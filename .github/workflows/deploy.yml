@@ -1,0 +1,63 @@
+name: Deploy
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-anthemic-hub
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+
+      - name: Configure SSH
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -p "${DEPLOY_PORT}" "${DEPLOY_HOST}" >> ~/.ssh/known_hosts
+
+      - name: Upload to Droplet
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          RSYNC_SSH="ssh -p ${DEPLOY_PORT}"
+          DEST="${DEPLOY_USER}@${DEPLOY_HOST}:incoming-hub/"
+          rsync -avz -e "${RSYNC_SSH}" \
+            --include 'index.html' \
+            --include 'assets/' --include 'assets/**' \
+            --exclude '*' \
+            ./ "${DEST}"
+
+      - name: Apply on Droplet
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            'sudo /usr/local/bin/anthemic-hub-deploy-apply.sh'
+
+      - name: Smoke test
+        run: |
+          set -euo pipefail
+          curl -sfI --retry 3 --retry-delay 2 "https://anthemic-developments.com/" \
+            | head -1 | grep -q "200"
+          # Verify the title belongs to the hub (not Set List or another vhost)
+          curl -sf "https://anthemic-developments.com/" | grep -q '<title>Anthemic Developments</title>'
