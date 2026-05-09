@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Andy Pap — Bass Teacher & Software Engineer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --void:           #0D0F1A;
+      --void-mid:       #111425;
+      --void-light:     #181D35;
+      --cyan:           #00F3FF;
+      --cyan-dim:       rgba(0, 243, 255, 0.12);
+      --cyan-glow:      0 0 24px rgba(0, 243, 255, 0.45), 0 0 64px rgba(0, 243, 255, 0.15);
+      --pink:           #FF2D75;
+      --pink-dim:       rgba(255, 45, 117, 0.12);
+      --pink-glow:      0 0 24px rgba(255, 45, 117, 0.45), 0 0 64px rgba(255, 45, 117, 0.15);
+      --coral:          #FFB800;
+      --coral-dim:      rgba(255, 184, 0, 0.1);
+      --white:          #F0F4FF;
+      --white-dim:      rgba(240, 244, 255, 0.6);
+      --white-muted:    rgba(240, 244, 255, 0.28);
+
+      --glass-bg:       rgba(255, 255, 255, 0.04);
+      --glass-bg-hover: rgba(255, 255, 255, 0.07);
+      --glass-border:   rgba(255, 255, 255, 0.08);
+      --glass-border-h: rgba(255, 255, 255, 0.16);
+
+      --font-display:   'Space Grotesk', sans-serif;
+      --font-body:      'Inter', sans-serif;
+      --font-mono:      'Space Mono', monospace;
+
+      --ease-expo:      cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-back:      cubic-bezier(0.34, 1.56, 0.64, 1);
+
+      --pad:            clamp(80px, 10vw, 140px);
+      --w:              min(90%, 1200px);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--void);
+      color: var(--white);
+      font-family: var(--font-body);
+      font-size: 16px;
+      line-height: 1.6;
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    input, select, textarea, button { cursor: none; }
+
+    /* ── CURSOR ── */
+    #cursor      { position: fixed; width: 10px; height: 10px; background: var(--cyan); border-radius: 50%; pointer-events: none; z-index: 9999; transform: translate(-50%,-50%); mix-blend-mode: screen; transition: width .2s, height .2s, background .2s; }
+    #cursor-ring { position: fixed; width: 36px; height: 36px; border: 1.5px solid rgba(0,243,255,.45); border-radius: 50%; pointer-events: none; z-index: 9998; transform: translate(-50%,-50%); mix-blend-mode: screen; transition: width .4s var(--ease-expo), height .4s var(--ease-expo), border-color .2s; }
+    body.c-hover #cursor      { width: 16px; height: 16px; background: var(--pink); }
+    body.c-hover #cursor-ring { width: 54px; height: 54px; border-color: rgba(255,45,117,.45); }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      padding: 1.5rem clamp(1.5rem, 5vw, 3rem);
+      display: flex; align-items: center; justify-content: space-between;
+      transition: background .4s, backdrop-filter .4s, border-color .4s;
+    }
+    nav.scrolled {
+      background: rgba(13,15,26,.88);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--glass-border);
+    }
+    .nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 1.1rem; letter-spacing: -.02em; color: var(--white); text-decoration: none; }
+    .nav-logo span { color: var(--cyan); }
+    .nav-links { display: flex; align-items: center; gap: 2rem; list-style: none; }
+    .nav-links a { color: var(--white-dim); text-decoration: none; font-size: .875rem; font-weight: 400; letter-spacing: .02em; transition: color .2s; }
+    .nav-links a:hover { color: var(--white); }
+    .nav-cta { padding: .5rem 1.25rem !important; border: 1px solid var(--cyan) !important; border-radius: 4px !important; color: var(--cyan) !important; font-weight: 500 !important; transition: background .2s, box-shadow .2s !important; }
+    .nav-cta:hover { background: var(--cyan-dim) !important; box-shadow: var(--cyan-glow) !important; }
+
+    /* ── HERO ── */
+    #hero {
+      position: relative; height: 100vh; min-height: 700px;
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
+    }
+    #hero-canvas { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 1; }
+    .hero-overlay {
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 60% 60% at 50% 100%, rgba(0,243,255,.06) 0%, transparent 70%),
+        linear-gradient(to bottom, rgba(13,15,26,.35) 0%, rgba(13,15,26,.08) 40%, rgba(13,15,26,.75) 100%);
+    }
+    .hero-overlay::after {
+      content: ''; position: absolute; inset: 0;
+      background-image: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,.025) 2px, rgba(0,0,0,.025) 4px);
+      pointer-events: none;
+    }
+    .hero-content {
+      position: relative; z-index: 2;
+      text-align: center; max-width: 900px; padding: 0 2rem;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: .5rem;
+      padding: .375rem 1rem;
+      border: 1px solid rgba(0,243,255,.3); border-radius: 100px;
+      background: rgba(0,243,255,.05);
+      font-size: .75rem; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--cyan);
+      margin-bottom: 2rem;
+      opacity: 0; animation: fadeUp .6s var(--ease-expo) .3s forwards;
+    }
+    .hero-badge::before {
+      content: ''; width: 6px; height: 6px; border-radius: 50%;
+      background: var(--cyan); box-shadow: 0 0 8px var(--cyan);
+      animation: blink 2s ease infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.75)} }
+
+    .hero-name {
+      font-family: var(--font-display);
+      font-size: clamp(4.5rem, 13vw, 9.5rem);
+      font-weight: 700; line-height: .9; letter-spacing: -.04em;
+      margin-bottom: 1.5rem;
+      display: flex; gap: 0; justify-content: center; flex-wrap: wrap;
+    }
+    .hero-name .word { display: inline-flex; }
+    .hero-name .word + .word { margin-left: .28em; }
+    .char {
+      display: inline-block;
+      opacity: 0; transform: translateY(60%) rotateX(-80deg);
+      transform-origin: bottom center;
+      animation: charIn .7s var(--ease-expo) forwards;
+    }
+    @keyframes charIn { to { opacity: 1; transform: translateY(0) rotateX(0); } }
+
+    .hero-tagline {
+      font-size: clamp(.875rem, 2vw, 1.125rem);
+      color: var(--white-dim); font-weight: 300; letter-spacing: .04em;
+      margin-bottom: 3rem;
+      opacity: 0; animation: fadeUp .8s var(--ease-expo) 1.2s forwards;
+    }
+    .hero-tagline strong { color: var(--white); font-weight: 500; }
+
+    .hero-actions {
+      display: flex; gap: 1rem; justify-content: center; align-items: center;
+      opacity: 0; animation: fadeUp .8s var(--ease-expo) 1.5s forwards;
+    }
+
+    .scroll-hint {
+      position: absolute; bottom: 2.5rem; left: 50%; transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: .5rem;
+      opacity: 0; animation: fadeUp 1s var(--ease-expo) 2s forwards;
+    }
+    .scroll-hint span { font-size: .6875rem; letter-spacing: .15em; text-transform: uppercase; color: var(--white-muted); }
+    .scroll-line { width: 1px; height: 40px; background: linear-gradient(to bottom, var(--white-muted), transparent); animation: lineIn 2s ease infinite; }
+    @keyframes lineIn { 0%{transform:scaleY(0);transform-origin:top;opacity:0} 50%{opacity:1} 100%{transform:scaleY(1);transform-origin:top;opacity:0} }
+
+    /* ── BUTTONS ── */
+    .btn {
+      position: relative; display: inline-flex; align-items: center; gap: .5rem;
+      padding: .875rem 2rem; border-radius: 6px;
+      font-family: var(--font-display); font-size: .9375rem; font-weight: 600; letter-spacing: .01em;
+      cursor: none; overflow: hidden; text-decoration: none;
+      transition: transform .2s var(--ease-back), box-shadow .3s;
+    }
+    .btn:active { transform: scale(.97) !important; }
+    .btn-primary { background: var(--cyan); color: var(--void); border: none; }
+    .btn-primary:hover { box-shadow: var(--cyan-glow); transform: translateY(-2px); }
+    .btn-outline { background: transparent; color: var(--white); border: 1px solid rgba(255,255,255,.22); }
+    .btn-outline:hover { border-color: rgba(255,255,255,.5); background: rgba(255,255,255,.05); transform: translateY(-2px); }
+    .btn-full { width: 100%; justify-content: center; }
+
+    .ripple-spot {
+      position: absolute; border-radius: 50%;
+      background: rgba(255,255,255,.32); transform: scale(0);
+      animation: ripple .65s linear; pointer-events: none;
+    }
+    @keyframes ripple { to { transform: scale(4.5); opacity: 0; } }
+
+    /* ── LAYOUT ── */
+    section { padding: var(--pad) 0; }
+    .container { width: var(--w); margin: 0 auto; }
+    .divider { height: 1px; background: linear-gradient(to right, transparent, var(--glass-border), transparent); }
+
+    .tag {
+      display: inline-flex; align-items: center; gap: .75rem;
+      font-size: .6875rem; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--white-muted);
+      margin-bottom: 1rem;
+    }
+    .tag::before { content: ''; width: 24px; height: 1px; background: currentColor; }
+
+    .sec-title {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 700;
+      letter-spacing: -.03em; line-height: 1.1; margin-bottom: 1.5rem;
+    }
+    .sec-title em { font-style: normal; }
+    .em-cyan { color: var(--cyan); }
+    .em-pink { color: var(--pink); }
+    .em-coral { color: var(--coral); }
+
+    /* Scroll reveal */
+    .reveal { opacity: 0; transform: translateY(28px); transition: opacity .8s var(--ease-expo), transform .8s var(--ease-expo); }
+    .reveal.in  { opacity: 1; transform: translateY(0); }
+    .d1 { transition-delay: .1s; }
+    .d2 { transition-delay: .2s; }
+    .d3 { transition-delay: .3s; }
+    .d4 { transition-delay: .4s; }
+
+    @keyframes fadeUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+
+    /* ── ABOUT ── */
+    #about { background: linear-gradient(to bottom, var(--void), var(--void-mid)); }
+
+    .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start; }
+
+    .lead { font-size: clamp(1rem, 2vw, 1.2rem); line-height: 1.75; color: var(--white-dim); margin-bottom: 1.5rem; }
+    .body-copy { color: rgba(240,244,255,.48); line-height: 1.85; font-size: .9375rem; }
+
+    .about-bar { width: 48px; height: 3px; background: linear-gradient(to right, var(--pink), var(--coral)); margin: 2rem 0; border-radius: 2px; }
+
+    .stat-card {
+      padding: 1.5rem;
+      background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 12px;
+      backdrop-filter: blur(12px);
+      transition: border-color .3s, background .3s;
+      margin-bottom: 1rem;
+    }
+    .stat-card:last-child { margin-bottom: 0; }
+    .stat-card:hover { border-color: var(--glass-border-h); background: var(--glass-bg-hover); }
+    .stat-num {
+      font-family: var(--font-display); font-size: 2.5rem; font-weight: 700;
+      line-height: 1; letter-spacing: -.04em;
+      background: linear-gradient(135deg, var(--cyan), var(--pink));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      margin-bottom: .25rem;
+    }
+    .stat-label { font-size: .8125rem; color: var(--white-dim); font-weight: 400; }
+    .stat-desc  { font-size: .75rem; color: var(--white-muted); margin-top: .375rem; line-height: 1.55; }
+
+    /* ── BENTO ── */
+    .bento {
+      display: grid; grid-template-columns: repeat(6, 1fr); gap: 1rem;
+      margin-top: 3rem;
+    }
+    .bc {
+      padding: 2rem;
+      background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px;
+      backdrop-filter: blur(16px); position: relative; overflow: hidden;
+      cursor: none; will-change: transform;
+      transition: border-color .3s, background .3s, box-shadow .3s, transform .3s var(--ease-expo);
+    }
+    .bc::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(255,255,255,.045) 0%, transparent 60%);
+      opacity: 0; transition: opacity .3s;
+    }
+    .bc:hover::before { opacity: 1; }
+    .bc:hover { border-color: var(--glass-border-h); background: var(--glass-bg-hover); }
+
+    .bico {
+      width: 48px; height: 48px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 1.25rem;
+    }
+    .bico svg { width: 22px; height: 22px; }
+    .bico-cyan  { background: rgba(0,243,255,.12);  color: var(--cyan); }
+    .bico-pink  { background: rgba(255,45,117,.14); color: var(--pink); }
+    .bico-coral { background: rgba(255,184,0,.12);  color: var(--coral); }
+    .bico-dim   { background: rgba(255,255,255,.06); color: var(--white-dim); }
+
+    .bc h3 { font-family: var(--font-display); font-size: 1.125rem; font-weight: 600; letter-spacing: -.02em; margin-bottom: .75rem; }
+    .bc p  { font-size: .875rem; color: var(--white-dim); line-height: 1.65; }
+
+    .btag {
+      display: inline-block; font-size: .6875rem; font-weight: 500;
+      letter-spacing: .08em; text-transform: uppercase;
+      padding: .25rem .75rem; border-radius: 100px; margin-bottom: 1rem;
+    }
+    .btag-cyan  { background: rgba(0,243,255,.08);  color: var(--cyan);  border: 1px solid rgba(0,243,255,.2); }
+    .btag-pink  { background: rgba(255,45,117,.1);  color: var(--pink);  border: 1px solid rgba(255,45,117,.2); }
+    .btag-coral { background: rgba(255,184,0,.08);  color: var(--coral); border: 1px solid rgba(255,184,0,.2); }
+    .btag-dim   { background: rgba(255,255,255,.05); color: var(--white-dim); border: 1px solid var(--glass-border); }
+
+    /* ── LESSONS BENTO ── */
+    .lb1 { grid-column: span 4; background: linear-gradient(135deg, rgba(255,45,117,.07) 0%, rgba(255,45,117,.01) 100%); border-color: rgba(255,45,117,.18); }
+    .lb1:hover { border-color: rgba(255,45,117,.38) !important; box-shadow: 0 8px 40px rgba(255,45,117,.1); }
+    .lb2 { grid-column: span 2; }
+    .lb3 { grid-column: span 2; }
+    .lb4 { grid-column: span 4; background: linear-gradient(135deg, rgba(255,184,0,.06) 0%, transparent 100%); border-color: rgba(255,184,0,.14); }
+    .lb4:hover { border-color: rgba(255,184,0,.3) !important; box-shadow: 0 8px 40px rgba(255,184,0,.07); }
+
+    .level-bars { display: flex; flex-direction: column; gap: .5rem; margin-top: 1.5rem; }
+    .lbar { display: flex; align-items: center; gap: 1rem; font-size: .8125rem; }
+    .lbar-label { width: 100px; color: var(--white-dim); flex-shrink: 0; }
+    .lbar-track { flex: 1; height: 3px; background: rgba(255,255,255,.08); border-radius: 2px; overflow: hidden; }
+    .lbar-fill  { height: 100%; width: 0; border-radius: 2px; background: linear-gradient(to right, var(--pink), var(--coral)); transition: width 1s var(--ease-expo); }
+    .lbar-pct   { width: 30px; text-align: right; font-family: var(--font-mono); font-size: .6875rem; color: var(--white-muted); }
+
+    .flex-tags { display: flex; gap: .5rem; margin-top: 1.5rem; flex-wrap: wrap; }
+    .ftag { padding: .25rem .75rem; border: 1px solid rgba(255,184,0,.2); border-radius: 100px; font-size: .6875rem; color: var(--coral); background: rgba(255,184,0,.07); }
+
+    /* ── SERVICES BENTO ── */
+    .sb1 { grid-column: span 3; background: linear-gradient(135deg, rgba(0,243,255,.07) 0%, rgba(0,243,255,.01) 100%); border-color: rgba(0,243,255,.18); }
+    .sb1:hover { border-color: rgba(0,243,255,.38) !important; box-shadow: 0 8px 40px rgba(0,243,255,.09); }
+    .sb2 { grid-column: span 3; }
+    .sb3 { grid-column: span 2; }
+    .sb4 { grid-column: span 4; background: linear-gradient(135deg, rgba(255,45,117,.04) 0%, transparent 100%); border-color: rgba(255,45,117,.1); }
+
+    .tech-pills { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
+    .tp {
+      padding: .375rem .875rem; border: 1px solid var(--glass-border); border-radius: 100px;
+      font-size: .75rem; font-family: var(--font-mono); color: var(--white-dim);
+      background: var(--glass-bg); backdrop-filter: blur(8px);
+      transition: border-color .2s, color .2s, background .2s;
+    }
+    .tp:hover { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
+
+    /* ── CONTACT ── */
+    #contact { background: linear-gradient(to bottom, var(--void-mid), var(--void)); }
+    .contact-wrap { max-width: 680px; margin: 0 auto; text-align: center; }
+    .contact-sub { font-size: 1rem; color: var(--white-dim); max-width: 480px; margin: 0 auto 3rem; line-height: 1.75; }
+
+    .glass-card {
+      background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px;
+      backdrop-filter: blur(16px); padding: 2rem;
+    }
+
+    .cform { display: flex; flex-direction: column; gap: 1rem; text-align: left; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .ff { display: flex; flex-direction: column; gap: .375rem; }
+    .ff label { font-size: .75rem; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--white-muted); }
+    .ff input, .ff select, .ff textarea {
+      padding: .875rem 1rem;
+      background: rgba(255,255,255,.04); border: 1px solid var(--glass-border); border-radius: 8px;
+      color: var(--white); font-family: var(--font-body); font-size: .9375rem;
+      outline: none; -webkit-appearance: none;
+      transition: border-color .2s, box-shadow .2s, background .2s;
+    }
+    .ff input::placeholder, .ff textarea::placeholder { color: rgba(240,244,255,.2); }
+    .ff input:focus, .ff select:focus, .ff textarea:focus {
+      border-color: rgba(0,243,255,.5);
+      background: rgba(0,243,255,.04);
+      box-shadow: 0 0 0 3px rgba(0,243,255,.08);
+    }
+    .ff select option { background: #1a1e35; color: var(--white); }
+    .ff textarea { resize: vertical; min-height: 120px; }
+
+    .social-row { display: flex; gap: 1rem; justify-content: center; margin-top: 3rem; flex-wrap: wrap; }
+    .slink {
+      display: flex; align-items: center; gap: .5rem;
+      padding: .625rem 1.25rem; border: 1px solid var(--glass-border); border-radius: 8px;
+      color: var(--white-dim); text-decoration: none; font-size: .8125rem; font-weight: 500;
+      transition: border-color .2s, color .2s, background .2s;
+    }
+    .slink:hover { border-color: var(--glass-border-h); color: var(--white); background: var(--glass-bg); }
+    .slink svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+    /* ── FOOTER ── */
+    footer { padding: 2rem 0; border-top: 1px solid var(--glass-border); }
+    .foot { display: flex; align-items: center; justify-content: space-between; }
+    .foot-copy  { font-size: .8125rem; color: var(--white-muted); }
+    .foot-copy strong { color: var(--cyan); }
+    .foot-mono  { font-family: var(--font-mono); font-size: .6875rem; color: rgba(240,244,255,.18); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .about-grid { grid-template-columns: 1fr; gap: 2rem; }
+      .bento { grid-template-columns: 1fr 1fr; }
+      .lb1, .lb4, .sb1, .sb2, .sb4 { grid-column: span 2; }
+      .form-row { grid-template-columns: 1fr; }
+      .nav-links { display: none; }
+      .foot { flex-direction: column; gap: .5rem; text-align: center; }
+    }
+    @media (max-width: 480px) {
+      .bento { grid-template-columns: 1fr; }
+      .lb1, .lb2, .lb3, .lb4, .sb1, .sb2, .sb3, .sb4 { grid-column: span 1; }
+      .hero-actions { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="#" class="nav-logo">Andy<span>.</span>Pap</a>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#lessons">Lessons</a></li>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#contact" class="nav-cta">Let's Talk</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <div class="hero-badge">Available for bookings</div>
+    <h1 class="hero-name" id="hero-name"></h1>
+    <p class="hero-tagline">
+      <strong>Bass Teacher.</strong> Software Engineer. <strong>Creative Technologist.</strong>
+    </p>
+    <div class="hero-actions">
+      <a href="#contact" class="btn btn-primary ripple-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px"><path d="M9 9l10.5-3m0 6.553v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 11-.99-3.467l2.31-.66a2.25 2.25 0 001.632-2.163zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 01-.99-3.467l2.31-.66A2.25 2.25 0 009 15.553z"/></svg>
+        Book a Lesson
+      </a>
+      <a href="#services" class="btn btn-outline ripple-btn">
+        View My Work
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+      </a>
+    </div>
+  </div>
+  <div class="scroll-hint">
+    <span>Scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="container">
+    <div class="about-grid">
+      <div>
+        <div class="tag reveal">About</div>
+        <h2 class="sec-title reveal d1">Where <em class="em-pink">rhythm</em> meets <em class="em-coral">logic</em></h2>
+        <p class="lead reveal d2">
+          I'm Andy — a bass player with a deep love for groove, and a software engineer with a passion for elegant systems. I bring the same creative discipline to both worlds.
+        </p>
+        <div class="about-bar reveal d3"></div>
+        <p class="body-copy reveal d3">
+          With over a decade of performing and teaching, I've helped hundreds of students find their voice on the bass. In the studio, I build modern web applications, APIs, and AI-integrated systems that solve real problems. The bridge between these worlds is pattern recognition — the same instinct that helps a student nail a walking bassline helps me architect clean, scalable code.
+        </p>
+      </div>
+      <div>
+        <div class="stat-card reveal d1">
+          <div class="stat-num">10+</div>
+          <div class="stat-label">Years Teaching</div>
+          <div class="stat-desc">From total beginners to seasoned players looking to refine technique and theory.</div>
+        </div>
+        <div class="stat-card reveal d2">
+          <div class="stat-num">200+</div>
+          <div class="stat-label">Students Taught</div>
+          <div class="stat-desc">Online and in-person, across multiple countries, styles, and skill levels.</div>
+        </div>
+        <div class="stat-card reveal d3">
+          <div class="stat-num">8+</div>
+          <div class="stat-label">Years in Software</div>
+          <div class="stat-desc">Full-stack engineering, API design, and AI-integrated apps for startups and enterprises.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- BASS LESSONS -->
+<section id="lessons">
+  <div class="container">
+    <div class="tag reveal">Bass Lessons</div>
+    <h2 class="sec-title reveal d1">Learn to play with <em class="em-pink">feel</em></h2>
+
+    <div class="bento">
+      <!-- Span 4 -->
+      <div class="bc lb1 reveal d1" data-tilt>
+        <div class="btag btag-pink">Core Program</div>
+        <div class="bico bico-pink">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 9l10.5-3m0 6.553v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 11-.99-3.467l2.31-.66a2.25 2.25 0 001.632-2.163zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 01-.99-3.467l2.31-.66A2.25 2.25 0 009 15.553z"/></svg>
+        </div>
+        <h3>Beginner to Advanced</h3>
+        <p>A structured curriculum that takes you from your first pluck to complex slap techniques, walking basslines, and soloing over changes.</p>
+        <div class="level-bars">
+          <div class="lbar"><span class="lbar-label">Beginner</span><div class="lbar-track"><div class="lbar-fill" data-w="95"></div></div><span class="lbar-pct">95%</span></div>
+          <div class="lbar"><span class="lbar-label">Intermediate</span><div class="lbar-track"><div class="lbar-fill" data-w="85"></div></div><span class="lbar-pct">85%</span></div>
+          <div class="lbar"><span class="lbar-label">Advanced</span><div class="lbar-track"><div class="lbar-fill" data-w="70"></div></div><span class="lbar-pct">70%</span></div>
+        </div>
+      </div>
+
+      <!-- Span 2 -->
+      <div class="bc lb2 reveal d2" data-tilt>
+        <div class="bico bico-pink">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        </div>
+        <h3>Music Theory</h3>
+        <p>Scales, modes, harmony, and how it all applies to the bass role. No boring textbooks — all practical application.</p>
+      </div>
+
+      <!-- Span 2 -->
+      <div class="bc lb3 reveal d3" data-tilt>
+        <div class="bico bico-coral">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
+        </div>
+        <h3>Groove & Rhythm</h3>
+        <p>Master timing, pocket playing, and feel. Lock in with a drummer and drive any genre — funk, rock, jazz, R&amp;B.</p>
+      </div>
+
+      <!-- Span 4 -->
+      <div class="bc lb4 reveal d4" data-tilt>
+        <div class="btag btag-coral">Flexible Format</div>
+        <div class="bico bico-coral">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>
+        </div>
+        <h3>Online or In-Person</h3>
+        <p>High-quality video sessions or face-to-face — both deliver the same focused, personalised teaching experience tailored to your goals and schedule.</p>
+        <div class="flex-tags">
+          <span class="ftag">📹 Online</span>
+          <span class="ftag">🎸 In-Person</span>
+          <span class="ftag">📅 Flexible Schedule</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- SOFTWARE SERVICES -->
+<section id="services">
+  <div class="container">
+    <div class="tag reveal">Software Engineering</div>
+    <h2 class="sec-title reveal d1">Building <em class="em-cyan">systems</em> that scale</h2>
+
+    <div class="bento">
+      <!-- Span 3 -->
+      <div class="bc sb1 reveal d1" data-tilt>
+        <div class="btag btag-cyan">Full Stack</div>
+        <div class="bico bico-cyan">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        </div>
+        <h3>Web Development</h3>
+        <p>Modern, performant web applications with React, Next.js, and Node.js. From landing pages to complex multi-tenant platforms.</p>
+      </div>
+
+      <!-- Span 3 -->
+      <div class="bc sb2 reveal d2" data-tilt>
+        <div class="bico bico-cyan">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        </div>
+        <h3>API Design</h3>
+        <p>Clean, well-documented REST and GraphQL APIs. Auth, rate-limiting, versioning, and developer experience built in from day one.</p>
+      </div>
+
+      <!-- Span 2 -->
+      <div class="bc sb3 reveal d3" data-tilt>
+        <div class="bico bico-pink">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        </div>
+        <h3>AI Integration</h3>
+        <p>LLMs, RAG pipelines, and AI assistants embedded into real products. Production-ready — not demos.</p>
+      </div>
+
+      <!-- Span 4 -->
+      <div class="bc sb4 reveal d4" data-tilt>
+        <div class="btag btag-dim">Strategic</div>
+        <div class="bico bico-dim">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        </div>
+        <h3>Technical Consulting</h3>
+        <p>Architecture reviews, tech stack decisions, and engineering leadership for product teams looking to move faster and smarter.</p>
+      </div>
+    </div>
+
+    <div class="tech-pills reveal">
+      <span class="tp">React</span><span class="tp">Next.js</span><span class="tp">TypeScript</span>
+      <span class="tp">Node.js</span><span class="tp">Python</span><span class="tp">PostgreSQL</span>
+      <span class="tp">Redis</span><span class="tp">Docker</span><span class="tp">AWS</span>
+      <span class="tp">GraphQL</span><span class="tp">Claude API</span><span class="tp">LangChain</span>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="container">
+    <div class="contact-wrap">
+      <div class="tag reveal" style="justify-content:center">Get in Touch</div>
+      <h2 class="sec-title reveal d1">Let's build something <em class="em-cyan">together</em></h2>
+      <p class="contact-sub reveal d2">
+        Whether you're picking up the bass for the first time or need a software engineer for your next project — I'd love to hear from you.
+      </p>
+
+      <div class="glass-card reveal d3">
+        <form class="cform" onsubmit="handleSubmit(event)">
+          <div class="form-row">
+            <div class="ff">
+              <label for="name">Name</label>
+              <input type="text" id="name" placeholder="Your name" required>
+            </div>
+            <div class="ff">
+              <label for="email">Email</label>
+              <input type="email" id="email" placeholder="your@email.com" required>
+            </div>
+          </div>
+          <div class="ff">
+            <label for="interest">I'm interested in</label>
+            <select id="interest">
+              <option value="">Select an option</option>
+              <option value="lesson">Bass Lesson</option>
+              <option value="software">Software Project</option>
+              <option value="both">Both</option>
+            </select>
+          </div>
+          <div class="ff">
+            <label for="msg">Message</label>
+            <textarea id="msg" placeholder="Tell me what you're working on or what you'd like to learn..." required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-full ripple-btn" id="submit-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+            Send Message
+          </button>
+        </form>
+      </div>
+
+      <div class="social-row reveal">
+        <a href="#" class="slink">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          GitHub
+        </a>
+        <a href="#" class="slink">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+          LinkedIn
+        </a>
+        <a href="mailto:hello@andypap.dev" class="slink">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+          Email
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="foot">
+      <p class="foot-copy">© 2026 <strong>Andy Pap</strong> — All rights reserved.</p>
+      <p class="foot-mono">// Bass & Code</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // ── CURSOR ──
+  const cur  = document.getElementById('cursor');
+  const ring = document.getElementById('cursor-ring');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    cur.style.left = mx + 'px'; cur.style.top = my + 'px';
+  });
+  (function tick() {
+    rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12;
+    ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+    requestAnimationFrame(tick);
+  })();
+  document.querySelectorAll('a, button, .bc, .slink').forEach(el => {
+    el.addEventListener('mouseenter', () => document.body.classList.add('c-hover'));
+    el.addEventListener('mouseleave', () => document.body.classList.remove('c-hover'));
+  });
+
+  // ── NAV SCROLL ──
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 50), { passive: true });
+
+  // ── HERO NAME KINETIC REVEAL ──
+  const words = 'Andy Pap'.split(' ');
+  const nameEl = document.getElementById('hero-name');
+  let delay = 0.5;
+  words.forEach(word => {
+    const wEl = document.createElement('span');
+    wEl.className = 'word';
+    [...word].forEach(ch => {
+      const cEl = document.createElement('span');
+      cEl.className = 'char';
+      cEl.textContent = ch;
+      cEl.style.animationDelay = delay + 's';
+      delay += 0.065;
+      wEl.appendChild(cEl);
+    });
+    nameEl.appendChild(wEl);
+  });
+
+  // ── CANVAS: PHOTO + OVERLAYS ──
+  const canvas = document.getElementById('hero-canvas');
+  const ctx = canvas.getContext('2d');
+  let canvasMouseY = 0.5;
+
+  function resize() { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; }
+  resize();
+  window.addEventListener('resize', resize, { passive: true });
+  document.addEventListener('mousemove', e => { canvasMouseY = e.clientY / innerHeight; }, { passive: true });
+
+  // Load the actual bass guitar photo
+  const guitarPhoto = new Image();
+  guitarPhoto.src = 'brand_assets/AndyPBass.png';
+
+  // Floating music notes
+  const floatNotes = Array.from({ length: 9 }, (_, i) => ({
+    x: 0.05 + Math.random() * 0.9, y: 0.1 + Math.random() * 0.8,
+    speed: 0.00025 + Math.random() * 0.00035,
+    size: 0.013 + Math.random() * 0.011,
+    alpha: 0.07 + Math.random() * 0.12,
+    char: ['♩','♪','♫','♬'][i % 4],
+    phase: Math.random() * Math.PI * 2,
+  }));
+
+  function drawGuitarPNG(W, H, t) {
+    if (!guitarPhoto.complete || !guitarPhoto.naturalWidth) return;
+    ctx.save();
+
+    const iW = guitarPhoto.naturalWidth, iH = guitarPhoto.naturalHeight;
+    // Scale guitar to 74% of canvas width
+    const dw = W * 0.74;
+    const dh = iH * (dw / iW);
+    // Center horizontally; sit at ~50% vertically (on the clef's body curve)
+    const dx = (W - dw) / 2;
+    const dy = H * 0.50 - dh * 0.5 + Math.sin(t * 0.28) * 4; // gentle float
+
+    // Warm neon glow behind guitar (stage-light effect)
+    const aura = ctx.createRadialGradient(W * 0.5, H * 0.5, 0, W * 0.5, H * 0.5, W * 0.42);
+    aura.addColorStop(0,   'rgba(255,184,0,0.07)');
+    aura.addColorStop(0.5, 'rgba(255,45,117,0.05)');
+    aura.addColorStop(1,   'transparent');
+    ctx.fillStyle = aura;
+    ctx.fillRect(0, 0, W, H);
+
+    // Neon shadow pass — gives the guitar a pink/coral edge glow
+    ctx.shadowBlur  = 38;
+    ctx.shadowColor = 'rgba(255,45,117,0.55)';
+    ctx.globalAlpha = 0.85;
+    ctx.drawImage(guitarPhoto, dx, dy, dw, dh);
+
+    // Clean sharp pass on top
+    ctx.shadowBlur  = 0;
+    ctx.globalAlpha = 1;
+    ctx.drawImage(guitarPhoto, dx, dy, dw, dh);
+
+    ctx.restore();
+  }
+
+  function drawColorOverlay(W, H, t) {
+    // Neon screen wash
+    ctx.globalCompositeOperation = 'screen';
+    const wash = ctx.createLinearGradient(0, 0, W, H);
+    wash.addColorStop(0,    'rgba(0, 110, 140, 0.22)');
+    wash.addColorStop(0.55, 'rgba(0,  60,  90, 0.10)');
+    wash.addColorStop(1,    'rgba(70,   0,  35, 0.20)');
+    ctx.fillStyle = wash;
+    ctx.fillRect(0, 0, W, H);
+    ctx.globalCompositeOperation = 'source-over';
+
+    // Pulsing spotlight centred on guitar/clef
+    const pulse = 0.06 + 0.02 * Math.sin(t * 0.55);
+    const spot = ctx.createRadialGradient(W * 0.5, H * 0.5, 0, W * 0.5, H * 0.5, W * 0.45);
+    spot.addColorStop(0, `rgba(0,243,255,${pulse})`);
+    spot.addColorStop(1, 'transparent');
+    ctx.fillStyle = spot;
+    ctx.fillRect(0, 0, W, H);
+
+    // Deep void vignette
+    const vg = ctx.createRadialGradient(W * 0.5, H * 0.5, H * 0.15, W * 0.5, H * 0.5, H * 0.9);
+    vg.addColorStop(0, 'rgba(13,15,26,0)');
+    vg.addColorStop(1, 'rgba(13,15,26,0.88)');
+    ctx.fillStyle = vg;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  function drawStaffLines(W, H, t) {
+    const sp   = H * 0.055;
+    const midY = H * 0.5 + (canvasMouseY - 0.5) * 12;
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 5; i++) {
+      const y = midY - sp * 2 + sp * i;
+      ctx.strokeStyle = `rgba(0,243,255,${0.05 + 0.02 * Math.sin(t * 0.5 + i * 0.8)})`;
+      ctx.beginPath(); ctx.moveTo(W * 0.03, y); ctx.lineTo(W * 0.97, y); ctx.stroke();
+    }
+  }
+
+  function drawBassClef(W, H, t) {
+    const size  = Math.min(W, H) * 0.78;
+    const x     = W * 0.50;
+    const y     = H * 0.62 + size * 0.08;
+    const alpha = 0.12 + 0.045 * Math.sin(t * 0.55);
+    ctx.save();
+    ctx.font         = `${size}px "Times New Roman", Georgia, serif`;
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'alphabetic';
+    ctx.shadowBlur   = 100;
+    ctx.shadowColor  = 'rgba(0,243,255,0.6)';
+    ctx.fillStyle    = `rgba(0,243,255,${alpha})`;
+    ctx.fillText('\u{1D122}', x, y);
+    ctx.shadowBlur   = 32;
+    ctx.fillStyle    = `rgba(0,243,255,${alpha * 0.5})`;
+    ctx.fillText('\u{1D122}', x, y);
+    ctx.restore();
+  }
+
+  function drawFloatingNotes(W, H, t) {
+    ctx.save();
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    floatNotes.forEach(n => {
+      n.y -= n.speed;
+      if (n.y < -0.06) { n.y = 1.06; n.x = 0.05 + Math.random() * 0.9; }
+      const wx = (n.x + Math.sin(t * 1.4 + n.phase) * 0.018) * W;
+      const wy = n.y * H;
+      const a  = n.alpha * Math.min(1, n.y * 12) * Math.min(1, (1 - n.y) * 10);
+      ctx.font        = `${n.size * Math.min(W, H)}px serif`;
+      ctx.fillStyle   = `rgba(0,243,255,${a})`;
+      ctx.shadowBlur  = 10;
+      ctx.shadowColor = `rgba(0,243,255,${a * 0.5})`;
+      ctx.fillText(n.char, wx, wy);
+    });
+    ctx.restore();
+  }
+
+  let aT = 0;
+  (function drawScene() {
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+    drawStaffLines(W, H, aT);
+    drawBassClef(W, H, aT);
+    drawGuitarPNG(W, H, aT);
+    drawColorOverlay(W, H, aT);
+    drawFloatingNotes(W, H, aT);
+    aT += 0.009;
+    requestAnimationFrame(drawScene);
+  })();
+
+  // ── SCROLL REVEAL ──
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // ── LEVEL BARS ──
+  const bIo = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.width = e.target.dataset.w + '%';
+        bIo.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.5 });
+  document.querySelectorAll('.lbar-fill').forEach(el => bIo.observe(el));
+
+  // ── 3D TILT ──
+  document.querySelectorAll('[data-tilt]').forEach(card => {
+    card.addEventListener('mousemove', e => {
+      const r = card.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width;
+      const y = (e.clientY - r.top)  / r.height;
+      card.style.transform = `perspective(900px) rotateX(${(y-.5)*-7}deg) rotateY(${(x-.5)*7}deg) translateZ(6px)`;
+      card.style.setProperty('--mx', (x * 100) + '%');
+      card.style.setProperty('--my', (y * 100) + '%');
+    });
+    card.addEventListener('mouseleave', () => { card.style.transform = ''; });
+  });
+
+  // ── RIPPLE ──
+  document.querySelectorAll('.ripple-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      const r = btn.getBoundingClientRect();
+      const size = Math.max(r.width, r.height);
+      const spot = document.createElement('span');
+      spot.className = 'ripple-spot';
+      spot.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX-r.left-size/2}px;top:${e.clientY-r.top-size/2}px`;
+      btn.appendChild(spot);
+      setTimeout(() => spot.remove(), 700);
+    });
+  });
+
+  // ── FORM ──
+  function handleSubmit(e) {
+    e.preventDefault();
+    const btn = document.getElementById('submit-btn');
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px"><path d="M20 6L9 17l-5-5"/></svg> Sent!`;
+    btn.style.background = '#10b981';
+    setTimeout(() => {
+      btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg> Send Message`;
+      btn.style.background = '';
+      e.target.reset();
+    }, 3000);
+  }
+</script>
+</body>
+</html>

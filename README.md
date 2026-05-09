@@ -2,7 +2,7 @@
 
 Landing page and project menu for **anthemic-developments.com**.
 
-This repo owns only the static landing page at `/`. Each linked project (Set List Generator, future personal site, future bass coaching) is deployed from its own repo.
+This repo owns the static landing page at `/` and the **bass coaching** mini-site under `/bass/` (copied from the PapaWeb project). Other linked projects (Set List Generator, personal site) deploy from their own repos.
 
 ## Local edit and preview
 
@@ -65,6 +65,7 @@ Same four as the Set List repo (the same key works because the `deploy` user tru
 ## Files
 
 - `index.html` — the landing page
+- `bass/` — bass coaching static site (`/bass/`, entry `bass/index.html` plus `bass/brand_assets/` including `AndyPBass.png` used by the page); update by syncing from PapaWeb when that site changes
 - `assets/` — optional images / OG card / icons (served at `/assets/...`)
 - `scripts/droplet/anthemic-hub-deploy-apply.sh` — installed at `/usr/local/bin/`
 - `.github/workflows/deploy.yml` — push-to-main deploy

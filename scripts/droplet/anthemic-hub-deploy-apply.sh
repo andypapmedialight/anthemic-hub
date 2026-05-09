@@ -5,6 +5,7 @@
 # Expects artifacts under /home/deploy/incoming-hub/:
 #   index.html        - the hub landing page
 #   assets/           - optional folder of static assets
+#   bass/             - bass coaching static site (e.g. bass/index.html)
 #
 set -euo pipefail
 
@@ -20,6 +21,7 @@ mkdir -p "${DEST}"
 rsync -a --delete \
   --include 'index.html' \
   --include 'assets/' --include 'assets/**' \
+  --include 'bass/' --include 'bass/**' \
   --exclude '*' \
   "${INCOMING}/" "${DEST}/"
 

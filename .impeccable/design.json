@@ -1,0 +1,160 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-09T12:00:00.000Z",
+  "title": "Design System: Anthemic Hub",
+  "extensions": {
+    "colorMeta": {
+      "canvas-base": {
+        "role": "neutral",
+        "displayName": "Canvas Base",
+        "canonical": "#0f1216",
+        "tonalRamp": [
+          "oklch(15% 0.02 250)",
+          "oklch(20% 0.02 250)",
+          "oklch(25% 0.02 250)",
+          "oklch(30% 0.025 250)",
+          "oklch(38% 0.03 250)",
+          "oklch(48% 0.03 250)",
+          "oklch(58% 0.025 250)",
+          "oklch(72% 0.02 250)"
+        ]
+      },
+      "accent-amber": {
+        "role": "primary",
+        "displayName": "Signal Amber",
+        "canonical": "#f59e0b",
+        "tonalRamp": [
+          "oklch(35% 0.08 75)",
+          "oklch(42% 0.1 75)",
+          "oklch(50% 0.12 75)",
+          "oklch(58% 0.14 75)",
+          "oklch(68% 0.14 75)",
+          "oklch(75% 0.12 75)",
+          "oklch(82% 0.1 75)",
+          "oklch(90% 0.06 75)"
+        ]
+      },
+      "accent-sky": {
+        "role": "secondary",
+        "displayName": "Console Sky",
+        "canonical": "#38bdf8",
+        "tonalRamp": [
+          "oklch(28% 0.06 230)",
+          "oklch(35% 0.08 230)",
+          "oklch(42% 0.1 230)",
+          "oklch(50% 0.12 230)",
+          "oklch(58% 0.12 230)",
+          "oklch(68% 0.1 230)",
+          "oklch(78% 0.08 230)",
+          "oklch(88% 0.05 230)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Single H1 in the header only."
+      },
+      "title": {
+        "displayName": "Card title",
+        "purpose": "Project and section card headings."
+      }
+    },
+    "shadows": [],
+    "motion": [
+      {
+        "name": "ease-card-state",
+        "value": "120ms ease",
+        "purpose": "Background, transform, and border transitions on interactive cards."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "card-grid-min",
+        "value": "260px",
+        "purpose": "minmax column width for auto-fit project grid."
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Hub project card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Full-width grid cell link; badge, title, description stack.",
+      "html": "<a class=\"ds-card\" href=\"#\"><span class=\"ds-badge ds-badge--live\">Live</span><span class=\"ds-card__title\">Set List Generator</span><span class=\"ds-card__desc\">Build, organise and share gig set lists.</span></a>",
+      "css": ".ds-card { box-sizing: border-box; display: flex; flex-direction: column; gap: 10px; background: #181d24; color: #e7ecf2; border: 1px solid #232a34; border-radius: 14px; padding: 24px 22px; text-decoration: none; transition: background 120ms ease, transform 120ms ease, border-color 120ms ease; } .ds-card:hover { background: #1f2630; border-color: #2c3543; transform: translateY(-1px); } .ds-card:focus-visible { outline: 2px solid #38bdf8; outline-offset: 3px; } .ds-card__title { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 18px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.35; } .ds-card__desc { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 1.55; color: #9aa6b2; }"
+    },
+    {
+      "name": "Status badge default",
+      "kind": "chip",
+      "refersTo": "badge-default",
+      "description": "Coming soon and neutral status.",
+      "html": "<span class=\"ds-badge ds-badge--default\">Coming soon</span>",
+      "css": ".ds-badge { box-sizing: border-box; align-self: flex-start; display: inline-block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; border: 1px solid; } .ds-badge--default { background: rgba(245, 158, 11, 0.12); color: #f59e0b; border-color: rgba(245, 158, 11, 0.35); }"
+    },
+    {
+      "name": "Status badge live",
+      "kind": "chip",
+      "refersTo": "badge-live",
+      "description": "In-service project indicator.",
+      "html": "<span class=\"ds-badge ds-badge--live\">Live</span>",
+      "css": ".ds-badge { box-sizing: border-box; align-self: flex-start; display: inline-block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; border: 1px solid; } .ds-badge--live { background: rgba(56, 189, 248, 0.12); color: #38bdf8; border-color: rgba(56, 189, 248, 0.35); }"
+    },
+    {
+      "name": "Status badge external",
+      "kind": "chip",
+      "refersTo": "badge-external",
+      "description": "Outbound or third-party link marker.",
+      "html": "<span class=\"ds-badge ds-badge--external\">External ↗</span>",
+      "css": ".ds-badge { box-sizing: border-box; align-self: flex-start; display: inline-block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; border: 1px solid; } .ds-badge--external { background: rgba(148, 163, 184, 0.12); color: #cbd5e1; border-color: rgba(148, 163, 184, 0.35); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Lit Workshop",
+    "overview": "This system implements the strategic line from PRODUCT.md: the interface should feel like a workshop with the lights on—ordered, intentional, and slightly warm inside a cool graphite shell. Density is calm and scannable: one hero message, then grids of equal-weight cards so projects read as inventory you maintain, not as marketing fiction.\n\nThe visual story is ember-and-console: a restrained amber accent pairs with a cool sky accent reserved for live state. Neutrals carry almost all surface area; color earns its keep on badges and the mark, not in full-bleed gradients.\n\nThe system explicitly rejects the vibe of Generic “AI SaaS” marketing pages, Portfolio theatre, and Loud personal-brand energy—as named in PRODUCT.md.",
+    "keyCharacteristics": [
+      "Dark-first canvas with a single soft radial lift (ambient only).",
+      "System sans stack end-to-end; hierarchy from scale and weight.",
+      "Cards as the primary interactive surface pattern.",
+      "Motion is state-only: short ease on hover/disabled.",
+      "Static-file discipline: tokens in :root in index.html."
+    ],
+    "rules": [
+      {
+        "name": "The Two-Accent Orchestra Rule",
+        "body": "Amber and sky never compete at the same hierarchy level on one component: one badge, one role.",
+        "section": "colors"
+      },
+      {
+        "name": "The No-Wash Rule",
+        "body": "Do not replace the canvas with saturated amber or sky fills. Large fields stay neutral; accents stay small.",
+        "section": "colors"
+      },
+      {
+        "name": "The Measure Rule",
+        "body": "Marketing explanation in the header caps near 65ch effective width; card copy should avoid long unbroken lines.",
+        "section": "typography"
+      },
+      {
+        "name": "The Hover-Is-State Rule",
+        "body": "Motion and tonal change appear together on :hover for enabled cards; disabled cards must not lift or brighten on hover.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do keep ≥ rough AA contrast for text-muted on canvas-base when you add new copy blocks.",
+      "Do preserve the card-first scan path: grids stay repeat(auto-fit, minmax(260px, 1fr)) with 20px gap unless a breakpoint audit says otherwise.",
+      "Do add an explicit :focus-visible outline on .card links before expanding keyboard paths.",
+      "Do respect prefers-reduced-motion if hover translation or transitions grow beyond the current subtle move."
+    ],
+    "donts": [
+      "Don't build layouts that read as Generic “AI SaaS” marketing pages—no purple gradients, glassmorphism stacks, interchangeable hero metrics, or fake urgency (PRODUCT.md anti-references, quoted).",
+      "Don't ship Portfolio theatre: no endless identical case-study cards with buzzwords and no working links.",
+      "Don't chase Loud personal-brand energy: no meme-density layouts, chaos grids, or novelty effects that compete with project links.",
+      "Don't use side-stripe accent borders (>1px colored border-left / border-right on cards or lists) as a decorative pattern.",
+      "Don't use gradient text (background-clip: text with gradients) for headings or titles.",
+      "Don't add modal-first flows on this hub; keep navigation flat and direct."
+    ]
+  }
+}

@@ -42,6 +42,7 @@ jobs:
           rsync -avz -e "${RSYNC_SSH}" \
             --include 'index.html' \
             --include 'assets/' --include 'assets/**' \
+            --include 'bass/' --include 'bass/**' \
             --exclude '*' \
             ./ "${DEST}"
 
