@@ -22,12 +22,9 @@ if [[ ! -f "${INCOMING}/bass/index.html" ]]; then
 fi
 
 mkdir -p "${DEST}"
-rsync -a --delete \
-  --include 'index.html' \
-  --include 'assets/' --include 'assets/**' \
-  --include 'bass/' --include 'bass/**' \
-  --exclude '*' \
-  "${INCOMING}/" "${DEST}/"
+_hub_src=( "${INCOMING}/index.html" "${INCOMING}/bass" )
+[[ -d "${INCOMING}/assets" ]] && _hub_src+=( "${INCOMING}/assets" )
+rsync -a --delete "${_hub_src[@]}" "${DEST}/"
 
 chown -R www-data:www-data "${DEST}"
 

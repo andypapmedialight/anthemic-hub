@@ -39,12 +39,11 @@ jobs:
         run: |
           RSYNC_SSH="ssh -p ${DEPLOY_PORT}"
           DEST="${DEPLOY_USER}@${DEPLOY_HOST}:incoming-hub/"
-          rsync -avz -e "${RSYNC_SSH}" \
-            --include 'index.html' \
-            --include 'assets/' --include 'assets/**' \
-            --include 'bass/' --include 'bass/**' \
-            --exclude '*' \
-            ./ "${DEST}"
+          # Explicit paths: filter-style --include/--exclude often skips nested dirs like bass/ on some rsync versions.
+          rsync -avz -e "${RSYNC_SSH}" ./index.html ./bass "${DEST}"
+          if [[ -d assets ]]; then
+            rsync -avz -e "${RSYNC_SSH}" ./assets "${DEST}"
+          fi
 
       - name: Apply on Droplet
         env:
