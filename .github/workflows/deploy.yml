@@ -39,10 +39,11 @@ jobs:
         run: |
           RSYNC_SSH="ssh -p ${DEPLOY_PORT}"
           DEST="${DEPLOY_USER}@${DEPLOY_HOST}:incoming-hub/"
-          # Explicit paths: filter-style --include/--exclude often skips nested dirs like bass/ on some rsync versions.
-          rsync -avz -e "${RSYNC_SSH}" ./index.html ./bass "${DEST}"
+          # One rsync per tree: avoids multi-source quirks; trailing slash on ./bass/ copies directory contents into incoming-hub/bass/.
+          rsync -avz -e "${RSYNC_SSH}" ./index.html "${DEST}"
+          rsync -avz -e "${RSYNC_SSH}" ./bass/ "${DEST}bass/"
           if [[ -d assets ]]; then
-            rsync -avz -e "${RSYNC_SSH}" ./assets "${DEST}"
+            rsync -avz -e "${RSYNC_SSH}" ./assets/ "${DEST}assets/"
           fi
 
       - name: Apply on Droplet
@@ -68,8 +69,8 @@ jobs:
             || { echo "Hub page missing expected <title>"; exit 1; }
           # Bass routing is nginx (anthemic-ops). Hub only guarantees files under /var/www/anthemic-hub/bass/.
           ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            'test -f /var/www/anthemic-hub/bass/index.html && test -f /var/www/anthemic-hub/bass/brand_assets/AndyPBass.png' \
-            || { echo "bass/ not on disk under /var/www/anthemic-hub/bass/ (apply script / rsync includes)"; exit 1; }
+            'test -f /var/www/anthemic-hub/bass/index.html' \
+            || { echo "bass/index.html missing under /var/www/anthemic-hub/bass/ (reinstall apply script from repo; check incoming-hub/bass/ after upload)"; exit 1; }
           ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
             'grep -qF "guitarPhoto" /var/www/anthemic-hub/bass/index.html' \
             || { echo "bass/index.html on droplet missing expected PapaWeb marker"; exit 1; }

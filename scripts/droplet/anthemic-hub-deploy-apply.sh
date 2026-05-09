@@ -21,10 +21,14 @@ if [[ ! -f "${INCOMING}/bass/index.html" ]]; then
   exit 1
 fi
 
-mkdir -p "${DEST}"
-_hub_src=( "${INCOMING}/index.html" "${INCOMING}/bass" )
-[[ -d "${INCOMING}/assets" ]] && _hub_src+=( "${INCOMING}/assets" )
-rsync -a --delete "${_hub_src[@]}" "${DEST}/"
+mkdir -p "${DEST}/bass"
+# Two-step rsync: multi-source rsync --delete has been observed to skip or clobber bass/ on the droplet.
+rsync -a "${INCOMING}/index.html" "${DEST}/"
+rsync -a --delete "${INCOMING}/bass/" "${DEST}/bass/"
+if [[ -d "${INCOMING}/assets" ]]; then
+  mkdir -p "${DEST}/assets"
+  rsync -a --delete "${INCOMING}/assets/" "${DEST}/assets/"
+fi
 
 chown -R www-data:www-data "${DEST}"
 

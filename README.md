@@ -26,6 +26,8 @@ Manual: **Actions → Deploy → Run workflow**.
 
 **`/bass/` 404 in the browser:** Hub CI only checks that **`/var/www/anthemic-hub/bass/`** is on disk after apply; **anthemic-ops** CI checks **`https://…/bass/`** (nginx `location /bass/` + `try_files` in `anthemic-hub.conf`). Deploy **hub** first so files exist, then **ops** (or reload nginx) so routing matches.
 
+**Hub deploy fails “bass missing on disk”:** Reinstall **`/usr/local/bin/anthemic-hub-deploy-apply.sh`** from this repo (the two-step `rsync` for `index.html` + `bass/`). Without that, an older script can leave **`/var/www/anthemic-hub/bass/`** empty even when **`incoming-hub/bass/`** is correct.
+
 ## One-time Droplet setup
 
 The Droplet already has a `deploy` user (set up for the Set List repo). The hub adds its own apply script so the same CI key can deploy independently.
