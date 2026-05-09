@@ -55,7 +55,11 @@ jobs:
           ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
             'sudo /usr/local/bin/anthemic-hub-deploy-apply.sh'
 
-      - name: Smoke test
+      - name: Smoke test (hub + bass files on droplet)
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
         run: |
           set -euo pipefail
           code_root=$(curl -sS -o /dev/null -w "%{http_code}" --retry 3 --retry-delay 2 "https://anthemic-developments.com/")
@@ -63,13 +67,10 @@ jobs:
           curl -sS --retry 3 --retry-delay 2 "https://anthemic-developments.com/" -o /tmp/anthemic-smoke-hub.html
           grep -qF '<title>Anthemic Developments</title>' /tmp/anthemic-smoke-hub.html \
             || { echo "Hub page missing expected <title>"; exit 1; }
-          code_bass=$(curl -sS --retry 3 --retry-delay 2 -o /tmp/anthemic-smoke-bass.html -w "%{http_code}" "https://anthemic-developments.com/bass/")
-          [[ "${code_bass}" == "200" ]] || { echo "/bass/ returned HTTP ${code_bass} (sync bass/ to the droplet + nginx try_files /bass/index.html)"; exit 1; }
-          if grep -qF '<title>Anthemic Developments</title>' /tmp/anthemic-smoke-bass.html; then
-            echo "/bass/ is serving the hub index (fix nginx try_files fallback to /bass/index.html)"
-            exit 1
-          fi
-          if ! grep -qE 'Bass Teacher|guitarPhoto' /tmp/anthemic-smoke-bass.html; then
-            echo "/bass/ response missing expected PapaWeb markers (Bass Teacher or guitarPhoto)"
-            exit 1
-          fi
+          # Bass routing is nginx (anthemic-ops). Hub only guarantees files under /var/www/anthemic-hub/bass/.
+          ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            'test -f /var/www/anthemic-hub/bass/index.html && test -f /var/www/anthemic-hub/bass/brand_assets/AndyPBass.png' \
+            || { echo "bass/ not on disk under /var/www/anthemic-hub/bass/ (apply script / rsync includes)"; exit 1; }
+          ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            'grep -qF "guitarPhoto" /var/www/anthemic-hub/bass/index.html' \
+            || { echo "bass/index.html on droplet missing expected PapaWeb marker"; exit 1; }
