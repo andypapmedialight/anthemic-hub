@@ -16,6 +16,10 @@ if [[ ! -f "${INCOMING}/index.html" ]]; then
   echo "anthemic-hub-deploy-apply: missing ${INCOMING}/index.html" >&2
   exit 1
 fi
+if [[ ! -f "${INCOMING}/bass/index.html" ]]; then
+  echo "anthemic-hub-deploy-apply: missing ${INCOMING}/bass/index.html (rsync must ship bass/ from repo)" >&2
+  exit 1
+fi
 
 mkdir -p "${DEST}"
 rsync -a --delete \

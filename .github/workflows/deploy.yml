@@ -58,7 +58,18 @@ jobs:
       - name: Smoke test
         run: |
           set -euo pipefail
-          curl -sfI --retry 3 --retry-delay 2 "https://anthemic-developments.com/" \
-            | head -1 | grep -q "200"
-          # Verify the title belongs to the hub (not Set List or another vhost)
-          curl -sf "https://anthemic-developments.com/" | grep -q '<title>Anthemic Developments</title>'
+          code_root=$(curl -sS -o /dev/null -w "%{http_code}" --retry 3 --retry-delay 2 "https://anthemic-developments.com/")
+          [[ "${code_root}" == "200" ]] || { echo "Hub / returned HTTP ${code_root}"; exit 1; }
+          curl -sS --retry 3 --retry-delay 2 "https://anthemic-developments.com/" -o /tmp/anthemic-smoke-hub.html
+          grep -qF '<title>Anthemic Developments</title>' /tmp/anthemic-smoke-hub.html \
+            || { echo "Hub page missing expected <title>"; exit 1; }
+          code_bass=$(curl -sS --retry 3 --retry-delay 2 -o /tmp/anthemic-smoke-bass.html -w "%{http_code}" "https://anthemic-developments.com/bass/")
+          [[ "${code_bass}" == "200" ]] || { echo "/bass/ returned HTTP ${code_bass} (sync bass/ to the droplet + nginx try_files /bass/index.html)"; exit 1; }
+          if grep -qF '<title>Anthemic Developments</title>' /tmp/anthemic-smoke-bass.html; then
+            echo "/bass/ is serving the hub index (fix nginx try_files fallback to /bass/index.html)"
+            exit 1
+          fi
+          if ! grep -qE 'Bass Teacher|guitarPhoto' /tmp/anthemic-smoke-bass.html; then
+            echo "/bass/ response missing expected PapaWeb markers (Bass Teacher or guitarPhoto)"
+            exit 1
+          fi

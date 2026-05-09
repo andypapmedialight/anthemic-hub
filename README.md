@@ -24,6 +24,8 @@ git push origin main
 
 Manual: **Actions → Deploy → Run workflow**.
 
+**`/bass/` 404 in production:** (1) nginx `location /bass/` must use `root /var/www/anthemic-hub` + `index index.html` (see **anthemic-ops** `anthemic-hub.conf`), not `alias` for the directory index. (2) Run a **hub** deploy so `/var/www/anthemic-hub/bass/index.html` exists; the apply script refuses to run without `incoming-hub/bass/index.html`. (3) **anthemic-ops** CI checks `/bass/` after nginx deploy - if the hub has never been deployed since adding `bass/`, run **hub** deploy first, then **ops** (or re-run ops after hub).
+
 ## One-time Droplet setup
 
 The Droplet already has a `deploy` user (set up for the Set List repo). The hub adds its own apply script so the same CI key can deploy independently.
