@@ -59,15 +59,6 @@ jobs:
             'test -f /home/deploy/incoming-hub/index.html && test -f /home/deploy/incoming-hub/bass/index.html' \
             || { echo "incoming-hub missing index.html or bass/index.html after upload"; exit 1; }
 
-      - name: Install latest apply script on Droplet
-        env:
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
-          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-        run: |
-          ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            'sudo install -o root -g root -m 755 /home/deploy/incoming-hub/anthemic-hub-deploy-apply.sh /usr/local/bin/anthemic-hub-deploy-apply.sh'
-
       - name: Apply on Droplet
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
