@@ -364,13 +364,15 @@
         var ymd = parseYmd(g.date);
         if (!ymd) return null;
         var where = [g.venue, g.city].filter(Boolean).join(", ");
+        var supportLine = g.support ? "<strong>Support</strong> · " + esc(g.support) : "";
         var roleLine = g.role ? "<strong>Role</strong> · " + esc(g.role) : "";
         var metaParts = [];
         if (where) metaParts.push("<strong>Where</strong> · " + esc(where));
+        if (supportLine) metaParts.push(supportLine);
         if (roleLine) metaParts.push(roleLine);
         var meta = metaParts.length ? "<p class=\"gig-meta\">" + metaParts.join("<br />") + "</p>" : "";
         var link = (g.link && String(g.link).trim())
-          ? "<div class=\"gig-actions\"><a href=\"" + esc(g.link) + "\" target=\"_blank\" rel=\"noopener noreferrer\">Link / tickets →</a></div>"
+          ? "<div class=\"gig-actions\"><a href=\"" + esc(g.link) + "\" target=\"_blank\" rel=\"noopener noreferrer\">Event details →</a></div>"
           : "";
         var badge = upcoming ? "<span class=\"badge upcoming\">Upcoming</span>" : "<span class=\"badge past\">Past</span>";
         var cls = "gig-card" + (upcoming ? " gig-card--upcoming" : "");
