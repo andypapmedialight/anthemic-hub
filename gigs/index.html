@@ -268,46 +268,6 @@
       background: var(--bg-card);
       color: var(--fg);
     }
-    details.howto {
-      margin: 0 0 28px;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 4px 16px 14px;
-      background: var(--bg-card);
-    }
-    details.howto summary {
-      cursor: pointer;
-      font-family: var(--font-ui);
-      font-weight: 600;
-      font-size: 14px;
-      padding: 10px 0;
-      color: var(--fg);
-    }
-    details.howto ol {
-      margin: 8px 0 12px;
-      padding-left: 1.25rem;
-      color: var(--fg-dim);
-      font-size: 0.92rem;
-    }
-    details.howto li { margin: 8px 0; }
-    details.howto code {
-      font-size: 12px;
-      padding: 2px 6px;
-      border-radius: 4px;
-      background: rgba(127, 127, 127, 0.12);
-      color: var(--fg);
-    }
-    details.howto pre {
-      margin: 0;
-      padding: 12px 14px;
-      border-radius: 8px;
-      overflow: auto;
-      font-size: 12px;
-      line-height: 1.45;
-      background: rgba(0, 0, 0, 0.25);
-      border: 1px solid var(--border);
-    }
-    html[data-theme="light"] details.howto pre { background: rgba(0, 0, 0, 0.04); }
   </style>
 </head>
 <body>
@@ -328,30 +288,7 @@
     </div>
 
     <h1>Gig calendar</h1>
-    <p class="lede">Upcoming shows first, then history. Data lives in a single JSON file in the repo so you can add rows without touching HTML.</p>
-
-    <details class="howto">
-      <summary>How to add or edit a gig</summary>
-      <ol>
-        <li>Open <code>anthemic-hub/gigs/gigs.json</code> in this repository.</li>
-        <li>Add an object to the <code>gigs</code> array (or edit an existing one). Use <code>date</code> as <code>YYYY-MM-DD</code> in your local calendar sense.</li>
-        <li>Commit and push; deploy copies <code>gigs/</code> to the server with the hub.</li>
-      </ol>
-      <p class="lede" style="margin-bottom:8px;font-size:0.88rem;">Fields: <code>date</code> (required), <code>title</code> (required), <code>venue</code>, <code>city</code>, <code>time</code> (e.g. <code>20:30</code>), <code>role</code>, <code>link</code> (tickets or promo URL, optional).</p>
-      <pre>{
-  "gigs": [
-    {
-      "date": "2026-09-05",
-      "title": "Your band or bill name",
-      "venue": "Venue name",
-      "city": "Melbourne",
-      "time": "20:00",
-      "role": "Bass",
-      "link": "https://example.com/tickets"
-    }
-  ]
-}</pre>
-    </details>
+    <p class="lede">Upcoming first, then past dates.</p>
 
     <p id="load-err" class="load-err" hidden></p>
 
@@ -475,14 +412,14 @@
 
           upcomingEl.innerHTML = upcoming.length
             ? upcoming.map(function (g) { return buildCard(g, true); }).join("")
-            : "<p class=\"empty\">No upcoming gigs listed. Add one in <code>gigs/gigs.json</code>.</p>";
+            : "<p class=\"empty\">No upcoming gigs.</p>";
           pastEl.innerHTML = past.length
             ? past.map(function (g) { return buildCard(g, false); }).join("")
             : "<p class=\"empty\">No past gigs yet.</p>";
         })
         .catch(function () {
           errEl.hidden = false;
-          errEl.textContent = "Could not load gigs.json. If you opened this file from disk, run a local server from the anthemic-hub folder and open /gigs/.";
+          errEl.textContent = "Could not load the gig list.";
           upcomingEl.innerHTML = "";
           pastEl.innerHTML = "";
         });
