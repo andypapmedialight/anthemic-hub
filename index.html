@@ -233,6 +233,66 @@
       text-transform: none;
     }
     .interest-bar + .hub-section .section-heading { margin-top: 20px; }
+    .subheading {
+      font-family: var(--font-ui);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--fg-dim);
+      margin: 0 2px 8px;
+    }
+    .photo-gallery-wrap {
+      margin-top: 22px;
+      padding: 0 2px 4px;
+    }
+    .photo-gallery-wrap[hidden] {
+      display: none !important;
+    }
+    .photo-gallery-lede {
+      margin: 0 0 14px;
+      font-size: 0.88rem;
+      color: var(--fg-dim);
+      line-height: 1.5;
+      max-width: 62ch;
+    }
+    .photo-gallery {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+      gap: 12px;
+    }
+    .photo-gallery li {
+      margin: 0;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: var(--bg-wash);
+      aspect-ratio: 1;
+      transition: border-color 140ms ease, box-shadow 140ms ease;
+    }
+    .photo-gallery li:hover {
+      border-color: var(--border-strong);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+    html[data-theme="light"] .photo-gallery li:hover {
+      box-shadow: 0 4px 18px rgba(20, 24, 32, 0.08);
+    }
+    .photo-gallery a {
+      display: block;
+      width: 100%;
+      height: 100%;
+      line-height: 0;
+    }
+    .photo-gallery img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      display: block;
+    }
     .section-heading .sec-num {
       font-weight: 400;
       color: var(--accent);
@@ -553,6 +613,7 @@
                 Cinnamon (pictured) is the dog who runs quality assurance on morale.</p>
               <div class="card-profile-actions">
                 <a href="https://www.linkedin.com/in/andy-papadopoulos/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+                <a href="https://anthemstothefall.bandcamp.com/" target="_blank" rel="noopener noreferrer">Bandcamp</a>
                 <a href="/brain/">Brain map</a>
               </div>
             </div>
@@ -599,7 +660,35 @@
           <div class="title">Bass coaching</div>
           <div class="desc">Lessons, resources, and booking for bass students.</div>
         </a>
+
+        <a class="card card--out" href="https://anthemstothefall.bandcamp.com/" target="_blank" rel="noopener noreferrer" data-interests="music creative personal">
+          <span class="badge external">External &nearr;</span>
+          <div class="title">Anthems to the Fall — Bandcamp</div>
+          <div class="desc">Solo recordings and releases on Bandcamp: Melbourne-based project with languid laments and soulful tunes — streaming and downloads.</div>
+        </a>
       </section>
+
+      <div id="photo-gallery-wrap" class="photo-gallery-wrap">
+        <h3 class="subheading">Photo gallery</h3>
+        <p class="photo-gallery-lede">Gigs, studio, and behind the scenes. Click a thumbnail to open the full image.</p>
+        <ul id="photo-gallery" class="photo-gallery" aria-label="Photo gallery">
+          <li>
+            <a href="/assets/gallery/20161212_AndyPap_0001.jpg" target="_blank" rel="noopener noreferrer">
+              <img src="/assets/gallery/20161212_AndyPap_0001.jpg" alt="Andy Papadopoulos portrait" width="640" height="640" loading="lazy" decoding="async" data-gallery-img />
+            </a>
+          </li>
+          <li>
+            <a href="/assets/gallery/AnthemsPromo.JPG" target="_blank" rel="noopener noreferrer">
+              <img src="/assets/gallery/AnthemsPromo.JPG" alt="Anthems to the Fall promo" width="640" height="640" loading="lazy" decoding="async" data-gallery-img />
+            </a>
+          </li>
+          <li>
+            <a href="/assets/gallery/cinnamon.jpg" target="_blank" rel="noopener noreferrer">
+              <img src="/assets/gallery/cinnamon.jpg" alt="Cinnamon the dog" width="640" height="640" loading="lazy" decoding="async" data-gallery-img />
+            </a>
+          </li>
+        </ul>
+      </div>
       </div>
 
       <div class="hub-section" data-hub-section="work">
@@ -750,6 +839,35 @@
               setInterest(interestSelect.value);
             });
           }
+        })();
+      </script>
+      <script>
+        (function () {
+          var wrap = document.getElementById("photo-gallery-wrap");
+          var ul = document.getElementById("photo-gallery");
+          if (!wrap || !ul) return;
+          function hideIfAllBroken() {
+            var items = ul.querySelectorAll("li");
+            var visible = 0;
+            for (var i = 0; i < items.length; i++) {
+              if (items[i].style.display === "none") continue;
+              if (items[i].hasAttribute("hidden")) continue;
+              visible++;
+            }
+            if (visible === 0) wrap.setAttribute("hidden", "");
+          }
+          ul.querySelectorAll("img[data-gallery-img]").forEach(function (img) {
+            img.addEventListener("error", function () {
+              var li = img.closest("li");
+              if (li) li.style.display = "none";
+              hideIfAllBroken();
+            });
+            if (img.complete && img.naturalWidth === 0) {
+              var li2 = img.closest("li");
+              if (li2) li2.style.display = "none";
+              hideIfAllBroken();
+            }
+          });
         })();
       </script>
     </div>
