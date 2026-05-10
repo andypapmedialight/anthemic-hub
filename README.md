@@ -6,11 +6,21 @@ This repo owns the static landing page at `/` and the **bass coaching** mini-sit
 
 ## Local edit and preview
 
-It is just plain HTML/CSS, no build step. Open `index.html` directly in a browser, or:
+It is just plain HTML/CSS, no build step. Open `index.html` directly in a browser for a quick look at the landing page only; subpaths such as `/bass/` need a real HTTP server.
+
+From the repo root:
 
 ```bash
-python -m http.server 8000
-# then visit http://localhost:8000
+./scripts/serve-local.sh
+```
+
+Then open **http://127.0.0.1:8000/**. Use another port with `PORT=9000 ./scripts/serve-local.sh`.
+
+Equivalent without the script:
+
+```bash
+cd "$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+python3 -m http.server -b 127.0.0.1 8000
 ```
 
 ## Deploy

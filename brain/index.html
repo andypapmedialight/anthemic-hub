@@ -220,6 +220,14 @@
       color: var(--accent);
     }
     .zone p { margin: 0 0 10px; color: var(--fg-dim); font-size: 0.88rem; }
+    .zone p.zone-neuro {
+      font-size: 0.8rem;
+      line-height: 1.5;
+      color: var(--fg-dim);
+      opacity: 0.95;
+      margin-bottom: 8px;
+    }
+    .zone p.zone-neuro strong { color: var(--fg); font-weight: 600; }
     .zone ul { margin: 0; padding-left: 1.1rem; }
     .zone li { margin: 6px 0; }
     .zone a { font-weight: 600; }
@@ -279,11 +287,22 @@
         interaction-prompt="none"
         ar-modes="webxr scene-viewer quick-look"
       >
-        <!-- Positions are in metres in the model’s coordinate space; tweak data-position / data-normal after you see how this GLB sits. -->
-        <button type="button" class="brain-hotspot" data-zone="gigs" slot="hotspot-gigs" data-position="0.14 0.06 0.04" data-normal="1 0 0.2">Gigs</button>
-        <button type="button" class="brain-hotspot" data-zone="work" slot="hotspot-work" data-position="0.05 0.16 0.07" data-normal="0 1 0.35">Work</button>
-        <button type="button" class="brain-hotspot" data-zone="reading" slot="hotspot-reading" data-position="-0.12 0.02 0.06" data-normal="-1 0.15 0.25">Reading</button>
-        <button type="button" class="brain-hotspot" data-zone="writing" slot="hotspot-writing" data-position="0.06 0.04 -0.11" data-normal="0.2 0 -1">Writing</button>
+        <!--
+          Hotspots (model-viewer: metres in the GLB frame). Lobes are approximate;
+          verify against your mesh + camera. Neuro references (overview level):
+          • Gigs / music: superior temporal gyrus, auditory belt — listening, pitch, rhythm;
+            performance adds motor/premotor, SMA, basal ganglia, cerebellum (not all visible).
+            e.g. Nat Rev Neurosci overview of music in the brain; PNAS perception–pleasure substrates.
+          • Work / planning: dorsolateral & lateral prefrontal cortex — goals, rules, working memory;
+            ACC for monitoring. e.g. Neuropsychopharmacology reviews on PFC & cognitive control.
+          • Reading: VWFA occipito-temporal, angular gyrus — integration with meaning.
+          • Writing: IFG (Broca) BA44/45, parietal IPS/SMG, motor hand area — production + graphomotor.
+            e.g. meta-analyses on written word production (Frontiers / NeuroImage literature).
+        -->
+        <button type="button" class="brain-hotspot" data-zone="gigs" slot="hotspot-gigs" title="Superior temporal / auditory cortex — listening &amp; rhythm" data-position="0.15 0.02 0.05" data-normal="0.92 -0.12 0.35">Gigs</button>
+        <button type="button" class="brain-hotspot" data-zone="work" slot="hotspot-work" title="Prefrontal cortex — planning &amp; executive control" data-position="0.04 0.17 0.08" data-normal="0.15 0.92 0.28">Work</button>
+        <button type="button" class="brain-hotspot" data-zone="reading" slot="hotspot-reading" title="Parieto-temporal — reading &amp; visual language" data-position="-0.11 0.06 0.02" data-normal="-0.88 0.35 0.2">Reading</button>
+        <button type="button" class="brain-hotspot" data-zone="writing" slot="hotspot-writing" title="Inferior frontal — language production &amp; writing" data-position="0.07 -0.02 -0.1" data-normal="0.35 -0.25 -0.9">Writing</button>
       </model-viewer>
       <p class="hint">Drag to orbit · scroll to zoom · hotspots jump to the matching panel</p>
     </div>
@@ -293,10 +312,11 @@
         <h1>Brain map</h1>
         <span class="page-status" role="status">In progress</span>
       </div>
-      <p class="lede">Each lobe-style anchor is a doorway into a part of the site. Adjust hotspot coordinates in this file once you have settled on a camera angle you like.</p>
+      <p class="lede">Hotspots sit on regions that roughly match what neuroscience links to each theme. Coordinates are in the GLB’s space — nudge <code>data-position</code> if your camera angle changes.</p>
       <div class="zones">
         <section class="zone" id="zone-gigs" data-zone="gigs">
           <h2>Gigs</h2>
+          <p class="zone-neuro">Listening, pitch, and rhythm lean heavily on the <strong>auditory cortex</strong> and <strong>superior temporal gyrus</strong> (including planum temporale / polare); performing also recruits motor, premotor, and basal circuits.</p>
           <p>Set lists, bass coaching, and performance tools.</p>
           <ul>
             <li><a href="/gigs/">Gig calendar</a> (upcoming &amp; past)</li>
@@ -306,6 +326,7 @@
         </section>
         <section class="zone" id="zone-work" data-zone="work">
           <h2>Work</h2>
+          <p class="zone-neuro">Planning, prioritising, and “rational” goal-directed control are tied to <strong>prefrontal</strong> networks — especially <strong>dorsolateral PFC</strong> — with support from parietal and cingulate systems for attention and conflict monitoring.</p>
           <p>Day job and professional profile.</p>
           <ul>
             <li><a href="https://meccamedialight.com.au" target="_blank" rel="noopener noreferrer">Mecca Medialight</a></li>
@@ -314,6 +335,7 @@
         </section>
         <section class="zone" id="zone-reading" data-zone="reading">
           <h2>Reading</h2>
+          <p class="zone-neuro">Visual word form and comprehension involve <strong>occipito-temporal</strong> cortex (including the “visual word form area”) and link forward to temporal and <strong>angular gyrus</strong> regions that bind meaning to text.</p>
           <p>Shelf, articles, and long-form tabs you want to keep visible.</p>
           <ul>
             <li><a href="/personal/">Personal site</a> (placeholder hub card)</li>
@@ -321,6 +343,7 @@
         </section>
         <section class="zone" id="zone-writing" data-zone="writing">
           <h2>Writing</h2>
+          <p class="zone-neuro">Written production recruits <strong>left inferior frontal</strong> cortex (Broca’s area, BA44/45) for spelling and sentence assembly, with <strong>parietal</strong> and motor areas for typing or handwriting.</p>
           <p>Essays, notes, and publishing.</p>
           <ul>
             <li><a href="/personal/">Personal site — writing</a></li>
