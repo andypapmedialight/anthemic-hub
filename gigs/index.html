@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gig calendar — Anthemic Developments</title>
+  <meta name="description" content="Upcoming and past gigs." />
+  <link rel="preconnect" href="https://fonts.bunny.net" />
+  <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700&display=swap" rel="stylesheet" />
+  <script>
+    (function () {
+      var key = "anthemic-hub-theme";
+      var r = document.documentElement;
+      var v;
+      try { v = localStorage.getItem(key); } catch (e) { v = null; }
+      if (v === "light" || v === "dark") r.setAttribute("data-theme", v);
+      else r.setAttribute("data-theme", window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    })();
+  </script>
+  <style>
+    html {
+      color-scheme: dark;
+      --bg: #0e1015;
+      --bg-card: #161b24;
+      --bg-card-hover: #1c2330;
+      --fg: #eceef4;
+      --fg-dim: #949db0;
+      --accent: #c9a227;
+      --mml-blue: #6b9cff;
+      --border: #2a3140;
+      --border-strong: #3d4659;
+      --accent-live: var(--mml-blue);
+      --accent-live-soft: rgba(107, 156, 255, 0.14);
+      --card-live-border: rgba(107, 156, 255, 0.35);
+      --card-live-title: #f2f5fc;
+      --badge-live-fg: #b8d4ff;
+      --badge-live-border: rgba(107, 156, 255, 0.42);
+      --badge-accent-border: rgba(201, 162, 39, 0.38);
+      --badge-past-bg: rgba(90, 99, 119, 0.12);
+      --badge-past-fg: #a8b0c4;
+      --badge-past-border: rgba(90, 99, 119, 0.35);
+      --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+      --font-body: "Figtree", ui-sans-serif, system-ui, sans-serif;
+      --font-ui: "Figtree", ui-sans-serif, system-ui, sans-serif;
+      --theme-chip-bg: rgba(255, 255, 255, 0.06);
+      --theme-chip-border: var(--border);
+      --theme-chip-active-bg: rgba(107, 156, 255, 0.18);
+      --theme-chip-active-fg: #e8eeff;
+    }
+    html[data-theme="light"] {
+      color-scheme: light;
+      --bg: #f4f6fb;
+      --bg-card: #ffffff;
+      --bg-card-hover: #e8ecf6;
+      --fg: #141820;
+      --fg-dim: #5a6377;
+      --accent: #9a7416;
+      --mml-blue: #2563eb;
+      --border: #d5dbe8;
+      --border-strong: #b8c2d4;
+      --accent-live: #2563eb;
+      --accent-live-soft: rgba(37, 99, 235, 0.1);
+      --card-live-border: rgba(37, 99, 235, 0.35);
+      --card-live-title: #0f172a;
+      --badge-live-fg: #1e40af;
+      --badge-live-border: rgba(37, 99, 235, 0.35);
+      --badge-accent-border: rgba(154, 116, 22, 0.35);
+      --badge-past-bg: rgba(90, 99, 119, 0.1);
+      --badge-past-fg: #4b5568;
+      --badge-past-border: rgba(90, 99, 119, 0.25);
+      --theme-chip-bg: rgba(255, 255, 255, 0.7);
+      --theme-chip-active-bg: rgba(37, 99, 235, 0.15);
+      --theme-chip-active-fg: #0f172a;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body {
+      background-color: var(--bg);
+      background-image:
+        linear-gradient(165deg, rgba(107, 156, 255, 0.06) 0%, transparent 42%),
+        linear-gradient(158deg, rgba(201, 162, 39, 0.04) 0%, transparent 36%),
+        repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(236, 238, 244, 0.022) 27px, rgba(236, 238, 244, 0.022) 28px);
+      color: var(--fg);
+      font-family: var(--font-body);
+      font-size: 16px;
+      line-height: 1.55;
+      min-height: 100vh;
+    }
+    html[data-theme="light"] body {
+      background-image:
+        linear-gradient(165deg, rgba(37, 99, 235, 0.06) 0%, transparent 42%),
+        linear-gradient(158deg, rgba(154, 116, 22, 0.05) 0%, transparent 36%),
+        repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(20, 24, 32, 0.06) 27px, rgba(20, 24, 32, 0.06) 28px);
+    }
+    .wrap { width: 100%; max-width: 720px; margin: 0 auto; padding: 0 28px 48px; }
+    .header-top {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      padding: 16px 28px 0;
+      max-width: 1120px;
+      margin: 0 auto;
+    }
+    .theme-group {
+      display: inline-flex;
+      border: 1px solid var(--theme-chip-border);
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--theme-chip-bg);
+    }
+    .theme-btn {
+      font-family: var(--font-ui);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      padding: 8px 14px;
+      margin: 0;
+      border: none;
+      background: transparent;
+      color: var(--fg-dim);
+      cursor: pointer;
+    }
+    .theme-btn[aria-pressed="true"] {
+      background: var(--theme-chip-active-bg);
+      color: var(--theme-chip-active-fg);
+    }
+    .theme-btn + .theme-btn { border-left: 1px solid var(--theme-chip-border); }
+    .nav-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 8px 0 28px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 28px;
+    }
+    .nav-row a {
+      color: var(--fg-dim);
+      text-decoration: none;
+      font-family: var(--font-ui);
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .nav-row a:hover { color: var(--fg); }
+    .nav-row .tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 18px;
+      justify-content: flex-end;
+    }
+    .nav-row .tools a { color: var(--accent-live); }
+    h1 {
+      margin: 0 0 10px;
+      font-family: var(--font-display);
+      font-size: clamp(1.75rem, 3.5vw, 2.25rem);
+      font-weight: 600;
+      letter-spacing: -0.03em;
+    }
+    .lede {
+      margin: 0 0 24px;
+      color: var(--fg-dim);
+      font-size: 1.02rem;
+    }
+    .section-heading {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin: 32px 0 14px;
+      font-family: var(--font-ui);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      color: var(--fg-dim);
+    }
+    .section-heading:first-of-type { margin-top: 8px; }
+    .section-heading .sec-num { font-weight: 400; color: var(--accent); font-variant-numeric: tabular-nums; }
+    .section-heading .sec-title { color: var(--fg); }
+    .gig-list { display: flex; flex-direction: column; gap: 12px; }
+    .gig-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px 20px 16px 8px;
+      padding: 18px 20px 20px;
+      transition: background 140ms ease, border-color 140ms ease;
+    }
+    .gig-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-strong);
+    }
+    .gig-card--upcoming {
+      border-color: var(--card-live-border);
+      box-shadow: inset 0 3px 0 0 var(--accent-live);
+    }
+    .gig-card .row-top {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px 12px;
+      margin-bottom: 8px;
+    }
+    .badge {
+      font-family: var(--font-ui);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 4px 9px;
+      border-radius: 4px;
+    }
+    .badge.upcoming {
+      background: var(--accent-live-soft);
+      color: var(--badge-live-fg);
+      border: 1px solid var(--badge-live-border);
+    }
+    .badge.past {
+      background: var(--badge-past-bg);
+      color: var(--badge-past-fg);
+      border: 1px solid var(--badge-past-border);
+    }
+    .gig-date {
+      font-family: var(--font-ui);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--fg-dim);
+    }
+    .gig-title {
+      margin: 0 0 6px;
+      font-family: var(--font-ui);
+      font-size: 1.12rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--card-live-title);
+    }
+    .gig-card:not(.gig-card--upcoming) .gig-title { color: var(--fg); }
+    .gig-meta {
+      margin: 0;
+      color: var(--fg-dim);
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+    .gig-meta strong { color: var(--fg); font-weight: 500; }
+    .gig-actions { margin-top: 12px; }
+    .gig-actions a {
+      display: inline-block;
+      font-family: var(--font-ui);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent-live);
+      text-decoration: none;
+    }
+    .gig-actions a:hover { text-decoration: underline; text-underline-offset: 3px; }
+    .empty {
+      margin: 0;
+      padding: 18px 16px;
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      color: var(--fg-dim);
+      font-size: 0.95rem;
+      text-align: center;
+    }
+    .load-err {
+      padding: 16px 18px;
+      border-radius: 12px;
+      border: 1px solid var(--border-strong);
+      background: var(--bg-card);
+      color: var(--fg);
+    }
+    details.howto {
+      margin: 0 0 28px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 4px 16px 14px;
+      background: var(--bg-card);
+    }
+    details.howto summary {
+      cursor: pointer;
+      font-family: var(--font-ui);
+      font-weight: 600;
+      font-size: 14px;
+      padding: 10px 0;
+      color: var(--fg);
+    }
+    details.howto ol {
+      margin: 8px 0 12px;
+      padding-left: 1.25rem;
+      color: var(--fg-dim);
+      font-size: 0.92rem;
+    }
+    details.howto li { margin: 8px 0; }
+    details.howto code {
+      font-size: 12px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(127, 127, 127, 0.12);
+      color: var(--fg);
+    }
+    details.howto pre {
+      margin: 0;
+      padding: 12px 14px;
+      border-radius: 8px;
+      overflow: auto;
+      font-size: 12px;
+      line-height: 1.45;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--border);
+    }
+    html[data-theme="light"] details.howto pre { background: rgba(0, 0, 0, 0.04); }
+  </style>
+</head>
+<body>
+  <div class="header-top">
+    <div class="theme-group" role="group" aria-label="Colour theme">
+      <button type="button" class="theme-btn" id="theme-dark" aria-pressed="false">Dark</button>
+      <button type="button" class="theme-btn" id="theme-light" aria-pressed="false">Light</button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="nav-row">
+      <a href="../index.html">← Hub</a>
+      <div class="tools">
+        <a href="/setlist/">Set List Generator</a>
+        <a href="/bass/">Bass coaching</a>
+      </div>
+    </div>
+
+    <h1>Gig calendar</h1>
+    <p class="lede">Upcoming shows first, then history. Data lives in a single JSON file in the repo so you can add rows without touching HTML.</p>
+
+    <details class="howto">
+      <summary>How to add or edit a gig</summary>
+      <ol>
+        <li>Open <code>anthemic-hub/gigs/gigs.json</code> in this repository.</li>
+        <li>Add an object to the <code>gigs</code> array (or edit an existing one). Use <code>date</code> as <code>YYYY-MM-DD</code> in your local calendar sense.</li>
+        <li>Commit and push; deploy copies <code>gigs/</code> to the server with the hub.</li>
+      </ol>
+      <p class="lede" style="margin-bottom:8px;font-size:0.88rem;">Fields: <code>date</code> (required), <code>title</code> (required), <code>venue</code>, <code>city</code>, <code>time</code> (e.g. <code>20:30</code>), <code>role</code>, <code>link</code> (tickets or promo URL, optional).</p>
+      <pre>{
+  "gigs": [
+    {
+      "date": "2026-09-05",
+      "title": "Your band or bill name",
+      "venue": "Venue name",
+      "city": "Melbourne",
+      "time": "20:00",
+      "role": "Bass",
+      "link": "https://example.com/tickets"
+    }
+  ]
+}</pre>
+    </details>
+
+    <p id="load-err" class="load-err" hidden></p>
+
+    <h2 class="section-heading"><span class="sec-num" aria-hidden="true">01</span> <span class="sec-title">Upcoming</span></h2>
+    <div id="gigs-upcoming" class="gig-list" aria-live="polite"></div>
+
+    <h2 class="section-heading"><span class="sec-num" aria-hidden="true">02</span> <span class="sec-title">Past</span></h2>
+    <div id="gigs-past" class="gig-list" aria-live="polite"></div>
+  </div>
+
+  <script>
+    (function () {
+      var key = "anthemic-hub-theme";
+      var root = document.documentElement;
+      function syncThemeButtons() {
+        var t = root.getAttribute("data-theme") || "dark";
+        var d = document.getElementById("theme-dark");
+        var l = document.getElementById("theme-light");
+        if (d) d.setAttribute("aria-pressed", t === "dark" ? "true" : "false");
+        if (l) l.setAttribute("aria-pressed", t === "light" ? "true" : "false");
+      }
+      function setTheme(theme) {
+        if (theme !== "light" && theme !== "dark") return;
+        root.setAttribute("data-theme", theme);
+        try { localStorage.setItem(key, theme); } catch (e) {}
+        syncThemeButtons();
+      }
+      document.getElementById("theme-dark").addEventListener("click", function () { setTheme("dark"); });
+      document.getElementById("theme-light").addEventListener("click", function () { setTheme("light"); });
+      syncThemeButtons();
+    })();
+  </script>
+  <script>
+    (function () {
+      function todayYmd() {
+        var d = new Date();
+        var y = d.getFullYear();
+        var m = String(d.getMonth() + 1).padStart(2, "0");
+        var day = String(d.getDate()).padStart(2, "0");
+        return y + "-" + m + "-" + day;
+      }
+
+      function parseYmd(s) {
+        if (typeof s !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return null;
+        var p = s.split("-");
+        return { y: +p[0], m: +p[1], d: +p[2], raw: s };
+      }
+
+      function compareYmd(a, b) {
+        if (a.raw < b.raw) return -1;
+        if (a.raw > b.raw) return 1;
+        return 0;
+      }
+
+      function formatWhen(ymd, timeStr) {
+        var d = new Date(ymd.y, ymd.m - 1, ymd.d);
+        var opts = { weekday: "short", day: "numeric", month: "long", year: "numeric" };
+        var s = d.toLocaleDateString("en-AU", opts);
+        if (timeStr && String(timeStr).trim()) s += " · " + String(timeStr).trim();
+        return s;
+      }
+
+      function esc(s) {
+        if (s == null) return "";
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function buildCard(g, upcoming) {
+        var ymd = parseYmd(g.date);
+        if (!ymd) return null;
+        var where = [g.venue, g.city].filter(Boolean).join(", ");
+        var roleLine = g.role ? "<strong>Role</strong> · " + esc(g.role) : "";
+        var metaParts = [];
+        if (where) metaParts.push("<strong>Where</strong> · " + esc(where));
+        if (roleLine) metaParts.push(roleLine);
+        var meta = metaParts.length ? "<p class=\"gig-meta\">" + metaParts.join("<br />") + "</p>" : "";
+        var link = (g.link && String(g.link).trim())
+          ? "<div class=\"gig-actions\"><a href=\"" + esc(g.link) + "\" target=\"_blank\" rel=\"noopener noreferrer\">Link / tickets →</a></div>"
+          : "";
+        var badge = upcoming ? "<span class=\"badge upcoming\">Upcoming</span>" : "<span class=\"badge past\">Past</span>";
+        var cls = "gig-card" + (upcoming ? " gig-card--upcoming" : "");
+        return (
+          "<article class=\"" + cls + "\">" +
+            "<div class=\"row-top\">" + badge + "<span class=\"gig-date\">" + esc(formatWhen(ymd, g.time)) + "</span></div>" +
+            "<h3 class=\"gig-title\">" + esc(g.title) + "</h3>" +
+            meta +
+            link +
+          "</article>"
+        );
+      }
+
+      var upcomingEl = document.getElementById("gigs-upcoming");
+      var pastEl = document.getElementById("gigs-past");
+      var errEl = document.getElementById("load-err");
+
+      fetch("gigs.json", { cache: "no-store" })
+        .then(function (r) {
+          if (!r.ok) throw new Error("HTTP " + r.status);
+          return r.json();
+        })
+        .then(function (data) {
+          var list = data && Array.isArray(data.gigs) ? data.gigs : [];
+          var today = todayYmd();
+          var upcoming = [];
+          var past = [];
+          for (var i = 0; i < list.length; i++) {
+            var g = list[i];
+            if (!g || typeof g !== "object") continue;
+            if (!g.date || !g.title) continue;
+            var ymd = parseYmd(g.date);
+            if (!ymd) continue;
+            if (g.date >= today) upcoming.push(g);
+            else past.push(g);
+          }
+          upcoming.sort(function (a, b) { return compareYmd(parseYmd(a.date), parseYmd(b.date)); });
+          past.sort(function (a, b) { return compareYmd(parseYmd(b.date), parseYmd(a.date)); });
+
+          upcomingEl.innerHTML = upcoming.length
+            ? upcoming.map(function (g) { return buildCard(g, true); }).join("")
+            : "<p class=\"empty\">No upcoming gigs listed. Add one in <code>gigs/gigs.json</code>.</p>";
+          pastEl.innerHTML = past.length
+            ? past.map(function (g) { return buildCard(g, false); }).join("")
+            : "<p class=\"empty\">No past gigs yet.</p>";
+        })
+        .catch(function () {
+          errEl.hidden = false;
+          errEl.textContent = "Could not load gigs.json. If you opened this file from disk, run a local server from the anthemic-hub folder and open /gigs/.";
+          upcomingEl.innerHTML = "";
+          pastEl.innerHTML = "";
+        });
+    })();
+  </script>
+</body>
+</html>

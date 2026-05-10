@@ -1,0 +1,31 @@
+{
+  "gigs": [
+    {
+      "date": "2026-05-22",
+      "title": "Cam Butler — World Forever album launch",
+      "venue": "Melbourne Town Hall",
+      "city": "Melbourne",
+      "time": "",
+      "role": "Bass",
+      "link": ""
+    },
+    {
+      "date": "2026-06-13",
+      "title": "The Telecaster Diaries",
+      "venue": "Union Hotel, Union St",
+      "city": "Brunswick",
+      "time": "",
+      "role": "Bass",
+      "link": ""
+    },
+    {
+      "date": "2026-08-16",
+      "title": "The Telecaster Diaries",
+      "venue": "Standard Hotel",
+      "city": "Melbourne",
+      "time": "",
+      "role": "Bass",
+      "link": ""
+    }
+  ]
+}

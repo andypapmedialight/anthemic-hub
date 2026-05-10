@@ -6,6 +6,8 @@
 #   index.html        - the hub landing page
 #   assets/           - optional folder of static assets
 #   bass/             - bass coaching static site (e.g. bass/index.html)
+#   brain/            - 3D brain hub page (e.g. brain/index.html)
+#   gigs/             - gig calendar (gigs/index.html + gigs.json)
 #
 set -euo pipefail
 
@@ -20,11 +22,21 @@ if [[ ! -f "${INCOMING}/bass/index.html" ]]; then
   echo "anthemic-hub-deploy-apply: missing ${INCOMING}/bass/index.html (rsync must ship bass/ from repo)" >&2
   exit 1
 fi
+if [[ ! -f "${INCOMING}/brain/index.html" ]]; then
+  echo "anthemic-hub-deploy-apply: missing ${INCOMING}/brain/index.html (rsync must ship brain/ from repo)" >&2
+  exit 1
+fi
+if [[ ! -f "${INCOMING}/gigs/index.html" ]] || [[ ! -f "${INCOMING}/gigs/gigs.json" ]]; then
+  echo "anthemic-hub-deploy-apply: missing gigs/index.html or gigs/gigs.json (rsync must ship gigs/ from repo)" >&2
+  exit 1
+fi
 
-mkdir -p "${DEST}/bass"
+mkdir -p "${DEST}/bass" "${DEST}/brain" "${DEST}/gigs"
 # Two-step rsync: multi-source rsync --delete has been observed to skip or clobber bass/ on the droplet.
 rsync -a "${INCOMING}/index.html" "${DEST}/"
 rsync -a --delete "${INCOMING}/bass/" "${DEST}/bass/"
+rsync -a --delete "${INCOMING}/brain/" "${DEST}/brain/"
+rsync -a --delete "${INCOMING}/gigs/" "${DEST}/gigs/"
 if [[ -d "${INCOMING}/assets" ]]; then
   mkdir -p "${DEST}/assets"
   rsync -a --delete "${INCOMING}/assets/" "${DEST}/assets/"
