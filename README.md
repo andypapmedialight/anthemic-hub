@@ -80,7 +80,7 @@ Same four as the Set List repo (the same key works because the `deploy` user tru
 
 - `index.html` — the landing page
 - `bass/` — bass coaching static site (`/bass/`, entry `bass/index.html` plus `bass/brand_assets/` including **`AndyPBass.png`** - commit this binary or CI/deploy will ship HTML without the hero image); sync from PapaWeb when the site changes
-- `assets/` — optional images / OG card / icons (served at `/assets/...`). The hub **Who am I** card uses **`assets/andy-cinnamon.jpg`**. The **Music** gallery uses files under **`assets/gallery/`** (see `index.html` for the list); if every image fails to load, that block stays hidden.
+- `assets/` — optional images / OG card / icons (served at `/assets/...`). The hub **Who am I** card uses **`assets/cinnamon.jpg`** (you and Cinnamon). The **Music** gallery uses files under **`assets/gallery/`** (see `index.html` for the list); if every image fails to load, that block stays hidden.
 - `scripts/droplet/anthemic-hub-deploy-apply.sh` — installed at `/usr/local/bin/`
 - `.github/workflows/deploy.yml` — push-to-main deploy
 
