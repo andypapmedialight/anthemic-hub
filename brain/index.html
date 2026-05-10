@@ -112,8 +112,6 @@
       min-height: 360px;
       --poster-color: transparent;
       background-color: #2a3348;
-      /* Extra lift for assets authored very dark (after scene lighting). */
-      filter: brightness(1.12) contrast(1.06) saturate(1.05);
     }
     @media (min-width: 900px) {
       model-viewer { height: calc(100vh - 53px); min-height: 480px; }
@@ -167,11 +165,34 @@
         max-height: calc(100vh - 53px);
       }
     }
-    aside h1 {
-      margin: 0 0 6px;
+    .aside-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 10px 14px;
+      margin: 0 0 10px;
+    }
+    .aside-head h1 {
+      margin: 0;
       font-size: 1.35rem;
       font-weight: 600;
       letter-spacing: -0.02em;
+    }
+    .page-status {
+      font-family: var(--font-body);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 4px 9px;
+      border-radius: 4px;
+      background: color-mix(in srgb, var(--accent) 14%, transparent);
+      color: var(--accent);
+      border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--border));
+    }
+    html[data-theme="light"] .page-status {
+      background: color-mix(in srgb, var(--accent) 12%, transparent);
+      border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
     }
     aside .lede {
       margin: 0 0 22px;
@@ -202,7 +223,7 @@
     .zone ul { margin: 0; padding-left: 1.1rem; }
     .zone li { margin: 6px 0; }
     .zone a { font-weight: 600; }
-    model-viewer a.brain-hotspot {
+    model-viewer button.brain-hotspot {
       display: block;
       width: max-content;
       max-width: 140px;
@@ -216,12 +237,11 @@
       font-weight: 700;
       letter-spacing: 0.04em;
       text-transform: uppercase;
-      text-decoration: none;
       cursor: pointer;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
       pointer-events: auto;
     }
-    model-viewer a.brain-hotspot:hover {
+    model-viewer button.brain-hotspot:hover {
       background: color-mix(in srgb, var(--accent-live) 25%, var(--bg-card));
       color: var(--fg);
     }
@@ -253,23 +273,26 @@
         rotation-per-second="12deg"
         shadow-intensity="0"
         shadow-softness="1"
-        exposure="3.75"
+        exposure="1.25"
         environment-image="neutral"
-        tone-mapping="aces"
+        tone-mapping="auto"
         interaction-prompt="none"
         ar-modes="webxr scene-viewer quick-look"
       >
         <!-- Positions are in metres in the model’s coordinate space; tweak data-position / data-normal after you see how this GLB sits. -->
-        <a class="brain-hotspot" href="#zone-gigs" slot="hotspot-gigs" data-position="0.14 0.06 0.04" data-normal="1 0 0.2">Gigs</a>
-        <a class="brain-hotspot" href="#zone-work" slot="hotspot-work" data-position="0.05 0.16 0.07" data-normal="0 1 0.35">Work</a>
-        <a class="brain-hotspot" href="#zone-reading" slot="hotspot-reading" data-position="-0.12 0.02 0.06" data-normal="-1 0.15 0.25">Reading</a>
-        <a class="brain-hotspot" href="#zone-writing" slot="hotspot-writing" data-position="0.06 0.04 -0.11" data-normal="0.2 0 -1">Writing</a>
+        <button type="button" class="brain-hotspot" data-zone="gigs" slot="hotspot-gigs" data-position="0.14 0.06 0.04" data-normal="1 0 0.2">Gigs</button>
+        <button type="button" class="brain-hotspot" data-zone="work" slot="hotspot-work" data-position="0.05 0.16 0.07" data-normal="0 1 0.35">Work</button>
+        <button type="button" class="brain-hotspot" data-zone="reading" slot="hotspot-reading" data-position="-0.12 0.02 0.06" data-normal="-1 0.15 0.25">Reading</button>
+        <button type="button" class="brain-hotspot" data-zone="writing" slot="hotspot-writing" data-position="0.06 0.04 -0.11" data-normal="0.2 0 -1">Writing</button>
       </model-viewer>
       <p class="hint">Drag to orbit · scroll to zoom · hotspots jump to the matching panel</p>
     </div>
 
     <aside aria-label="Content areas">
-      <h1>Brain map</h1>
+      <div class="aside-head">
+        <h1>Brain map</h1>
+        <span class="page-status" role="status">In progress</span>
+      </div>
       <p class="lede">Each lobe-style anchor is a doorway into a part of the site. Adjust hotspot coordinates in this file once you have settled on a camera angle you like.</p>
       <div class="zones">
         <section class="zone" id="zone-gigs" data-zone="gigs">
@@ -409,10 +432,11 @@
                 a
               ]);
             }
-            /* Near-white factor + dark albedo texture: tint cannot help; add fill light via env response. */
             if (typeof pbr.setRoughnessFactor === "function") {
               var r0 = typeof pbr.roughnessFactor === "number" ? pbr.roughnessFactor : 1;
-              var rough = avg >= 0.85 ? Math.max(0.12, r0 * 0.35) : Math.max(0.06, Math.min(1, r0 * 0.5));
+              /* Already-light materials: do not crush roughness or they clip to white under high exposure. */
+              var rough =
+                avg >= 0.75 ? Math.max(0.4, Math.min(1, r0 * 0.92)) : Math.max(0.06, Math.min(1, r0 * 0.5));
               pbr.setRoughnessFactor(rough);
             }
             if (typeof pbr.setMetallicFactor === "function") {
@@ -421,44 +445,108 @@
           } catch (e) {}
           try {
             if (typeof material.setEmissiveFactor === "function") {
-              var em = (c && (r + g + b) / 3 >= 0.85) ? [0.28, 0.26, 0.32] : [0.12, 0.115, 0.14];
+              /* Strong emissive on already-bright albedo (e.g. TestBrain) blows the whole mesh to white. */
+              var em =
+                avg < 0.45 ? [0.06, 0.058, 0.07] : [0, 0, 0];
               material.setEmissiveFactor(em);
             }
           } catch (e2) {}
         }
       }
 
-      mv.addEventListener("load", function () {
-        liftMaterialsForClarity();
-        try { mv.cameraOrbit = orbits.work; } catch (e) {}
-      });
+      /**
+       * model-viewer retargets hotspot hits (shadow / 3D DOM), so listeners on
+       * <model-viewer> + target.closest() often never see the control. Use
+       * capture on document and composedPath() to find the real hotspot node.
+       */
+      function pathIndexOfBrain(e) {
+        var path = typeof e.composedPath === "function" ? e.composedPath() : [e.target];
+        for (var i = 0; i < path.length; i++) {
+          if (path[i] === mv) return i;
+        }
+        return -1;
+      }
 
-      /* Hotspots are <a href="#zone-…">; delegation works after load when MV wires slotted nodes. */
-      mv.addEventListener(
+      function zoneFromHotspotEl(el) {
+        if (!el || !el.getAttribute) return null;
+        var z = el.getAttribute("data-zone");
+        if (z) return z;
+        var slot = el.getAttribute("slot");
+        if (slot && slot.indexOf("hotspot-") === 0) return slot.replace("hotspot-", "");
+        return null;
+      }
+
+      function findBrainHotspotInComposedPath(e) {
+        var path = typeof e.composedPath === "function" ? e.composedPath() : [];
+        if (!path || !path.length) path = [e.target];
+        for (var i = 0; i < path.length; i++) {
+          var el = path[i];
+          if (!el || !el.classList || !el.classList.contains("brain-hotspot")) continue;
+          return el;
+        }
+        return null;
+      }
+
+      var lastHotspotActivate = 0;
+      function activateHotspotZone(zone) {
+        var now = Date.now();
+        if (now - lastHotspotActivate < 220) return;
+        lastHotspotActivate = now;
+        setActive(zone);
+        if (orbits[zone]) {
+          try {
+            mv.cameraOrbit = orbits[zone];
+          } catch (err) {}
+        }
+        var panel = document.getElementById("zone-" + zone);
+        if (panel) {
+          try {
+            panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          } catch (err2) {
+            panel.scrollIntoView();
+          }
+        }
+        try {
+          history.replaceState(null, "", "#zone-" + zone);
+        } catch (err3) {}
+      }
+
+      document.addEventListener(
         "click",
         function (e) {
-          var t = e.target.closest("a.brain-hotspot[slot^=\"hotspot-\"]");
-          if (!t || !mv.contains(t)) return;
-          var slot = t.getAttribute("slot");
-          if (!slot) return;
-          var zone = slot.replace("hotspot-", "");
-          setActive(zone);
-          if (orbits[zone]) {
-            try {
-              mv.cameraOrbit = orbits[zone];
-            } catch (err) {}
-          }
-          var panel = document.getElementById("zone-" + zone);
-          if (panel) {
-            try {
-              panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
-            } catch (err2) {
-              panel.scrollIntoView();
-            }
-          }
+          if (pathIndexOfBrain(e) === -1) return;
+          var t = findBrainHotspotInComposedPath(e);
+          if (!t) return;
+          var zone = zoneFromHotspotEl(t);
+          if (!zone) return;
+          e.preventDefault();
+          activateHotspotZone(zone);
         },
-        false
+        true
       );
+
+      var hotspotButtonsWired = new WeakSet();
+      function wireHotspotButtonsDirect() {
+        mv.querySelectorAll("button.brain-hotspot[data-zone]").forEach(function (btn) {
+          if (hotspotButtonsWired.has(btn)) return;
+          hotspotButtonsWired.add(btn);
+          var zone = btn.getAttribute("data-zone");
+          if (!zone) return;
+          btn.addEventListener("click", function (e) {
+            e.preventDefault();
+            activateHotspotZone(zone);
+          });
+        });
+      }
+
+      mv.addEventListener("load", function () {
+        liftMaterialsForClarity();
+        try {
+          mv.cameraOrbit = orbits.work;
+        } catch (e) {}
+        wireHotspotButtonsDirect();
+        setTimeout(wireHotspotButtonsDirect, 400);
+      });
     })();
   </script>
 </body>
