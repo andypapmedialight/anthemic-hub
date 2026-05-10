@@ -184,6 +184,7 @@
       border-radius: 12px;
       padding: 14px 16px;
       transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      scroll-margin-top: 88px;
     }
     .zone.is-active {
       border-color: color-mix(in srgb, var(--accent-live) 55%, var(--border));
@@ -201,7 +202,7 @@
     .zone ul { margin: 0; padding-left: 1.1rem; }
     .zone li { margin: 6px 0; }
     .zone a { font-weight: 600; }
-    model-viewer button[slot^="hotspot"] {
+    model-viewer a.brain-hotspot {
       display: block;
       width: max-content;
       max-width: 140px;
@@ -215,12 +216,14 @@
       font-weight: 700;
       letter-spacing: 0.04em;
       text-transform: uppercase;
+      text-decoration: none;
       cursor: pointer;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
       pointer-events: auto;
     }
-    model-viewer button[slot^="hotspot"]:hover {
+    model-viewer a.brain-hotspot:hover {
       background: color-mix(in srgb, var(--accent-live) 25%, var(--bg-card));
+      color: var(--fg);
     }
     @media (prefers-reduced-motion: reduce) {
       .zone { transition: none; }
@@ -241,7 +244,7 @@
       <p id="brain-load-error" class="brain-load-error" hidden></p>
       <model-viewer
         id="brain"
-        src="../assets/brain-human-custom.glb""
+        src="../assets/TestBrain.glb"
         alt="Rotatable 3D model of a human brain with labelled connection points"
         camera-controls
         touch-action="pan-y"
@@ -257,12 +260,12 @@
         ar-modes="webxr scene-viewer quick-look"
       >
         <!-- Positions are in metres in the model’s coordinate space; tweak data-position / data-normal after you see how this GLB sits. -->
-        <button type="button" slot="hotspot-gigs" data-position="0.14 0.06 0.04" data-normal="1 0 0.2">Gigs</button>
-        <button type="button" slot="hotspot-work" data-position="0.05 0.16 0.07" data-normal="0 1 0.35">Work</button>
-        <button type="button" slot="hotspot-reading" data-position="-0.12 0.02 0.06" data-normal="-1 0.15 0.25">Reading</button>
-        <button type="button" slot="hotspot-writing" data-position="0.06 0.04 -0.11" data-normal="0.2 0 -1">Writing</button>
+        <a class="brain-hotspot" href="#zone-gigs" slot="hotspot-gigs" data-position="0.14 0.06 0.04" data-normal="1 0 0.2">Gigs</a>
+        <a class="brain-hotspot" href="#zone-work" slot="hotspot-work" data-position="0.05 0.16 0.07" data-normal="0 1 0.35">Work</a>
+        <a class="brain-hotspot" href="#zone-reading" slot="hotspot-reading" data-position="-0.12 0.02 0.06" data-normal="-1 0.15 0.25">Reading</a>
+        <a class="brain-hotspot" href="#zone-writing" slot="hotspot-writing" data-position="0.06 0.04 -0.11" data-normal="0.2 0 -1">Writing</a>
       </model-viewer>
-      <p class="hint">Drag to orbit · scroll to zoom · hotspots open the matching panel</p>
+      <p class="hint">Drag to orbit · scroll to zoom · hotspots jump to the matching panel</p>
     </div>
 
     <aside aria-label="Content areas">
@@ -430,15 +433,32 @@
         try { mv.cameraOrbit = orbits.work; } catch (e) {}
       });
 
-      ["hotspot-gigs", "hotspot-work", "hotspot-reading", "hotspot-writing"].forEach(function (slot) {
-        var btn = mv.querySelector('button[slot="' + slot + '"]');
-        if (!btn) return;
-        btn.addEventListener("click", function () {
+      /* Hotspots are <a href="#zone-…">; delegation works after load when MV wires slotted nodes. */
+      mv.addEventListener(
+        "click",
+        function (e) {
+          var t = e.target.closest("a.brain-hotspot[slot^=\"hotspot-\"]");
+          if (!t || !mv.contains(t)) return;
+          var slot = t.getAttribute("slot");
+          if (!slot) return;
           var zone = slot.replace("hotspot-", "");
           setActive(zone);
-          if (orbits[zone]) mv.cameraOrbit = orbits[zone];
-        });
-      });
+          if (orbits[zone]) {
+            try {
+              mv.cameraOrbit = orbits[zone];
+            } catch (err) {}
+          }
+          var panel = document.getElementById("zone-" + zone);
+          if (panel) {
+            try {
+              panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            } catch (err2) {
+              panel.scrollIntoView();
+            }
+          }
+        },
+        false
+      );
     })();
   </script>
 </body>
