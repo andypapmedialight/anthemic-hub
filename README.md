@@ -1,95 +1,145 @@
 # anthemic-hub
 
-Landing page and project menu for **anthemic-developments.com**.
+Static site for **anthemic-developments.com** — hub landing page, gig calendar, bass coaching, brain map, and admin panel.
 
-This repo owns the static landing page at `/` and the **bass coaching** mini-site under `/bass/` (copied from the PapaWeb project). Other linked projects (Set List Generator, personal site) deploy from their own repos.
+## Structure
 
-## Local edit and preview
+```
+index.html                          Hub landing page
+bass/                               Bass coaching static site (/bass/)
+brain/                              3D brain map (/brain/)
+gigs/
+  index.html                        Gig calendar (/gigs/) — reads gigs.json at runtime
+  gigs.json                         Gig data — seed only; live copy managed by admin panel
+  admin/
+    index.php                       Admin panel (/gigs/admin/) — PHP built-in server via Docker
+    php.ini                         Upload limits for the PHP container (20 MB)
+content/
+  hub.json                          Editable site content (bio, instruments, projects) — managed by admin panel
+assets/
+  gallery/                          Photo gallery images — managed by admin panel
+  gallery/manifest.json             Auto-generated on upload/delete; drives front-end gallery
+  cinnamon.jpg                      "Who am I" card photo
+scripts/
+  droplet/anthemic-hub-deploy-apply.sh   Installed on Droplet as /usr/local/bin/
+.github/workflows/deploy.yml        Push-to-main CI deploy
+```
 
-It is just plain HTML/CSS, no build step. Open `index.html` directly in a browser for a quick look at the landing page only; subpaths such as `/bass/` need a real HTTP server.
+## Local preview
 
-From the repo root:
+No build step. Serve from repo root:
 
 ```bash
 ./scripts/serve-local.sh
-```
-
-Then open **http://127.0.0.1:8000/**. Use another port with `PORT=9000 ./scripts/serve-local.sh`.
-
-Equivalent without the script:
-
-```bash
-cd "$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+# or
 python3 -m http.server -b 127.0.0.1 8000
 ```
 
+Open **http://127.0.0.1:8000/**. The admin panel requires the PHP Docker container (see below).
+
 ## Deploy
 
-Push to `main` and GitHub Actions ships `index.html` (and optional `assets/`) to the Droplet at `/var/www/anthemic-hub/`. No Set List / API restart involved.
+Push to `main` → GitHub Actions rsyncs all dirs to the Droplet → apply script promotes to web root.
 
 ```bash
-git commit -am "hub: ..."
 git push origin main
 ```
 
-Manual: **Actions → Deploy → Run workflow**.
+### What the deploy preserves (never overwritten by CI)
 
-**`/bass/` 404 in the browser:** Hub CI only checks that **`/var/www/anthemic-hub/bass/`** is on disk after apply; **anthemic-ops** CI checks **`https://…/bass/`** (nginx `location /bass/` + `try_files` in `anthemic-hub.conf`). Deploy **hub** first so files exist, then **ops** (or reload nginx) so routing matches.
+| File | Reason |
+|------|--------|
+| `gigs/gigs.json` | Admin-managed gig data |
+| `content/hub.json` | Admin-managed site content |
+| `assets/gallery/manifest.json` | Admin-managed gallery manifest |
 
-**Hub deploy fails “bass missing on disk”:** Reinstall **`/usr/local/bin/anthemic-hub-deploy-apply.sh`** from this repo (the two-step `rsync` for `index.html` + `bass/`). Without that, an older script can leave **`/var/www/anthemic-hub/bass/`** empty even when **`incoming-hub/bass/`** is correct.
+Git copies of these files act as **seeds on first deploy only**. After that the admin panel is the source of truth.
+
+## Admin panel
+
+Accessible at `https://anthemic-developments.com/gigs/admin/`.
+
+Two auth layers:
+1. **nginx `auth_basic`** — htpasswd credentials (set once on Droplet, never in git)
+2. **PHP password** — bcrypt hash stored in Docker env var
+
+Three tabs: **Gig calendar** · **Site content** · **Gallery**
+
+### PHP Docker container (Droplet)
+
+The admin panel runs as a PHP 8.2 CLI container. Run once, persists via `--restart unless-stopped`:
+
+```bash
+# Generate password hash
+docker run --rm php:8.2-cli php -r "echo password_hash('YOUR_PASSWORD', PASSWORD_BCRYPT) . PHP_EOL;"
+
+# Start container
+docker run -d --name gigs-admin --restart unless-stopped -p 127.0.0.1:9001:9001 -e GIGS_ADMIN_PASSWORD_HASH='$2y$10$...' -v /var/www/anthemic-hub:/app php:8.2-cli php -S 0.0.0.0:9001 -c /app/gigs/admin/php.ini /app/gigs/admin/index.php
+
+# Create nginx basic auth user (one time)
+sudo apt install apache2-utils -y
+sudo htpasswd -c /etc/nginx/conf.d/gigs-admin.htpasswd andy
+```
+
+The volume mounts the full `/var/www/anthemic-hub` dir so the container can read/write `gigs.json`, `content/hub.json`, and `assets/gallery/`.
+
+## Dynamic content
+
+Two JSON files are fetched client-side at runtime:
+
+| URL | Powers |
+|-----|--------|
+| `/content/hub.json` | "Who am I" bio, music bio prose, instruments, projects |
+| `/assets/gallery/manifest.json` | Photo gallery image list |
+
+The HTML includes fallback content so the page renders even if JS or the fetches fail.
+
+## nginx
+
+Config lives in **anthemic-ops** repo (`nginx/sites-available/anthemic-hub.conf`). Key locations:
+
+| Location | Behaviour |
+|----------|-----------|
+| `/gigs/admin/` | `auth_basic` + `proxy_pass` to PHP container on `127.0.0.1:9001` |
+| `/setlist/` | Proxy to Set List SPA |
+| `/api/` | Proxy to Set List API on `127.0.0.1:8081` |
+| `/bass/` | Static files from `/var/www/anthemic-hub/bass/` |
+| `/` | Static files from `/var/www/anthemic-hub/` |
 
 ## One-time Droplet setup
 
-The Droplet already has a `deploy` user (set up for the Set List repo). The hub adds its own apply script so the same CI key can deploy independently.
-
 ```bash
-# Copy script to Droplet (from this repo root, on your laptop)
-scp -P 26555 -i ~/.ssh/id_ed25519 \
-  scripts/droplet/anthemic-hub-deploy-apply.sh \
-  root@170.64.232.47:/tmp/
+# Install apply script
+scp -P 26555 scripts/droplet/anthemic-hub-deploy-apply.sh root@YOUR_DROPLET:/tmp/
+sudo install -o root -g root -m 755 /tmp/anthemic-hub-deploy-apply.sh /usr/local/bin/anthemic-hub-deploy-apply.sh
 
-# As root on the Droplet
-sudo install -o root -g root -m 755 \
-  /tmp/anthemic-hub-deploy-apply.sh \
-  /usr/local/bin/anthemic-hub-deploy-apply.sh
-rm /tmp/anthemic-hub-deploy-apply.sh
-
-# Allow deploy user to run only this script with sudo
+# Sudoers entry for deploy user
 sudo tee /etc/sudoers.d/deploy-anthemic-hub <<'EOF'
 deploy ALL=(root) NOPASSWD: /usr/local/bin/anthemic-hub-deploy-apply.sh
 EOF
 sudo chmod 440 /etc/sudoers.d/deploy-anthemic-hub
-sudo visudo -cf /etc/sudoers.d/deploy-anthemic-hub  # should print "parsed OK"
 
-# Make sure the upload destination exists for the deploy user
+# Incoming dir
 sudo -u deploy mkdir -p /home/deploy/incoming-hub
 ```
 
-## GitHub repository secrets
-
-Same four as the Set List repo (the same key works because the `deploy` user trusts it):
+## GitHub secrets
 
 | Name | Value |
 |------|-------|
-| `DEPLOY_HOST` | `170.64.232.47` |
-| `DEPLOY_PORT` | `26555` |
+| `DEPLOY_HOST` | Droplet IP |
+| `DEPLOY_PORT` | SSH port |
 | `DEPLOY_USER` | `deploy` |
-| `DEPLOY_SSH_KEY` | private key matching deploy's `authorized_keys` |
+| `DEPLOY_SSH_KEY` | Private key matching deploy's `authorized_keys` |
 
-## Files
+## Interest filter
 
-- `index.html` — the landing page
-- `bass/` — bass coaching static site (`/bass/`, entry `bass/index.html` plus `bass/brand_assets/` including **`AndyPBass.png`** - commit this binary or CI/deploy will ship HTML without the hero image); sync from PapaWeb when the site changes
-- `assets/` — optional images / OG card / icons (served at `/assets/...`). The hub **Who am I** card uses **`assets/cinnamon.jpg`** (you and Cinnamon). The **Music** gallery uses files under **`assets/gallery/`** (see `index.html` for the list); if every image fails to load, that block stays hidden.
-- `scripts/droplet/anthemic-hub-deploy-apply.sh` — installed at `/usr/local/bin/`
-- `.github/workflows/deploy.yml` — push-to-main deploy
+The hub landing page has a "What are you interested in?" dropdown. Cards and sections have `data-interests="music gigs teaching ..."` attributes. JS sorts matching content to the top. Section-level `data-interests` on hub-section divs (e.g. the music bio section) also participate in sorting.
 
-## Adding a new project card
+## Adding a project card
 
-Edit `index.html`, copy an existing `<a class="card">` block, change `href`, title, description, and badge:
+Copy an existing `<a class="card">` in `index.html`, set `href`, title, description, badge, and `data-interests`:
 
-- `<span class="badge live">Live</span>` — finished and live
-- `<span class="badge">Coming soon</span>` plus `aria-disabled="true" onclick="event.preventDefault()"` — placeholder
-- `<span class="badge external">External &nearr;</span>` plus `target="_blank" rel="noopener noreferrer"` — link off-domain
-
-Commit + push.
+- `<span class="badge live">Live</span>` — live project
+- `<span class="badge">Coming soon</span>` + `aria-disabled="true" onclick="event.preventDefault()"` — placeholder
+- `<span class="badge external">External &nearr;</span>` + `target="_blank" rel="noopener noreferrer"` — off-domain link
