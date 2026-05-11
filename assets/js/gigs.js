@@ -153,10 +153,18 @@
         }).join("") + "</div>"
       : "";
     var badge = upcoming ? "<span class=\"badge upcoming\">Upcoming</span>" : "<span class=\"badge past\">Past</span>";
-    var cls = "gig-card" + (upcoming ? " gig-card--upcoming" : "");
+    var entryTag = g.free
+      ? "<span class=\"badge free\">Free</span>"
+      : (g.price && String(g.price).trim() ? "<span class=\"gig-price\">" + esc(g.price) + "</span>" : "");
+    var poster = (g.poster && String(g.poster).trim())
+      ? "<img class=\"gig-poster\" src=\"/assets/gig-posters/" + esc(encodeURIComponent(g.poster))
+          + "\" alt=\"" + esc(g.title) + " poster\" loading=\"lazy\" decoding=\"async\" />"
+      : "";
+    var cls = "gig-card" + (upcoming ? " gig-card--upcoming" : "") + (poster ? " gig-card--has-poster" : "");
     return (
       "<article class=\"" + cls + "\" data-gig-date=\"" + esc(g.date) + "\">" +
-        "<div class=\"row-top\">" + badge + "<span class=\"gig-date\">" + esc(formatWhen(ymd, g.time)) + "</span></div>" +
+        poster +
+        "<div class=\"row-top\">" + badge + "<span class=\"gig-date\">" + esc(formatWhen(ymd, g.time)) + "</span>" + entryTag + "</div>" +
         "<h3 class=\"gig-title\">" + esc(g.title) + "</h3>" +
         meta + link +
       "</article>"

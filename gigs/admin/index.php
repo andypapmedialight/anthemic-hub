@@ -1,9 +1,10 @@
 <?php
 declare(strict_types=1);
 
-$gigsPath     = __DIR__ . '/../gigs.json';
-$contentPath  = __DIR__ . '/../../content/hub.json';
-$galleryPath  = __DIR__ . '/../../assets/gallery';
+$gigsPath      = __DIR__ . '/../gigs.json';
+$contentPath   = __DIR__ . '/../../content/hub.json';
+$galleryPath   = __DIR__ . '/../../assets/gallery';
+$posterPath    = __DIR__ . '/../../assets/gig-posters';
 $passwordHash = getenv('GIGS_ADMIN_PASSWORD_HASH') ?: '';
 $adminBase    = '/gigs/admin/';
 
@@ -89,7 +90,30 @@ function regenerateManifest(string $dir): void {
 
 function knownGigKeys(): array {
     return ['date', 'title', 'venue', 'city', 'time', 'role', 'support',
-            'link', 'tickets_link', 'maps_link', 'venue_link'];
+            'link', 'tickets_link', 'maps_link', 'venue_link',
+            'free', 'price', 'poster'];
+}
+
+function uploadPoster(?array $file, string $dir): ?string {
+    if (!$file || $file['error'] !== UPLOAD_ERR_OK || !is_uploaded_file($file['tmp_name'])) return null;
+    $info = @getimagesize($file['tmp_name']);
+    $allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!$info || !in_array($info['mime'], $allowed)) return null;
+    if (!is_dir($dir)) mkdir($dir, 0755, true);
+    $ext  = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    $base = preg_replace('/[^a-z0-9_\-]/', '_', strtolower(pathinfo($file['name'], PATHINFO_FILENAME)));
+    $base = trim($base, '_') ?: 'poster_' . time();
+    $dest = $dir . '/' . $base . '.' . $ext;
+    if (file_exists($dest)) $dest = $dir . '/' . $base . '_' . time() . '.' . $ext;
+    move_uploaded_file($file['tmp_name'], $dest);
+    chmod($dest, 0644);
+    return basename($dest);
+}
+
+function deletePoster(string $filename, string $dir): void {
+    if (!$filename) return;
+    $path = realpath($dir . '/' . $filename);
+    if ($path && str_starts_with($path, realpath($dir) . DIRECTORY_SEPARATOR)) @unlink($path);
 }
 
 function sanitizeUrl(string $raw): string {
@@ -124,6 +148,8 @@ function sanitizeGig(array $p, array $extraKeys = []): array {
         'tickets_link' => sanitizeUrl($p['tickets_link'] ?? ''),
         'maps_link'    => sanitizeUrl($p['maps_link']    ?? ''),
         'venue_link'   => sanitizeUrl($p['venue_link']   ?? ''),
+        'free'         => !empty($p['free']),
+        'price'        => substr(trim(strip_tags($p['price'] ?? '')), 0, 50),
     ];
     foreach ($extraKeys as $k) {
         $out[$k] = substr(trim(strip_tags($p[$k] ?? '')), 0, 500);
@@ -145,6 +171,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'add') {
         $gig = sanitizeGig($_POST, $extraKeys);
         if ($gig['date'] !== '' && $gig['title'] !== '') {
+            $uploaded = uploadPoster($_FILES['poster_file'] ?? null, $posterPath);
+            $gig['poster'] = $uploaded ?? '';
             $gigs[] = $gig;
             saveGigs($gigsPath, $gigs);
         }
@@ -153,6 +181,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($idx >= 0 && isset($gigs[$idx])) {
             $gig = sanitizeGig($_POST, $extraKeys);
             if ($gig['date'] !== '' && $gig['title'] !== '') {
+                $existing = $gigs[$idx]['poster'] ?? '';
+                if (!empty($_POST['remove_poster'])) {
+                    deletePoster($existing, $posterPath);
+                    $gig['poster'] = '';
+                } else {
+                    $uploaded = uploadPoster($_FILES['poster_file'] ?? null, $posterPath);
+                    if ($uploaded) {
+                        deletePoster($existing, $posterPath);
+                        $gig['poster'] = $uploaded;
+                    } else {
+                        $gig['poster'] = $existing;
+                    }
+                }
                 $gigs[$idx] = $gig;
                 saveGigs($gigsPath, $gigs);
             }
@@ -160,6 +201,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($action === 'delete') {
         $idx = (int)($_POST['idx'] ?? -1);
         if ($idx >= 0 && isset($gigs[$idx])) {
+            deletePoster($gigs[$idx]['poster'] ?? '', $posterPath);
             array_splice($gigs, $idx, 1);
             saveGigs($gigsPath, $gigs);
         }
@@ -309,7 +351,7 @@ function showLogin(?string $error): void { ?>
 
 function gigForm(string $action, array $g = [], int $idx = -1, string $csrf = '', array $extraKeys = []): void {
     $isEdit = $action === 'edit'; ?>
-<form method="post" class="gig-form">
+<form method="post" enctype="multipart/form-data" class="gig-form">
   <input type="hidden" name="action" value="<?= h($action) ?>" />
   <input type="hidden" name="csrf"   value="<?= h($csrf) ?>" />
   <?php if ($isEdit): ?><input type="hidden" name="idx" value="<?= $idx ?>" /><?php endif ?>
@@ -342,6 +384,17 @@ function gigForm(string $action, array $g = [], int $idx = -1, string $csrf = ''
       <label>Support</label>
       <input type="text" name="support" value="<?= h($g['support'] ?? '') ?>" placeholder="Opening act" />
     </div>
+    <div class="field">
+      <label>Entry</label>
+      <label class="check-label">
+        <input type="checkbox" name="free" value="1" <?= !empty($g['free']) ? 'checked' : '' ?> />
+        Free entry
+      </label>
+    </div>
+    <div class="field">
+      <label>Ticket price</label>
+      <input type="text" name="price" value="<?= h($g['price'] ?? '') ?>" placeholder="e.g. $15 · $20–$35" />
+    </div>
     <div class="field span2">
       <label>Event link</label>
       <input type="url" name="link" value="<?= h($g['link'] ?? '') ?>" placeholder="https://..." />
@@ -357,6 +410,19 @@ function gigForm(string $action, array $g = [], int $idx = -1, string $csrf = ''
     <div class="field span2">
       <label>Venue link</label>
       <input type="url" name="venue_link" value="<?= h($g['venue_link'] ?? '') ?>" placeholder="https://..." />
+    </div>
+    <div class="field span2">
+      <label>Poster image</label>
+      <?php if (!empty($g['poster'])): ?>
+        <img src="/assets/gig-posters/<?= h(rawurlencode($g['poster'])) ?>" class="poster-preview" alt="Current poster" />
+        <label class="check-label" style="margin-top:8px">
+          <input type="checkbox" name="remove_poster" value="1" />
+          Remove poster
+        </label>
+        <p class="field-hint">Or upload a new image to replace it:</p>
+      <?php endif ?>
+      <input type="file" name="poster_file" accept="image/jpeg,image/png,image/gif,image/webp" />
+      <p class="field-hint">JPEG, PNG, GIF or WebP · optional</p>
     </div>
     <?php foreach ($extraKeys as $ek): ?>
     <div class="field span2">
@@ -439,6 +505,10 @@ function gigForm(string $action, array $g = [], int $idx = -1, string $csrf = ''
     .upload-box{border:2px dashed #2a3140;border-radius:10px;padding:28px 24px;text-align:center;transition:border-color 140ms}
     .upload-box:hover{border-color:#6b9cff}
     input[type=file]{font-family:inherit;font-size:.9rem;color:#eceef4;margin-bottom:14px}
+    .check-label{display:flex;align-items:center;gap:8px;font-size:.9rem;color:#eceef4;cursor:pointer;padding:9px 0}
+    .check-label input[type=checkbox]{width:16px;height:16px;accent-color:#6b9cff;cursor:pointer;flex-shrink:0}
+    .poster-preview{max-width:160px;max-height:220px;object-fit:cover;border-radius:6px;display:block;border:1px solid #2a3140}
+    .field-hint{margin:4px 0 8px;font-size:11px;color:#5a6377}
     @media(max-width:540px){.form-grid{grid-template-columns:1fr}.field.span2{grid-column:span 1}}
   </style>
 </head>
