@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-$gigsPath      = __DIR__ . '/../gigs.json';
+$gigsPath      = __DIR__ . '/../../gigs/gigs.json';
 $contentPath   = __DIR__ . '/../../content/hub.json';
 $galleryPath   = __DIR__ . '/../../assets/gallery';
 $posterPath    = __DIR__ . '/../../assets/gig-posters';
 $passwordHash = getenv('GIGS_ADMIN_PASSWORD_HASH') ?: '';
-$adminBase    = '/gigs/admin/';
+$adminBase    = '/anth-dev-ad/admin/';
 
 session_start();
 
