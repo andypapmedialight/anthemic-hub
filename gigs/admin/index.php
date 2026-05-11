@@ -3,12 +3,13 @@ declare(strict_types=1);
 
 $gigsPath     = __DIR__ . '/../gigs.json';
 $passwordHash = getenv('GIGS_ADMIN_PASSWORD_HASH') ?: '';
+$adminBase    = '/gigs/admin/';
 
 session_start();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['logout'])) {
     session_destroy();
-    header('Location: ' . strtok($_SERVER['REQUEST_URI'], '?'));
+    header('Location: ' . $adminBase);
     exit;
 }
 
@@ -18,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['password'])) {
         session_regenerate_id(true);
         $_SESSION['authed'] = true;
         $_SESSION['csrf']   = bin2hex(random_bytes(16));
-        header('Location: ' . strtok($_SERVER['REQUEST_URI'], '?'));
+        header('Location: ' . $adminBase);
         exit;
     }
     $loginError = 'Incorrect password.';
@@ -71,7 +72,7 @@ function h(mixed $v): string {
     return htmlspecialchars((string)($v ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
-function selfUrl(): string { return strtok($_SERVER['REQUEST_URI'], '?'); }
+function selfUrl(): string { global $adminBase; return $adminBase; }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrfCheck();
