@@ -87,10 +87,27 @@ function regenerateManifest(string $dir): void {
     rename($tmp, $dir . '/manifest.json');
 }
 
-function sanitizeGig(array $p): array {
+function knownGigKeys(): array {
+    return ['date', 'title', 'venue', 'city', 'time', 'role', 'support', 'link'];
+}
+
+function extraGigKeys(array $gigs): array {
+    $known = knownGigKeys();
+    $extra = [];
+    foreach ($gigs as $g) {
+        foreach (array_keys($g) as $k) {
+            if (!in_array($k, $known, true) && !in_array($k, $extra, true)) {
+                $extra[] = $k;
+            }
+        }
+    }
+    return $extra;
+}
+
+function sanitizeGig(array $p, array $extraKeys = []): array {
     $url = trim($p['link'] ?? '');
     if ($url && !preg_match('#^https?://#i', $url)) $url = '';
-    return [
+    $out = [
         'date'    => preg_replace('/[^0-9\-]/', '', substr($p['date']    ?? '', 0, 10)),
         'title'   => substr(trim(strip_tags($p['title']   ?? '')), 0, 200),
         'venue'   => substr(trim(strip_tags($p['venue']   ?? '')), 0, 200),
@@ -100,6 +117,10 @@ function sanitizeGig(array $p): array {
         'support' => substr(trim(strip_tags($p['support'] ?? '')), 0, 200),
         'link'    => substr($url, 0, 500),
     ];
+    foreach ($extraKeys as $k) {
+        $out[$k] = substr(trim(strip_tags($p[$k] ?? '')), 0, 500);
+    }
+    return $out;
 }
 
 function h(mixed $v): string {
@@ -112,8 +133,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrfCheck();
     $action = $_POST['action'] ?? '';
     $gigs   = loadGigs($gigsPath);
+    $extraKeys = extraGigKeys($gigs);
     if ($action === 'add') {
-        $gig = sanitizeGig($_POST);
+        $gig = sanitizeGig($_POST, $extraKeys);
         if ($gig['date'] !== '' && $gig['title'] !== '') {
             $gigs[] = $gig;
             saveGigs($gigsPath, $gigs);
@@ -121,7 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($action === 'edit') {
         $idx = (int)($_POST['idx'] ?? -1);
         if ($idx >= 0 && isset($gigs[$idx])) {
-            $gig = sanitizeGig($_POST);
+            $gig = sanitizeGig($_POST, $extraKeys);
             if ($gig['date'] !== '' && $gig['title'] !== '') {
                 $gigs[$idx] = $gig;
                 saveGigs($gigsPath, $gigs);
@@ -277,7 +299,7 @@ function showLogin(?string $error): void { ?>
 </html>
 <?php }
 
-function gigForm(string $action, array $g = [], int $idx = -1, string $csrf = ''): void {
+function gigForm(string $action, array $g = [], int $idx = -1, string $csrf = '', array $extraKeys = []): void {
     $isEdit = $action === 'edit'; ?>
 <form method="post" class="gig-form">
   <input type="hidden" name="action" value="<?= h($action) ?>" />
@@ -316,6 +338,12 @@ function gigForm(string $action, array $g = [], int $idx = -1, string $csrf = ''
       <label>Link</label>
       <input type="url" name="link" value="<?= h($g['link'] ?? '') ?>" placeholder="https://..." />
     </div>
+    <?php foreach ($extraKeys as $ek): ?>
+    <div class="field span2">
+      <label><?= h(ucfirst(str_replace('_', ' ', $ek))) ?></label>
+      <input type="text" name="<?= h($ek) ?>" value="<?= h($g[$ek] ?? '') ?>" />
+    </div>
+    <?php endforeach ?>
   </div>
   <div class="form-actions">
     <button type="submit" class="btn-primary"><?= $isEdit ? 'Save changes' : 'Add gig' ?></button>
@@ -526,12 +554,12 @@ function gigForm(string $action, array $g = [], int $idx = -1, string $csrf = ''
   <?php if ($editGig !== null): ?>
     <div class="panel">
       <h2>Edit gig</h2>
-      <?php gigForm('edit', $editGig, $editIdx, $csrf) ?>
+      <?php gigForm('edit', $editGig, $editIdx, $csrf, extraGigKeys($gigs)) ?>
     </div>
   <?php else: ?>
     <div class="panel">
       <h2>Add gig</h2>
-      <?php gigForm('add', [], -1, $csrf) ?>
+      <?php gigForm('add', [], -1, $csrf, extraGigKeys($gigs)) ?>
     </div>
   <?php endif ?>
 
