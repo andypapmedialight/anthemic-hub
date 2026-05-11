@@ -162,6 +162,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             return ['name' => trim($parts[0]), 'dates' => isset($parts[1]) ? trim($parts[1]) : ''];
         }, $projLines));
 
+        $knownContentFields = ['who_am_i', 'music_bio_origin', 'music_bio_anthems', 'instruments', 'projects'];
+        foreach ($_POST['extra'] ?? [] as $ek => $ev) {
+            $ek = preg_replace('/[^a-z0-9_]/i', '', (string)$ek);
+            if (!$ek || in_array($ek, $knownContentFields, true)) continue;
+            $content[$ek] = substr(trim(strip_tags((string)$ev)), 0, 2000);
+        }
+
         saveContent($contentPath, $content);
         $_SESSION['content_saved'] = true;
     } elseif ($action === 'gallery_delete') {
@@ -196,7 +203,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['gallery_error'] = 'Upload failed (error ' . $file['error'] . '). Check file size — limit is 20 MB.';
         }
     }
-    header('Location: ' . $adminBase . '?tab=gallery'); exit;
+    if ($action === 'content_save') {
+        $redirect = $adminBase . '?tab=content';
+    } elseif ($action === 'raw') {
+        $redirect = $adminBase . '?tab=gigs&raw=open';
+    } elseif (in_array($action, ['gallery_delete', 'gallery_upload'], true)) {
+        $redirect = $adminBase . '?tab=gallery';
+    } else {
+        $redirect = $adminBase . '?tab=gigs';
+    }
+    header('Location: ' . $redirect); exit;
 }
 
 $gigs         = loadGigs($gigsPath);
@@ -212,6 +228,7 @@ $content      = loadContent($contentPath);
 $galleryFiles = galleryImages($galleryPath);
 $validTabs    = ['gigs', 'content', 'gallery'];
 $activeTab    = (isset($_GET['tab']) && in_array($_GET['tab'], $validTabs)) ? $_GET['tab'] : 'gigs';
+$rawOpen      = ($activeTab === 'gigs' && ($_GET['raw'] ?? '') === 'open');
 
 // Helpers for content form display
 function contentInstText(array $c): string {
@@ -426,6 +443,16 @@ function gigForm(string $action, array $g = [], int $idx = -1, string $csrf = ''
         <span class="hint">One per line. Optionally add dates after a pipe: <code>Dollop | 1993–96</code></span>
         <textarea name="projects" class="content-area" rows="14"><?= h(contentProjText($content)) ?></textarea>
       </div>
+      <?php
+        $knownContentFields = ['who_am_i', 'music_bio_origin', 'music_bio_anthems', 'instruments', 'projects'];
+        foreach ($content as $ck => $cv):
+          if (in_array($ck, $knownContentFields, true) || is_array($cv)) continue;
+      ?>
+      <div class="content-field">
+        <label><?= h(ucfirst(str_replace('_', ' ', $ck))) ?></label>
+        <input type="text" name="extra[<?= h($ck) ?>]" value="<?= h((string)$cv) ?>" />
+      </div>
+      <?php endforeach ?>
       <div class="form-actions">
         <button type="submit" class="btn-primary">Save content</button>
       </div>
@@ -509,7 +536,7 @@ function gigForm(string $action, array $g = [], int $idx = -1, string $csrf = ''
   <?php endif ?>
 
   <div class="panel" style="margin-top:24px">
-    <details>
+    <details<?= $rawOpen ? ' open' : '' ?>>
       <summary>Raw JSON editor</summary>
       <?php if ($rawError): ?>
         <p class="raw-error"><?= h($rawError) ?></p>
