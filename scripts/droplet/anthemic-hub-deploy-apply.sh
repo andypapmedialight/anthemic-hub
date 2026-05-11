@@ -32,11 +32,27 @@ if [[ ! -f "${INCOMING}/gigs/index.html" ]] || [[ ! -f "${INCOMING}/gigs/gigs.js
 fi
 
 mkdir -p "${DEST}/bass" "${DEST}/brain" "${DEST}/gigs"
+
+# Preserve admin-managed gigs.json: back up before rsync, restore after.
+# Git copy in incoming/ acts as the seed on first deploy only.
+GIGS_LIVE="${DEST}/gigs/gigs.json"
+GIGS_BACKUP=""
+if [[ -f "${GIGS_LIVE}" ]]; then
+  GIGS_BACKUP="$(mktemp)"
+  cp "${GIGS_LIVE}" "${GIGS_BACKUP}"
+fi
+
 # Two-step rsync: multi-source rsync --delete has been observed to skip or clobber bass/ on the droplet.
 rsync -a "${INCOMING}/index.html" "${DEST}/"
 rsync -a --delete "${INCOMING}/bass/" "${DEST}/bass/"
 rsync -a --delete "${INCOMING}/brain/" "${DEST}/brain/"
 rsync -a --delete "${INCOMING}/gigs/" "${DEST}/gigs/"
+
+# Restore live gigs.json so admin edits survive deploys.
+if [[ -n "${GIGS_BACKUP}" ]]; then
+  cp "${GIGS_BACKUP}" "${GIGS_LIVE}"
+  rm -f "${GIGS_BACKUP}"
+fi
 if [[ -d "${INCOMING}/assets" ]]; then
   mkdir -p "${DEST}/assets"
   rsync -a --delete "${INCOMING}/assets/" "${DEST}/assets/"
