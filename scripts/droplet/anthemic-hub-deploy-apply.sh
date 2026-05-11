@@ -57,7 +57,10 @@ preserve_restore "${CONTENT_LIVE}" "${CONTENT_BACKUP}"
 
 if [[ -d "${INCOMING}/assets" ]]; then
   mkdir -p "${DEST}/assets"
+  MANIFEST_LIVE="${DEST}/assets/gallery/manifest.json"
+  MANIFEST_BACKUP="$(preserve_backup "${MANIFEST_LIVE}")"
   rsync -a --delete "${INCOMING}/assets/" "${DEST}/assets/"
+  preserve_restore "${MANIFEST_LIVE}" "${MANIFEST_BACKUP}"
 fi
 
 chown -R www-data:www-data "${DEST}"

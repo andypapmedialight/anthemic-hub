@@ -1029,30 +1029,44 @@
       <script>
         (function () {
           var wrap = document.getElementById("photo-gallery-wrap");
-          var ul = document.getElementById("photo-gallery");
+          var ul   = document.getElementById("photo-gallery");
           if (!wrap || !ul) return;
-          function hideIfAllBroken() {
+          function checkVisible() {
             var items = ul.querySelectorAll("li");
             var visible = 0;
             for (var i = 0; i < items.length; i++) {
-              if (items[i].style.display === "none") continue;
-              if (items[i].hasAttribute("hidden")) continue;
-              visible++;
+              if (items[i].style.display !== "none" && !items[i].hasAttribute("hidden")) visible++;
             }
             if (visible === 0) wrap.setAttribute("hidden", "");
+            else wrap.removeAttribute("hidden");
           }
-          ul.querySelectorAll("img[data-gallery-img]").forEach(function (img) {
-            img.addEventListener("error", function () {
-              var li = img.closest("li");
-              if (li) li.style.display = "none";
-              hideIfAllBroken();
+          function attachErrors() {
+            ul.querySelectorAll("img[data-gallery-img]").forEach(function (img) {
+              img.addEventListener("error", function () {
+                var li = img.closest("li");
+                if (li) li.style.display = "none";
+                checkVisible();
+              });
+              if (img.complete && img.naturalWidth === 0) {
+                var li2 = img.closest("li");
+                if (li2) li2.style.display = "none";
+              }
             });
-            if (img.complete && img.naturalWidth === 0) {
-              var li2 = img.closest("li");
-              if (li2) li2.style.display = "none";
-              hideIfAllBroken();
-            }
-          });
+            checkVisible();
+          }
+          fetch("/assets/gallery/manifest.json", { cache: "no-store" })
+            .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
+            .then(function (data) {
+              if (!Array.isArray(data.images) || !data.images.length) throw new Error();
+              ul.innerHTML = data.images.map(function (f) {
+                var src = "/assets/gallery/" + encodeURIComponent(f);
+                var alt = f.replace(/\.[^.]+$/, "").replace(/[_\-]+/g, " ");
+                return "<li><a href=\"" + src + "\" target=\"_blank\" rel=\"noopener noreferrer\">" +
+                  "<img src=\"" + src + "\" alt=\"" + alt + "\" width=\"640\" height=\"640\" loading=\"lazy\" decoding=\"async\" data-gallery-img /></a></li>";
+              }).join("");
+              attachErrors();
+            })
+            .catch(attachErrors);
         })();
       </script>
     </div>

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 $gigsPath     = __DIR__ . '/../gigs.json';
 $contentPath  = __DIR__ . '/../../content/hub.json';
+$galleryPath  = __DIR__ . '/../../assets/gallery';
 $passwordHash = getenv('GIGS_ADMIN_PASSWORD_HASH') ?: '';
 $adminBase    = '/gigs/admin/';
 
@@ -65,6 +66,25 @@ function saveContent(string $path, array $data): void {
     $tmp = $path . '.tmp.' . getmypid();
     file_put_contents($tmp, $out . "\n");
     rename($tmp, $path);
+}
+
+function galleryImages(string $dir): array {
+    if (!is_dir($dir)) return [];
+    $exts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    $out = [];
+    foreach (scandir($dir) as $f) {
+        if ($f === '.' || $f === '..' || $f === 'manifest.json' || $f === '.gitkeep') continue;
+        if (in_array(strtolower(pathinfo($f, PATHINFO_EXTENSION)), $exts)) $out[] = $f;
+    }
+    sort($out);
+    return $out;
+}
+
+function regenerateManifest(string $dir): void {
+    $images = galleryImages($dir);
+    $tmp = $dir . '/manifest.json.tmp.' . getmypid();
+    file_put_contents($tmp, json_encode(['images' => $images], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "\n");
+    rename($tmp, $dir . '/manifest.json');
 }
 
 function sanitizeGig(array $p): array {
@@ -144,8 +164,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         saveContent($contentPath, $content);
         $_SESSION['content_saved'] = true;
+    } elseif ($action === 'gallery_delete') {
+        global $galleryPath;
+        $filename = basename($_POST['filename'] ?? '');
+        if ($filename && $filename !== 'manifest.json' && $filename !== '.gitkeep') {
+            $filepath = $galleryPath . '/' . $filename;
+            if (is_file($filepath) && realpath(dirname($filepath)) === realpath($galleryPath)) {
+                unlink($filepath);
+                regenerateManifest($galleryPath);
+            }
+        }
+    } elseif ($action === 'gallery_upload') {
+        global $galleryPath;
+        $file = $_FILES['photo'] ?? null;
+        if ($file && $file['error'] === UPLOAD_ERR_OK && is_uploaded_file($file['tmp_name'])) {
+            $info = @getimagesize($file['tmp_name']);
+            $allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            if ($info && in_array($info['mime'], $allowed)) {
+                $ext  = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+                $base = preg_replace('/[^a-z0-9_\-]/', '_', strtolower(pathinfo($file['name'], PATHINFO_FILENAME)));
+                $base = trim($base, '_') ?: 'photo_' . time();
+                $dest = $galleryPath . '/' . $base . '.' . $ext;
+                if (file_exists($dest)) $dest = $galleryPath . '/' . $base . '_' . time() . '.' . $ext;
+                move_uploaded_file($file['tmp_name'], $dest);
+                chmod($dest, 0644);
+                regenerateManifest($galleryPath);
+            } else {
+                $_SESSION['gallery_error'] = 'Only JPEG, PNG, GIF, and WebP images are allowed.';
+            }
+        } elseif ($file && $file['error'] !== UPLOAD_ERR_OK && $file['error'] !== UPLOAD_ERR_NO_FILE) {
+            $_SESSION['gallery_error'] = 'Upload failed (error ' . $file['error'] . '). Check file size — limit is 20 MB.';
+        }
     }
-    header('Location: ' . selfUrl()); exit;
+    header('Location: ' . $adminBase . '?tab=gallery'); exit;
 }
 
 $gigs         = loadGigs($gigsPath);
@@ -154,10 +205,13 @@ $editGig      = ($editIdx >= 0 && isset($gigs[$editIdx])) ? $gigs[$editIdx] : nu
 $csrf         = $_SESSION['csrf'];
 $rawError     = $_SESSION['raw_error'] ?? null;
 $contentSaved = $_SESSION['content_saved'] ?? false;
-unset($_SESSION['raw_error'], $_SESSION['content_saved']);
+$galleryError = $_SESSION['gallery_error'] ?? null;
+unset($_SESSION['raw_error'], $_SESSION['content_saved'], $_SESSION['gallery_error']);
 
 $content      = loadContent($contentPath);
-$activeTab    = isset($_GET['tab']) && $_GET['tab'] === 'content' ? 'content' : 'gigs';
+$galleryFiles = galleryImages($galleryPath);
+$validTabs    = ['gigs', 'content', 'gallery'];
+$activeTab    = (isset($_GET['tab']) && in_array($_GET['tab'], $validTabs)) ? $_GET['tab'] : 'gigs';
 
 // Helpers for content form display
 function contentInstText(array $c): string {
@@ -311,6 +365,15 @@ function gigForm(string $action, array $g = [], int $idx = -1, string $csrf = ''
     .content-field{display:flex;flex-direction:column;gap:6px;margin-bottom:18px}
     .content-field label{font-size:13px;font-weight:600;color:#949db0}
     .content-field .hint{font-size:11px;color:#5a6377;margin-top:2px}
+    .gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:28px}
+    .gallery-item{position:relative;border-radius:8px;overflow:hidden;border:1px solid #2a3140;background:#0e1015;aspect-ratio:1}
+    .gallery-item img{width:100%;height:100%;object-fit:cover;display:block}
+    .gallery-item .del-btn{position:absolute;top:6px;right:6px;font-family:inherit;font-size:11px;font-weight:700;padding:4px 8px;background:rgba(15,18,24,.85);border:1px solid rgba(255,80,80,.4);border-radius:4px;color:#ff9999;cursor:pointer;backdrop-filter:blur(4px)}
+    .gallery-item .del-btn:hover{background:rgba(255,80,80,.2)}
+    .gallery-item .fname{position:absolute;bottom:0;left:0;right:0;padding:4px 6px;font-size:10px;color:#eceef4;background:rgba(14,16,21,.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .upload-box{border:2px dashed #2a3140;border-radius:10px;padding:28px 24px;text-align:center;transition:border-color 140ms}
+    .upload-box:hover{border-color:#6b9cff}
+    input[type=file]{font-family:inherit;font-size:.9rem;color:#eceef4;margin-bottom:14px}
     @media(max-width:540px){.form-grid{grid-template-columns:1fr}.field.span2{grid-column:span 1}}
   </style>
 </head>
@@ -327,6 +390,7 @@ function gigForm(string $action, array $g = [], int $idx = -1, string $csrf = ''
   <nav class="tab-nav">
     <a href="<?= h($adminBase) ?>?tab=gigs"    class="tab-btn<?= $activeTab === 'gigs'    ? ' active' : '' ?>">Gig calendar</a>
     <a href="<?= h($adminBase) ?>?tab=content" class="tab-btn<?= $activeTab === 'content' ? ' active' : '' ?>">Site content</a>
+    <a href="<?= h($adminBase) ?>?tab=gallery" class="tab-btn<?= $activeTab === 'gallery' ? ' active' : '' ?>">Gallery</a>
   </nav>
 
   <?php if ($activeTab === 'content'): ?>
@@ -364,6 +428,45 @@ function gigForm(string $action, array $g = [], int $idx = -1, string $csrf = ''
       </div>
       <div class="form-actions">
         <button type="submit" class="btn-primary">Save content</button>
+      </div>
+    </form>
+  </div>
+
+  <?php elseif ($activeTab === 'gallery'): ?>
+
+  <?php if ($galleryError): ?><p class="raw-error"><?= h($galleryError) ?></p><?php endif ?>
+
+  <div class="panel">
+    <h2>Current photos <span style="font-weight:400;color:#949db0;font-size:12px">(<?= count($galleryFiles) ?> images)</span></h2>
+    <?php if (empty($galleryFiles)): ?>
+      <p class="empty">No photos yet.</p>
+    <?php else: ?>
+      <div class="gallery-grid">
+        <?php foreach ($galleryFiles as $f): ?>
+          <div class="gallery-item">
+            <img src="/assets/gallery/<?= h(rawurlencode($f)) ?>" alt="<?= h($f) ?>" loading="lazy" />
+            <span class="fname"><?= h($f) ?></span>
+            <form method="post" onsubmit="return confirm('Delete <?= h(addslashes($f)) ?>?')">
+              <input type="hidden" name="action"   value="gallery_delete" />
+              <input type="hidden" name="filename" value="<?= h($f) ?>" />
+              <input type="hidden" name="csrf"     value="<?= h($csrf) ?>" />
+              <button type="submit" class="del-btn">✕</button>
+            </form>
+          </div>
+        <?php endforeach ?>
+      </div>
+    <?php endif ?>
+  </div>
+
+  <div class="panel" style="margin-top:20px">
+    <h2>Upload photo</h2>
+    <form method="post" enctype="multipart/form-data">
+      <input type="hidden" name="action" value="gallery_upload" />
+      <input type="hidden" name="csrf"   value="<?= h($csrf) ?>" />
+      <div class="upload-box">
+        <input type="file" name="photo" accept="image/jpeg,image/png,image/gif,image/webp" required /><br />
+        <button type="submit" class="btn-primary">Upload</button>
+        <p style="margin:10px 0 0;font-size:12px;color:#5a6377">JPEG, PNG, GIF or WebP · max 20 MB</p>
       </div>
     </form>
   </div>
