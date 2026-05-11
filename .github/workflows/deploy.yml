@@ -44,6 +44,7 @@ jobs:
           rsync -avz -e "${RSYNC_SSH}" ./bass/ "${DEST}bass/"
           rsync -avz -e "${RSYNC_SSH}" ./brain/ "${DEST}brain/"
           rsync -avz -e "${RSYNC_SSH}" ./gigs/ "${DEST}gigs/"
+          rsync -avz -e "${RSYNC_SSH}" ./content/ "${DEST}content/"
           if [[ -d assets ]]; then
             rsync -avz -e "${RSYNC_SSH}" ./assets/ "${DEST}assets/"
           fi
@@ -58,8 +59,8 @@ jobs:
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
         run: |
           ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            'test -f /home/deploy/incoming-hub/index.html && test -f /home/deploy/incoming-hub/bass/index.html && test -f /home/deploy/incoming-hub/brain/index.html && test -f /home/deploy/incoming-hub/gigs/index.html && test -f /home/deploy/incoming-hub/gigs/gigs.json' \
-            || { echo "incoming-hub missing hub, bass, brain, or gigs files after upload"; exit 1; }
+            'test -f /home/deploy/incoming-hub/index.html && test -f /home/deploy/incoming-hub/bass/index.html && test -f /home/deploy/incoming-hub/brain/index.html && test -f /home/deploy/incoming-hub/gigs/index.html && test -f /home/deploy/incoming-hub/gigs/gigs.json && test -f /home/deploy/incoming-hub/content/hub.json' \
+            || { echo "incoming-hub missing hub, bass, brain, gigs, or content files after upload"; exit 1; }
 
       - name: Apply on Droplet
         env:

@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 $gigsPath     = __DIR__ . '/../gigs.json';
+$contentPath  = __DIR__ . '/../../content/hub.json';
 $passwordHash = getenv('GIGS_ADMIN_PASSWORD_HASH') ?: '';
 $adminBase    = '/gigs/admin/';
 
@@ -48,6 +49,19 @@ function saveGigs(string $path, array $gigs): void {
         ['gigs' => array_values($gigs)],
         JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
     );
+    $tmp = $path . '.tmp.' . getmypid();
+    file_put_contents($tmp, $out . "\n");
+    rename($tmp, $path);
+}
+
+function loadContent(string $path): array {
+    if (!is_file($path)) return [];
+    $data = json_decode((string)file_get_contents($path), true);
+    return is_array($data) ? $data : [];
+}
+
+function saveContent(string $path, array $data): void {
+    $out = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     $tmp = $path . '.tmp.' . getmypid();
     file_put_contents($tmp, $out . "\n");
     rename($tmp, $path);
@@ -107,16 +121,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $_SESSION['raw_error'] = 'Invalid JSON or missing "gigs" array. Changes not saved.';
         }
+    } elseif ($action === 'content_save') {
+        global $contentPath;
+        $content = loadContent($contentPath);
+        $content['who_am_i']          = trim(strip_tags($_POST['who_am_i'] ?? ''));
+        $content['music_bio_origin']  = array_values(array_filter(array_map('trim', explode("\n\n", str_replace("\r\n", "\n", $_POST['music_bio_origin'] ?? '')))));
+        $content['music_bio_anthems'] = array_values(array_filter(array_map('trim', explode("\n\n", str_replace("\r\n", "\n", $_POST['music_bio_anthems'] ?? '')))));
+
+        // Instruments: one per line, * prefix = primary
+        $instLines = array_filter(array_map('trim', explode("\n", str_replace("\r\n", "\n", $_POST['instruments'] ?? ''))));
+        $content['instruments'] = array_values(array_map(function (string $line): array {
+            $primary = str_starts_with($line, '*');
+            return ['name' => trim(ltrim($line, '* ')), 'primary' => $primary];
+        }, $instLines));
+
+        // Projects: one per line, format "Name | dates" (dates optional)
+        $projLines = array_filter(array_map('trim', explode("\n", str_replace("\r\n", "\n", $_POST['projects'] ?? ''))));
+        $content['projects'] = array_values(array_map(function (string $line): array {
+            $parts = explode('|', $line, 2);
+            return ['name' => trim($parts[0]), 'dates' => isset($parts[1]) ? trim($parts[1]) : ''];
+        }, $projLines));
+
+        saveContent($contentPath, $content);
+        $_SESSION['content_saved'] = true;
     }
     header('Location: ' . selfUrl()); exit;
 }
 
-$gigs     = loadGigs($gigsPath);
-$editIdx  = (isset($_GET['edit']) && ctype_digit((string)$_GET['edit'])) ? (int)$_GET['edit'] : -1;
-$editGig  = ($editIdx >= 0 && isset($gigs[$editIdx])) ? $gigs[$editIdx] : null;
-$csrf     = $_SESSION['csrf'];
-$rawError = $_SESSION['raw_error'] ?? null;
-unset($_SESSION['raw_error']);
+$gigs         = loadGigs($gigsPath);
+$editIdx      = (isset($_GET['edit']) && ctype_digit((string)$_GET['edit'])) ? (int)$_GET['edit'] : -1;
+$editGig      = ($editIdx >= 0 && isset($gigs[$editIdx])) ? $gigs[$editIdx] : null;
+$csrf         = $_SESSION['csrf'];
+$rawError     = $_SESSION['raw_error'] ?? null;
+$contentSaved = $_SESSION['content_saved'] ?? false;
+unset($_SESSION['raw_error'], $_SESSION['content_saved']);
+
+$content      = loadContent($contentPath);
+$activeTab    = isset($_GET['tab']) && $_GET['tab'] === 'content' ? 'content' : 'gigs';
+
+// Helpers for content form display
+function contentInstText(array $c): string {
+    $insts = $c['instruments'] ?? [];
+    return implode("\n", array_map(fn($i) => ($i['primary'] ? '*' : '') . $i['name'], $insts));
+}
+function contentProjText(array $c): string {
+    $projs = $c['projects'] ?? [];
+    return implode("\n", array_map(fn($p) => $p['name'] . ($p['dates'] ? ' | ' . $p['dates'] : ''), $projs));
+}
+function contentParasText(array $c, string $key): string {
+    $paras = $c[$key] ?? [];
+    return is_array($paras) ? implode("\n\n", $paras) : (string)$paras;
+}
 
 function showLogin(?string $error): void { ?>
 <!doctype html>
@@ -194,7 +249,7 @@ function gigForm(string $action, array $g = [], int $idx = -1, string $csrf = ''
   <div class="form-actions">
     <button type="submit" class="btn-primary"><?= $isEdit ? 'Save changes' : 'Add gig' ?></button>
     <?php if ($isEdit): ?>
-      <a href="<?= h(selfUrl()) ?>" class="btn-cancel">Cancel</a>
+      <a href="<?= h($GLOBALS['adminBase']) ?>?tab=gigs" class="btn-cancel">Cancel</a>
     <?php endif ?>
   </div>
 </form>
@@ -242,22 +297,78 @@ function gigForm(string $action, array $g = [], int $idx = -1, string $csrf = ''
     .empty{color:#949db0;font-size:.9rem;padding:16px 0}
     textarea.raw-json{width:100%;min-height:280px;padding:12px;background:#0e1015;border:1px solid #2a3140;border-radius:6px;color:#eceef4;font-family:'SF Mono',ui-monospace,monospace;font-size:.82rem;line-height:1.6;resize:vertical}
     textarea.raw-json:focus{outline:none;border-color:#6b9cff}
+    textarea.content-area{width:100%;padding:10px 12px;background:#0e1015;border:1px solid #2a3140;border-radius:6px;color:#eceef4;font-family:inherit;font-size:.9rem;line-height:1.65;resize:vertical}
+    textarea.content-area:focus{outline:none;border-color:#6b9cff}
     .raw-error{padding:10px 14px;background:rgba(255,80,80,.1);border:1px solid rgba(255,80,80,.3);border-radius:6px;color:#ff9999;font-size:13px;margin-bottom:16px}
+    .save-notice{padding:10px 14px;background:rgba(107,156,255,.1);border:1px solid rgba(107,156,255,.3);border-radius:6px;color:#b8d4ff;font-size:13px;margin-bottom:16px}
     details>summary{cursor:pointer;font-size:13px;font-weight:600;color:#949db0;letter-spacing:.04em;text-transform:uppercase;padding:20px 0 0;user-select:none}
     details>summary:hover{color:#eceef4}
     details[open]>summary{padding-bottom:16px}
+    .tab-nav{display:flex;gap:0;margin-bottom:28px;border-bottom:1px solid #2a3140}
+    .tab-btn{font-family:inherit;font-size:13px;font-weight:600;padding:10px 20px;background:transparent;border:none;border-bottom:2px solid transparent;color:#949db0;cursor:pointer;margin-bottom:-1px}
+    .tab-btn:hover{color:#eceef4}
+    .tab-btn.active{color:#6b9cff;border-bottom-color:#6b9cff}
+    .content-field{display:flex;flex-direction:column;gap:6px;margin-bottom:18px}
+    .content-field label{font-size:13px;font-weight:600;color:#949db0}
+    .content-field .hint{font-size:11px;color:#5a6377;margin-top:2px}
     @media(max-width:540px){.form-grid{grid-template-columns:1fr}.field.span2{grid-column:span 1}}
   </style>
 </head>
 <body>
 <div class="wrap">
   <div class="top-bar">
-    <h1>Gig Admin</h1>
+    <h1>Anthemic Admin</h1>
     <form method="post">
       <input type="hidden" name="logout" value="1" />
       <button type="submit" class="btn-logout">Sign out</button>
     </form>
   </div>
+
+  <nav class="tab-nav">
+    <a href="<?= h($adminBase) ?>?tab=gigs"    class="tab-btn<?= $activeTab === 'gigs'    ? ' active' : '' ?>">Gig calendar</a>
+    <a href="<?= h($adminBase) ?>?tab=content" class="tab-btn<?= $activeTab === 'content' ? ' active' : '' ?>">Site content</a>
+  </nav>
+
+  <?php if ($activeTab === 'content'): ?>
+
+  <?php if ($contentSaved): ?><p class="save-notice">Content saved.</p><?php endif ?>
+
+  <div class="panel">
+    <h2>Who am I</h2>
+    <form method="post">
+      <input type="hidden" name="action" value="content_save" />
+      <input type="hidden" name="csrf"   value="<?= h($csrf) ?>" />
+      <div class="content-field">
+        <label>Bio text</label>
+        <textarea name="who_am_i" class="content-area" rows="4"><?= h($content['who_am_i'] ?? '') ?></textarea>
+      </div>
+      <div class="content-field">
+        <label>Music bio — How it all began</label>
+        <span class="hint">Separate paragraphs with a blank line.</span>
+        <textarea name="music_bio_origin" class="content-area" rows="10"><?= h(contentParasText($content, 'music_bio_origin')) ?></textarea>
+      </div>
+      <div class="content-field">
+        <label>Music bio — Why 'Anthems to the Fall'?</label>
+        <span class="hint">Separate paragraphs with a blank line.</span>
+        <textarea name="music_bio_anthems" class="content-area" rows="6"><?= h(contentParasText($content, 'music_bio_anthems')) ?></textarea>
+      </div>
+      <div class="content-field">
+        <label>Instruments</label>
+        <span class="hint">One per line. Prefix with <code>*</code> for a primary instrument (blue chip). E.g. <code>*Double bass</code></span>
+        <textarea name="instruments" class="content-area" rows="8"><?= h(contentInstText($content)) ?></textarea>
+      </div>
+      <div class="content-field">
+        <label>Projects &amp; artists</label>
+        <span class="hint">One per line. Optionally add dates after a pipe: <code>Dollop | 1993–96</code></span>
+        <textarea name="projects" class="content-area" rows="14"><?= h(contentProjText($content)) ?></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn-primary">Save content</button>
+      </div>
+    </form>
+  </div>
+
+  <?php else: ?>
 
   <h2>All gigs</h2>
   <div class="gig-list">
@@ -270,7 +381,7 @@ function gigForm(string $action, array $g = [], int $idx = -1, string $csrf = ''
           <div class="gig-meta-text"><?= h($g['date']) ?><?= $g['venue'] ? ' · ' . h($g['venue']) : '' ?><?= $g['city'] ? ', ' . h($g['city']) : '' ?></div>
         </div>
         <div class="row-actions">
-          <a href="<?= h(selfUrl()) ?>?edit=<?= $i ?>" class="btn-edit">Edit</a>
+          <a href="<?= h($adminBase) ?>?tab=gigs&edit=<?= $i ?>" class="btn-edit">Edit</a>
           <form method="post" onsubmit="return confirm('Delete this gig?')">
             <input type="hidden" name="action" value="delete" />
             <input type="hidden" name="idx"    value="<?= $i ?>" />
@@ -310,6 +421,8 @@ function gigForm(string $action, array $g = [], int $idx = -1, string $csrf = ''
       </form>
     </details>
   </div>
+
+  <?php endif ?>
 </div>
 </body>
 </html>

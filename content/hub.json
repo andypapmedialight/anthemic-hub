@@ -1,0 +1,40 @@
+{
+  "who_am_i": "Andy Papadopoulos trained as a software engineer — senior developer, full-stack engineer, and infrastructure architect at Mecca Medialight in Melbourne. He designs and ships web apps, mentors where he can, and tinkers on the side. Off the clock he plays music, teaches bass, and scratches creative itches here under Anthemic. Cinnamon (pictured) is the dog who runs quality assurance on morale.",
+  "music_bio_origin": [
+    "A long, long time ago in a decade far far away that has come to be known as 'the eighties' one of Andy's best friends ran into their classroom at a Melbourne school, his eyes wide with excitement having recently played a drum kit for the first time: 'Maaate!', he proclaimed in an English accent which had shown only the slightest hint of ockerisation, '...we have to put a band together!, it'll be great!, we'll get heaps of chicks!' Andy's eyes widened though he was still unsure of his particular role in this venture, but his friend continued, '....you've got big hands — you can play bass!'",
+    "And so, that very week, having no idea what they were looking for, the two went round to check out a cheap bass they had seen advertised in the trading paper. The seller invited them into his bedroom, but as neither of the new band members could play a note, the seller had to demonstrate. He flicked on the radio, plugged the bass into the stereo amp and jammed along to Phil Collins and Billy Ocean's 'Easy Lover'. Andy and his mate were positively dribbling — 'We are SO doing this!'",
+    "And so began Andy's musical journey, from his first band with his excitable school buddy 'The Cultural Terrorists' to his first solo project 'Anthems to the Fall'."
+  ],
+  "music_bio_anthems": [
+    "History, Nature, Myth — they are all replete with rises and falls. So often we valorise the rise, but where would we be without the fall? If we had not eaten from the tree of knowledge? If empires had not fallen? If we did not make mistakes? If we did not grow old and die?",
+    "This is a celebration of imperfection: from the errors in the copying of genetic code that makes evolution possible, to the hubris that brings down tyrants, to a fate that defies the best of intentions. An imperfection that asserts itself in the face of a misguided striving for perfection — this is the realisation that fall is necessary for a rise to be possible, that imperfection is beautiful and, yes, that we live by trial and error. But mainly error."
+  ],
+  "instruments": [
+    { "name": "Double bass", "primary": true },
+    { "name": "Electric bass", "primary": true },
+    { "name": "Guitar", "primary": false },
+    { "name": "Keys", "primary": false },
+    { "name": "Drums", "primary": false },
+    { "name": "Vocals", "primary": false }
+  ],
+  "projects": [
+    { "name": "Helvellyn", "dates": "1989–92" },
+    { "name": "Dollop", "dates": "1993–96" },
+    { "name": "Registered Nurse", "dates": "1999–2004" },
+    { "name": "Root Bound System", "dates": "2000–06" },
+    { "name": "Deborah Conway", "dates": "2004–07" },
+    { "name": "Mistah Savona", "dates": "2006–" },
+    { "name": "Andrew McCubbin & the Hope Addicts", "dates": "" },
+    { "name": "Cam Butler", "dates": "" },
+    { "name": "Phillipa Nihill", "dates": "" },
+    { "name": "Elizaband", "dates": "" },
+    { "name": "Stutz", "dates": "" },
+    { "name": "The Spoils", "dates": "" },
+    { "name": "The Telecaster Diaries", "dates": "" },
+    { "name": "Marcel Borrack", "dates": "" },
+    { "name": "Streams of Whiskey", "dates": "" },
+    { "name": "Horace Andy", "dates": "" },
+    { "name": "The Willard Grant Conspiracy", "dates": "" },
+    { "name": "Ron S Peno & The Superstitions", "dates": "" }
+  ]
+}

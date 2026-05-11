@@ -694,9 +694,7 @@
             </div>
             <div class="card-profile-body">
               <div class="title">Who am I</div>
-              <p class="desc">I am Andy Papadopoulos trained as a software engineer I am a senior developer, full-stack engineer, and infrastructure architect at Mecca Medialight in Melbourne. I design and ship web apps, mentor where I can, and tinker on the side. 
-                Off the clock I play music, teach bass, and scratch creative itches here under Anthemic. 
-                Cinnamon (pictured) is the dog who runs quality assurance on morale.</p>
+              <p class="desc" id="who-am-i-body">Andy Papadopoulos trained as a software engineer — senior developer, full-stack engineer, and infrastructure architect at Mecca Medialight in Melbourne. He designs and ships web apps, mentors where he can, and tinkers on the side. Off the clock he plays music, teaches bass, and scratches creative itches here under Anthemic. Cinnamon (pictured) is the dog who runs quality assurance on morale.</p>
               <div class="card-profile-actions">
                 <a href="https://www.linkedin.com/in/andy-papadopoulos/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
                 <a href="https://anthemstothefall.bandcamp.com/" target="_blank" rel="noopener noreferrer">Bandcamp</a>
@@ -782,7 +780,7 @@
       <article class="bio-card">
         <div>
           <div class="bio-label">Instruments</div>
-          <div class="bio-chips">
+          <div class="bio-chips" id="bio-instruments">
             <span class="chip chip--primary">Double bass</span>
             <span class="chip chip--primary">Electric bass</span>
             <span class="chip">Guitar</span>
@@ -794,7 +792,7 @@
         <hr class="bio-divider" />
         <div>
           <div class="bio-label">Projects &amp; artists</div>
-          <div class="bio-projects-grid">
+          <div class="bio-projects-grid" id="bio-projects">
             <span class="project-chip">Helvellyn<span class="proj-dates">1989–92</span></span>
             <span class="project-chip">Dollop<span class="proj-dates">1993–96</span></span>
             <span class="project-chip">Registered Nurse<span class="proj-dates">1999–2004</span></span>
@@ -812,17 +810,18 @@
             <span class="project-chip">Streams of Whiskey</span>
             <span class="project-chip">Horace Andy</span>
             <span class="project-chip">The Willard Grant Conspiracy</span>
+            <span class="project-chip">Ron S Peno &amp; The Superstitions</span>
           </div>
         </div>
         <hr class="bio-divider" />
         <div class="bio-prose">
-          <div class="bio-prose-section">
+          <div class="bio-prose-section" id="bio-origin">
             <h3>How it all began</h3>
             <p>A long, long time ago in a decade far far away that has come to be known as 'the eighties' one of Andy's best friends ran into their classroom at a Melbourne school, his eyes wide with excitement having recently played a drum kit for the first time: 'Maaate!', he proclaimed in an English accent which had shown only the slightest hint of ockerisation, '...we have to put a band together!, it'll be great!, we'll get heaps of chicks!' Andy's eyes widened though he was still unsure of his particular role in this venture, but his friend continued, '....you've got big hands — you can play bass!'</p>
             <p>And so, that very week, having no idea what they were looking for, the two went round to check out a cheap bass they had seen advertised in the trading paper. The seller invited them into his bedroom, but as neither of the new band members could play a note, the seller had to demonstrate. He flicked on the radio, plugged the bass into the stereo amp and jammed along to Phil Collins and Billy Ocean's 'Easy Lover'. Andy and his mate were positively dribbling — 'We are SO doing this!'</p>
             <p>And so began Andy's musical journey, from his first band with his excitable school buddy 'The Cultural Terrorists' to his first solo project 'Anthems to the Fall'.</p>
           </div>
-          <div class="bio-prose-section">
+          <div class="bio-prose-section" id="bio-anthems">
             <h3>Why 'Anthems to the Fall'?</h3>
             <p>History, Nature, Myth — they are all replete with rises and falls. So often we valorise the rise, but where would we be without the fall? If we had not eaten from the tree of knowledge? If empires had not fallen? If we did not make mistakes? If we did not grow old and die?</p>
             <p>This is a celebration of imperfection: from the errors in the copying of genetic code that makes evolution possible, to the hubris that brings down tyrants, to a fate that defies the best of intentions. An imperfection that asserts itself in the face of a misguided striving for perfection — this is the realisation that fall is necessary for a rise to be possible, that imperfection is beautiful and, yes, that we live by trial and error. But mainly error.</p>
@@ -849,6 +848,48 @@
     </div>
   </main>
 
+  <script>
+    (function () {
+      function esc(s) {
+        return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      }
+      fetch('/content/hub.json', { cache: 'no-store' })
+        .then(function (r) { if (!r.ok) throw new Error('no content'); return r.json(); })
+        .then(function (c) {
+          var wai = document.getElementById('who-am-i-body');
+          if (wai && c.who_am_i) wai.textContent = c.who_am_i;
+
+          var origin = document.getElementById('bio-origin');
+          if (origin && Array.isArray(c.music_bio_origin)) {
+            origin.innerHTML = '<h3>How it all began</h3>' +
+              c.music_bio_origin.map(function (p) { return '<p>' + esc(p) + '</p>'; }).join('');
+          }
+
+          var anthems = document.getElementById('bio-anthems');
+          if (anthems && Array.isArray(c.music_bio_anthems)) {
+            anthems.innerHTML = "<h3>Why ‘Anthems to the Fall’?</h3>" +
+              c.music_bio_anthems.map(function (p) { return '<p>' + esc(p) + '</p>'; }).join('');
+          }
+
+          var instruments = document.getElementById('bio-instruments');
+          if (instruments && Array.isArray(c.instruments)) {
+            instruments.innerHTML = c.instruments.map(function (inst) {
+              var cls = 'chip' + (inst.primary ? ' chip--primary' : '');
+              return '<span class="' + cls + '">' + esc(inst.name) + '</span>';
+            }).join('');
+          }
+
+          var projects = document.getElementById('bio-projects');
+          if (projects && Array.isArray(c.projects)) {
+            projects.innerHTML = c.projects.map(function (p) {
+              var dates = p.dates ? '<span class="proj-dates">' + esc(p.dates) + '</span>' : '';
+              return '<span class="project-chip">' + esc(p.name) + dates + '</span>';
+            }).join('');
+          }
+        })
+        .catch(function () {}); // HTML fallback stays if fetch fails
+    })();
+  </script>
   <footer>
     <div class="wrap">
       <div>&copy; <span id="y"></span> Anthemic Developments</div>

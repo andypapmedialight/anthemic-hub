@@ -8,6 +8,7 @@
 #   bass/             - bass coaching static site (e.g. bass/index.html)
 #   brain/            - 3D brain hub page (e.g. brain/index.html)
 #   gigs/             - gig calendar (gigs/index.html + gigs.json)
+#   content/          - admin-editable site content (content/hub.json)
 #
 set -euo pipefail
 
@@ -31,28 +32,29 @@ if [[ ! -f "${INCOMING}/gigs/index.html" ]] || [[ ! -f "${INCOMING}/gigs/gigs.js
   exit 1
 fi
 
-mkdir -p "${DEST}/bass" "${DEST}/brain" "${DEST}/gigs"
+mkdir -p "${DEST}/bass" "${DEST}/brain" "${DEST}/gigs" "${DEST}/content"
 
-# Preserve admin-managed gigs.json: back up before rsync, restore after.
-# Git copy in incoming/ acts as the seed on first deploy only.
+# Preserve admin-managed files: back up before rsync, restore after.
+# Git copies act as seeds on first deploy only.
+function preserve_backup() { local f="$1"; local bk=""; if [[ -f "$f" ]]; then bk="$(mktemp)"; cp "$f" "$bk"; fi; echo "$bk"; }
+function preserve_restore() { local f="$1"; local bk="$2"; if [[ -n "$bk" ]]; then cp "$bk" "$f"; rm -f "$bk"; fi; }
+
 GIGS_LIVE="${DEST}/gigs/gigs.json"
-GIGS_BACKUP=""
-if [[ -f "${GIGS_LIVE}" ]]; then
-  GIGS_BACKUP="$(mktemp)"
-  cp "${GIGS_LIVE}" "${GIGS_BACKUP}"
-fi
+CONTENT_LIVE="${DEST}/content/hub.json"
+GIGS_BACKUP="$(preserve_backup "${GIGS_LIVE}")"
+CONTENT_BACKUP="$(preserve_backup "${CONTENT_LIVE}")"
 
 # Two-step rsync: multi-source rsync --delete has been observed to skip or clobber bass/ on the droplet.
 rsync -a "${INCOMING}/index.html" "${DEST}/"
 rsync -a --delete "${INCOMING}/bass/" "${DEST}/bass/"
 rsync -a --delete "${INCOMING}/brain/" "${DEST}/brain/"
 rsync -a --delete "${INCOMING}/gigs/" "${DEST}/gigs/"
+rsync -a --delete "${INCOMING}/content/" "${DEST}/content/"
 
-# Restore live gigs.json so admin edits survive deploys.
-if [[ -n "${GIGS_BACKUP}" ]]; then
-  cp "${GIGS_BACKUP}" "${GIGS_LIVE}"
-  rm -f "${GIGS_BACKUP}"
-fi
+# Restore live admin-managed files so edits survive deploys.
+preserve_restore "${GIGS_LIVE}"    "${GIGS_BACKUP}"
+preserve_restore "${CONTENT_LIVE}" "${CONTENT_BACKUP}"
+
 if [[ -d "${INCOMING}/assets" ]]; then
   mkdir -p "${DEST}/assets"
   rsync -a --delete "${INCOMING}/assets/" "${DEST}/assets/"
