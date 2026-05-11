@@ -233,14 +233,20 @@
       line-height: 1.5;
     }
     .gig-meta strong { color: var(--fg); font-weight: 500; }
-    .gig-actions { margin-top: 12px; }
+    .gig-actions {
+      margin-top: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 16px;
+      align-items: center;
+    }
     .gig-actions a {
-      display: inline-block;
       font-family: var(--font-ui);
       font-size: 13px;
       font-weight: 600;
       color: var(--accent-live);
       text-decoration: none;
+      white-space: nowrap;
     }
     .gig-actions a:hover { text-decoration: underline; text-underline-offset: 3px; }
     .empty {
@@ -258,6 +264,101 @@
       border: 1px solid var(--border-strong);
       background: var(--bg-card);
       color: var(--fg);
+    }
+    .cal-wrap {
+      margin-bottom: 32px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px 20px 16px;
+      user-select: none;
+    }
+    .cal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .cal-title {
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+    .cal-nav {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--fg-dim);
+      cursor: pointer;
+      font-family: var(--font-ui);
+      font-size: 13px;
+      line-height: 1;
+      padding: 6px 12px;
+    }
+    .cal-nav:hover { border-color: var(--border-strong); color: var(--fg); }
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 2px;
+    }
+    .cal-dow {
+      font-family: var(--font-ui);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--fg-dim);
+      text-align: center;
+      padding-bottom: 8px;
+    }
+    .cal-day {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 38px;
+      border-radius: 7px;
+      font-family: var(--font-ui);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--fg);
+      position: relative;
+    }
+    .cal-day--today {
+      background: rgba(201, 162, 39, 0.12);
+      color: var(--accent);
+      font-weight: 700;
+    }
+    .cal-day--has-gig {
+      background: var(--accent-live-soft);
+      color: var(--accent-live);
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .cal-day--has-gig:hover,
+    .cal-day--has-gig:focus-visible {
+      background: rgba(107, 156, 255, 0.22);
+      outline: 2px solid var(--accent-live);
+      outline-offset: 1px;
+    }
+    .cal-day--today.cal-day--has-gig {
+      background: var(--accent-live-soft);
+      color: var(--accent-live);
+    }
+    .cal-day--has-gig::after {
+      content: '';
+      position: absolute;
+      bottom: 4px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: 0.7;
+    }
+    html[data-theme="light"] .cal-day--today {
+      background: rgba(154, 116, 22, 0.1);
     }
   </style>
   <script src="/assets/js/theme-init.js"></script>
@@ -281,6 +382,8 @@
 
     <h1>Gig calendar</h1>
     <p class="lede">Upcoming first, then past dates.</p>
+
+    <div id="gig-calendar" class="cal-wrap" hidden></div>
 
     <p id="load-err" class="load-err" hidden></p>
 

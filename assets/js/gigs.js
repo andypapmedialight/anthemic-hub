@@ -20,6 +20,14 @@
 })();
 
 (function () {
+  var MONTH_NAMES = ["January","February","March","April","May","June",
+                     "July","August","September","October","November","December"];
+  var DOW = ["Mo","Tu","We","Th","Fr","Sa","Su"];
+
+  var calYear = new Date().getFullYear();
+  var calMonth = new Date().getMonth();
+  var calGigDates = {}; // "YYYY-MM-DD" -> ["Title", ...]
+
   function todayYmd() {
     var d = new Date();
     var y = d.getFullYear();
@@ -57,6 +65,70 @@
       .replace(/"/g, "&quot;");
   }
 
+  function renderCalendar() {
+    var calEl = document.getElementById("gig-calendar");
+    if (!calEl) return;
+
+    var todayStr = todayYmd();
+    var firstDay = new Date(calYear, calMonth, 1);
+    var startDow = (firstDay.getDay() + 6) % 7; // Mon = 0
+    var daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+
+    var html = "<div class=\"cal-header\">"
+      + "<button class=\"cal-nav\" id=\"cal-prev\" aria-label=\"Previous month\">&#8592;</button>"
+      + "<span class=\"cal-title\">" + MONTH_NAMES[calMonth] + " " + calYear + "</span>"
+      + "<button class=\"cal-nav\" id=\"cal-next\" aria-label=\"Next month\">&#8594;</button>"
+      + "</div>"
+      + "<div class=\"cal-grid\" role=\"grid\" aria-label=\"" + MONTH_NAMES[calMonth] + " " + calYear + "\">";
+
+    for (var h = 0; h < 7; h++) {
+      html += "<div class=\"cal-dow\" role=\"columnheader\">" + DOW[h] + "</div>";
+    }
+    for (var e = 0; e < startDow; e++) {
+      html += "<div class=\"cal-day\" aria-hidden=\"true\"></div>";
+    }
+    for (var d = 1; d <= daysInMonth; d++) {
+      var mm = String(calMonth + 1).padStart(2, "0");
+      var dd = String(d).padStart(2, "0");
+      var dateStr = calYear + "-" + mm + "-" + dd;
+      var cls = "cal-day";
+      var extra = "";
+      if (dateStr === todayStr) cls += " cal-day--today";
+      if (calGigDates[dateStr]) {
+        cls += " cal-day--has-gig";
+        var label = d + ", " + esc(calGigDates[dateStr].join(", "));
+        extra = " role=\"button\" tabindex=\"0\" data-cal-date=\"" + esc(dateStr)
+              + "\" aria-label=\"" + label + "\"";
+      }
+      html += "<div class=\"" + cls + "\"" + extra + ">" + d + "</div>";
+    }
+    html += "</div>";
+
+    calEl.innerHTML = html;
+    calEl.removeAttribute("hidden");
+
+    document.getElementById("cal-prev").addEventListener("click", function () {
+      calMonth--;
+      if (calMonth < 0) { calMonth = 11; calYear--; }
+      renderCalendar();
+    });
+    document.getElementById("cal-next").addEventListener("click", function () {
+      calMonth++;
+      if (calMonth > 11) { calMonth = 0; calYear++; }
+      renderCalendar();
+    });
+
+    calEl.querySelectorAll("[data-cal-date]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var target = document.querySelector("[data-gig-date=\"" + btn.getAttribute("data-cal-date") + "\"]");
+        if (target) target.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      });
+      btn.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); btn.click(); }
+      });
+    });
+  }
+
   function buildCard(g, upcoming) {
     var ymd = parseYmd(g.date);
     if (!ymd) return null;
@@ -68,17 +140,25 @@
     if (supportLine) metaParts.push(supportLine);
     if (roleLine) metaParts.push(roleLine);
     var meta = metaParts.length ? "<p class=\"gig-meta\">" + metaParts.join("<br />") + "</p>" : "";
-    var link = (g.link && String(g.link).trim())
-      ? "<div class=\"gig-actions\"><a href=\"" + esc(g.link) + "\" target=\"_blank\" rel=\"noopener noreferrer\">Event details →</a></div>"
+    var actionDefs = [
+      [g.link,         "Event details"],
+      [g.tickets_link, "Tickets"],
+      [g.maps_link,    "Map"],
+      [g.venue_link,   "Venue"],
+    ];
+    var actionItems = actionDefs.filter(function (l) { return l[0] && String(l[0]).trim(); });
+    var link = actionItems.length
+      ? "<div class=\"gig-actions\">" + actionItems.map(function (l) {
+          return "<a href=\"" + esc(l[0]) + "\" target=\"_blank\" rel=\"noopener noreferrer\">" + esc(l[1]) + " →</a>";
+        }).join("") + "</div>"
       : "";
     var badge = upcoming ? "<span class=\"badge upcoming\">Upcoming</span>" : "<span class=\"badge past\">Past</span>";
     var cls = "gig-card" + (upcoming ? " gig-card--upcoming" : "");
     return (
-      "<article class=\"" + cls + "\">" +
+      "<article class=\"" + cls + "\" data-gig-date=\"" + esc(g.date) + "\">" +
         "<div class=\"row-top\">" + badge + "<span class=\"gig-date\">" + esc(formatWhen(ymd, g.time)) + "</span></div>" +
         "<h3 class=\"gig-title\">" + esc(g.title) + "</h3>" +
-        meta +
-        link +
+        meta + link +
       "</article>"
     );
   }
@@ -97,15 +177,19 @@
       var today = todayYmd();
       var upcoming = [];
       var past = [];
+
       for (var i = 0; i < list.length; i++) {
         var g = list[i];
         if (!g || typeof g !== "object") continue;
         if (!g.date || !g.title) continue;
         var ymd = parseYmd(g.date);
         if (!ymd) continue;
+        if (!calGigDates[g.date]) calGigDates[g.date] = [];
+        calGigDates[g.date].push(g.title);
         if (g.date >= today) upcoming.push(g);
         else past.push(g);
       }
+
       upcoming.sort(function (a, b) { return compareYmd(parseYmd(a.date), parseYmd(b.date)); });
       past.sort(function (a, b) { return compareYmd(parseYmd(b.date), parseYmd(a.date)); });
 
@@ -115,6 +199,14 @@
       pastEl.innerHTML = past.length
         ? past.map(function (g) { return buildCard(g, false); }).join("")
         : "<p class=\"empty\">No past gigs yet.</p>";
+
+      // Jump to the month of the first upcoming gig if it exists
+      if (upcoming.length > 0) {
+        var first = parseYmd(upcoming[0].date);
+        if (first) { calYear = first.y; calMonth = first.m - 1; }
+      }
+
+      renderCalendar();
     })
     .catch(function () {
       errEl.hidden = false;

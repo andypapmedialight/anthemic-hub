@@ -88,7 +88,14 @@ function regenerateManifest(string $dir): void {
 }
 
 function knownGigKeys(): array {
-    return ['date', 'title', 'venue', 'city', 'time', 'role', 'support', 'link'];
+    return ['date', 'title', 'venue', 'city', 'time', 'role', 'support',
+            'link', 'tickets_link', 'maps_link', 'venue_link'];
+}
+
+function sanitizeUrl(string $raw): string {
+    $url = trim($raw);
+    if ($url && !preg_match('#^https?://#i', $url)) return '';
+    return substr($url, 0, 500);
 }
 
 function extraGigKeys(array $gigs): array {
@@ -105,17 +112,18 @@ function extraGigKeys(array $gigs): array {
 }
 
 function sanitizeGig(array $p, array $extraKeys = []): array {
-    $url = trim($p['link'] ?? '');
-    if ($url && !preg_match('#^https?://#i', $url)) $url = '';
     $out = [
-        'date'    => preg_replace('/[^0-9\-]/', '', substr($p['date']    ?? '', 0, 10)),
-        'title'   => substr(trim(strip_tags($p['title']   ?? '')), 0, 200),
-        'venue'   => substr(trim(strip_tags($p['venue']   ?? '')), 0, 200),
-        'city'    => substr(trim(strip_tags($p['city']    ?? '')), 0, 100),
-        'time'    => substr(trim(strip_tags($p['time']    ?? '')), 0, 50),
-        'role'    => substr(trim(strip_tags($p['role']    ?? '')), 0, 100),
-        'support' => substr(trim(strip_tags($p['support'] ?? '')), 0, 200),
-        'link'    => substr($url, 0, 500),
+        'date'         => preg_replace('/[^0-9\-]/', '', substr($p['date']    ?? '', 0, 10)),
+        'title'        => substr(trim(strip_tags($p['title']   ?? '')), 0, 200),
+        'venue'        => substr(trim(strip_tags($p['venue']   ?? '')), 0, 200),
+        'city'         => substr(trim(strip_tags($p['city']    ?? '')), 0, 100),
+        'time'         => substr(trim(strip_tags($p['time']    ?? '')), 0, 50),
+        'role'         => substr(trim(strip_tags($p['role']    ?? '')), 0, 100),
+        'support'      => substr(trim(strip_tags($p['support'] ?? '')), 0, 200),
+        'link'         => sanitizeUrl($p['link']         ?? ''),
+        'tickets_link' => sanitizeUrl($p['tickets_link'] ?? ''),
+        'maps_link'    => sanitizeUrl($p['maps_link']    ?? ''),
+        'venue_link'   => sanitizeUrl($p['venue_link']   ?? ''),
     ];
     foreach ($extraKeys as $k) {
         $out[$k] = substr(trim(strip_tags($p[$k] ?? '')), 0, 500);
@@ -335,8 +343,20 @@ function gigForm(string $action, array $g = [], int $idx = -1, string $csrf = ''
       <input type="text" name="support" value="<?= h($g['support'] ?? '') ?>" placeholder="Opening act" />
     </div>
     <div class="field span2">
-      <label>Link</label>
+      <label>Event link</label>
       <input type="url" name="link" value="<?= h($g['link'] ?? '') ?>" placeholder="https://..." />
+    </div>
+    <div class="field">
+      <label>Tickets link</label>
+      <input type="url" name="tickets_link" value="<?= h($g['tickets_link'] ?? '') ?>" placeholder="https://..." />
+    </div>
+    <div class="field">
+      <label>Maps link</label>
+      <input type="url" name="maps_link" value="<?= h($g['maps_link'] ?? '') ?>" placeholder="https://maps.google.com/..." />
+    </div>
+    <div class="field span2">
+      <label>Venue link</label>
+      <input type="url" name="venue_link" value="<?= h($g['venue_link'] ?? '') ?>" placeholder="https://..." />
     </div>
     <?php foreach ($extraKeys as $ek): ?>
     <div class="field span2">
