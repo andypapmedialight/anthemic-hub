@@ -90,7 +90,7 @@ function regenerateManifest(string $dir): void {
 
 function knownGigKeys(): array {
     return ['date', 'title', 'venue', 'city', 'time', 'role', 'support',
-            'link', 'tickets_link', 'maps_link', 'venue_link',
+            'description', 'link', 'tickets_link', 'maps_link', 'venue_link',
             'free', 'price', 'poster'];
 }
 
@@ -144,6 +144,7 @@ function sanitizeGig(array $p, array $extraKeys = []): array {
         'time'         => substr(trim(strip_tags($p['time']    ?? '')), 0, 50),
         'role'         => substr(trim(strip_tags($p['role']    ?? '')), 0, 100),
         'support'      => substr(trim(strip_tags($p['support'] ?? '')), 0, 200),
+        'description'  => substr(trim(strip_tags($p['description'] ?? '')), 0, 500),
         'link'         => sanitizeUrl($p['link']         ?? ''),
         'tickets_link' => sanitizeUrl($p['tickets_link'] ?? ''),
         'maps_link'    => sanitizeUrl($p['maps_link']    ?? ''),
@@ -383,6 +384,10 @@ function gigForm(string $action, array $g = [], int $idx = -1, string $csrf = ''
     <div class="field">
       <label>Support</label>
       <input type="text" name="support" value="<?= h($g['support'] ?? '') ?>" placeholder="Opening act" />
+    </div>
+    <div class="field span2">
+      <label>Description</label>
+      <textarea name="description" rows="3" style="width:100%;padding:9px 11px;background:#0e1015;border:1px solid #2a3140;border-radius:6px;color:#eceef4;font-family:inherit;font-size:.9rem;resize:vertical"><?= h($g['description'] ?? '') ?></textarea>
     </div>
     <div class="field">
       <label>Entry</label>

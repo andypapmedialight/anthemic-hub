@@ -161,14 +161,47 @@
           + "\" alt=\"" + esc(g.title) + " poster\" loading=\"lazy\" decoding=\"async\" />"
       : "";
     var cls = "gig-card" + (upcoming ? " gig-card--upcoming" : "") + (poster ? " gig-card--has-poster" : "");
+    var desc = (g.description && String(g.description).trim())
+      ? "<p class=\"gig-desc\">" + esc(g.description) + "</p>"
+      : "";
     return (
       "<article class=\"" + cls + "\" data-gig-date=\"" + esc(g.date) + "\">" +
         poster +
         "<div class=\"row-top\">" + badge + "<span class=\"gig-date\">" + esc(formatWhen(ymd, g.time)) + "</span>" + entryTag + "</div>" +
         "<h3 class=\"gig-title\">" + esc(g.title) + "</h3>" +
-        meta + link +
+        desc + meta + link +
       "</article>"
     );
+  }
+
+  function injectEventSchemas(gigs) {
+    var schemas = gigs.map(function (g) {
+      var schema = {
+        "@context": "https://schema.org",
+        "@type": "Event",
+        "name": g.title,
+        "startDate": g.date,
+        "eventStatus": "https://schema.org/EventScheduled",
+        "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode"
+      };
+      if (g.venue || g.city) {
+        schema.location = { "@type": "Place", "name": g.venue || g.city };
+        if (g.venue && g.city) schema.location.address = g.city;
+      }
+      if (g.description && String(g.description).trim()) schema.description = g.description;
+      if (g.link && String(g.link).trim()) schema.url = g.link;
+      if (g.tickets_link && String(g.tickets_link).trim()) {
+        schema.offers = { "@type": "Offer", "url": g.tickets_link, "availability": "https://schema.org/InStock" };
+        if (g.free) { schema.offers.price = "0"; schema.offers.priceCurrency = "AUD"; }
+      } else if (g.free) {
+        schema.offers = { "@type": "Offer", "price": "0", "priceCurrency": "AUD", "availability": "https://schema.org/InStock" };
+      }
+      return schema;
+    });
+    var el = document.createElement("script");
+    el.type = "application/ld+json";
+    el.text = JSON.stringify(schemas);
+    document.head.appendChild(el);
   }
 
   var upcomingEl = document.getElementById("gigs-upcoming");
@@ -200,6 +233,7 @@
 
       upcoming.sort(function (a, b) { return compareYmd(parseYmd(a.date), parseYmd(b.date)); });
       past.sort(function (a, b) { return compareYmd(parseYmd(b.date), parseYmd(a.date)); });
+      if (upcoming.length) injectEventSchemas(upcoming);
 
       upcomingEl.innerHTML = upcoming.length
         ? upcoming.map(function (g) { return buildCard(g, true); }).join("")
