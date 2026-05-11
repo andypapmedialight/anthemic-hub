@@ -552,6 +552,92 @@
       outline: 2px solid var(--accent-live);
       outline-offset: 2px;
     }
+    .bio-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px 20px 16px 8px;
+      padding: 26px 26px 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .bio-label {
+      font-family: var(--font-ui);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--fg-dim);
+      margin-bottom: 10px;
+    }
+    .bio-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+    .chip {
+      font-family: var(--font-ui);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 20px;
+      background: var(--bg-wash);
+      border: 1px solid var(--border);
+      color: var(--fg);
+    }
+    .chip--primary {
+      background: var(--accent-live-soft);
+      border-color: var(--badge-live-border);
+      color: var(--badge-live-fg);
+    }
+    .bio-divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0;
+    }
+    .bio-projects-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px 8px;
+    }
+    .project-chip {
+      font-family: var(--font-ui);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 5px;
+      background: var(--bg-wash);
+      border: 1px solid var(--border);
+      color: var(--fg);
+      white-space: nowrap;
+    }
+    .project-chip .proj-dates {
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 600;
+      margin-left: 5px;
+    }
+    .bio-prose {
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+    .bio-prose-section h3 {
+      margin: 0 0 10px;
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--fg);
+    }
+    .bio-prose-section p {
+      margin: 0 0 10px;
+      color: var(--fg-dim);
+      font-size: 0.93rem;
+      line-height: 1.72;
+      max-width: 72ch;
+    }
+    .bio-prose-section p:last-child { margin-bottom: 0; }
   </style>
 </head>
 <body>
@@ -691,6 +777,60 @@
       </div>
       </div>
 
+      <div class="hub-section" data-hub-section="music-bio" data-interests="music personal">
+      <h2 class="section-heading"><span class="sec-num" aria-hidden="true">03</span> <span class="sec-title">Music bio</span></h2>
+      <article class="bio-card">
+        <div>
+          <div class="bio-label">Instruments</div>
+          <div class="bio-chips">
+            <span class="chip chip--primary">Double bass</span>
+            <span class="chip chip--primary">Electric bass</span>
+            <span class="chip">Guitar</span>
+            <span class="chip">Keys</span>
+            <span class="chip">Drums</span>
+            <span class="chip">Vocals</span>
+          </div>
+        </div>
+        <hr class="bio-divider" />
+        <div>
+          <div class="bio-label">Projects &amp; artists</div>
+          <div class="bio-projects-grid">
+            <span class="project-chip">Helvellyn<span class="proj-dates">1989–92</span></span>
+            <span class="project-chip">Dollop<span class="proj-dates">1993–96</span></span>
+            <span class="project-chip">Registered Nurse<span class="proj-dates">1999–2004</span></span>
+            <span class="project-chip">Root Bound System<span class="proj-dates">2000–06</span></span>
+            <span class="project-chip">Deborah Conway<span class="proj-dates">2004–07</span></span>
+            <span class="project-chip">Mistah Savona<span class="proj-dates">2006–</span></span>
+            <span class="project-chip">Andrew McCubbin &amp; the Hope Addicts</span>
+            <span class="project-chip">Cam Butler</span>
+            <span class="project-chip">Phillipa Nihill</span>
+            <span class="project-chip">Elizaband</span>
+            <span class="project-chip">Stutz</span>
+            <span class="project-chip">The Spoils</span>
+            <span class="project-chip">The Telecaster Diaries</span>
+            <span class="project-chip">Marcel Borrack</span>
+            <span class="project-chip">Streams of Whiskey</span>
+            <span class="project-chip">Horace Andy</span>
+            <span class="project-chip">The Willard Grant Conspiracy</span>
+          </div>
+        </div>
+        <hr class="bio-divider" />
+        <div class="bio-prose">
+          <div class="bio-prose-section">
+            <h3>How it all began</h3>
+            <p>A long, long time ago in a decade far far away that has come to be known as 'the eighties' one of Andy's best friends ran into their classroom at a Melbourne school, his eyes wide with excitement having recently played a drum kit for the first time: 'Maaate!', he proclaimed in an English accent which had shown only the slightest hint of ockerisation, '...we have to put a band together!, it'll be great!, we'll get heaps of chicks!' Andy's eyes widened though he was still unsure of his particular role in this venture, but his friend continued, '....you've got big hands — you can play bass!'</p>
+            <p>And so, that very week, having no idea what they were looking for, the two went round to check out a cheap bass they had seen advertised in the trading paper. The seller invited them into his bedroom, but as neither of the new band members could play a note, the seller had to demonstrate. He flicked on the radio, plugged the bass into the stereo amp and jammed along to Phil Collins and Billy Ocean's 'Easy Lover'. Andy and his mate were positively dribbling — 'We are SO doing this!'</p>
+            <p>And so began Andy's musical journey, from his first band with his excitable school buddy 'The Cultural Terrorists' to his first solo project 'Anthems to the Fall'.</p>
+          </div>
+          <div class="bio-prose-section">
+            <h3>Why 'Anthems to the Fall'?</h3>
+            <p>History, Nature, Myth — they are all replete with rises and falls. So often we valorise the rise, but where would we be without the fall? If we had not eaten from the tree of knowledge? If empires had not fallen? If we did not make mistakes? If we did not grow old and die?</p>
+            <p>This is a celebration of imperfection: from the errors in the copying of genetic code that makes evolution possible, to the hubris that brings down tyrants, to a fate that defies the best of intentions. An imperfection that asserts itself in the face of a misguided striving for perfection — this is the realisation that fall is necessary for a rise to be possible, that imperfection is beautiful and, yes, that we live by trial and error. But mainly error.</p>
+          </div>
+        </div>
+      </article>
+      </div>
+
       <div class="hub-section" data-hub-section="work">
       <h2 class="section-heading"><span class="sec-num" aria-hidden="true">03</span> <span class="sec-title">Work</span></h2>
       <section class="grid" aria-label="Professional work">
@@ -765,8 +905,12 @@
           }
           function sectionMatchCount(block, interest) {
             if (!interest || interest === "all") return 0;
-            var cards = block.querySelectorAll("section.grid > .card[data-interests]");
             var n = 0;
+            // Section-level data-interests (e.g. bio section with no grid cards)
+            var sectionTags = (block.getAttribute("data-interests") || "").trim().split(/\s+/).filter(Boolean);
+            if (sectionTags.indexOf(interest) !== -1) n++;
+            // Card-level matches within grids
+            var cards = block.querySelectorAll("section.grid > .card[data-interests]");
             for (var i = 0; i < cards.length; i++) {
               if (cardMatchesInterest(cards[i], interest)) n++;
             }
