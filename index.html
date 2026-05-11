@@ -12,16 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700&display=swap" rel="stylesheet" />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%230e1015%22%2F%3E%3Cpath%20d%3D%22M8%2046%20C16%2024%2C24%2024%2C32%2046%20C40%2024%2C48%2024%2C56%2046%22%20fill%3D%22none%22%20stroke%3D%22%23c9a227%22%20stroke-width%3D%225%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%223%22%20fill%3D%22%236b9cff%22%2F%3E%3C%2Fsvg%3E" />
   <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%230e1015%22%2F%3E%3Cpath%20d%3D%22M8%2046%20C16%2024%2C24%2024%2C32%2046%20C40%2024%2C48%2024%2C56%2046%22%20fill%3D%22none%22%20stroke%3D%22%23c9a227%22%20stroke-width%3D%225%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%223%22%20fill%3D%22%236b9cff%22%2F%3E%3C%2Fsvg%3E" />
-  <script>
-    (function () {
-      var key = "anthemic-hub-theme";
-      var r = document.documentElement;
-      var v;
-      try { v = localStorage.getItem(key); } catch (e) { v = null; }
-      if (v === "light" || v === "dark") r.setAttribute("data-theme", v);
-      else r.setAttribute("data-theme", window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-    })();
-  </script>
+
   <style>
     html {
       color-scheme: dark;
@@ -639,7 +630,8 @@
     }
     .bio-prose-section p:last-child { margin-bottom: 0; }
   </style>
-</head>
+  <script src="/assets/js/theme-init.js"></script>
+
 <body>
   <header>
     <div class="wrap header-top">
@@ -848,228 +840,12 @@
     </div>
   </main>
 
-  <script>
-    (function () {
-      function esc(s) {
-        return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      }
-      fetch('/content/hub.json', { cache: 'no-store' })
-        .then(function (r) { if (!r.ok) throw new Error('no content'); return r.json(); })
-        .then(function (c) {
-          var wai = document.getElementById('who-am-i-body');
-          if (wai && c.who_am_i) wai.textContent = c.who_am_i;
-
-          var origin = document.getElementById('bio-origin');
-          if (origin && Array.isArray(c.music_bio_origin)) {
-            origin.innerHTML = '<h3>How it all began</h3>' +
-              c.music_bio_origin.map(function (p) { return '<p>' + esc(p) + '</p>'; }).join('');
-          }
-
-          var anthems = document.getElementById('bio-anthems');
-          if (anthems && Array.isArray(c.music_bio_anthems)) {
-            anthems.innerHTML = "<h3>Why ‘Anthems to the Fall’?</h3>" +
-              c.music_bio_anthems.map(function (p) { return '<p>' + esc(p) + '</p>'; }).join('');
-          }
-
-          var instruments = document.getElementById('bio-instruments');
-          if (instruments && Array.isArray(c.instruments)) {
-            instruments.innerHTML = c.instruments.map(function (inst) {
-              var cls = 'chip' + (inst.primary ? ' chip--primary' : '');
-              return '<span class="' + cls + '">' + esc(inst.name) + '</span>';
-            }).join('');
-          }
-
-          var projects = document.getElementById('bio-projects');
-          if (projects && Array.isArray(c.projects)) {
-            projects.innerHTML = c.projects.map(function (p) {
-              var dates = p.dates ? '<span class="proj-dates">' + esc(p.dates) + '</span>' : '';
-              return '<span class="project-chip">' + esc(p.name) + dates + '</span>';
-            }).join('');
-          }
-        })
-        .catch(function () {}); // HTML fallback stays if fetch fails
-    })();
-  </script>
   <footer>
     <div class="wrap">
       <div>&copy; <span id="y"></span> Anthemic Developments</div>
-      <script>
-        (function () {
-          var key = "anthemic-hub-theme";
-          var root = document.documentElement;
-          function syncThemeButtons() {
-            var t = root.getAttribute("data-theme") || "dark";
-            var d = document.getElementById("theme-dark");
-            var l = document.getElementById("theme-light");
-            if (d) d.setAttribute("aria-pressed", t === "dark" ? "true" : "false");
-            if (l) l.setAttribute("aria-pressed", t === "light" ? "true" : "false");
-          }
-          function setTheme(theme) {
-            if (theme !== "light" && theme !== "dark") return;
-            root.setAttribute("data-theme", theme);
-            try { localStorage.setItem(key, theme); } catch (e) {}
-            syncThemeButtons();
-          }
-          document.getElementById("theme-dark").addEventListener("click", function () { setTheme("dark"); });
-          document.getElementById("theme-light").addEventListener("click", function () { setTheme("light"); });
-          syncThemeButtons();
-          var y = document.getElementById("y");
-          if (y) y.textContent = new Date().getFullYear();
 
-          var interestKey = "anthemic-hub-interest";
-          var interestSelect = document.getElementById("hub-interest");
-          var interestValues = ["all", "music", "teaching", "creative", "work", "community", "personal"];
-
-          function cardInterestTags(el) {
-            return (el.getAttribute("data-interests") || "").trim().split(/\s+/).filter(Boolean);
-          }
-          function cardMatchesInterest(el, interest) {
-            if (!interest || interest === "all") return true;
-            return cardInterestTags(el).indexOf(interest) !== -1;
-          }
-          function assignOriginalOrder() {
-            var sections = document.querySelectorAll("main section.grid");
-            for (var s = 0; s < sections.length; s++) {
-              var cards = sections[s].querySelectorAll(":scope > a.card");
-              for (var i = 0; i < cards.length; i++) {
-                cards[i].setAttribute("data-orig-order", String(i));
-              }
-            }
-          }
-          function assignOriginalSectionOrder() {
-            var wrap = document.querySelector("main .wrap");
-            if (!wrap) return;
-            var blocks = wrap.querySelectorAll(":scope > .hub-section");
-            for (var i = 0; i < blocks.length; i++) {
-              blocks[i].setAttribute("data-orig-section-order", String(i));
-            }
-          }
-          function sectionMatchCount(block, interest) {
-            if (!interest || interest === "all") return 0;
-            var n = 0;
-            // Section-level data-interests (e.g. bio section with no grid cards)
-            var sectionTags = (block.getAttribute("data-interests") || "").trim().split(/\s+/).filter(Boolean);
-            if (sectionTags.indexOf(interest) !== -1) n++;
-            // Card-level matches within grids
-            var cards = block.querySelectorAll("section.grid > .card[data-interests]");
-            for (var i = 0; i < cards.length; i++) {
-              if (cardMatchesInterest(cards[i], interest)) n++;
-            }
-            return n;
-          }
-          function sortGridsByInterest(interest) {
-            var sections = document.querySelectorAll("main section.grid");
-            for (var s = 0; s < sections.length; s++) {
-              var section = sections[s];
-              var cards = Array.prototype.slice.call(section.querySelectorAll(":scope > a.card"));
-              cards.sort(function (a, b) {
-                var ao = parseInt(a.getAttribute("data-orig-order") || "0", 10);
-                var bo = parseInt(b.getAttribute("data-orig-order") || "0", 10);
-                if (!interest || interest === "all") return ao - bo;
-                var aMatch = cardMatchesInterest(a, interest) ? 0 : 1;
-                var bMatch = cardMatchesInterest(b, interest) ? 0 : 1;
-                if (aMatch !== bMatch) return aMatch - bMatch;
-                return ao - bo;
-              });
-              for (var i = 0; i < cards.length; i++) section.appendChild(cards[i]);
-            }
-          }
-          function sortHubSectionsByInterest(interest) {
-            var wrap = document.querySelector("main .wrap");
-            if (!wrap) return;
-            var blocks = Array.prototype.slice.call(wrap.querySelectorAll(":scope > .hub-section"));
-            if (!blocks.length) return;
-            blocks.sort(function (a, b) {
-              var ao = parseInt(a.getAttribute("data-orig-section-order") || "0", 10);
-              var bo = parseInt(b.getAttribute("data-orig-section-order") || "0", 10);
-              if (!interest || interest === "all") return ao - bo;
-              var ac = sectionMatchCount(a, interest);
-              var bc = sectionMatchCount(b, interest);
-              var aHit = ac > 0 ? 1 : 0;
-              var bHit = bc > 0 ? 1 : 0;
-              if (aHit !== bHit) {
-                if (aHit && !bHit) return -1;
-                if (!aHit && bHit) return 1;
-              }
-              if (ac !== bc) return bc - ac;
-              return ao - bo;
-            });
-            for (var i = 0; i < blocks.length; i++) wrap.appendChild(blocks[i]);
-          }
-          function updateSectionNumbers() {
-            var wrap = document.querySelector("main .wrap");
-            if (!wrap) return;
-            var blocks = wrap.querySelectorAll(":scope > .hub-section");
-            for (var i = 0; i < blocks.length; i++) {
-              var num = blocks[i].querySelector(".sec-num");
-              if (num) num.textContent = i + 1 < 10 ? "0" + (i + 1) : String(i + 1);
-            }
-          }
-          function setInterest(interest) {
-            if (interestValues.indexOf(interest) === -1) interest = "all";
-            if (interestSelect) interestSelect.value = interest;
-            sortGridsByInterest(interest);
-            sortHubSectionsByInterest(interest);
-            updateSectionNumbers();
-            try { localStorage.setItem(interestKey, interest); } catch (e) {}
-          }
-          assignOriginalOrder();
-          assignOriginalSectionOrder();
-          if (interestSelect) {
-            var saved = null;
-            try { saved = localStorage.getItem(interestKey); } catch (e) {}
-            if (saved && interestValues.indexOf(saved) !== -1) interestSelect.value = saved;
-            setInterest(interestSelect.value);
-            interestSelect.addEventListener("change", function () {
-              setInterest(interestSelect.value);
-            });
-          }
-        })();
-      </script>
-      <script>
-        (function () {
-          var wrap = document.getElementById("photo-gallery-wrap");
-          var ul   = document.getElementById("photo-gallery");
-          if (!wrap || !ul) return;
-          function checkVisible() {
-            var items = ul.querySelectorAll("li");
-            var visible = 0;
-            for (var i = 0; i < items.length; i++) {
-              if (items[i].style.display !== "none" && !items[i].hasAttribute("hidden")) visible++;
-            }
-            if (visible === 0) wrap.setAttribute("hidden", "");
-            else wrap.removeAttribute("hidden");
-          }
-          function attachErrors() {
-            ul.querySelectorAll("img[data-gallery-img]").forEach(function (img) {
-              img.addEventListener("error", function () {
-                var li = img.closest("li");
-                if (li) li.style.display = "none";
-                checkVisible();
-              });
-              if (img.complete && img.naturalWidth === 0) {
-                var li2 = img.closest("li");
-                if (li2) li2.style.display = "none";
-              }
-            });
-            checkVisible();
-          }
-          fetch("/assets/gallery/manifest.json", { cache: "no-store" })
-            .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
-            .then(function (data) {
-              if (!Array.isArray(data.images) || !data.images.length) throw new Error();
-              ul.innerHTML = data.images.map(function (f) {
-                var src = "/assets/gallery/" + encodeURIComponent(f);
-                var alt = f.replace(/\.[^.]+$/, "").replace(/[_\-]+/g, " ");
-                return "<li><a href=\"" + src + "\" target=\"_blank\" rel=\"noopener noreferrer\">" +
-                  "<img src=\"" + src + "\" alt=\"" + alt + "\" width=\"640\" height=\"640\" loading=\"lazy\" decoding=\"async\" data-gallery-img /></a></li>";
-              }).join("");
-              attachErrors();
-            })
-            .catch(attachErrors);
-        })();
-      </script>
     </div>
   </footer>
-</body>
+  <script defer src="/assets/js/hub.js"></script>
+
 </html>
