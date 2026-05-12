@@ -135,6 +135,10 @@ deploy ALL=(root) NOPASSWD: /usr/local/bin/anthemic-hub-deploy-apply.sh
 EOF
 sudo chmod 440 /etc/sudoers.d/deploy-anthemic-hub
 
+# After pulling a new apply script from the repo, refresh /usr/local/bin (CI relies on /tmp/anthemic-hub-incoming.path + this script):
+#   sudo install -o root -g root -m 755 /home/deploy/incoming-hub/anthemic-hub-deploy-apply.sh /usr/local/bin/anthemic-hub-deploy-apply.sh
+# (Use your real staging path if DEPLOY_USER is not `deploy`.)
+
 # Incoming dir
 sudo -u deploy mkdir -p /home/deploy/incoming-hub
 ```

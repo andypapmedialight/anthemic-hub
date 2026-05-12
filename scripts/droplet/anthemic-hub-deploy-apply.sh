@@ -3,9 +3,9 @@
 # Invoked by the deploy user via:
 #   sudo /usr/local/bin/anthemic-hub-deploy-apply.sh
 # Optional first argument sets INCOMING (manual override).
-# If no argument: read one line from /home/${SUDO_USER}/.incoming-hub-path when that file exists (CI),
-# else default /home/deploy/incoming-hub.
-# CI writes .incoming-hub-path so sudoers NOPASSWD can list this script with no args (some hosts reject argv).
+# If no argument: read one line from /tmp/anthemic-hub-incoming.path if it exists (CI writes this before sudo — works when SUDO_USER is unset).
+# Else read /home/${SUDO_USER}/.incoming-hub-path when present (manual).
+# Else default /home/deploy/incoming-hub.
 #   index.html        - the hub landing page
 #   assets/           - optional folder of static assets
 #   bass/             - bass coaching static site (e.g. bass/index.html)
@@ -17,10 +17,17 @@ set -euo pipefail
 
 if [[ -n "${1:-}" ]]; then
   INCOMING="$1"
+elif [[ -f /tmp/anthemic-hub-incoming.path ]]; then
+  IFS= read -r INCOMING < /tmp/anthemic-hub-incoming.path || true
+  INCOMING="${INCOMING//$'\r'/}"
+  INCOMING="${INCOMING//$'\n'/}"
+  INCOMING=$(printf '%s' "$INCOMING" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+  rm -f /tmp/anthemic-hub-incoming.path
 elif [[ -n "${SUDO_USER:-}" && -f "/home/${SUDO_USER}/.incoming-hub-path" ]]; then
   IFS= read -r INCOMING < "/home/${SUDO_USER}/.incoming-hub-path" || true
   INCOMING="${INCOMING//$'\r'/}"
   INCOMING="${INCOMING//$'\n'/}"
+  INCOMING=$(printf '%s' "$INCOMING" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 fi
 if [[ -z "${INCOMING:-}" ]]; then
   INCOMING="/home/deploy/incoming-hub"
