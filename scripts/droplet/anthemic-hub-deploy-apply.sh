@@ -2,10 +2,10 @@
 # Installed on the Droplet as /usr/local/bin/anthemic-hub-deploy-apply.sh (root, 755).
 # Invoked by the deploy user via:
 #   sudo /usr/local/bin/anthemic-hub-deploy-apply.sh
-# Optional first argument sets the incoming staging dir (CI uses this so sudoers NOPASSWD still matches this script, not `env`):
-#   sudo /usr/local/bin/anthemic-hub-deploy-apply.sh /home/ubuntu/incoming-hub
-#
-# Expects artifacts under $INCOMING (default /home/deploy/incoming-hub, or first argument):
+# Optional first argument sets INCOMING (manual override).
+# If no argument: read one line from /home/${SUDO_USER}/.incoming-hub-path when that file exists (CI),
+# else default /home/deploy/incoming-hub.
+# CI writes .incoming-hub-path so sudoers NOPASSWD can list this script with no args (some hosts reject argv).
 #   index.html        - the hub landing page
 #   assets/           - optional folder of static assets
 #   bass/             - bass coaching static site (e.g. bass/index.html)
@@ -17,12 +17,15 @@ set -euo pipefail
 
 if [[ -n "${1:-}" ]]; then
   INCOMING="$1"
-else
-  INCOMING="${INCOMING:-/home/deploy/incoming-hub}"
+elif [[ -n "${SUDO_USER:-}" && -f "/home/${SUDO_USER}/.incoming-hub-path" ]]; then
+  IFS= read -r INCOMING < "/home/${SUDO_USER}/.incoming-hub-path" || true
+  INCOMING="${INCOMING//$'\r'/}"
+  INCOMING="${INCOMING//$'\n'/}"
+fi
+if [[ -z "${INCOMING:-}" ]]; then
+  INCOMING="/home/deploy/incoming-hub"
 fi
 DEST=/var/www/anthemic-hub
-
-# CI rsyncs the latest script here each deploy; refresh /usr/local/bin copy (this run is already root via sudo).
 # If /usr/local/bin still predates this block, bootstrap once as root:
 #   install -m 755 /home/deploy/incoming-hub/anthemic-hub-deploy-apply.sh /usr/local/bin/anthemic-hub-deploy-apply.sh
 SELF_INCOMING="${INCOMING}/anthemic-hub-deploy-apply.sh"
@@ -139,5 +142,6 @@ if [[ -d "${INCOMING}/assets" ]]; then
 fi
 
 chown -R www-data:www-data "${DEST}"
+chmod -R a+rX "${DEST}"
 
 echo "anthemic-hub-deploy-apply: OK"

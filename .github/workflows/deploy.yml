@@ -90,7 +90,7 @@ jobs:
         run: |
           HUB_IN="/home/${DEPLOY_USER}/incoming-hub"
           ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            "sudo /usr/local/bin/anthemic-hub-deploy-apply.sh '${HUB_IN}'"
+            "printf '%s\\n' '${HUB_IN}' > /home/${DEPLOY_USER}/.incoming-hub-path && sudo /usr/local/bin/anthemic-hub-deploy-apply.sh"
 
       - name: Smoke test (hub + bass files on droplet)
         env:
@@ -113,8 +113,8 @@ jobs:
             'grep -qF "Bass Teacher" /var/www/anthemic-hub/bass/index.html' \
             || { echo "bass/index.html on droplet missing expected content marker"; exit 1; }
           ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            'sudo test -f /var/www/anthemic-hub/personal/writing/index.html' \
-            || { echo "After apply, /var/www/anthemic-hub/personal/writing/index.html missing or unreadable (expect incoming under ${HUB_IN}/personal/; apply was: sudo apply.sh ${HUB_IN})"; exit 1; }
+            'test -f /var/www/anthemic-hub/personal/writing/index.html' \
+            || { echo "After apply, /var/www/anthemic-hub/personal/writing/index.html missing (incoming: ${HUB_IN})"; exit 1; }
           code_writing=$(curl -sS -o /dev/null -w "%{http_code}" --retry 3 --retry-delay 2 "https://anthemic-developments.com/personal/writing/")
           [[ "${code_writing}" == "200" ]] || { echo "Writing holding page /personal/writing/ returned HTTP ${code_writing} (sync anthemic-ops nginx to droplet; verify sites-enabled -> sites-available/anthemic-hub)"; exit 1; }
           curl -sS --retry 3 --retry-delay 2 "https://anthemic-developments.com/personal/writing/" -o /tmp/anthemic-smoke-writing.html
