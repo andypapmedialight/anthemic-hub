@@ -676,7 +676,8 @@
   </div>
 </footer>
 
-<!-- Site logic in papaweb.js — external file required when CSP blocks inline scripts (script-src 'self'). -->
+<!-- papaweb.config.js sets globalThis.PAPAWEB_CONTACT_SECRETS (Slack webhook, etc.); generated in CI from GitHub secret PAPAWEB_SLACK_WEBHOOK. -->
+<script src="papaweb.config.js"></script>
 <script src="papaweb.js" defer></script>
 </body>
 </html>

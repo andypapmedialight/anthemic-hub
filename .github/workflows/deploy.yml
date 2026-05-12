@@ -18,6 +18,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Write bass/papaweb.config.js (Slack webhook from secret)
+        env:
+          PAPAWEB_SLACK_WEBHOOK: ${{ secrets.PAPAWEB_SLACK_WEBHOOK }}
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const url = (process.env.PAPAWEB_SLACK_WEBHOOK || '').trim();
+          const o = {};
+          if (url) o.CONTACT_SLACK_WEBHOOK_URL = url;
+          const body =
+            '/* Generated in CI — do not edit on the droplet (redeploy overwrites). */\n' +
+            'globalThis.PAPAWEB_CONTACT_SECRETS = ' +
+            JSON.stringify(o) +
+            ';\n';
+          fs.writeFileSync('bass/papaweb.config.js', body);
+          NODE
+
       - name: Install SSH key
         uses: webfactory/ssh-agent@v0.9.0
         with:

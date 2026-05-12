@@ -1,13 +1,20 @@
 /* Contact form — first non-empty option wins.
  * Security (static site limits):
  * - Honeypot + rate limit + validation reduce casual bots; they are not proof against a determined attacker.
- * - Slack / Web3Forms URLs or keys in this file are visible to anyone who can load the script — rotate webhooks if abused; use CONTACT_FORM_ENDPOINT + your server for real secret handling.
+ * - Secrets (Slack webhook, Web3 key, …) must NOT live in this file if the repo has push protection: set repo secret PAPAWEB_SLACK_WEBHOOK and deploy writes bass/papaweb.config.js (see .github/workflows/deploy.yml), or edit papaweb.config.js only on the server.
  * Options: 1) CONTACT_FORM_ENDPOINT  2) CONTACT_FORMSPREE_ID  3) CONTACT_FORM_ACCESS_KEY  4) CONTACT_SLACK_WEBHOOK_URL  5) mailto CONTACT_TO_EMAIL */
-const CONTACT_FORM_ENDPOINT = '';
-const CONTACT_FORMSPREE_ID = '';
-const CONTACT_FORM_ACCESS_KEY = '';
-const CONTACT_SLACK_WEBHOOK_URL = '';
-const CONTACT_TO_EMAIL = 'hello@andypap.dev';
+const _PAPAWEB_SEC = typeof globalThis.PAPAWEB_CONTACT_SECRETS === 'object' && globalThis.PAPAWEB_CONTACT_SECRETS !== null
+  ? globalThis.PAPAWEB_CONTACT_SECRETS
+  : {};
+function pickContactStr(key) {
+  const v = _PAPAWEB_SEC[key];
+  return typeof v === 'string' && v.trim() !== '' ? v.trim() : '';
+}
+const CONTACT_FORM_ENDPOINT = pickContactStr('CONTACT_FORM_ENDPOINT');
+const CONTACT_FORMSPREE_ID = pickContactStr('CONTACT_FORMSPREE_ID');
+const CONTACT_FORM_ACCESS_KEY = pickContactStr('CONTACT_FORM_ACCESS_KEY');
+const CONTACT_SLACK_WEBHOOK_URL = pickContactStr('CONTACT_SLACK_WEBHOOK_URL');
+const CONTACT_TO_EMAIL = pickContactStr('CONTACT_TO_EMAIL') || 'hello@andypap.dev';
 
 const CONTACT_MAX_NAME = 120;
 const CONTACT_MAX_MSG = 8000;
