@@ -78,7 +78,7 @@ jobs:
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
         run: |
           ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            'test -f /home/deploy/incoming-hub/index.html && test -f /home/deploy/incoming-hub/bass/index.html && test -f /home/deploy/incoming-hub/brain/index.html && test -f /home/deploy/incoming-hub/gigs/index.html && test -f /home/deploy/incoming-hub/gigs/gigs.json && test -f /home/deploy/incoming-hub/content/hub.json && test -f /home/deploy/incoming-hub/content/reading-list.seed.json && test -f /home/deploy/incoming-hub/personal/index.html && test -f /home/deploy/incoming-hub/personal/writing/index.html' \
+            'test -f /home/deploy/incoming-hub/index.html && test -f /home/deploy/incoming-hub/bass/index.html && test -f /home/deploy/incoming-hub/brain/index.html && test -f /home/deploy/incoming-hub/gigs/index.html && test -f /home/deploy/incoming-hub/gigs/gigs.json && test -f /home/deploy/incoming-hub/content/hub.json && test -f /home/deploy/incoming-hub/content/reading-list.seed.json && test -f /home/deploy/incoming-hub/personal/index.html && test -f /home/deploy/incoming-hub/personal/writing/index.html && test -f /home/deploy/incoming-hub/personal/writing/quill-ink.svg' \
             || { echo "incoming-hub missing hub, bass, brain, gigs, content, reading-list.seed, or personal/ files after upload"; exit 1; }
 
       - name: Apply on Droplet
@@ -109,3 +109,8 @@ jobs:
           ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
             'grep -qF "Bass Teacher" /var/www/anthemic-hub/bass/index.html' \
             || { echo "bass/index.html on droplet missing expected content marker"; exit 1; }
+          code_writing=$(curl -sS -o /dev/null -w "%{http_code}" --retry 3 --retry-delay 2 "https://anthemic-developments.com/personal/writing/")
+          [[ "${code_writing}" == "200" ]] || { echo "Writing holding page /personal/writing/ returned HTTP ${code_writing} (sync nginx from anthemic-ops if 404)"; exit 1; }
+          curl -sS --retry 3 --retry-delay 2 "https://anthemic-developments.com/personal/writing/" -o /tmp/anthemic-smoke-writing.html
+          grep -qF 'Writing — coming soon' /tmp/anthemic-smoke-writing.html \
+            || { echo "Writing page missing expected <title> marker"; exit 1; }
