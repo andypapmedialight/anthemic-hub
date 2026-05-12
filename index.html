@@ -377,12 +377,7 @@
     .card.card--profile {
       cursor: default;
       grid-column: 1 / -1;
-      display: block;
-      padding: 0;
       overflow: hidden;
-    }
-    .card.card--profile > .badge {
-      margin: 20px 22px 6px;
     }
     .card.card--profile:hover {
       transform: translateY(-2px);
@@ -446,10 +441,15 @@
       display: none !important;
     }
     .card-profile-body {
-      padding: 22px 22px 24px;
+      padding: 0;
       display: flex;
       flex-direction: column;
       gap: 12px;
+    }
+    @media (max-width: 719px) {
+      .card-profile-body {
+        padding-top: 12px;
+      }
     }
     .card-profile-body .title { margin: 0; }
     .card-profile-body .desc { margin: 0; }
@@ -631,7 +631,6 @@
     .bio-prose-section p:last-child { margin-bottom: 0; }
   </style>
   <script src="/assets/js/theme-init.js"></script>
-
 <body>
   <header>
     <div class="wrap header-top">
@@ -686,7 +685,7 @@
             </div>
             <div class="card-profile-body">
               <div class="title">Who am I</div>
-              <p class="desc" id="who-am-i-body">Andy Papadopoulos trained as a software engineer — senior developer, full-stack engineer, and infrastructure architect at Mecca Medialight in Melbourne. He designs and ships web apps, mentors where he can, and tinkers on the side. Off the clock he plays music, teaches bass, and scratches creative itches here under Anthemic. Cinnamon (pictured) is the dog who runs quality assurance on morale.</p>
+              <p class="desc" id="who-am-i-body">Andy Papadopoulos,  trained as a software engineer — senior developer, full-stack engineer, and infrastructure architect at Mecca Medialight in Melbourne. He designs and ships web apps, mentors where he can, and tinkers on the side. Off the clock he plays music, teaches bass, and scratches creative itches here under Anthemic. Cinnamon (pictured) is the dog who runs quality assurance on morale.</p>
               <div class="card-profile-actions">
                 <a href="https://www.linkedin.com/in/andy-papadopoulos/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
                 <a href="https://anthemstothefall.bandcamp.com/" target="_blank" rel="noopener noreferrer">Bandcamp</a>
