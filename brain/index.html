@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Brain map — Anthemic Developments</title>
+  <title>Brain map - Anthemic Developments</title>
   <meta name="description" content="Interactive 3D brain linking to gigs, work, reading, and writing." />
   <link rel="preconnect" href="https://fonts.bunny.net" />
   <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
@@ -97,6 +97,77 @@
       min-height: 52vh;
       background: radial-gradient(ellipse at 50% 35%, color-mix(in srgb, var(--accent-live) 12%, transparent), transparent 55%);
     }
+    .brain-loading {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: color-mix(in srgb, var(--bg) 82%, transparent);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      transition: opacity 0.4s ease, visibility 0.4s ease;
+    }
+    .brain-loading.is-done {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .brain-loading-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      max-width: 280px;
+      text-align: center;
+    }
+    .brain-loading-spinner {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 3px solid color-mix(in srgb, var(--accent-live) 22%, var(--border));
+      border-top-color: var(--accent-live);
+      animation: brain-spin 0.85s linear infinite;
+    }
+    @keyframes brain-spin {
+      to { transform: rotate(360deg); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .brain-loading-spinner {
+        animation: none;
+        border-top-color: color-mix(in srgb, var(--accent-live) 55%, var(--border));
+      }
+    }
+    .brain-loading-text {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--fg);
+      letter-spacing: 0.02em;
+    }
+    .brain-loading-sub {
+      margin: -8px 0 0;
+      font-size: 12px;
+      color: var(--fg-dim);
+    }
+    .brain-loading-bar {
+      width: 100%;
+      max-width: 200px;
+      height: 4px;
+      border-radius: 4px;
+      background: var(--border);
+      overflow: hidden;
+    }
+    .brain-loading-bar > span {
+      display: block;
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent-live), var(--accent));
+      transition: width 0.12s ease-out;
+    }
     model-viewer {
       width: 100%;
       height: min(72vh, 720px);
@@ -117,13 +188,14 @@
       pointer-events: none;
       text-align: center;
       max-width: 90%;
+      z-index: 2;
     }
     .brain-load-error {
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      z-index: 2;
+      z-index: 6;
       margin: 0;
       max-width: min(420px, 92vw);
       padding: 14px 16px;
@@ -222,6 +294,11 @@
     .zone ul { margin: 0; padding-left: 1.1rem; }
     .zone li { margin: 6px 0; }
     .zone a { font-weight: 600; }
+    .writing-soon {
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--fg-dim);
+    }
     model-viewer button.brain-hotspot {
       display: block;
       width: max-content;
@@ -246,10 +323,15 @@
     }
     @media (prefers-reduced-motion: reduce) {
       .zone { transition: none; }
+      .brain-loading {
+        transition: none;
+      }
+      .brain-loading-bar > span {
+        transition: none;
+      }
     }
   </style>
   <script src="/assets/js/theme-init.js"></script>
-
 <body>
   <div class="topbar">
     <a class="back" href="../index.html">← Anthemic hub</a>
@@ -260,11 +342,11 @@
   </div>
 
   <div class="layout">
-    <div class="viewer-wrap">
+    <div class="viewer-wrap" aria-busy="true">
       <p id="brain-load-error" class="brain-load-error" hidden></p>
       <model-viewer
         id="brain"
-        src="../assets/TestBrain.glb"
+        src="/assets/TestBrain.glb"
         alt="Rotatable 3D model of a human brain with labelled connection points"
         camera-controls
         touch-action="pan-y"
@@ -282,20 +364,35 @@
         <!--
           Hotspots (model-viewer: metres in the GLB frame). Lobes are approximate;
           verify against your mesh + camera. Neuro references (overview level):
-          • Gigs / music: superior temporal gyrus, auditory belt — listening, pitch, rhythm;
+          • Gigs / music: superior temporal gyrus, auditory belt - listening, pitch, rhythm;
             performance adds motor/premotor, SMA, basal ganglia, cerebellum (not all visible).
             e.g. Nat Rev Neurosci overview of music in the brain; PNAS perception–pleasure substrates.
-          • Work / planning: dorsolateral & lateral prefrontal cortex — goals, rules, working memory;
+          • Work / planning: dorsolateral & lateral prefrontal cortex - goals, rules, working memory;
             ACC for monitoring. e.g. Neuropsychopharmacology reviews on PFC & cognitive control.
-          • Reading: VWFA occipito-temporal, angular gyrus — integration with meaning.
-          • Writing: IFG (Broca) BA44/45, parietal IPS/SMG, motor hand area — production + graphomotor.
+          • Reading: VWFA occipito-temporal, angular gyrus - integration with meaning.
+          • Writing: IFG (Broca) BA44/45, parietal IPS/SMG, motor hand area - production + graphomotor.
             e.g. meta-analyses on written word production (Frontiers / NeuroImage literature).
         -->
-        <button type="button" class="brain-hotspot" data-zone="gigs" slot="hotspot-gigs" title="Superior temporal / auditory cortex — listening &amp; rhythm" data-position="0.15 0.02 0.05" data-normal="0.92 -0.12 0.35">Gigs</button>
-        <button type="button" class="brain-hotspot" data-zone="work" slot="hotspot-work" title="Prefrontal cortex — planning &amp; executive control" data-position="0.04 0.17 0.08" data-normal="0.15 0.92 0.28">Work</button>
-        <button type="button" class="brain-hotspot" data-zone="reading" slot="hotspot-reading" title="Parieto-temporal — reading &amp; visual language" data-position="-0.11 0.06 0.02" data-normal="-0.88 0.35 0.2">Reading</button>
-        <button type="button" class="brain-hotspot" data-zone="writing" slot="hotspot-writing" title="Inferior frontal — language production &amp; writing" data-position="0.07 -0.02 -0.1" data-normal="0.35 -0.25 -0.9">Writing</button>
+        <button type="button" class="brain-hotspot" data-zone="gigs" slot="hotspot-gigs" title="Superior temporal / auditory cortex - listening &amp; rhythm" data-position="0.15 0.02 0.05" data-normal="0.92 -0.12 0.35">Gigs</button>
+        <button type="button" class="brain-hotspot" data-zone="work" slot="hotspot-work" title="Prefrontal cortex - planning &amp; executive control" data-position="0.04 0.17 0.08" data-normal="0.15 0.92 0.28">Work</button>
+        <button type="button" class="brain-hotspot" data-zone="reading" slot="hotspot-reading" title="Parieto-temporal - reading &amp; visual language" data-position="-0.11 0.06 0.02" data-normal="-0.88 0.35 0.2">Reading</button>
+        <button type="button" class="brain-hotspot" data-zone="writing" slot="hotspot-writing" title="Inferior frontal - language production &amp; writing" data-position="0.07 -0.02 -0.1" data-normal="0.35 -0.25 -0.9">Writing</button>
       </model-viewer>
+      <div
+        class="brain-loading"
+        id="brain-loading"
+        role="status"
+        aria-live="polite"
+        aria-busy="true"
+        aria-label="Loading 3D brain model"
+      >
+        <div class="brain-loading-inner">
+          <div class="brain-loading-spinner" aria-hidden="true"></div>
+          <p class="brain-loading-text">Loading 3D model…</p>
+          <p class="brain-loading-sub" id="brain-loading-pct">Preparing viewer</p>
+          <div class="brain-loading-bar" aria-hidden="true"><span id="brain-loading-progress"></span></div>
+        </div>
+      </div>
       <p class="hint">Drag to orbit · scroll to zoom · hotspots jump to the matching panel</p>
     </div>
 
@@ -304,7 +401,7 @@
         <h1>Brain map</h1>
         <span class="page-status" role="status">In progress</span>
       </div>
-      <p class="lede">Hotspots sit on regions that roughly match what neuroscience links to each theme. Coordinates are in the GLB’s space — nudge <code>data-position</code> if your camera angle changes.</p>
+      <p class="lede">Hotspots sit on regions that roughly match what neuroscience links to each theme. Coordinates are in the GLB’s space - nudge <code>data-position</code> if your camera angle changes.</p>
       <div class="zones">
         <section class="zone" id="zone-gigs" data-zone="gigs">
           <h2>Gigs</h2>
@@ -314,12 +411,12 @@
             <li><a href="/gigs/">Gig calendar</a> (upcoming &amp; past)</li>
             <li><a href="/setlist/">Set List Generator</a></li>
             <li><a href="/bass/">Bass coaching</a></li>
-            <li><a href="https://anthemstothefall.bandcamp.com/" target="_blank" rel="noopener noreferrer">Anthems to the Fall — Bandcamp</a></li>
+            <li><a href="https://anthemstothefall.bandcamp.com/" target="_blank" rel="noopener noreferrer">Anthems to the Fall - Bandcamp</a></li>
           </ul>
         </section>
         <section class="zone" id="zone-work" data-zone="work">
           <h2>Work</h2>
-          <p class="zone-neuro">Planning, prioritising, and “rational” goal-directed control are tied to <strong>prefrontal</strong> networks — especially <strong>dorsolateral PFC</strong> — with support from parietal and cingulate systems for attention and conflict monitoring.</p>
+          <p class="zone-neuro">Planning, prioritising, and “rational” goal-directed control are tied to <strong>prefrontal</strong> networks - especially <strong>dorsolateral PFC</strong> - with support from parietal and cingulate systems for attention and conflict monitoring.</p>
           <p>Day job and professional profile.</p>
           <ul>
             <li><a href="https://meccamedialight.com.au" target="_blank" rel="noopener noreferrer">Mecca Medialight</a></li>
@@ -331,6 +428,7 @@
           <p class="zone-neuro">Visual word form and comprehension involve <strong>occipito-temporal</strong> cortex (including the “visual word form area”) and link forward to temporal and <strong>angular gyrus</strong> regions that bind meaning to text.</p>
           <p>Shelf, articles, and long-form tabs you want to keep visible.</p>
           <ul>
+            <li><a href="/#reading-list">Reading list on the hub</a> — books finished and in progress, by topic.</li>
             <li><a href="/personal/">Personal site</a> (placeholder hub card)</li>
           </ul>
         </section>
@@ -339,7 +437,7 @@
           <p class="zone-neuro">Written production recruits <strong>left inferior frontal</strong> cortex (Broca’s area, BA44/45) for spelling and sentence assembly, with <strong>parietal</strong> and motor areas for typing or handwriting.</p>
           <p>Essays, notes, and publishing.</p>
           <ul>
-            <li><a href="/personal/">Personal site — writing</a></li>
+            <li><a href="/personal/writing/">Personal site — writing</a> <span class="writing-soon">(coming soon)</span></li>
           </ul>
         </section>
       </div>
@@ -347,5 +445,5 @@
   </div>
 
   <script defer src="/assets/js/brain.js"></script>
-
+</body>
 </html>

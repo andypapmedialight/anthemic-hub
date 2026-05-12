@@ -3,8 +3,17 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Anthemic Developments</title>
-  <meta name="description" content="Anthemic Developments - a general hub for tasty tech solutions, tools, and experiments." />
+  <title>Andy Papadopoulos - Anthemic Developments</title>
+  <meta name="description" content="Andy Papadopoulos: full-stack engineer in Melbourne. Web apps, APIs, deployment, and creative tools - plus music and teaching. Anthemic Developments hub." />
+  <meta property="og:title" content="Andy Papadopoulos - Anthemic Developments" />
+  <meta property="og:description" content="Full-stack engineer in Melbourne. Web apps, APIs, deployment, civic tools, and creative experiments - Anthemic hub." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://anthemic-developments.com/" />
+  <meta property="og:image" content="https://anthemic-developments.com/assets/cinnamon.jpg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Andy Papadopoulos - Anthemic Developments" />
+  <meta name="twitter:description" content="Full-stack engineer in Melbourne - web apps, APIs, deployment, and creative tools." />
+  <meta name="twitter:image" content="https://anthemic-developments.com/assets/cinnamon.jpg" />
   <link rel="preconnect" href="https://fonts.bunny.net" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -168,12 +177,13 @@
     header .inner {
       display: grid;
       gap: 28px;
-      align-items: end;
+      align-items: start;
     }
     @media (min-width: 720px) {
       header .inner {
-        grid-template-columns: minmax(0, 1fr) minmax(0, 42ch);
+        grid-template-columns: minmax(0, 1fr) minmax(0, 38ch);
         gap: 48px;
+        align-items: end;
       }
     }
     header .brand {
@@ -184,14 +194,37 @@
       text-transform: uppercase;
       color: var(--fg-dim);
     }
-    header h1 {
-      margin: 12px 0 0;
+    .hero-name {
+      margin: 0;
       font-family: var(--font-display);
-      font-size: clamp(2.1rem, 4.2vw, 3.15rem);
+      font-size: clamp(2.15rem, 4.5vw, 3.25rem);
+      font-weight: 700;
+      letter-spacing: -0.035em;
+      line-height: 1.08;
+      color: var(--fg);
+    }
+    .hero-tagline {
+      margin: 10px 0 0;
+      font-family: var(--font-ui);
+      font-size: 1.05rem;
+      font-weight: 500;
+      color: var(--fg-dim);
+      line-height: 1.45;
+      max-width: 36ch;
+    }
+    .brand--hero {
+      margin-top: 18px;
+    }
+    .hero-kicker {
+      margin: 14px 0 0;
+      font-family: var(--font-display);
+      font-size: clamp(1.2rem, 2.2vw, 1.45rem);
       font-weight: 600;
-      letter-spacing: -0.03em;
-      line-height: 1.12;
-      max-width: 14ch;
+      font-style: italic;
+      letter-spacing: -0.02em;
+      line-height: 1.35;
+      color: var(--accent);
+      max-width: 22ch;
     }
     header .lede {
       margin: 0;
@@ -199,6 +232,117 @@
       color: var(--fg-dim);
       font-size: 1.02rem;
       line-height: 1.65;
+    }
+    .brain-teaser {
+      margin: 16px 0 0;
+      font-size: 0.95rem;
+      line-height: 1.55;
+      color: var(--fg-dim);
+    }
+    .brain-teaser a {
+      color: var(--accent-live);
+      font-weight: 600;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    .brain-teaser a:hover {
+      color: var(--fg);
+    }
+    .employer-strip {
+      margin: 0 0 22px;
+      padding: 16px 18px 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--bg-wash);
+    }
+    .employer-strip-inner {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    @media (min-width: 720px) {
+      .employer-strip-inner {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px 24px;
+      }
+    }
+    .employer-skills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .employer-skill {
+      font-family: var(--font-ui);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 5px 11px;
+      border-radius: 6px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--fg);
+    }
+    .employer-links {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px 18px;
+    }
+    .employer-link {
+      font-family: var(--font-ui);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent-live);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    .employer-link:hover {
+      color: var(--fg);
+    }
+    .employer-link--accent {
+      color: var(--accent);
+    }
+    .interest-bar .interest-status {
+      flex-basis: 100%;
+      margin: 2px 0 0;
+      min-height: 1.35em;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--fg-dim);
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .interest-bar,
+      .employer-strip,
+      .theme-group {
+        transition: border-color 0.2s ease, background-color 0.22s ease, box-shadow 0.22s ease;
+      }
+      .card[data-interests],
+      article.card[data-interests] {
+        transition: opacity 0.22s ease, transform 0.22s ease, filter 0.22s ease;
+      }
+      main.interest-filtering .card.is-interest-dim,
+      main.interest-filtering article.card.is-interest-dim {
+        opacity: 0.2;
+        transform: scale(0.985);
+        filter: grayscale(0.45);
+      }
+      .wrap > .hub-section {
+        animation: hub-section-in 0.55s cubic-bezier(0.33, 1, 0.68, 1) backwards;
+      }
+      .wrap > .hub-section:nth-child(3) { animation-delay: 0.04s; }
+      .wrap > .hub-section:nth-child(4) { animation-delay: 0.1s; }
+      .wrap > .hub-section:nth-child(5) { animation-delay: 0.15s; }
+      .wrap > .hub-section:nth-child(6) { animation-delay: 0.19s; }
+      .wrap > .hub-section:nth-child(7) { animation-delay: 0.23s; }
+      .wrap > .hub-section:nth-child(8) { animation-delay: 0.27s; }
+    }
+    @keyframes hub-section-in {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
     }
     main { flex: 1; }
     main .wrap {
@@ -246,6 +390,13 @@
       color: var(--fg-dim);
       line-height: 1.5;
       max-width: 62ch;
+    }
+    .photo-gallery-tagline {
+      margin: -6px 0 14px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: var(--accent);
     }
     .photo-gallery {
       list-style: none;
@@ -309,12 +460,26 @@
       border-color: var(--border-strong);
     }
     .card:focus-visible {
-      outline: 2px solid var(--accent-live);
-      outline-offset: 3px;
+      outline: 3px solid var(--accent-live);
+      outline-offset: 4px;
     }
     .card--live {
       border-color: var(--card-live-border);
       box-shadow: inset 0 3px 0 0 var(--accent-live);
+    }
+    .card--live.card--live-wave::before {
+      content: "";
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 42px;
+      height: 16px;
+      opacity: 0.42;
+      pointer-events: none;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 20'%3E%3Cpath d='M4 10 Q14 2 24 10 T44 10 T60 10' fill='none' stroke='%236b9cff' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+    }
+    html[data-theme="light"] .card--live.card--live-wave::before {
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 20'%3E%3Cpath d='M4 10 Q14 2 24 10 T44 10 T60 10' fill='none' stroke='%232563eb' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
     }
     .card--live:hover {
       border-color: var(--card-live-border-hover);
@@ -350,6 +515,26 @@
       color: var(--fg-dim);
       font-size: 0.9rem;
       line-height: 1.58;
+    }
+    .card-outcome {
+      margin: 0;
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: var(--card-live-title);
+      line-height: 1.45;
+    }
+    .card-stack {
+      margin: 0;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--fg-dim);
+    }
+    @media (min-width: 900px) {
+      .grid .card--flagship {
+        grid-column: span 2;
+      }
     }
     .badge {
       align-self: flex-start;
@@ -452,6 +637,15 @@
       }
     }
     .card-profile-body .title { margin: 0; }
+    .profile-ships {
+      margin: 0 0 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--accent-live);
+      line-height: 1.35;
+    }
     .card-profile-body .desc { margin: 0; }
     .card-profile-actions {
       display: flex;
@@ -629,6 +823,123 @@
       max-width: 72ch;
     }
     .bio-prose-section p:last-child { margin-bottom: 0; }
+    .reading-board {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px 20px 16px 8px;
+      padding: 26px 26px 28px;
+    }
+    .reading-intro {
+      margin: 0 0 22px;
+      color: var(--fg-dim);
+      font-size: 0.95rem;
+      line-height: 1.65;
+      max-width: 68ch;
+    }
+    .reading-skeleton,
+    .reading-fallback {
+      margin: 0;
+      color: var(--fg-dim);
+      font-size: 0.92rem;
+    }
+    .reading-fallback code {
+      font-size: 0.85em;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--bg-wash);
+      border: 1px solid var(--border);
+    }
+    .reading-category {
+      margin: 0 0 22px;
+    }
+    .reading-category:last-child {
+      margin-bottom: 0;
+    }
+    .reading-category-title {
+      margin: 0 0 12px;
+      font-family: var(--font-display);
+      font-size: 1.08rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--accent);
+    }
+    .reading-books {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .reading-book {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 10px 14px;
+      padding: 11px 14px;
+      border-radius: 10px;
+      background: var(--bg-wash);
+      border: 1px solid var(--border);
+    }
+    .reading-status {
+      flex-shrink: 0;
+      font-family: var(--font-ui);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+    .reading-status--read {
+      color: var(--fg-dim);
+      background: rgba(148, 157, 176, 0.1);
+    }
+    .reading-status--reading {
+      color: var(--badge-live-fg);
+      background: var(--accent-live-soft);
+      border-color: var(--badge-live-border);
+    }
+    .reading-line {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 6px 10px;
+    }
+    .reading-title {
+      font-weight: 600;
+      color: var(--fg);
+      font-size: 0.95rem;
+    }
+    .reading-title a {
+      color: var(--accent-live);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    .reading-title a:hover {
+      color: var(--fg);
+    }
+    .reading-by {
+      font-size: 0.88rem;
+      color: var(--fg-dim);
+      font-weight: 500;
+    }
+    .reading-by::before {
+      content: "—";
+      margin-right: 6px;
+      opacity: 0.45;
+    }
+    .reading-note {
+      flex-basis: 100%;
+      margin: 2px 0 0;
+      font-size: 0.82rem;
+      color: var(--fg-dim);
+      line-height: 1.45;
+      font-style: italic;
+    }
   </style>
   <script src="/assets/js/theme-init.js"></script>
 <body>
@@ -641,21 +952,41 @@
     </div>
     <div class="wrap">
       <div class="inner">
-        <div>
-          <div class="brand">Anthemic Developments</div>
-          <h1>A general hub for tasty tech solutions.</h1>
+        <div class="hero-block">
+          <h1 class="hero-name" id="hero-name">Andy Papadopoulos</h1>
+          <p class="hero-tagline" id="hero-tagline">Full-stack engineer · Melbourne - web apps, APIs, and deployment</p>
+          <div class="brand brand--hero">Anthemic Developments</div>
+          <p class="hero-kicker">A general hub for tasty tech solutions.</p>
         </div>
-        <p class="lede">Andy Papadopoulos is a developer, designer, and music maker based in Melbourne, Australia.</p>
-        <p class="lede">Tools, sites and experiments from the workshop. Everything linked here is real - shipping, in progress, or on the bench.</p>
+        <div class="hero-aside">
+          <p class="lede">Tools, sites and experiments from the workshop. Everything linked here is real - shipping, in progress, or on the bench.</p>
+          <p class="brain-teaser">Prefer something spatial? <a href="/brain/">Open the 3D brain map</a> - gigs, reading, and writing in one explorable space.</p>
+        </div>
       </div>
     </div>
   </header>
 
   <main>
     <div class="wrap">
+      <section class="employer-strip" aria-label="At a glance">
+        <div class="employer-strip-inner">
+          <div class="employer-skills" id="employer-skills" aria-label="Focus areas">
+            <span class="employer-skill">TypeScript &amp; React</span>
+            <span class="employer-skill">Node &amp; APIs</span>
+            <span class="employer-skill">Laravel</span>
+            <span class="employer-skill">Maps &amp; data viz</span>
+            <span class="employer-skill">AWS &amp; CI/CD</span>
+          </div>
+          <div class="employer-links">
+            <a class="employer-link" href="https://www.linkedin.com/in/andy-papadopoulos/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+            <a class="employer-link" id="employer-github" href="https://github.com/andypapmedialight" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <a class="employer-link employer-link--accent" id="employer-case" href="https://report.safermurrayroad.com" target="_blank" rel="noopener noreferrer">Case study: SWARM reporter</a>
+          </div>
+        </div>
+      </section>
       <div class="interest-bar">
         <label for="hub-interest">What are you interested in?</label>
-        <select id="hub-interest">
+        <select id="hub-interest" aria-describedby="interest-status">
           <option value="all">Everything</option>
           <option value="music">Music &amp; live performance</option>
           <option value="teaching">Teaching &amp; learning</option>
@@ -664,6 +995,7 @@
           <option value="community">Community &amp; civic tech</option>
           <option value="personal">Personal &amp; writing</option>
         </select>
+        <p class="interest-status" id="interest-status" aria-live="polite" role="status"></p>
       </div>
       <div class="hub-section" data-hub-section="projects">
       <h2 class="section-heading"><span class="sec-num" aria-hidden="true">01</span> <span class="sec-title">Anthemic projects</span></h2>
@@ -685,6 +1017,7 @@
             </div>
             <div class="card-profile-body">
               <div class="title">Who am I</div>
+              <p class="profile-ships" id="profile-ships">Ships: product UI · APIs · pipelines and cloud hosting</p>
               <p class="desc" id="who-am-i-body">Andy Papadopoulos,  trained as a software engineer - senior developer, full-stack engineer,
                  and infrastructure architect at Mecca Medialight in Melbourne. He designs and ships web apps, mentors where he can, and tinkers on the side. 
                  Off the clock he plays music, teaches bass, and scratches creative itches here under Anthemic. 
@@ -698,28 +1031,30 @@
           </div>
         </article>
 
-        <a class="card card--live" href="/setlist/" data-interests="music gigs creative">
+        <a class="card card--live card--live-wave card--flagship" href="/setlist/" data-interests="music gigs creative">
           <span class="badge live">Live</span>
           <div class="title">Set List Generator</div>
+          <p class="card-outcome">Flagship build - set lists from rehearsal to stage.</p>
+          <p class="card-stack">React · Vite · Spring Boot API</p>
           <div class="desc">Build, organise and share gig set lists for bands and solo performers.</div>
         </a>
 
         <a class="card card--out" href="https://report.safermurrayroad.com" target="_blank" rel="noopener noreferrer" data-interests="community">
           <span class="badge external">External &nearr;</span>
-          <div class="title">Safer Murray Road — SWARM Reporter</div>
+          <div class="title">Safer Murray Road - SWARM Reporter</div>
           <div class="desc">Community-led incident reporting along Murray Road, built for the SWARM group: submit reports, browse the heatmap, and track trends for safer streets.</div>
         </a>
 
-        <a class="card card--soon" href="/personal/" aria-disabled="true" onclick="event.preventDefault()" data-interests="personal writing">
+        <a class="card card--soon" href="/personal/writing/" data-interests="personal writing">
           <span class="badge">Coming soon</span>
-          <div class="title">Personal site</div>
-          <div class="desc">About me, writing, and links.</div>
+          <div class="title">Writing</div>
+          <div class="desc">Essays and notes — open the holding page (quill &amp; ink) while the wider personal site is still on the bench.</div>
         </a>
 
-        <a class="card card--live" href="/brain/" data-interests="creative music gigs">
+        <a class="card card--live card--live-wave" href="/brain/" data-interests="creative music gigs">
           <span class="badge live">Live</span>
           <div class="title">Brain map</div>
-          <div class="desc">A 3D workshop atlas and an alternate way to move around this hub — gigs, projects, reading, and writing linked from one explorable space.</div>
+          <div class="desc">A 3D workshop atlas and an alternate way to move around this hub - gigs, projects, reading, and writing linked from one explorable space.</div>
         </a>
       </section>
       </div>
@@ -727,13 +1062,13 @@
       <div class="hub-section" data-hub-section="music">
       <h2 class="section-heading"><span class="sec-num" aria-hidden="true">02</span> <span class="sec-title">Music</span></h2>
       <section class="grid" aria-label="Music">
-        <a class="card card--live" href="/gigs/" data-interests="music gigs">
+        <a class="card card--live card--live-wave" href="/gigs/" data-interests="music gigs">
           <span class="badge live">Live</span>
           <div class="title">Gig calendar</div>
           <div class="desc">Upcoming and past gigs.</div>
         </a>
 
-        <a class="card card--live" href="/bass/" data-interests="music teaching">
+        <a class="card card--live card--live-wave" href="/bass/" data-interests="music teaching">
           <span class="badge live">Live</span>
           <div class="title">Bass coaching</div>
           <div class="desc">Lessons, resources, and booking for bass students.</div>
@@ -741,14 +1076,15 @@
 
         <a class="card card--out" href="https://anthemstothefall.bandcamp.com/" target="_blank" rel="noopener noreferrer" data-interests="music creative personal">
           <span class="badge external">External &nearr;</span>
-          <div class="title">Anthems to the Fall — Bandcamp</div>
-          <div class="desc">Solo recordings and releases on Bandcamp: Melbourne-based project with languid laments and soulful tunes — streaming and downloads.</div>
+          <div class="title">Anthems to the Fall - Bandcamp</div>
+          <div class="desc">Solo recordings and releases on Bandcamp: Melbourne-based project with languid laments and soulful tunes - streaming and downloads.</div>
         </a>
       </section>
 
       <div id="photo-gallery-wrap" class="photo-gallery-wrap">
         <h3 class="subheading">Photo gallery</h3>
         <p class="photo-gallery-lede">Gigs, studio, and behind the scenes. Click a thumbnail to open the full image.</p>
+        <p class="photo-gallery-tagline" id="photo-gallery-tagline">Melbourne · stage · studio - and the studio dog on QA.</p>
         <ul id="photo-gallery" class="photo-gallery" aria-label="Photo gallery">
           <li>
             <a href="/assets/gallery/20161212_AndyPap_0001.jpg" target="_blank" rel="noopener noreferrer">
@@ -811,21 +1147,28 @@
         <div class="bio-prose">
           <div class="bio-prose-section" id="bio-origin">
             <h3>How it all began</h3>
-            <p>A long, long time ago in a decade far far away that has come to be known as 'the eighties' one of Andy's best friends ran into their classroom at a Melbourne school, his eyes wide with excitement having recently played a drum kit for the first time: 'Maaate!', he proclaimed in an English accent which had shown only the slightest hint of ockerisation, '...we have to put a band together!, it'll be great!, we'll get heaps of chicks!' Andy's eyes widened though he was still unsure of his particular role in this venture, but his friend continued, '....you've got big hands — you can play bass!'</p>
-            <p>And so, that very week, having no idea what they were looking for, the two went round to check out a cheap bass they had seen advertised in the trading paper. The seller invited them into his bedroom, but as neither of the new band members could play a note, the seller had to demonstrate. He flicked on the radio, plugged the bass into the stereo amp and jammed along to Phil Collins and Billy Ocean's 'Easy Lover'. Andy and his mate were positively dribbling — 'We are SO doing this!'</p>
+            <p>A long, long time ago in a decade far far away that has come to be known as 'the eighties' one of Andy's best friends ran into their classroom at a Melbourne school, his eyes wide with excitement having recently played a drum kit for the first time: 'Maaate!', he proclaimed in an English accent which had shown only the slightest hint of ockerisation, '...we have to put a band together!, it'll be great!, we'll get heaps of chicks!' Andy's eyes widened though he was still unsure of his particular role in this venture, but his friend continued, '....you've got big hands - you can play bass!'</p>
+            <p>And so, that very week, having no idea what they were looking for, the two went round to check out a cheap bass they had seen advertised in the trading paper. The seller invited them into his bedroom, but as neither of the new band members could play a note, the seller had to demonstrate. He flicked on the radio, plugged the bass into the stereo amp and jammed along to Phil Collins and Billy Ocean's 'Easy Lover'. Andy and his mate were positively dribbling - 'We are SO doing this!'</p>
             <p>And so began Andy's musical journey, from his first band with his excitable school buddy 'The Cultural Terrorists' to his first solo project 'Anthems to the Fall'.</p>
           </div>
           <div class="bio-prose-section" id="bio-anthems">
             <h3>Why 'Anthems to the Fall'?</h3>
-            <p>History, Nature, Myth — they are all replete with rises and falls. So often we valorise the rise, but where would we be without the fall? If we had not eaten from the tree of knowledge? If empires had not fallen? If we did not make mistakes? If we did not grow old and die?</p>
-            <p>This is a celebration of imperfection: from the errors in the copying of genetic code that makes evolution possible, to the hubris that brings down tyrants, to a fate that defies the best of intentions. An imperfection that asserts itself in the face of a misguided striving for perfection — this is the realisation that fall is necessary for a rise to be possible, that imperfection is beautiful and, yes, that we live by trial and error. But mainly error.</p>
+            <p>History, Nature, Myth - they are all replete with rises and falls. So often we valorise the rise, but where would we be without the fall? If we had not eaten from the tree of knowledge? If empires had not fallen? If we did not make mistakes? If we did not grow old and die?</p>
+            <p>This is a celebration of imperfection: from the errors in the copying of genetic code that makes evolution possible, to the hubris that brings down tyrants, to a fate that defies the best of intentions. An imperfection that asserts itself in the face of a misguided striving for perfection - this is the realisation that fall is necessary for a rise to be possible, that imperfection is beautiful and, yes, that we live by trial and error. But mainly error.</p>
           </div>
         </div>
       </article>
       </div>
 
+      <div class="hub-section" id="reading-list" data-hub-section="reading-list" data-interests="personal creative work teaching">
+      <h2 class="section-heading"><span class="sec-num" aria-hidden="true">04</span> <span class="sec-title">Reading list</span></h2>
+      <article class="reading-board" aria-label="Books read and in progress">
+        <div id="reading-list-root"><p class="reading-skeleton">Loading reading list…</p></div>
+      </article>
+      </div>
+
       <div class="hub-section" data-hub-section="work">
-      <h2 class="section-heading"><span class="sec-num" aria-hidden="true">03</span> <span class="sec-title">Work</span></h2>
+      <h2 class="section-heading"><span class="sec-num" aria-hidden="true">05</span> <span class="sec-title">Work</span></h2>
       <section class="grid" aria-label="Professional work">
         <a class="card card--out" href="https://meccamedialight.com.au" target="_blank" rel="noopener noreferrer" data-interests="work">
           <span class="badge external">External &nearr;</span>
@@ -849,5 +1192,4 @@
     </div>
   </footer>
   <script defer src="/assets/js/hub.js"></script>
-
 </html>

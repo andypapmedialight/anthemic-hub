@@ -26,11 +26,60 @@
   if (!mv) return;
 
   var errEl = document.getElementById("brain-load-error");
+  var loadingEl = document.getElementById("brain-loading");
+  var progressBar = document.getElementById("brain-loading-progress");
+  var pctEl = document.getElementById("brain-loading-pct");
+  var loadingDismissed = false;
+  var modelReadyHandled = false;
+  var stuckTimer = null;
+  var pollTimer = null;
+
+  function clearStuckTimer() {
+    if (stuckTimer) {
+      clearTimeout(stuckTimer);
+      stuckTimer = null;
+    }
+    if (pollTimer) {
+      clearInterval(pollTimer);
+      pollTimer = null;
+    }
+  }
+
+  function dismissLoading() {
+    if (loadingDismissed) return;
+    loadingDismissed = true;
+    clearStuckTimer();
+    if (loadingEl) {
+      loadingEl.classList.add("is-done");
+      loadingEl.setAttribute("aria-busy", "false");
+      loadingEl.setAttribute("aria-label", "3D model ready");
+    }
+    var wrap = document.querySelector(".viewer-wrap");
+    if (wrap) wrap.setAttribute("aria-busy", "false");
+  }
+
   function showLoadError(msg) {
+    dismissLoading();
     if (!errEl) return;
     errEl.hidden = false;
     errEl.textContent = msg;
   }
+
+  mv.addEventListener("progress", function (e) {
+    if (!progressBar || !pctEl) return;
+    var d = e.detail;
+    var p = d && typeof d.totalProgress === "number" ? d.totalProgress : 0;
+    p = Math.max(0, Math.min(1, p));
+    progressBar.style.width = Math.round(p * 100) + "%";
+    if (p < 0.02) {
+      pctEl.textContent = "Downloading mesh…";
+    } else if (p < 0.98) {
+      pctEl.textContent = Math.round(p * 100) + "%";
+    } else {
+      pctEl.textContent = "Almost ready…";
+    }
+  });
+
   mv.addEventListener("error", function () {
     showLoadError(
       "The GLB could not be loaded. Use an HTTP server with the site root at the anthemic-hub folder (not only the brain folder), then open /brain/ — for example: cd anthemic-hub && python3 -m http.server 8765"
@@ -205,12 +254,55 @@
     });
   }
 
-  mv.addEventListener("load", function () {
-    liftMaterialsForClarity();
+  function onBrainModelReady() {
+    if (modelReadyHandled) return;
+    modelReadyHandled = true;
+    dismissLoading();
+    try {
+      liftMaterialsForClarity();
+    } catch (e1) {}
     try {
       mv.cameraOrbit = orbits.work;
-    } catch (e) {}
+    } catch (e2) {}
     wireHotspotButtonsDirect();
     setTimeout(wireHotspotButtonsDirect, 400);
+  }
+
+  function tryLoadedFromState() {
+    if (modelReadyHandled) return;
+    try {
+      if (mv.loaded === true) {
+        onBrainModelReady();
+      }
+    } catch (e) {}
+  }
+
+  mv.addEventListener("load", onBrainModelReady);
+
+  /* load can fire before this deferred script runs; poll mv.loaded for a short window. */
+  tryLoadedFromState();
+  [0, 32, 100, 250, 600, 1200, 2500].forEach(function (ms) {
+    setTimeout(tryLoadedFromState, ms);
   });
+  pollTimer = setInterval(tryLoadedFromState, 400);
+  setTimeout(function () {
+    if (pollTimer) {
+      clearInterval(pollTimer);
+      pollTimer = null;
+    }
+  }, 8000);
+
+  stuckTimer = setTimeout(function () {
+    if (!loadingDismissed) {
+      showLoadError(
+        "The model is taking too long or the 3D viewer did not start. Confirm /assets/TestBrain.glb is deployed, disable strict blockers for ajax.googleapis.com (model-viewer), then refresh."
+      );
+    }
+  }, 45000);
+
+  if (window.customElements && typeof customElements.whenDefined === "function") {
+    customElements.whenDefined("model-viewer").then(function () {
+      tryLoadedFromState();
+    }).catch(function () {});
+  }
 })();

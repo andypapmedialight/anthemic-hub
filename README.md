@@ -1,6 +1,6 @@
 # anthemic-hub
 
-Static site for **anthemic-developments.com** — hub landing page, gig calendar, bass coaching, brain map, and admin panel.
+Static site for **anthemic-developments.com** - hub landing page, gig calendar, bass coaching, brain map, and admin panel.
 
 ## Structure
 
@@ -8,17 +8,20 @@ Static site for **anthemic-developments.com** — hub landing page, gig calendar
 index.html                          Hub landing page
 bass/                               Bass coaching static site (/bass/)
 brain/                              3D brain map (/brain/)
+personal/
+  writing/
+    index.html                      Writing placeholder (/personal/writing/) — quill & ink animation
 gigs/
-  index.html                        Gig calendar (/gigs/) — reads gigs.json at runtime
-  gigs.json                         Gig data — seed only; live copy managed by admin panel
+  index.html                        Gig calendar (/gigs/) - reads gigs.json at runtime
+  gigs.json                         Gig data - seed only; live copy managed by admin panel
 anth-dev-ad/
   admin/
-    index.php                       Admin panel — PHP built-in server via Docker (URL: /anth-dev-ad/admin/)
+    index.php                       Admin panel - PHP built-in server via Docker (URL: /anth-dev-ad/admin/)
     php.ini                         Upload limits for the PHP container (20 MB)
 content/
-  hub.json                          Editable site content (bio, instruments, projects) — managed by admin panel
+  hub.json                          Editable site content (bio, instruments, projects, reading list) - managed by admin panel
 assets/
-  gallery/                          Photo gallery images — managed by admin panel
+  gallery/                          Photo gallery images - managed by admin panel
   gallery/manifest.json             Auto-generated on upload/delete; drives front-end gallery
   cinnamon.jpg                      "Who am I" card photo
 scripts/
@@ -61,8 +64,8 @@ Git copies of these files act as **seeds on first deploy only**. After that the 
 Accessible at `https://anthemic-developments.com/anth-dev-ad/admin/` (nginx `auth_basic` + `proxy_pass` to the PHP container).
 
 Two auth layers:
-1. **nginx `auth_basic`** — htpasswd credentials (set once on Droplet, never in git)
-2. **PHP password** — bcrypt hash stored in Docker env var
+1. **nginx `auth_basic`** - htpasswd credentials (set once on Droplet, never in git)
+2. **PHP password** - bcrypt hash stored in Docker env var
 
 Three tabs: **Gig calendar** · **Site content** · **Gallery**
 
@@ -101,7 +104,7 @@ Two JSON files are fetched client-side at runtime:
 
 | URL | Powers |
 |-----|--------|
-| `/content/hub.json` | "Who am I" bio, music bio prose, instruments, projects |
+| `/content/hub.json` | Hero, employer strip, ships line, gallery tagline, who-am-i, music prose, instruments, projects, **reading_list** (intro + categories of books with `status`: `read` \| `reading`, optional `url`, `note`) |
 | `/assets/gallery/manifest.json` | Photo gallery image list |
 
 The HTML includes fallback content so the page renders even if JS or the fetches fail.
@@ -152,6 +155,6 @@ The hub landing page has a "What are you interested in?" dropdown. Cards and sec
 
 Copy an existing `<a class="card">` in `index.html`, set `href`, title, description, badge, and `data-interests`:
 
-- `<span class="badge live">Live</span>` — live project
-- `<span class="badge">Coming soon</span>` + `aria-disabled="true" onclick="event.preventDefault()"` — placeholder
-- `<span class="badge external">External &nearr;</span>` + `target="_blank" rel="noopener noreferrer"` — off-domain link
+- `<span class="badge live">Live</span>` - live project
+- `<span class="badge">Coming soon</span>` + `aria-disabled="true" onclick="event.preventDefault()"` - placeholder
+- `<span class="badge external">External &nearr;</span>` + `target="_blank" rel="noopener noreferrer"` - off-domain link

@@ -33,11 +33,11 @@ Reference lane: **quiet tech craft** (Stripe-level restraint without copying Str
 
 ## Design Principles
 
-1. **Projects first** — The primary job of the page is navigation to live work; everything else supports that scan path.
-2. **Earned credibility** — Employers and agencies should infer seniority and reliability from structure and copy, not from claims alone; show what’s live and what’s coming honestly.
-3. **One surface, many audiences** — Copy and IA should not optimize for a single persona at the expense of others; use clear sections (e.g. projects vs work vs related) instead of blending intents.
-4. **Contact is completion** — A visit is not successful until a motivated visitor knows how to reach you; preserve space and priority for that path as it is implemented.
-5. **Maintainable modesty** — Static HTML/CSS is a deliberate constraint; design choices should stay easy to edit in one file without a build step.
+1. **Projects first** - The primary job of the page is navigation to live work; everything else supports that scan path.
+2. **Earned credibility** - Employers and agencies should infer seniority and reliability from structure and copy, not from claims alone; show what’s live and what’s coming honestly.
+3. **One surface, many audiences** - Copy and IA should not optimize for a single persona at the expense of others; use clear sections (e.g. projects vs work vs related) instead of blending intents.
+4. **Contact is completion** - A visit is not successful until a motivated visitor knows how to reach you; preserve space and priority for that path as it is implemented.
+5. **Maintainable modesty** - Static HTML/CSS is a deliberate constraint; design choices should stay easy to edit in one file without a build step.
 
 ## Accessibility & Inclusion
 

@@ -109,7 +109,7 @@ function knownGigKeys(): array {
             'free', 'price', 'poster'];
 }
 
-/** Extension derived from getimagesize() MIME — never trust client filename extension. */
+/** Extension derived from getimagesize() MIME - never trust client filename extension. */
 function imageMimeToExtension(string $mime): ?string {
     return match ($mime) {
         'image/jpeg' => 'jpg',
@@ -161,6 +161,58 @@ function sanitizeUrl(string $raw): string {
     $url = trim($raw);
     if ($url && !preg_match('#^https?://#i', $url)) return '';
     return substr($url, 0, 500);
+}
+
+/**
+ * @param array<string, mixed> $in
+ * @return array{intro: string, categories: list<array{label: string, books: list<array<string, mixed>>}>}
+ */
+function sanitizeReadingList(array $in): array {
+    $out = [
+        'intro'      => substr(trim(strip_tags((string)($in['intro'] ?? ''))), 0, 1200),
+        'categories' => [],
+    ];
+    $cats = $in['categories'] ?? null;
+    if (!is_array($cats)) {
+        return $out;
+    }
+    foreach ($cats as $cat) {
+        if (!is_array($cat)) {
+            continue;
+        }
+        $label = substr(trim(strip_tags((string)($cat['label'] ?? ''))), 0, 200);
+        if ($label === '') {
+            continue;
+        }
+        $booksOut = [];
+        $books = $cat['books'] ?? null;
+        if (is_array($books)) {
+            foreach ($books as $b) {
+                if (!is_array($b)) {
+                    continue;
+                }
+                $title = substr(trim(strip_tags((string)($b['title'] ?? ''))), 0, 400);
+                if ($title === '') {
+                    continue;
+                }
+                $author = substr(trim(strip_tags((string)($b['author'] ?? ''))), 0, 300);
+                $status = (($b['status'] ?? '') === 'reading') ? 'reading' : 'read';
+                $note   = substr(trim(strip_tags((string)($b['note'] ?? ''))), 0, 500);
+                $url    = sanitizeUrl((string)($b['url'] ?? ''));
+                $row    = ['title' => $title, 'author' => $author, 'status' => $status];
+                if ($note !== '') {
+                    $row['note'] = $note;
+                }
+                if ($url !== '') {
+                    $row['url'] = $url;
+                }
+                $booksOut[] = $row;
+            }
+        }
+        $out['categories'][] = ['label' => $label, 'books' => $booksOut];
+    }
+
+    return $out;
 }
 
 function extraGigKeys(array $gigs): array {
@@ -296,7 +348,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             return ['name' => trim($parts[0]), 'dates' => isset($parts[1]) ? trim($parts[1]) : ''];
         }, $projLines));
 
-        $knownContentFields = ['who_am_i', 'music_bio_origin', 'music_bio_anthems', 'instruments', 'projects'];
+        $rlRaw = (string)($_POST['reading_list_json'] ?? '');
+        $rlTrim = trim($rlRaw);
+        if ($rlTrim !== '') {
+            json_decode($rlTrim, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                $_SESSION['reading_list_error'] = 'Reading list: invalid JSON (' . json_last_error_msg() . '). That section was not updated; everything else saved.';
+            } else {
+                /** @var mixed $rlDecoded */
+                $rlDecoded = json_decode($rlTrim, true);
+                $content['reading_list'] = sanitizeReadingList(is_array($rlDecoded) ? $rlDecoded : []);
+            }
+        }
+
+        $knownContentFields = ['who_am_i', 'music_bio_origin', 'music_bio_anthems', 'instruments', 'projects', 'reading_list'];
         foreach ($_POST['extra'] ?? [] as $ek => $ev) {
             $ek = preg_replace('/[^a-z0-9_]/i', '', (string)$ek);
             if (!$ek || in_array($ek, $knownContentFields, true)) continue;
@@ -338,7 +403,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['gallery_error'] = 'Only JPEG, PNG, GIF, and WebP images are allowed.';
             }
         } elseif ($file && $file['error'] !== UPLOAD_ERR_OK && $file['error'] !== UPLOAD_ERR_NO_FILE) {
-            $_SESSION['gallery_error'] = 'Upload failed (error ' . $file['error'] . '). Check file size — limit is 20 MB.';
+            $_SESSION['gallery_error'] = 'Upload failed (error ' . $file['error'] . '). Check file size - limit is 20 MB.';
         }
     }
     if ($action === 'content_save') {
@@ -357,10 +422,11 @@ $gigs         = loadGigs($gigsPath);
 $editIdx      = (isset($_GET['edit']) && ctype_digit((string)$_GET['edit'])) ? (int)$_GET['edit'] : -1;
 $editGig      = ($editIdx >= 0 && isset($gigs[$editIdx])) ? $gigs[$editIdx] : null;
 $csrf         = $_SESSION['csrf'];
-$rawError     = $_SESSION['raw_error'] ?? null;
-$contentSaved = $_SESSION['content_saved'] ?? false;
-$galleryError = $_SESSION['gallery_error'] ?? null;
-unset($_SESSION['raw_error'], $_SESSION['content_saved'], $_SESSION['gallery_error']);
+$rawError          = $_SESSION['raw_error'] ?? null;
+$contentSaved      = $_SESSION['content_saved'] ?? false;
+$galleryError      = $_SESSION['gallery_error'] ?? null;
+$readingListError  = $_SESSION['reading_list_error'] ?? null;
+unset($_SESSION['raw_error'], $_SESSION['content_saved'], $_SESSION['gallery_error'], $_SESSION['reading_list_error']);
 
 $content      = loadContent($contentPath);
 $galleryFiles = galleryImages($galleryPath);
@@ -382,12 +448,23 @@ function contentParasText(array $c, string $key): string {
     return is_array($paras) ? implode("\n\n", $paras) : (string)$paras;
 }
 
+/** JSON for the reading list editor (hub.json reading_list). */
+function readingListJsonForForm(array $c): string {
+    $rl = $c['reading_list'] ?? null;
+    if (!is_array($rl)) {
+        $rl = ['intro' => '', 'categories' => []];
+    }
+    $enc = json_encode($rl, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+    return is_string($enc) ? $enc : '{"intro":"","categories":[]}';
+}
+
 function showLogin(?string $error): void { ?>
 <!doctype html>
 <html lang="en-AU">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Gig Admin — Login</title>
+  <title>Gig Admin - Login</title>
   <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
   <style>
     *{box-sizing:border-box}html,body{margin:0;min-height:100vh;background:#0e1015;color:#eceef4;font-family:'Figtree',system-ui,sans-serif;display:flex;align-items:center;justify-content:center}
@@ -513,7 +590,7 @@ function gigForm(string $action, array $g = [], int $idx = -1, string $csrf = ''
 <html lang="en-AU">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Gig Admin — Anthemic</title>
+  <title>Gig Admin - Anthemic</title>
   <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
   <style>
     *{box-sizing:border-box}html,body{margin:0;background:#0e1015;color:#eceef4;font-family:'Figtree',system-ui,sans-serif;font-size:16px;line-height:1.5;min-height:100vh}
@@ -602,6 +679,7 @@ function gigForm(string $action, array $g = [], int $idx = -1, string $csrf = ''
   <?php if ($activeTab === 'content'): ?>
 
   <?php if ($contentSaved): ?><p class="save-notice">Content saved.</p><?php endif ?>
+  <?php if ($readingListError): ?><p class="raw-error"><?= h($readingListError) ?></p><?php endif ?>
 
   <div class="panel">
     <h2>Who am I</h2>
@@ -613,12 +691,12 @@ function gigForm(string $action, array $g = [], int $idx = -1, string $csrf = ''
         <textarea name="who_am_i" class="content-area" rows="4"><?= h($content['who_am_i'] ?? '') ?></textarea>
       </div>
       <div class="content-field">
-        <label>Music bio — How it all began</label>
+        <label>Music bio - How it all began</label>
         <span class="hint">Separate paragraphs with a blank line.</span>
         <textarea name="music_bio_origin" class="content-area" rows="10"><?= h(contentParasText($content, 'music_bio_origin')) ?></textarea>
       </div>
       <div class="content-field">
-        <label>Music bio — Why 'Anthems to the Fall'?</label>
+        <label>Music bio - Why 'Anthems to the Fall'?</label>
         <span class="hint">Separate paragraphs with a blank line.</span>
         <textarea name="music_bio_anthems" class="content-area" rows="6"><?= h(contentParasText($content, 'music_bio_anthems')) ?></textarea>
       </div>
@@ -632,8 +710,13 @@ function gigForm(string $action, array $g = [], int $idx = -1, string $csrf = ''
         <span class="hint">One per line. Optionally add dates after a pipe: <code>Dollop | 1993–96</code></span>
         <textarea name="projects" class="content-area" rows="14"><?= h(contentProjText($content)) ?></textarea>
       </div>
+      <div class="content-field">
+        <label>Reading list</label>
+        <span class="hint">JSON for the hub reading board. Leave unchanged to keep the current list. Use <code>{}</code> with keys <code>intro</code> (string) and <code>categories</code> (array of <code>label</code> + <code>books</code>). Each book: <code>title</code>, <code>author</code>, <code>status</code> (<code>read</code> or <code>reading</code>), optional <code>note</code>, optional <code>url</code> (http/https only).</span>
+        <textarea name="reading_list_json" class="raw-json" style="min-height:220px" spellcheck="false"><?= h(readingListJsonForForm($content)) ?></textarea>
+      </div>
       <?php
-        $knownContentFields = ['who_am_i', 'music_bio_origin', 'music_bio_anthems', 'instruments', 'projects'];
+        $knownContentFields = ['who_am_i', 'music_bio_origin', 'music_bio_anthems', 'instruments', 'projects', 'reading_list'];
         foreach ($content as $ck => $cv):
           if (in_array($ck, $knownContentFields, true) || is_array($cv)) continue;
       ?>

@@ -83,7 +83,7 @@ function drawGuitarPNG(W, H, t) {
   ctx.fillStyle = aura;
   ctx.fillRect(0, 0, W, H);
 
-  // Neon shadow pass — gives the guitar a pink/coral edge glow
+  // Neon shadow pass - gives the guitar a pink/coral edge glow
   ctx.shadowBlur  = 38;
   ctx.shadowColor = 'rgba(255,45,117,0.55)';
   ctx.globalAlpha = 0.85;

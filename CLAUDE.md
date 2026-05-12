@@ -1,8 +1,8 @@
-# CLAUDE.md — anthemic-hub
+# CLAUDE.md - anthemic-hub
 
 ## What this repo is
 
-Static site for `anthemic-developments.com`. No build step, no framework — plain HTML/CSS/JS plus a PHP admin panel running in Docker on the Droplet.
+Static site for `anthemic-developments.com`. No build step, no framework - plain HTML/CSS/JS plus a PHP admin panel running in Docker on the Droplet.
 
 ## Key facts
 
@@ -28,7 +28,7 @@ Static site for `anthemic-developments.com`. No build step, no framework — pla
 | `/content/hub.json` | Hub bio text, instruments, projects list |
 | `/assets/gallery/manifest.json` | Photo gallery on hub landing page |
 
-All fetches have HTML fallback content — page works without JS.
+All fetches have HTML fallback content - page works without JS.
 
 ## File paths inside the PHP container
 
@@ -66,12 +66,12 @@ Cards have `data-interests="music gigs teaching creative work community personal
 
 ## nginx (anthemic-ops)
 
-`/gigs/admin/` proxies to `127.0.0.1:9001` with `auth_basic`. Do not add PHP processing to the main nginx config — all PHP goes through the container proxy.
+`/gigs/admin/` proxies to `127.0.0.1:9001` with `auth_basic`. Do not add PHP processing to the main nginx config - all PHP goes through the container proxy.
 
 ## What NOT to do
 
 - Do not add a JS framework or build step
-- Do not add comments explaining what code does — only add comments for non-obvious WHY
-- Do not modify `swarm-reporter` nginx config — it is a separate site on the same Droplet
+- Do not add comments explaining what code does - only add comments for non-obvious WHY
+- Do not modify `swarm-reporter` nginx config - it is a separate site on the same Droplet
 - Do not commit htpasswd files or password hashes
-- Do not edit `assets/gallery/manifest.json` manually — it is auto-generated
+- Do not edit `assets/gallery/manifest.json` manually - it is auto-generated
