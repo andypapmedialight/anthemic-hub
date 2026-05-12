@@ -68,32 +68,51 @@ rsync -a --delete "${INCOMING}/content/" "${DEST}/content/"
 preserve_restore "${GIGS_LIVE}"    "${GIGS_BACKUP}"
 preserve_restore "${CONTENT_LIVE}" "${CONTENT_BACKUP}"
 
-# Preserved hub.json may predate new keys (e.g. reading_list). Merge from incoming when live lacks a valid block.
+# Preserved hub.json may predate reading_list. Merge from incoming hub.json, else from reading-list.seed.json.
 INCOMING_HUB="${INCOMING}/content/hub.json"
-if [[ -f "${CONTENT_LIVE}" ]] && [[ -f "${INCOMING_HUB}" ]]; then
-  python3 - "${CONTENT_LIVE}" "${INCOMING_HUB}" <<'PY'
+INCOMING_SEED="${INCOMING}/content/reading-list.seed.json"
+if [[ -f "${CONTENT_LIVE}" ]]; then
+  python3 - "${CONTENT_LIVE}" "${INCOMING_HUB}" "${INCOMING_SEED}" <<'PY'
 import json, os, sys
 
 def valid_reading_list(rl):
     return isinstance(rl, dict) and isinstance(rl.get("categories"), list)
 
-live_path, inc_path = sys.argv[1], sys.argv[2]
+live_path, inc_path, seed_path = sys.argv[1], sys.argv[2], sys.argv[3]
+
 try:
     with open(live_path, encoding="utf-8") as f:
         live = json.load(f)
 except Exception:
     live = {}
-try:
-    with open(inc_path, encoding="utf-8") as f:
-        inc = json.load(f)
-except Exception:
-    sys.exit(0)
-inc_rl = inc.get("reading_list")
-if not valid_reading_list(inc_rl):
-    sys.exit(0)
+
 if valid_reading_list(live.get("reading_list")):
     sys.exit(0)
-live["reading_list"] = inc_rl
+
+
+def load_json(p):
+    if not p or not os.path.isfile(p):
+        return None
+    try:
+        with open(p, encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return None
+
+inc = load_json(inc_path)
+seed_doc = load_json(seed_path)
+inc_rl = inc.get("reading_list") if isinstance(inc, dict) else None
+seed_rl = seed_doc.get("reading_list") if isinstance(seed_doc, dict) else None
+
+picked = None
+if valid_reading_list(inc_rl):
+    picked = inc_rl
+elif valid_reading_list(seed_rl):
+    picked = seed_rl
+else:
+    sys.exit(0)
+
+live["reading_list"] = picked
 tmp = live_path + ".tmp." + str(os.getpid())
 with open(tmp, "w", encoding="utf-8") as f:
     json.dump(live, f, indent=2, ensure_ascii=False)

@@ -61,12 +61,16 @@
     });
     return parts.join('');
   }
+  /** Same shape check as deploy merge (object with categories array). */
+  function readingListValid(rl) {
+    return rl && typeof rl === 'object' && !Array.isArray(rl) && Array.isArray(rl.categories);
+  }
   /** Always clear the loading skeleton once hub.json has been fetched (even if reading_list is absent). */
   function applyReadingListFromHub(c) {
     var readingRoot = document.getElementById('reading-list-root');
     if (!readingRoot) return;
     var rl = c && c.reading_list;
-    if (rl && typeof rl === 'object' && !Array.isArray(rl)) {
+    if (readingListValid(rl)) {
       var html = renderReadingListHtml(rl);
       readingRoot.innerHTML =
         html ||
@@ -74,7 +78,7 @@
       return;
     }
     readingRoot.innerHTML =
-      '<p class="reading-fallback">No <code>reading_list</code> in the server copy of <code>hub.json</code> (live file is preserved across deploys). Add it under Admin → Site content, or redeploy: the apply script merges <code>reading_list</code> from git when the live file is missing that block.</p>';
+      '<p class="reading-fallback">No usable <code>reading_list</code> in <code>hub.json</code> and the bundled seed did not load. Add it under Admin → Site content, or redeploy so the apply script can merge from git.</p>';
   }
 
   function normaliseBandName(s) {
@@ -110,6 +114,20 @@
 
   fetch('/content/hub.json', { cache: 'no-store' })
     .then(function (r) { if (!r.ok) throw new Error('no content'); return r.json(); })
+    .then(function (c) {
+      if (readingListValid(c.reading_list)) {
+        return Promise.resolve(c);
+      }
+      return fetch('/content/reading-list.seed.json', { cache: 'no-store' })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (seed) {
+          if (seed && readingListValid(seed.reading_list)) {
+            c.reading_list = seed.reading_list;
+          }
+          return c;
+        })
+        .catch(function () { return c; });
+    })
     .then(function (c) {
       try {
         var hn = document.getElementById('hero-name');

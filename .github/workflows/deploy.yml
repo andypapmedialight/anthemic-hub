@@ -61,8 +61,8 @@ jobs:
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
         run: |
           ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            'test -f /home/deploy/incoming-hub/index.html && test -f /home/deploy/incoming-hub/bass/index.html && test -f /home/deploy/incoming-hub/brain/index.html && test -f /home/deploy/incoming-hub/gigs/index.html && test -f /home/deploy/incoming-hub/gigs/gigs.json && test -f /home/deploy/incoming-hub/content/hub.json && test -f /home/deploy/incoming-hub/personal/writing/index.html' \
-            || { echo "incoming-hub missing hub, bass, brain, gigs, content, or personal/writing files after upload"; exit 1; }
+            'test -f /home/deploy/incoming-hub/index.html && test -f /home/deploy/incoming-hub/bass/index.html && test -f /home/deploy/incoming-hub/brain/index.html && test -f /home/deploy/incoming-hub/gigs/index.html && test -f /home/deploy/incoming-hub/gigs/gigs.json && test -f /home/deploy/incoming-hub/content/hub.json && test -f /home/deploy/incoming-hub/content/reading-list.seed.json && test -f /home/deploy/incoming-hub/personal/writing/index.html' \
+            || { echo "incoming-hub missing hub, bass, brain, gigs, content, reading-list.seed, or personal/writing files after upload"; exit 1; }
 
       - name: Apply on Droplet
         env:
