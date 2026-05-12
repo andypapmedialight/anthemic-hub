@@ -71,7 +71,7 @@ jobs:
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
         run: |
           ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            'sudo install -o root -g root -m 755 /home/deploy/incoming-hub/anthemic-hub-deploy-apply.sh /usr/local/bin/anthemic-hub-deploy-apply.sh && sudo /usr/local/bin/anthemic-hub-deploy-apply.sh'
+            'sudo /usr/local/bin/anthemic-hub-deploy-apply.sh'
 
       - name: Smoke test (hub + bass files on droplet)
         env:

@@ -15,6 +15,15 @@ set -euo pipefail
 INCOMING=/home/deploy/incoming-hub
 DEST=/var/www/anthemic-hub
 
+# CI rsyncs the latest script here each deploy; refresh /usr/local/bin copy (this run is already root via sudo).
+# If /usr/local/bin still predates this block, bootstrap once as root:
+#   install -m 755 /home/deploy/incoming-hub/anthemic-hub-deploy-apply.sh /usr/local/bin/anthemic-hub-deploy-apply.sh
+SELF_INCOMING="${INCOMING}/anthemic-hub-deploy-apply.sh"
+APPLY_BIN="/usr/local/bin/anthemic-hub-deploy-apply.sh"
+if [[ "${EUID:-$(id -u)}" -eq 0 ]] && [[ -f "${SELF_INCOMING}" ]]; then
+  install -m 755 -o root -g root "${SELF_INCOMING}" "${APPLY_BIN}"
+fi
+
 if [[ ! -f "${INCOMING}/index.html" ]]; then
   echo "anthemic-hub-deploy-apply: missing ${INCOMING}/index.html" >&2
   exit 1
