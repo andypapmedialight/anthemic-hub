@@ -1,15 +1,106 @@
-/* Contact form — first non-empty option wins (good for DO static sites: no SMTP on the droplet needed):
- * 1) CONTACT_FORM_ENDPOINT — POST JSON to your own API (see PapaWeb/contact-backend/server.mjs for DigitalOcean App Platform).
- * 2) CONTACT_FORMSPREE_ID — form id from https://formspree.io (hosted submissions inbox + optional email via their integrations).
- * 3) CONTACT_FORM_ACCESS_KEY — https://web3forms.com (emails you; no inbox UI).
- * 4) CONTACT_SLACK_WEBHOOK_URL — Incoming Webhook from a Slack app (https://api.slack.com/messaging/webhooks). Posts to a channel; no extra hosting. Warning: the URL is a secret — anyone who reads your page source can spam the channel; use Slack “IP allowlists” / rotate URL if abused, or proxy via your own API.
- * 5) Otherwise opens the visitor's mail app (mailto). */
+/* Contact form — first non-empty option wins.
+ * Security (static site limits):
+ * - Honeypot + rate limit + validation reduce casual bots; they are not proof against a determined attacker.
+ * - Slack / Web3Forms URLs or keys in this file are visible to anyone who can load the script — rotate webhooks if abused; use CONTACT_FORM_ENDPOINT + your server for real secret handling.
+ * Options: 1) CONTACT_FORM_ENDPOINT  2) CONTACT_FORMSPREE_ID  3) CONTACT_FORM_ACCESS_KEY  4) CONTACT_SLACK_WEBHOOK_URL  5) mailto CONTACT_TO_EMAIL */
 const CONTACT_FORM_ENDPOINT = '';
 const CONTACT_FORMSPREE_ID = '';
 const CONTACT_FORM_ACCESS_KEY = '';
 const CONTACT_SLACK_WEBHOOK_URL = '';
 const CONTACT_TO_EMAIL = 'hello@andypap.dev';
 
+const CONTACT_MAX_NAME = 120;
+const CONTACT_MAX_MSG = 8000;
+const CONTACT_RATE_N = 5;
+const CONTACT_RATE_MS = 60 * 60 * 1000;
+const CONTACT_RL_KEY = 'papaweb_contact_rl_v1';
+
+function stripCtrl(s) {
+  return String(s).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '');
+}
+
+function isValidEmail(email) {
+  if (!email || email.length > 254) return false;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+}
+
+function isAllowedHttpsUrl(url) {
+  try {
+    return new URL(url).protocol === 'https:';
+  } catch (_) {
+    return false;
+  }
+}
+
+function isAllowedSlackWebhookUrl(url) {
+  try {
+    const u = new URL(url);
+    if (u.protocol !== 'https:' || u.hostname !== 'hooks.slack.com') return false;
+    const parts = u.pathname.split('/').filter(Boolean);
+    return parts[0] === 'services' && parts.length === 4;
+  } catch (_) {
+    return false;
+  }
+}
+
+function isCleanFormspreeId(id) {
+  return /^[a-zA-Z0-9_-]+$/.test(id) && id.length >= 4 && id.length <= 48;
+}
+
+function contactRateAllow() {
+  try {
+    const now = Date.now();
+    const raw = sessionStorage.getItem(CONTACT_RL_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    const recent = arr.filter(function (t) { return now - t < CONTACT_RATE_MS; });
+    if (recent.length >= CONTACT_RATE_N) return false;
+    recent.push(now);
+    sessionStorage.setItem(CONTACT_RL_KEY, JSON.stringify(recent));
+    return true;
+  } catch (_) {
+    return true;
+  }
+}
+
+function readSanitizedContact() {
+  const nameEl = document.getElementById('name');
+  const emailEl = document.getElementById('email');
+  const interestEl = document.getElementById('interest');
+  const msgEl = document.getElementById('msg');
+  if (!nameEl || !emailEl || !interestEl || !msgEl) {
+    return { ok: false, error: 'Form is unavailable. Refresh the page.' };
+  }
+  const name = stripCtrl(nameEl.value).trim().slice(0, CONTACT_MAX_NAME);
+  const email = stripCtrl(emailEl.value).trim().slice(0, 254);
+  const interest = interestEl.value;
+  const msg = stripCtrl(msgEl.value).trim().slice(0, CONTACT_MAX_MSG);
+  const allowedInterest = { lesson: true, software: true, both: true };
+  if (!name || !email || !msg) return { ok: false, error: 'Please fill in all fields.' };
+  if (!isValidEmail(email)) return { ok: false, error: 'Enter a valid email address.' };
+  if (!allowedInterest[interest]) return { ok: false, error: 'Select a valid topic.' };
+  return { ok: true, name: name, email: email, interest: interest, msg: msg };
+}
+
+function isHoneypotFilled() {
+  const hp = document.getElementById('contact-hp-fax');
+  return !!(hp && String(hp.value || '').trim() !== '');
+}
+
+function assertContactProvidersConfigured() {
+  if (CONTACT_FORM_ENDPOINT && !isAllowedHttpsUrl(CONTACT_FORM_ENDPOINT)) {
+    return 'Contact form endpoint must be an https URL.';
+  }
+  if (CONTACT_FORMSPREE_ID && !isCleanFormspreeId(CONTACT_FORMSPREE_ID)) {
+    return 'Formspree form id looks invalid.';
+  }
+  if (CONTACT_FORM_ACCESS_KEY && CONTACT_FORM_ACCESS_KEY.length < 16) {
+    return 'Web3Forms access key looks invalid.';
+  }
+  if (CONTACT_SLACK_WEBHOOK_URL && !isAllowedSlackWebhookUrl(CONTACT_SLACK_WEBHOOK_URL)) {
+    return 'Slack webhook URL must be https://hooks.slack.com/services/…';
+  }
+  return '';
+}
 // ── CURSOR ──
 const cur  = document.getElementById('cursor');
 const ring = document.getElementById('cursor-ring');
@@ -303,21 +394,8 @@ async function handleSubmit(e) {
   e.preventDefault();
   const form = e.target;
   const btn = document.getElementById('submit-btn');
-  const name = document.getElementById('name').value.trim();
-  const email = document.getElementById('email').value.trim();
-  const interest = document.getElementById('interest').value;
-  const msg = document.getElementById('msg').value.trim();
 
-  const interestLabels = { lesson: 'Bass lesson', software: 'Software project', both: 'Both' };
-  const interestLabel = interestLabels[interest] || interest || 'Not specified';
-  const subjectLine = contactSubject(interestLabel, name);
-  const fullMessage = contactBody(interestLabel, msg);
-
-  setFormStatus('', null);
-  btn.disabled = true;
-  btn.innerHTML = 'Sending…';
-
-  function mailtoFallback() {
+  function mailtoFallback(name, email, interestLabel, msg, subjectLine) {
     const subject = encodeURIComponent(subjectLine);
     const body = encodeURIComponent(
       'Name: ' + name + '\nEmail: ' + email + '\nInterest: ' + interestLabel + '\n\n' + msg
@@ -350,8 +428,44 @@ async function handleSubmit(e) {
     }, 6000);
   }
 
+  if (isHoneypotFilled()) {
+    finishSuccess();
+    return;
+  }
+
+  const pack = readSanitizedContact();
+  if (!pack.ok) {
+    setFormStatus(pack.error, 'err');
+    return;
+  }
+
+  const cfgErr = assertContactProvidersConfigured();
+  if (cfgErr) {
+    setFormStatus(cfgErr, 'err');
+    return;
+  }
+
+  if (!contactRateAllow()) {
+    setFormStatus('Too many submissions from this browser. Try again in about an hour.', 'err');
+    return;
+  }
+
+  const name = pack.name;
+  const email = pack.email;
+  const interest = pack.interest;
+  const msg = pack.msg;
+
+  const interestLabels = { lesson: 'Bass lesson', software: 'Software project', both: 'Both' };
+  const interestLabel = interestLabels[interest] || interest || 'Not specified';
+  const subjectLine = contactSubject(interestLabel, name);
+  const fullMessage = contactBody(interestLabel, msg);
+
+  setFormStatus('', null);
+  btn.disabled = true;
+  btn.innerHTML = 'Sending…';
+
   if (!CONTACT_FORM_ENDPOINT && !CONTACT_FORMSPREE_ID && !CONTACT_FORM_ACCESS_KEY && !CONTACT_SLACK_WEBHOOK_URL) {
-    mailtoFallback();
+    mailtoFallback(name, email, interestLabel, msg, subjectLine);
     return;
   }
 
@@ -368,12 +482,15 @@ async function handleSubmit(e) {
         throw new Error((data && (data.message || data.error)) || 'Could not send message');
       }
     } else if (CONTACT_FORMSPREE_ID) {
-      const { res, data } = await postContactJson('https://formspree.io/f/' + CONTACT_FORMSPREE_ID, {
-        name: name,
-        email: email,
-        message: fullMessage,
-        _subject: subjectLine,
-      });
+      const { res, data } = await postContactJson(
+        'https://formspree.io/f/' + encodeURIComponent(CONTACT_FORMSPREE_ID),
+        {
+          name: name,
+          email: email,
+          message: fullMessage,
+          _subject: subjectLine,
+        }
+      );
       if (!res.ok) {
         const errMsg = (data && (data.error || (data.errors && data.errors[0] && data.errors[0].message))) || 'Could not send message';
         throw new Error(typeof errMsg === 'string' ? errMsg : 'Could not send message');
@@ -395,8 +512,9 @@ async function handleSubmit(e) {
       const si = slackMrkdwnEscape(interestLabel);
       const sm = slackMrkdwnEscape(msg);
       const mailtoHref = 'mailto:' + encodeURIComponent(email);
+      const subEsc = slackMrkdwnEscape(subjectLine);
       await postSlackContact(CONTACT_SLACK_WEBHOOK_URL, {
-        text: subjectLine,
+        text: subEsc,
         blocks: [
           { type: 'header', text: { type: 'plain_text', text: 'New PapaWeb contact', emoji: true } },
           {

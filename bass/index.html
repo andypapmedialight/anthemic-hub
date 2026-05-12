@@ -348,6 +348,18 @@
     }
     .ff select option { background: #1a1e35; color: var(--white); }
     .ff textarea { resize: vertical; min-height: 120px; }
+    /* Honeypot: off-screen, not tab-focusable — bots often fill every field. */
+    .contact-hp {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
     .form-status {
       margin: 0;
       font-size: .8125rem;
@@ -601,14 +613,18 @@
 
       <div class="glass-card reveal d3">
         <form class="cform" id="contact-form">
+          <div class="contact-hp" aria-hidden="true">
+            <label for="contact-hp-fax">Fax</label>
+            <input type="text" id="contact-hp-fax" name="fax" value="" tabindex="-1" autocomplete="off">
+          </div>
           <div class="form-row">
             <div class="ff">
               <label for="name">Name</label>
-              <input type="text" id="name" name="name" placeholder="Your name" autocomplete="name" required>
+              <input type="text" id="name" name="name" placeholder="Your name" autocomplete="name" maxlength="120" required>
             </div>
             <div class="ff">
               <label for="email">Email</label>
-              <input type="email" id="email" name="email" placeholder="your@email.com" autocomplete="email" required>
+              <input type="email" id="email" name="email" placeholder="your@email.com" autocomplete="email" maxlength="254" required>
             </div>
           </div>
           <div class="ff">
@@ -622,7 +638,7 @@
           </div>
           <div class="ff">
             <label for="msg">Message</label>
-            <textarea id="msg" name="message" placeholder="Tell me what you're working on or what you'd like to learn..." required></textarea>
+            <textarea id="msg" name="message" placeholder="Tell me what you're working on or what you'd like to learn..." maxlength="8000" required></textarea>
           </div>
           <button type="submit" class="btn btn-primary btn-full ripple-btn" id="submit-btn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
