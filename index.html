@@ -678,10 +678,11 @@
     }
     .gallery-lightbox__stage {
       flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: grid;
+      grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+      place-items: stretch;
       min-height: 0;
+      min-width: 0;
       background: rgba(0, 0, 0, 0.28);
       border-radius: 14px;
       border: 1px solid var(--border);
@@ -693,10 +694,10 @@
       background: rgba(0, 0, 0, 0.06);
     }
     .gallery-lightbox__stage img {
-      max-width: min(92vw, 1600px);
-      max-height: min(72vh, 920px);
-      width: auto;
-      height: auto;
+      width: 100%;
+      height: 100%;
+      min-width: 0;
+      min-height: 0;
       object-fit: contain;
       object-position: center;
       display: block;
