@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Contact submissions — PapaWeb</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Mono:wght@400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --void: #0D0F1A;
+      --void-light: #181D35;
+      --cyan: #00F3FF;
+      --white: #F0F4FF;
+      --dim: rgba(240, 244, 255, 0.55);
+      --muted: rgba(240, 244, 255, 0.28);
+      --border: rgba(255, 255, 255, 0.1);
+      --err: #f87171;
+      --ok: #34d399;
+      --font: 'Inter', system-ui, sans-serif;
+      --mono: 'Space Mono', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font);
+      background: var(--void);
+      color: var(--white);
+      min-height: 100vh;
+      line-height: 1.5;
+      font-size: 15px;
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 2rem clamp(1rem, 4vw, 2rem); }
+    h1 { font-size: 1.35rem; font-weight: 600; margin-bottom: 0.35rem; }
+    .sub { color: var(--dim); font-size: 0.875rem; margin-bottom: 1.75rem; max-width: 62ch; }
+    .card {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    label { display: block; font-size: 0.75rem; font-weight: 500; color: var(--dim); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.35rem; }
+    input {
+      width: 100%;
+      max-width: 480px;
+      padding: 0.65rem 0.75rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--void-light);
+      color: var(--white);
+      font-family: var(--mono);
+      font-size: 0.8125rem;
+    }
+    input:focus { outline: none; border-color: rgba(0, 243, 255, 0.45); }
+    .row { margin-bottom: 1rem; }
+    .row:last-child { margin-bottom: 0; }
+    button {
+      margin-top: 0.75rem;
+      padding: 0.55rem 1.15rem;
+      border-radius: 8px;
+      border: 1px solid var(--cyan);
+      background: rgba(0, 243, 255, 0.08);
+      color: var(--cyan);
+      font-weight: 500;
+      font-size: 0.875rem;
+      cursor: pointer;
+      font-family: var(--font);
+    }
+    button:hover { background: rgba(0, 243, 255, 0.14); }
+    .status { margin-top: 0.75rem; font-size: 0.8125rem; color: var(--dim); }
+    .status.err { color: var(--err); }
+    .status.ok { color: var(--ok); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+    th, td { text-align: left; padding: 0.65rem 0.75rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { color: var(--dim); font-weight: 500; font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    td { color: var(--white); }
+    .mono { font-family: var(--mono); font-size: 0.75rem; color: var(--dim); }
+    .msg { max-width: 360px; white-space: pre-wrap; word-break: break-word; color: var(--dim); }
+    .hint { margin-top: 1.25rem; font-size: 0.8125rem; color: var(--muted); max-width: 70ch; }
+    .hint a { color: var(--cyan); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Contact submissions</h1>
+    <p class="sub">
+      Lists messages stored by your <strong style="color:var(--white)">contact-backend</strong> API on DigitalOcean (or elsewhere).
+      Third-party form hosts (Formspree, Web3Forms) use their own dashboards instead — see hints below.
+    </p>
+
+    <div class="card">
+      <div class="row">
+        <label for="api-base">API base URL</label>
+        <input id="api-base" type="url" placeholder="https://your-contact-api.ondigitalocean.app" autocomplete="off">
+      </div>
+      <div class="row">
+        <label for="token">Admin token (Bearer)</label>
+        <input id="token" type="password" placeholder="CONTACT_ADMIN_TOKEN value" autocomplete="current-password">
+      </div>
+      <button type="button" id="load-btn">Save in this browser &amp; load</button>
+      <p class="status" id="status" role="status"></p>
+    </div>
+
+    <div class="card" id="table-wrap" hidden>
+      <table>
+        <thead>
+          <tr>
+            <th>Received</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Interest</th>
+            <th>Message</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+
+    <p class="hint">
+      <strong>No self-hosted API?</strong>
+      Use <a href="https://formspree.io" rel="noopener noreferrer">Formspree</a> (set <code style="font-family:var(--mono);font-size:0.8em">CONTACT_FORMSPREE_ID</code> in <code style="font-family:var(--mono);font-size:0.8em">index.html</code>) and read submissions in their inbox.
+      <a href="https://web3forms.com" rel="noopener noreferrer">Web3Forms</a> emails you directly.
+      PapaWeb <a href="/">home</a> form sends to whichever provider you configure first in that priority chain.
+      <br><br>
+      <strong>Security:</strong> if you use this page with a live API, keep <code style="font-family:var(--mono);font-size:0.8em">/admin/</code> off the public web or protect it (e.g. HTTP basic auth on your static host). The token lives only in this browser’s localStorage.
+    </p>
+  </div>
+  <script>
+    var LS_API = 'papaweb_contact_api_base';
+    var LS_TOK = 'papaweb_contact_bearer';
+
+    function $(id) { return document.getElementById(id); }
+
+    function setStatus(msg, kind) {
+      var el = $('status');
+      el.textContent = msg || '';
+      el.className = 'status' + (kind ? ' ' + kind : '');
+    }
+
+    function normalizeBase(url) {
+      if (!url) return '';
+      return String(url).trim().replace(/\/+$/, '');
+    }
+
+    function renderRows(rows) {
+      var tb = $('tbody');
+      var wrap = $('table-wrap');
+      tb.innerHTML = '';
+      if (!rows.length) {
+        wrap.hidden = false;
+        tb.innerHTML = '<tr><td colspan="5" class="mono">No submissions yet.</td></tr>';
+        return;
+      }
+      wrap.hidden = false;
+      rows.forEach(function (r) {
+        var tr = document.createElement('tr');
+        tr.innerHTML =
+          '<td class="mono">' + escapeHtml(r.receivedAt || '—') + '</td>' +
+          '<td>' + escapeHtml(r.name || '') + '</td>' +
+          '<td class="mono">' + escapeHtml(r.email || '') + '</td>' +
+          '<td>' + escapeHtml(r.interest || '') + '</td>' +
+          '<td class="msg">' + escapeHtml(r.message || '') + '</td>';
+        tb.appendChild(tr);
+      });
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    $('load-btn').addEventListener('click', async function () {
+      var base = normalizeBase($('api-base').value);
+      var token = $('token').value.trim();
+      if (!base || !token) {
+        setStatus('Enter both API base URL and token.', 'err');
+        return;
+      }
+      localStorage.setItem(LS_API, base);
+      localStorage.setItem(LS_TOK, token);
+      setStatus('Loading…', '');
+      try {
+        var res = await fetch(base + '/contacts', {
+          headers: { Authorization: 'Bearer ' + token, Accept: 'application/json' },
+        });
+        var data = await res.json().catch(function () { return null; });
+        if (!res.ok) {
+          var err = data && (data.error || data.message);
+          throw new Error(err || 'HTTP ' + res.status);
+        }
+        if (!Array.isArray(data)) {
+          throw new Error('Unexpected response (expected a JSON array).');
+        }
+        renderRows(data);
+        setStatus('Loaded ' + data.length + ' row(s).', 'ok');
+      } catch (e) {
+        setStatus(e.message || String(e), 'err');
+        $('table-wrap').hidden = true;
+      }
+    });
+
+    (function init() {
+      var b = localStorage.getItem(LS_API);
+      var t = localStorage.getItem(LS_TOK);
+      if (b) $('api-base').value = b;
+      if (t) $('token').value = t;
+    })();
+  </script>
+</body>
+</html>
