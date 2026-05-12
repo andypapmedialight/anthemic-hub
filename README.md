@@ -9,6 +9,7 @@ index.html                          Hub landing page
 bass/                               Bass coaching static site (/bass/)
 brain/                              3D brain map (/brain/)
 personal/
+  index.html                      Short index at /personal/ (links to writing)
   writing/
     index.html                      Writing placeholder (/personal/writing/) — quill & ink animation
 gigs/
