@@ -77,9 +77,10 @@ jobs:
           DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
         run: |
+          HUB_IN="/home/${DEPLOY_USER}/incoming-hub"
           ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            'test -f /home/deploy/incoming-hub/index.html && test -f /home/deploy/incoming-hub/bass/index.html && test -f /home/deploy/incoming-hub/brain/index.html && test -f /home/deploy/incoming-hub/gigs/index.html && test -f /home/deploy/incoming-hub/gigs/gigs.json && test -f /home/deploy/incoming-hub/content/hub.json && test -f /home/deploy/incoming-hub/content/reading-list.seed.json && test -f /home/deploy/incoming-hub/personal/index.html && test -f /home/deploy/incoming-hub/personal/writing/index.html && test -f /home/deploy/incoming-hub/personal/writing/quill-ink.svg' \
-            || { echo "incoming-hub missing hub, bass, brain, gigs, content, reading-list.seed, or personal/ files after upload"; exit 1; }
+            "test -f ${HUB_IN}/index.html && test -f ${HUB_IN}/bass/index.html && test -f ${HUB_IN}/brain/index.html && test -f ${HUB_IN}/gigs/index.html && test -f ${HUB_IN}/gigs/gigs.json && test -f ${HUB_IN}/content/hub.json && test -f ${HUB_IN}/content/reading-list.seed.json && test -f ${HUB_IN}/personal/index.html && test -f ${HUB_IN}/personal/writing/index.html && test -f ${HUB_IN}/personal/writing/quill-ink.svg" \
+            || { echo "incoming-hub missing hub, bass, brain, gigs, content, reading-list.seed, or personal/ files after upload (expected under ${HUB_IN})"; exit 1; }
 
       - name: Apply on Droplet
         env:
@@ -87,8 +88,9 @@ jobs:
           DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
         run: |
+          HUB_IN="/home/${DEPLOY_USER}/incoming-hub"
           ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            'sudo /usr/local/bin/anthemic-hub-deploy-apply.sh'
+            "sudo env INCOMING=${HUB_IN} /usr/local/bin/anthemic-hub-deploy-apply.sh"
 
       - name: Smoke test (hub + bass files on droplet)
         env:
@@ -97,6 +99,7 @@ jobs:
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
         run: |
           set -euo pipefail
+          HUB_IN="/home/${DEPLOY_USER}/incoming-hub"
           code_root=$(curl -sS -o /dev/null -w "%{http_code}" --retry 3 --retry-delay 2 "https://anthemic-developments.com/")
           [[ "${code_root}" == "200" ]] || { echo "Hub / returned HTTP ${code_root}"; exit 1; }
           curl -sS --retry 3 --retry-delay 2 "https://anthemic-developments.com/" -o /tmp/anthemic-smoke-hub.html
@@ -110,8 +113,8 @@ jobs:
             'grep -qF "Bass Teacher" /var/www/anthemic-hub/bass/index.html' \
             || { echo "bass/index.html on droplet missing expected content marker"; exit 1; }
           ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            'test -f /var/www/anthemic-hub/personal/writing/index.html' \
-            || { echo "After apply, /var/www/anthemic-hub/personal/writing/index.html missing (check incoming-hub/personal/ and apply logs)"; exit 1; }
+            'sudo test -f /var/www/anthemic-hub/personal/writing/index.html' \
+            || { echo "After apply, /var/www/anthemic-hub/personal/writing/index.html missing or unreadable (expect incoming under ${HUB_IN}/personal/; apply uses sudo env INCOMING=...)"; exit 1; }
           code_writing=$(curl -sS -o /dev/null -w "%{http_code}" --retry 3 --retry-delay 2 "https://anthemic-developments.com/personal/writing/")
           [[ "${code_writing}" == "200" ]] || { echo "Writing holding page /personal/writing/ returned HTTP ${code_writing} (sync anthemic-ops nginx to droplet; verify sites-enabled -> sites-available/anthemic-hub)"; exit 1; }
           curl -sS --retry 3 --retry-delay 2 "https://anthemic-developments.com/personal/writing/" -o /tmp/anthemic-smoke-writing.html
