@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 # Installed on the Droplet as /usr/local/bin/anthemic-hub-deploy-apply.sh (root, 755).
-# Invoked by the `deploy` user via: sudo /usr/local/bin/anthemic-hub-deploy-apply.sh
+# Invoked by the deploy user via:
+#   sudo /usr/local/bin/anthemic-hub-deploy-apply.sh
+# Optional first argument sets the incoming staging dir (CI uses this so sudoers NOPASSWD still matches this script, not `env`):
+#   sudo /usr/local/bin/anthemic-hub-deploy-apply.sh /home/ubuntu/incoming-hub
 #
-# Expects artifacts under $INCOMING (default /home/deploy/incoming-hub).
-# CI must pass INCOMING=/home/<deploy-user>/incoming-hub when DEPLOY_USER is not "deploy".
+# Expects artifacts under $INCOMING (default /home/deploy/incoming-hub, or first argument):
 #   index.html        - the hub landing page
 #   assets/           - optional folder of static assets
 #   bass/             - bass coaching static site (e.g. bass/index.html)
@@ -13,7 +15,11 @@
 #
 set -euo pipefail
 
-INCOMING="${INCOMING:-/home/deploy/incoming-hub}"
+if [[ -n "${1:-}" ]]; then
+  INCOMING="$1"
+else
+  INCOMING="${INCOMING:-/home/deploy/incoming-hub}"
+fi
 DEST=/var/www/anthemic-hub
 
 # CI rsyncs the latest script here each deploy; refresh /usr/local/bin copy (this run is already root via sudo).
