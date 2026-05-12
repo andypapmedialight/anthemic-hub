@@ -74,7 +74,7 @@
       return;
     }
     readingRoot.innerHTML =
-      '<p class="reading-fallback">Reading list is missing from <code>/content/hub.json</code> on the server. Add a <code>reading_list</code> object (or open admin → Site content and save) then redeploy.</p>';
+      '<p class="reading-fallback">No <code>reading_list</code> in the server copy of <code>hub.json</code> (live file is preserved across deploys). Add it under Admin → Site content, or redeploy: the apply script merges <code>reading_list</code> from git when the live file is missing that block.</p>';
   }
 
   function normaliseBandName(s) {

@@ -59,6 +59,40 @@ rsync -a --delete "${INCOMING}/content/" "${DEST}/content/"
 preserve_restore "${GIGS_LIVE}"    "${GIGS_BACKUP}"
 preserve_restore "${CONTENT_LIVE}" "${CONTENT_BACKUP}"
 
+# Preserved hub.json may predate new keys (e.g. reading_list). Merge from incoming when live lacks a valid block.
+INCOMING_HUB="${INCOMING}/content/hub.json"
+if [[ -f "${CONTENT_LIVE}" ]] && [[ -f "${INCOMING_HUB}" ]]; then
+  python3 - "${CONTENT_LIVE}" "${INCOMING_HUB}" <<'PY'
+import json, os, sys
+
+def valid_reading_list(rl):
+    return isinstance(rl, dict) and isinstance(rl.get("categories"), list)
+
+live_path, inc_path = sys.argv[1], sys.argv[2]
+try:
+    with open(live_path, encoding="utf-8") as f:
+        live = json.load(f)
+except Exception:
+    live = {}
+try:
+    with open(inc_path, encoding="utf-8") as f:
+        inc = json.load(f)
+except Exception:
+    sys.exit(0)
+inc_rl = inc.get("reading_list")
+if not valid_reading_list(inc_rl):
+    sys.exit(0)
+if valid_reading_list(live.get("reading_list")):
+    sys.exit(0)
+live["reading_list"] = inc_rl
+tmp = live_path + ".tmp." + str(os.getpid())
+with open(tmp, "w", encoding="utf-8") as f:
+    json.dump(live, f, indent=2, ensure_ascii=False)
+    f.write("\n")
+os.replace(tmp, live_path)
+PY
+fi
+
 if [[ -d "${INCOMING}/assets" ]]; then
   mkdir -p "${DEST}/assets"
   MANIFEST_LIVE="${DEST}/assets/gallery/manifest.json"
