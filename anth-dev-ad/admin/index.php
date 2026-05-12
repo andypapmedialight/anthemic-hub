@@ -8,9 +8,24 @@ $posterPath    = __DIR__ . '/../../assets/gig-posters';
 $passwordHash = getenv('GIGS_ADMIN_PASSWORD_HASH') ?: '';
 $adminBase    = '/anth-dev-ad/admin/';
 
+$cookieSecure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+    || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+session_set_cookie_params([
+    'lifetime' => 0,
+    'path'     => '/',
+    'secure'   => $cookieSecure,
+    'httponly' => true,
+    'samesite' => 'Lax',
+]);
 session_start();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['logout'])) {
+    if (!empty($_SESSION['authed'])) {
+        if (!hash_equals($_SESSION['csrf'] ?? '', $_POST['csrf'] ?? '')) {
+            http_response_code(403);
+            die('CSRF check failed.');
+        }
+    }
     session_destroy();
     header('Location: ' . $adminBase);
     exit;
@@ -94,13 +109,39 @@ function knownGigKeys(): array {
             'free', 'price', 'poster'];
 }
 
+/** Extension derived from getimagesize() MIME — never trust client filename extension. */
+function imageMimeToExtension(string $mime): ?string {
+    return match ($mime) {
+        'image/jpeg' => 'jpg',
+        'image/png'  => 'png',
+        'image/gif'  => 'gif',
+        'image/webp' => 'webp',
+        default      => null,
+    };
+}
+
+function safePosterFilename(mixed $v): string {
+    if (!is_string($v) || $v === '') {
+        return '';
+    }
+    $b = basename($v);
+    if ($b === '' || $b === '.' || $b === '..') {
+        return '';
+    }
+    if (!preg_match('/^[a-zA-Z0-9][a-zA-Z0-9._\-]{0,199}$/', $b)) {
+        return '';
+    }
+    return $b;
+}
+
 function uploadPoster(?array $file, string $dir): ?string {
     if (!$file || $file['error'] !== UPLOAD_ERR_OK || !is_uploaded_file($file['tmp_name'])) return null;
     $info = @getimagesize($file['tmp_name']);
     $allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    if (!$info || !in_array($info['mime'], $allowed)) return null;
+    if (!$info || !in_array($info['mime'], $allowed, true)) return null;
+    $ext = imageMimeToExtension($info['mime']);
+    if ($ext === null) return null;
     if (!is_dir($dir)) mkdir($dir, 0755, true);
-    $ext  = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
     $base = preg_replace('/[^a-z0-9_\-]/', '_', strtolower(pathinfo($file['name'], PATHINFO_FILENAME)));
     $base = trim($base, '_') ?: 'poster_' . time();
     $dest = $dir . '/' . $base . '.' . $ext;
@@ -151,6 +192,7 @@ function sanitizeGig(array $p, array $extraKeys = []): array {
         'venue_link'   => sanitizeUrl($p['venue_link']   ?? ''),
         'free'         => !empty($p['free']),
         'price'        => substr(trim(strip_tags($p['price'] ?? '')), 0, 50),
+        'poster'       => safePosterFilename($p['poster'] ?? ''),
     ];
     foreach ($extraKeys as $k) {
         $out[$k] = substr(trim(strip_tags($p[$k] ?? '')), 0, 500);
@@ -210,7 +252,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $raw = $_POST['raw_json'] ?? '';
         $decoded = json_decode($raw, true);
         if (json_last_error() === JSON_ERROR_NONE && isset($decoded['gigs']) && is_array($decoded['gigs'])) {
-            saveGigs($gigsPath, $decoded['gigs']);
+            $rawGigs = $decoded['gigs'];
+            $extraFromRaw = [];
+            foreach ($rawGigs as $g) {
+                if (!is_array($g)) {
+                    continue;
+                }
+                foreach (array_keys($g) as $k) {
+                    if (!in_array($k, knownGigKeys(), true) && !in_array($k, $extraFromRaw, true)) {
+                        $extraFromRaw[] = $k;
+                    }
+                }
+            }
+            $sanitized = [];
+            foreach ($rawGigs as $g) {
+                if (!is_array($g)) {
+                    continue;
+                }
+                $sanitized[] = sanitizeGig($g, $extraFromRaw);
+            }
+            saveGigs($gigsPath, $sanitized);
         } else {
             $_SESSION['raw_error'] = 'Invalid JSON or missing "gigs" array. Changes not saved.';
         }
@@ -260,8 +321,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($file && $file['error'] === UPLOAD_ERR_OK && is_uploaded_file($file['tmp_name'])) {
             $info = @getimagesize($file['tmp_name']);
             $allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-            if ($info && in_array($info['mime'], $allowed)) {
-                $ext  = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            if ($info && in_array($info['mime'], $allowed, true)) {
+                $ext = imageMimeToExtension($info['mime']);
+                if ($ext === null) {
+                    $_SESSION['gallery_error'] = 'Only JPEG, PNG, GIF, and WebP images are allowed.';
+                } else {
                 $base = preg_replace('/[^a-z0-9_\-]/', '_', strtolower(pathinfo($file['name'], PATHINFO_FILENAME)));
                 $base = trim($base, '_') ?: 'photo_' . time();
                 $dest = $galleryPath . '/' . $base . '.' . $ext;
@@ -269,6 +333,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 move_uploaded_file($file['tmp_name'], $dest);
                 chmod($dest, 0644);
                 regenerateManifest($galleryPath);
+                }
             } else {
                 $_SESSION['gallery_error'] = 'Only JPEG, PNG, GIF, and WebP images are allowed.';
             }
@@ -523,6 +588,7 @@ function gigForm(string $action, array $g = [], int $idx = -1, string $csrf = ''
     <h1>Anthemic Admin</h1>
     <form method="post">
       <input type="hidden" name="logout" value="1" />
+      <input type="hidden" name="csrf" value="<?= h($csrf) ?>" />
       <button type="submit" class="btn-logout">Sign out</button>
     </form>
   </div>

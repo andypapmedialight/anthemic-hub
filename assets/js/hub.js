@@ -175,6 +175,13 @@
   var wrap = document.getElementById("photo-gallery-wrap");
   var ul   = document.getElementById("photo-gallery");
   if (!wrap || !ul) return;
+  function escAttr(s) {
+    return String(s || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
   function checkVisible() {
     var items = ul.querySelectorAll("li");
     var visible = 0;
@@ -206,7 +213,7 @@
         var src = "/assets/gallery/" + encodeURIComponent(f);
         var alt = f.replace(/\.[^.]+$/, "").replace(/[_\-]+/g, " ");
         return "<li><a href=\"" + src + "\" target=\"_blank\" rel=\"noopener noreferrer\">" +
-          "<img src=\"" + src + "\" alt=\"" + alt + "\" width=\"640\" height=\"640\" loading=\"lazy\" decoding=\"async\" data-gallery-img /></a></li>";
+          "<img src=\"" + src + "\" alt=\"" + escAttr(alt) + "\" width=\"640\" height=\"640\" loading=\"lazy\" decoding=\"async\" data-gallery-img /></a></li>";
       }).join("");
       attachErrors();
     })
