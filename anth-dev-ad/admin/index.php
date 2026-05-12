@@ -215,6 +215,29 @@ function sanitizeReadingList(array $in): array {
     return $out;
 }
 
+/**
+ * Favourite bands for hub Music section (hub.json favourite_bands).
+ *
+ * @return list<string>
+ */
+function sanitizeFavouriteBandsFromText(string $raw): array {
+    $lines = preg_split('/\r\n|\r|\n/', $raw) ?: [];
+    $out = [];
+    foreach ($lines as $line) {
+        $name = substr(trim(strip_tags($line)), 0, 120);
+        if ($name === '') {
+            continue;
+        }
+        if (!in_array($name, $out, true)) {
+            $out[] = $name;
+        }
+        if (count($out) >= 80) {
+            break;
+        }
+    }
+    return $out;
+}
+
 function extraGigKeys(array $gigs): array {
     $known = knownGigKeys();
     $extra = [];
@@ -348,6 +371,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             return ['name' => trim($parts[0]), 'dates' => isset($parts[1]) ? trim($parts[1]) : ''];
         }, $projLines));
 
+        $content['favourite_bands'] = sanitizeFavouriteBandsFromText((string)($_POST['favourite_bands'] ?? ''));
+
         $rlRaw = (string)($_POST['reading_list_json'] ?? '');
         $rlTrim = trim($rlRaw);
         if ($rlTrim !== '') {
@@ -361,7 +386,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        $knownContentFields = ['who_am_i', 'music_bio_origin', 'music_bio_anthems', 'instruments', 'projects', 'reading_list'];
+        $knownContentFields = ['who_am_i', 'music_bio_origin', 'music_bio_anthems', 'instruments', 'projects', 'favourite_bands', 'reading_list'];
         foreach ($_POST['extra'] ?? [] as $ek => $ev) {
             $ek = preg_replace('/[^a-z0-9_]/i', '', (string)$ek);
             if (!$ek || in_array($ek, $knownContentFields, true)) continue;
@@ -442,6 +467,23 @@ function contentInstText(array $c): string {
 function contentProjText(array $c): string {
     $projs = $c['projects'] ?? [];
     return implode("\n", array_map(fn($p) => $p['name'] . ($p['dates'] ? ' | ' . $p['dates'] : ''), $projs));
+}
+function contentFavouriteBandsText(array $c): string {
+    $fb = $c['favourite_bands'] ?? null;
+    if (!is_array($fb)) {
+        return '';
+    }
+    $lines = [];
+    foreach ($fb as $name) {
+        if (!is_string($name)) {
+            continue;
+        }
+        $t = trim($name);
+        if ($t !== '') {
+            $lines[] = $t;
+        }
+    }
+    return implode("\n", $lines);
 }
 function contentParasText(array $c, string $key): string {
     $paras = $c[$key] ?? [];
@@ -711,12 +753,17 @@ function gigForm(string $action, array $g = [], int $idx = -1, string $csrf = ''
         <textarea name="projects" class="content-area" rows="14"><?= h(contentProjText($content)) ?></textarea>
       </div>
       <div class="content-field">
+        <label>Favourite bands</label>
+        <span class="hint">Shown on the hub Music section. One band per line (max 120 characters per line, up to 80 lines). Duplicates are removed when saving.</span>
+        <textarea name="favourite_bands" class="content-area" rows="10"><?= h(contentFavouriteBandsText($content)) ?></textarea>
+      </div>
+      <div class="content-field">
         <label>Reading list</label>
         <span class="hint">JSON for the hub reading board. Leave unchanged to keep the current list. Use <code>{}</code> with keys <code>intro</code> (string) and <code>categories</code> (array of <code>label</code> + <code>books</code>). Each book: <code>title</code>, <code>author</code>, <code>status</code> (<code>read</code> or <code>reading</code>), optional <code>note</code>, optional <code>url</code> (http/https only).</span>
         <textarea name="reading_list_json" class="raw-json" style="min-height:220px" spellcheck="false"><?= h(readingListJsonForForm($content)) ?></textarea>
       </div>
       <?php
-        $knownContentFields = ['who_am_i', 'music_bio_origin', 'music_bio_anthems', 'instruments', 'projects', 'reading_list'];
+        $knownContentFields = ['who_am_i', 'music_bio_origin', 'music_bio_anthems', 'instruments', 'projects', 'favourite_bands', 'reading_list'];
         foreach ($content as $ck => $cv):
           if (in_array($ck, $knownContentFields, true) || is_array($cv)) continue;
       ?>

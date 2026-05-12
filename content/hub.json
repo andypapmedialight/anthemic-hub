@@ -13,6 +13,13 @@
   "case_study_url": "https://report.safermurrayroad.com",
   "case_study_label": "Case study: SWARM reporter",
   "gallery_tagline": "Melbourne · stage · studio - and the studio dog on QA.",
+  "favourite_bands": [
+    "The Clash",
+    "Talking Heads",
+    "Nick Cave and the Bad Seeds",
+    "PJ Harvey",
+    "Massive Attack"
+  ],
   "who_am_i": "Andy Papadopoulos trained as a software engineer - senior developer, full-stack engineer, and infrastructure architect at Mecca Medialight in Melbourne. He designs and ships web apps, mentors where he can, and tinkers on the side. Off the clock he plays music, teaches bass, and scratches creative itches here under Anthemic. Cinnamon (pictured) is the dog who runs quality assurance on morale.",
   "music_bio_origin": [
     "A long, long time ago in a decade far far away that has come to be known as 'the eighties' one of Andy's best friends ran into their classroom at a Melbourne school, his eyes wide with excitement having recently played a drum kit for the first time: 'Maaate!', he proclaimed in an English accent which had shown only the slightest hint of ockerisation, '...we have to put a band together!, it'll be great!, we'll get heaps of chicks!' Andy's eyes widened though he was still unsure of his particular role in this venture, but his friend continued, '....you've got big hands - you can play bass!'",
@@ -52,8 +59,59 @@
     { "name": "Ron S Peno & The Superstitions", "dates": "" }
   ],
   "reading_list": {
-    "intro": "A shelf of what I have finished and what is still open on the desk — grouped by theme, not by spine height.",
+    "intro": "The photo is the real shelf at home — guitars and mic usually live a little further left. The list below mixes spines that are readable in that shot with a few desk and e-reader titles I still count as the same library. Status is honest, not performative: some spines are old friends, others are mid-flight.",
     "categories": [
+      {
+        "label": "Home shelf — politics, media & dissent",
+        "books": [
+          { "title": "A People's History of the United States", "author": "Howard Zinn", "status": "read" },
+          { "title": "The Chomsky Reader", "author": "Noam Chomsky", "status": "read" },
+          { "title": "Necessary Illusions", "author": "Noam Chomsky", "status": "read" },
+          { "title": "After the Cataclysm", "author": "Noam Chomsky & Edward S. Herman", "status": "read" },
+          { "title": "Powers & Prospects", "author": "Noam Chomsky", "status": "read" },
+          { "title": "Profit Over People", "author": "Noam Chomsky", "status": "read" },
+          { "title": "Latin America: From Colonization to Globalization", "author": "Noam Chomsky", "status": "read" },
+          { "title": "The Washington Connection and Third World Fascism", "author": "Noam Chomsky & Edward S. Herman", "status": "read" },
+          { "title": "What's the Matter with Kansas?", "author": "Thomas Frank", "status": "read" },
+          { "title": "Listen, Liberal", "author": "Thomas Frank", "status": "read" },
+          { "title": "One Market Under God", "author": "Thomas Frank", "status": "read" },
+          { "title": "God is Not Great", "author": "Christopher Hitchens", "status": "read" },
+          { "title": "Dark Money", "author": "Jane Mayer", "status": "read" },
+          { "title": "No Logo", "author": "Naomi Klein", "status": "read" },
+          { "title": "The Shock Doctrine", "author": "Naomi Klein", "status": "read" },
+          { "title": "This Changes Everything", "author": "Naomi Klein", "status": "read" }
+        ]
+      },
+      {
+        "label": "Home shelf — economics & political economy",
+        "books": [
+          { "title": "The Great Transformation", "author": "Karl Polanyi", "status": "read" },
+          { "title": "The Road to Serfdom", "author": "F.A. Hayek", "status": "read" },
+          { "title": "Wall Street", "author": "Doug Henwood", "status": "read" },
+          { "title": "Capital", "author": "Karl Marx", "status": "reading", "note": "The fat black spine in the photo — slow progress." },
+          { "title": "The Wealth of Nations", "author": "Adam Smith", "status": "read" },
+          { "title": "Rogue Economics", "author": "Loretta Napoleoni", "status": "read" },
+          { "title": "Capital and Ideology", "author": "Thomas Piketty", "status": "reading" },
+          { "title": "The New Way of the World", "author": "Pierre Dardot & Christian Laval", "status": "read" },
+          { "title": "The Price of Power: Kissinger in the Nixon White House", "author": "Seymour M. Hersh", "status": "read" },
+          { "title": "The Pentagon of Power", "author": "Lewis Mumford", "status": "read" }
+        ]
+      },
+      {
+        "label": "Home shelf — mind, science & information",
+        "books": [
+          { "title": "A History of the Mind", "author": "Nicholas Humphrey", "status": "read" },
+          { "title": "The Significance of Consciousness", "author": "Charles Siewert", "status": "read" },
+          { "title": "The Elegant Universe", "author": "Brian Greene", "status": "read" },
+          { "title": "The Fabric of the Cosmos", "author": "Brian Greene", "status": "read" },
+          { "title": "The Emperor's New Mind", "author": "Roger Penrose", "status": "read" },
+          { "title": "Full Catastrophe Living", "author": "Jon Kabat-Zinn", "status": "read" },
+          { "title": "Information Anxiety 2", "author": "Richard Saul Wurman", "status": "read" },
+          { "title": "Thinking, Fast and Slow", "author": "Daniel Kahneman", "status": "read" },
+          { "title": "Seven and a Half Lessons About the Brain", "author": "Lisa Feldman Barrett", "status": "reading" },
+          { "title": "The Man Who Mistook His Wife for a Hat", "author": "Oliver Sacks", "status": "read" }
+        ]
+      },
       {
         "label": "Software, systems & craft",
         "books": [
@@ -64,16 +122,10 @@
         ]
       },
       {
-        "label": "Neuroscience, mind & decisions",
+        "label": "Fiction, myth & Australian classics",
         "books": [
-          { "title": "Thinking, Fast and Slow", "author": "Daniel Kahneman", "status": "read" },
-          { "title": "Seven and a Half Lessons About the Brain", "author": "Lisa Feldman Barrett", "status": "reading" },
-          { "title": "The Man Who Mistook His Wife for a Hat", "author": "Oliver Sacks", "status": "read" }
-        ]
-      },
-      {
-        "label": "Fiction, myth & long-form essays",
-        "books": [
+          { "title": "For the Term of His Natural Life", "author": "Marcus Clarke", "status": "read", "note": "Australian classic — visible in the stack." },
+          { "title": "My Brother Jack", "author": "George Johnston", "status": "read" },
           { "title": "The Left Hand of Darkness", "author": "Ursula K. Le Guin", "status": "read" },
           { "title": "The Broken Earth trilogy (started)", "author": "N. K. Jemisin", "status": "reading" },
           { "title": "The Name of the Rose", "author": "Umberto Eco", "status": "read" }

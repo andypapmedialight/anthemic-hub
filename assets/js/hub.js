@@ -20,12 +20,23 @@
     cats.forEach(function (cat, ci) {
       if (!cat || !cat.label) return;
       var id = 'reading-cat-' + ci;
+      var bookArr = Array.isArray(cat.books) ? cat.books : [];
+      var n = 0;
+      for (var bi = 0; bi < bookArr.length; bi++) {
+        if (bookArr[bi] && bookArr[bi].title) n++;
+      }
+      var countLabel = n === 1 ? '1 title' : String(n) + ' titles';
       parts.push(
-        '<section class="reading-category" aria-labelledby="' + id + '">' +
-        '<h3 class="reading-category-title" id="' + id + '">' + esc(cat.label) + '</h3>' +
-        '<ul class="reading-books">'
+        '<details class="reading-category reading-category-details">' +
+        '<summary class="reading-category-summary">' +
+        '<span class="reading-category-summary-row">' +
+        '<span class="reading-category-title" id="' + id + '">' + esc(cat.label) + '</span>' +
+        '<span class="reading-category-count">' + esc(countLabel) + '</span>' +
+        '</span>' +
+        '</summary>' +
+        '<ul class="reading-books" aria-labelledby="' + id + '">'
       );
-      (Array.isArray(cat.books) ? cat.books : []).forEach(function (b) {
+      bookArr.forEach(function (b) {
         if (!b || !b.title) return;
         var st = b.status === 'reading' ? 'reading' : 'read';
         var stLabel = st === 'reading' ? 'Reading' : 'Read';
@@ -46,7 +57,7 @@
           '</span></li>'
         );
       });
-      parts.push('</ul></section>');
+      parts.push('</ul></details>');
     });
     return parts.join('');
   }
@@ -65,6 +76,38 @@
     readingRoot.innerHTML =
       '<p class="reading-fallback">Reading list is missing from <code>/content/hub.json</code> on the server. Add a <code>reading_list</code> object (or open admin → Site content and save) then redeploy.</p>';
   }
+
+  function normaliseBandName(s) {
+    s = String(s || '').trim();
+    return s.length > 120 ? s.slice(0, 120) : s;
+  }
+  function favouriteBandsDefaultsFromHub(c) {
+    if (c && Array.isArray(c.favourite_bands)) {
+      return c.favourite_bands.map(normaliseBandName).filter(Boolean);
+    }
+    return [];
+  }
+  function setupFavouriteBands(c) {
+    var ul = document.getElementById('favourite-bands-list');
+    if (!ul) return;
+    var bands = favouriteBandsDefaultsFromHub(c);
+    ul.innerHTML = '';
+    if (!bands.length) {
+      var empty = document.createElement('li');
+      empty.className = 'favourite-bands-empty';
+      empty.textContent =
+        'No bands listed yet. Add a favourite_bands array in hub.json or edit Site content in admin.';
+      ul.appendChild(empty);
+      return;
+    }
+    for (var i = 0; i < bands.length; i++) {
+      var li = document.createElement('li');
+      li.className = 'favourite-bands-item';
+      li.textContent = bands[i];
+      ul.appendChild(li);
+    }
+  }
+
   fetch('/content/hub.json', { cache: 'no-store' })
     .then(function (r) { if (!r.ok) throw new Error('no content'); return r.json(); })
     .then(function (c) {
@@ -129,6 +172,7 @@
         }
       } finally {
         applyReadingListFromHub(c);
+        setupFavouriteBands(c);
       }
     })
     .catch(function () {
@@ -136,6 +180,7 @@
       if (rr) {
         rr.innerHTML = '<p class="reading-fallback">Could not load the reading list. It is stored in <code>/content/hub.json</code> on the server.</p>';
       }
+      setupFavouriteBands(null);
     });
 })();
 
@@ -162,8 +207,15 @@
   if (y) y.textContent = new Date().getFullYear();
 
   var interestKey = "anthemic-hub-interest";
-  var interestSelect = document.getElementById("hub-interest");
   var interestValues = ["all", "music", "teaching", "creative", "work", "community", "personal"];
+
+  function syncInterestChips(interest) {
+    var chips = document.querySelectorAll(".interest-chip[data-interest]");
+    for (var i = 0; i < chips.length; i++) {
+      var v = chips[i].getAttribute("data-interest");
+      chips[i].setAttribute("aria-pressed", v === interest ? "true" : "false");
+    }
+  }
 
   function cardInterestTags(el) {
     return (el.getAttribute("data-interests") || "").trim().split(/\s+/).filter(Boolean);
@@ -189,6 +241,23 @@
       blocks[i].setAttribute("data-orig-section-order", String(i));
     }
   }
+  /** When an interest is active, these hub-section ids sort first (in order) among sections that still match. */
+  var interestPrimaryHubOrder = {
+    music: ["music", "music-bio", "projects", "reading-list", "work"],
+    teaching: ["music", "reading-list", "projects", "music-bio", "work"],
+    creative: ["projects", "music", "reading-list", "music-bio", "work"],
+    work: ["work", "reading-list", "projects", "music", "music-bio"],
+    community: ["projects", "music", "reading-list", "music-bio", "work"],
+    personal: ["reading-list", "music-bio", "projects", "music", "work"]
+  };
+  function primarySectionRank(block, interest) {
+    if (!interest || interest === "all") return 0;
+    var order = interestPrimaryHubOrder[interest];
+    if (!order || !order.length) return 999;
+    var id = block.getAttribute("data-hub-section") || "";
+    var ix = order.indexOf(id);
+    return ix === -1 ? 999 : ix;
+  }
   function sectionMatchCount(block, interest) {
     if (!interest || interest === "all") return 0;
     var n = 0;
@@ -196,7 +265,7 @@
     var sectionTags = (block.getAttribute("data-interests") || "").trim().split(/\s+/).filter(Boolean);
     if (sectionTags.indexOf(interest) !== -1) n++;
     // Card-level matches within grids
-    var cards = block.querySelectorAll("section.grid > .card[data-interests]");
+    var cards = block.querySelectorAll(":scope .card[data-interests]");
     for (var i = 0; i < cards.length; i++) {
       if (cardMatchesInterest(cards[i], interest)) n++;
     }
@@ -236,6 +305,9 @@
         if (aHit && !bHit) return -1;
         if (!aHit && bHit) return 1;
       }
+      var apr = primarySectionRank(a, interest);
+      var bpr = primarySectionRank(b, interest);
+      if (apr !== bpr) return apr - bpr;
       if (ac !== bc) return bc - ac;
       return ao - bo;
     });
@@ -263,18 +335,18 @@
       el.classList.toggle("is-interest-dim", !all && !match);
     }
     var status = document.getElementById("interest-status");
-    if (status && interestSelect) {
+    if (status) {
       if (all) {
         status.textContent = "";
       } else {
-        var opt = interestSelect.querySelector("option[value=\"" + interest + "\"]");
-        status.textContent = opt ? "Showing: " + opt.textContent : "";
+        var chip = main.querySelector('.interest-chip[data-interest="' + interest + '"]');
+        status.textContent = chip ? "Showing: " + chip.textContent.replace(/\s+/g, " ").trim() : "";
       }
     }
   }
   function setInterest(interest) {
     if (interestValues.indexOf(interest) === -1) interest = "all";
-    if (interestSelect) interestSelect.value = interest;
+    syncInterestChips(interest);
     sortGridsByInterest(interest);
     sortHubSectionsByInterest(interest);
     updateSectionNumbers();
@@ -283,14 +355,18 @@
   }
   assignOriginalOrder();
   assignOriginalSectionOrder();
-  if (interestSelect) {
+  var interestChips = document.querySelectorAll(".interest-chip[data-interest]");
+  if (interestChips.length) {
     var saved = null;
     try { saved = localStorage.getItem(interestKey); } catch (e) {}
-    if (saved && interestValues.indexOf(saved) !== -1) interestSelect.value = saved;
-    setInterest(interestSelect.value);
-    interestSelect.addEventListener("change", function () {
-      setInterest(interestSelect.value);
-    });
+    var initial = saved && interestValues.indexOf(saved) !== -1 ? saved : "all";
+    setInterest(initial);
+    for (var ic = 0; ic < interestChips.length; ic++) {
+      interestChips[ic].addEventListener("click", function () {
+        var v = this.getAttribute("data-interest");
+        if (v) setInterest(v);
+      });
+    }
   }
 })();
 

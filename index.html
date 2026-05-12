@@ -18,7 +18,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700&display=swap" rel="stylesheet" />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%230e1015%22%2F%3E%3Cpath%20d%3D%22M8%2046%20C16%2024%2C24%2024%2C32%2046%20C40%2024%2C48%2024%2C56%2046%22%20fill%3D%22none%22%20stroke%3D%22%23c9a227%22%20stroke-width%3D%225%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%223%22%20fill%3D%22%236b9cff%22%2F%3E%3C%2Fsvg%3E" />
   <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%230e1015%22%2F%3E%3Cpath%20d%3D%22M8%2046%20C16%2024%2C24%2024%2C32%2046%20C40%2024%2C48%2024%2C56%2046%22%20fill%3D%22none%22%20stroke%3D%22%23c9a227%22%20stroke-width%3D%225%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%223%22%20fill%3D%22%236b9cff%22%2F%3E%3C%2Fsvg%3E" />
 
@@ -58,9 +58,15 @@
       --theme-chip-border: var(--border);
       --theme-chip-active-bg: rgba(107, 156, 255, 0.18);
       --theme-chip-active-fg: #e8eeff;
+      /* Lined-paper artefacts: margin line, washes, soft ink blobs */
+      --paper-margin-line: rgba(232, 150, 150, 0.055);
+      --paper-blob-1: rgba(107, 156, 255, 0.09);
+      --paper-blob-2: rgba(201, 162, 39, 0.065);
+      --paper-blob-3: rgba(115, 130, 175, 0.055);
       --font-display: "Fraunces", Georgia, "Times New Roman", serif;
       --font-body: "Figtree", ui-sans-serif, system-ui, sans-serif;
       --font-ui: "Figtree", ui-sans-serif, system-ui, sans-serif;
+      --font-script: "Alex Brush", cursive;
     }
     html[data-theme="light"] {
       color-scheme: light;
@@ -97,21 +103,35 @@
       --theme-chip-border: var(--border);
       --theme-chip-active-bg: rgba(37, 99, 235, 0.15);
       --theme-chip-active-fg: #0f172a;
+      --paper-margin-line: rgba(190, 90, 90, 0.09);
+      --paper-blob-1: rgba(37, 99, 235, 0.07);
+      --paper-blob-2: rgba(154, 116, 22, 0.07);
+      --paper-blob-3: rgba(90, 105, 140, 0.06);
     }
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; }
     body {
       background-color: var(--bg);
+      /* Stack (first = top): ruled lines, margin stripe, washes, ink blobs */
       background-image:
-        linear-gradient(165deg, var(--body-wash-blue) 0%, transparent 42%),
-        linear-gradient(158deg, var(--body-wash-gold) 0%, transparent 36%),
         repeating-linear-gradient(
           0deg,
           transparent,
           transparent 27px,
           var(--body-line) 27px,
           var(--body-line) 28px
-        );
+        ),
+        linear-gradient(90deg, transparent 46px, var(--paper-margin-line) 46px, var(--paper-margin-line) 48px, transparent 48px),
+        linear-gradient(165deg, var(--body-wash-blue) 0%, transparent 42%),
+        linear-gradient(158deg, var(--body-wash-gold) 0%, transparent 36%),
+        radial-gradient(ellipse 150px 95px at 88% 14%, var(--paper-blob-1) 0%, transparent 72%),
+        radial-gradient(ellipse 220px 150px at 8% 38%, var(--paper-blob-2) 0%, transparent 71%),
+        radial-gradient(ellipse 100px 72px at 68% 62%, var(--paper-blob-3) 0%, transparent 68%),
+        radial-gradient(ellipse 180px 110px at 32% 86%, var(--paper-blob-1) 0%, transparent 70%),
+        radial-gradient(ellipse 52px 48px at 52% 24%, var(--paper-blob-2) 0%, transparent 78%);
+      background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat;
+      background-size: auto, auto, auto, auto, auto, auto, auto, auto, auto;
+      background-position: 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0;
       color: var(--fg);
       font-family: var(--font-body);
       font-size: 16px;
@@ -119,6 +139,11 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+    }
+    @media (max-width: 560px) {
+      html {
+        --paper-margin-line: transparent;
+      }
     }
     .wrap {
       width: 100%;
@@ -254,6 +279,8 @@
       border: 1px solid var(--border);
       border-radius: 12px;
       background: var(--bg-wash);
+      position: relative;
+      overflow: visible;
     }
     .employer-strip-inner {
       display: flex;
@@ -333,21 +360,99 @@
       .wrap > .hub-section {
         animation: hub-section-in 0.55s cubic-bezier(0.33, 1, 0.68, 1) backwards;
       }
-      .wrap > .hub-section:nth-child(3) { animation-delay: 0.04s; }
-      .wrap > .hub-section:nth-child(4) { animation-delay: 0.1s; }
-      .wrap > .hub-section:nth-child(5) { animation-delay: 0.15s; }
-      .wrap > .hub-section:nth-child(6) { animation-delay: 0.19s; }
-      .wrap > .hub-section:nth-child(7) { animation-delay: 0.23s; }
-      .wrap > .hub-section:nth-child(8) { animation-delay: 0.27s; }
+      .wrap > .hub-section:nth-child(4) { animation-delay: 0.04s; }
+      .wrap > .hub-section:nth-child(5) { animation-delay: 0.1s; }
+      .wrap > .hub-section:nth-child(6) { animation-delay: 0.15s; }
+      .wrap > .hub-section:nth-child(7) { animation-delay: 0.19s; }
+      .wrap > .hub-section:nth-child(8) { animation-delay: 0.23s; }
+      .wrap > .hub-section:nth-child(9) { animation-delay: 0.27s; }
     }
     @keyframes hub-section-in {
       from { opacity: 0; transform: translateY(12px); }
       to { opacity: 1; transform: translateY(0); }
     }
     main { flex: 1; }
+    /* Handwritten labels sit in the left margin (out of flow); cards keep full wrap width */
+    .section-script {
+      margin: 0;
+      font-family: var(--font-script);
+      font-weight: 400;
+      font-size: 1.5rem;
+      line-height: 1.12;
+      color: var(--fg-dim);
+      opacity: 0.92;
+      letter-spacing: 0.01em;
+    }
+    .section-script--aside {
+      transform-origin: 100% 50%;
+    }
+    @media (min-width: 880px) {
+      .employer-strip > .section-script--aside,
+      .interest-bar > .section-script--aside {
+        position: absolute;
+        right: 100%;
+        top: 50%;
+        width: 5.75rem;
+        margin: 0 14px 0 0;
+        padding: 0 4px 0 0;
+        text-align: right;
+        transform: translateY(-50%) rotate(-3.5deg);
+      }
+      .hub-section > .section-script:not(.section-script--aside),
+      .hub-who-block > .section-script:not(.section-script--aside) {
+        position: absolute;
+        right: 100%;
+        left: auto;
+        top: 40px;
+        width: 5.75rem;
+        margin: 0 12px 0 0;
+        padding: 0 4px 0 0;
+        text-align: right;
+        font-size: clamp(1.35rem, 1.75vw, 1.75rem);
+        line-height: 1.08;
+        transform: rotate(-5deg);
+        transform-origin: 100% 0;
+        pointer-events: none;
+      }
+      .hub-who-block > .section-script:not(.section-script--aside) {
+        top: 28px;
+      }
+      .interest-bar + .hub-section > .section-script:not(.section-script--aside) {
+        top: 24px;
+      }
+    }
+    @media (max-width: 879px) {
+      .employer-strip > .section-script--aside,
+      .interest-bar > .section-script--aside {
+        position: static;
+        display: block;
+        margin: 0 0 8px 2px;
+        max-width: 22ch;
+        transform: rotate(-2deg);
+        transform-origin: 0 50%;
+      }
+      .hub-section > .section-script:not(.section-script--aside),
+      .hub-who-block > .section-script:not(.section-script--aside) {
+        position: static;
+        margin: 4px 0 8px 2px;
+        max-width: 22ch;
+        transform: rotate(-2deg);
+        transform-origin: 0 0;
+      }
+    }
+    .hub-who-block {
+      position: relative;
+      overflow: visible;
+      margin: 0 0 20px;
+    }
+    .hub-section {
+      position: relative;
+      overflow: visible;
+    }
     main .wrap {
       padding-top: 8px;
       padding-bottom: 48px;
+      overflow-x: visible;
     }
     .grid {
       display: grid;
@@ -377,6 +482,17 @@
       color: var(--fg-dim);
       margin: 0 2px 8px;
     }
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
     .photo-gallery-wrap {
       margin-top: 22px;
       padding: 0 2px 4px;
@@ -397,6 +513,45 @@
       font-weight: 600;
       letter-spacing: 0.06em;
       color: var(--accent);
+    }
+    .favourite-bands-wrap {
+      margin-top: 26px;
+      padding: 18px 18px 16px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--bg-wash);
+    }
+    .favourite-bands-lede {
+      margin: 0 0 14px;
+      font-size: 0.8rem;
+      color: var(--fg-dim);
+      line-height: 1.45;
+      max-width: 56ch;
+    }
+    .favourite-bands-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .favourite-bands-item {
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--card-bg, var(--bg));
+      font-size: 0.95rem;
+      font-weight: 600;
+      line-height: 1.35;
+    }
+    .favourite-bands-empty {
+      margin: 0;
+      padding: 12px 14px;
+      font-size: 0.88rem;
+      color: var(--fg-dim);
+      border-radius: 10px;
+      border: 1px dashed var(--border-strong);
     }
     .photo-gallery {
       list-style: none;
@@ -694,6 +849,8 @@
       .grid .card:nth-child(8) { animation-delay: 0.24s; }
     }
     .interest-bar {
+      position: relative;
+      overflow: visible;
       display: flex;
       flex-wrap: wrap;
       align-items: center;
@@ -704,38 +861,67 @@
       border-radius: 12px;
       background: var(--bg-card);
     }
-    .interest-bar label {
+    .interest-bar-main {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .interest-fieldset {
+      border: none;
+      margin: 0;
+      padding: 0;
+      min-width: 0;
+    }
+    .interest-bar-legend {
+      display: block;
+      width: 100%;
+      padding: 0;
+      margin: 0 0 10px;
       font-family: var(--font-ui);
       font-size: 13px;
       font-weight: 600;
       color: var(--fg);
       letter-spacing: 0.02em;
+      line-height: 1.35;
     }
-    .interest-bar select {
+    .interest-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 10px;
+      align-items: center;
+    }
+    .interest-chip {
       font-family: var(--font-ui);
-      font-size: 14px;
-      font-weight: 500;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      margin: 0;
+      padding: 8px 14px;
+      cursor: pointer;
       color: var(--fg);
       background: var(--bg-wash);
       border: 1px solid var(--border-strong);
-      border-radius: 8px;
-      padding: 10px 36px 10px 12px;
-      max-width: min(100%, 320px);
-      cursor: pointer;
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='none' stroke='%23949db0' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='M2.5 4.25 6 7.75 9.5 4.25'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 12px center;
+      border-radius: 999px;
+      line-height: 1.25;
+      transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
     }
-    html[data-theme="light"] .interest-bar select {
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='none' stroke='%235a6377' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='M2.5 4.25 6 7.75 9.5 4.25'/%3E%3C/svg%3E");
-    }
-    .interest-bar select:hover {
+    .interest-chip:hover {
       border-color: var(--accent-live);
+      color: var(--fg);
     }
-    .interest-bar select:focus {
+    .interest-chip:focus {
+      outline: none;
+    }
+    .interest-chip:focus-visible {
       outline: 2px solid var(--accent-live);
       outline-offset: 2px;
+    }
+    .interest-chip[aria-pressed="true"] {
+      background: var(--theme-chip-active-bg);
+      color: var(--theme-chip-active-fg);
+      border-color: var(--accent-live);
     }
     .bio-card {
       background: var(--bg-card);
@@ -829,6 +1015,69 @@
       border-radius: 6px 20px 16px 8px;
       padding: 26px 26px 28px;
     }
+    @media (min-width: 880px) {
+      .reading-board {
+        display: grid;
+        grid-template-columns: minmax(200px, 30%) minmax(0, 1fr);
+        column-gap: 24px;
+        row-gap: 0;
+        align-items: start;
+      }
+      .reading-board-figure {
+        margin: 0;
+        grid-column: 1;
+        grid-row: 1;
+      }
+      #reading-list-root {
+        grid-column: 2;
+        grid-row: 1;
+        min-width: 0;
+      }
+    }
+    .reading-board-figure {
+      margin: 0 0 22px;
+      padding: 0;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: var(--bg-wash);
+      display: grid;
+      grid-template-rows: minmax(200px, min(40vh, 380px)) auto;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 880px) {
+      .reading-board-figure {
+        margin: 0;
+        position: sticky;
+        top: 12px;
+        grid-template-rows: minmax(220px, min(48vh, 440px)) auto;
+      }
+    }
+    .reading-board-figure img {
+      grid-row: 1;
+      grid-column: 1;
+      display: block;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      object-fit: cover;
+      object-position: center 32%;
+    }
+    .reading-board-caption {
+      grid-row: 2;
+      grid-column: 1;
+      margin: 0;
+      padding: 10px 14px 12px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--fg-dim);
+      line-height: 1.45;
+      border-top: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.12);
+    }
+    html[data-theme="light"] .reading-board-caption {
+      background: rgba(255, 255, 255, 0.45);
+    }
     .reading-intro {
       margin: 0 0 22px;
       color: var(--fg-dim);
@@ -850,18 +1099,111 @@
       border: 1px solid var(--border);
     }
     .reading-category {
-      margin: 0 0 22px;
+      margin: 0 0 10px;
     }
     .reading-category:last-child {
       margin-bottom: 0;
     }
-    .reading-category-title {
-      margin: 0 0 12px;
+    .reading-category-details:not([open]) > .reading-books {
+      display: none;
+    }
+    .reading-category-details[open] > .reading-books {
+      display: flex;
+    }
+    .reading-category-details {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--bg-wash);
+      overflow: hidden;
+    }
+    .reading-category-details[open] {
+      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+    }
+    html[data-theme="light"] .reading-category-details[open] {
+      box-shadow: 0 1px 0 rgba(20, 24, 32, 0.06);
+    }
+    .reading-category-summary {
+      list-style: none;
+      display: block;
+      padding: 12px 14px;
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.15s ease, color 0.15s ease;
+    }
+    .reading-category-summary-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px 16px;
+      width: 100%;
       font-family: var(--font-display);
-      font-size: 1.08rem;
+      font-size: 1.02rem;
       font-weight: 600;
       letter-spacing: -0.02em;
       color: var(--accent);
+    }
+    .reading-category-summary:focus {
+      outline: none;
+    }
+    .reading-category-summary:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+    .reading-category-summary::-webkit-details-marker {
+      display: none;
+    }
+    .reading-category-summary::marker {
+      content: "";
+    }
+    .reading-category-summary:hover {
+      background: rgba(107, 156, 255, 0.06);
+    }
+    html[data-theme="light"] .reading-category-summary:hover {
+      background: rgba(37, 99, 235, 0.06);
+    }
+    .reading-category-details[open] > .reading-category-summary {
+      border-bottom: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.08);
+    }
+    html[data-theme="light"] .reading-category-details[open] > .reading-category-summary {
+      background: rgba(255, 255, 255, 0.35);
+    }
+    .reading-category-title {
+      margin: 0;
+      flex: 1;
+      min-width: 0;
+      text-align: left;
+      line-height: 1.3;
+      font: inherit;
+      color: inherit;
+    }
+    .reading-category-count {
+      flex-shrink: 0;
+      font-family: var(--font-ui);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--fg-dim);
+    }
+    .reading-category-summary-row::after {
+      content: "";
+      flex-shrink: 0;
+      width: 0.45em;
+      height: 0.45em;
+      margin-left: 4px;
+      border-right: 2px solid var(--fg-dim);
+      border-bottom: 2px solid var(--fg-dim);
+      transform: rotate(-45deg);
+      transition: transform 0.2s ease;
+      opacity: 0.75;
+    }
+    .reading-category-details[open] > .reading-category-summary .reading-category-summary-row::after {
+      transform: rotate(45deg);
+      margin-top: 2px;
+    }
+    .reading-category-details .reading-books {
+      padding: 12px 12px 14px;
     }
     .reading-books {
       list-style: none;
@@ -969,6 +1311,7 @@
   <main>
     <div class="wrap">
       <section class="employer-strip" aria-label="At a glance">
+        <p class="section-script section-script--aside" aria-hidden="true">What?</p>
         <div class="employer-strip-inner">
           <div class="employer-skills" id="employer-skills" aria-label="Focus areas">
             <span class="employer-skill">TypeScript &amp; React</span>
@@ -984,23 +1327,9 @@
           </div>
         </div>
       </section>
-      <div class="interest-bar">
-        <label for="hub-interest">What are you interested in?</label>
-        <select id="hub-interest" aria-describedby="interest-status">
-          <option value="all">Everything</option>
-          <option value="music">Music &amp; live performance</option>
-          <option value="teaching">Teaching &amp; learning</option>
-          <option value="creative">Creative tools &amp; maps</option>
-          <option value="work">Work &amp; professional</option>
-          <option value="community">Community &amp; civic tech</option>
-          <option value="personal">Personal &amp; writing</option>
-        </select>
-        <p class="interest-status" id="interest-status" aria-live="polite" role="status"></p>
-      </div>
-      <div class="hub-section" data-hub-section="projects">
-      <h2 class="section-heading"><span class="sec-num" aria-hidden="true">01</span> <span class="sec-title">Anthemic projects</span></h2>
-      <section class="grid" aria-label="Anthemic projects">
-        <article class="card card--profile" data-interests="personal work music teaching creative">
+      <div class="hub-who-block" aria-label="About">
+        <p class="section-script" aria-hidden="true">Who?</p>
+        <article class="card card--profile" id="who-am-i-card">
           <span class="badge">About</span>
           <div class="card-profile-layout">
             <div class="card-profile-photo-wrap">
@@ -1030,7 +1359,28 @@
             </div>
           </div>
         </article>
-
+      </div>
+      <div class="interest-bar">
+        <p class="section-script section-script--aside" aria-hidden="true">Your lens</p>
+        <div class="interest-bar-main">
+          <fieldset class="interest-fieldset">
+            <legend class="interest-bar-legend">What are you interested in about Andy?</legend>
+            <div class="interest-chips">
+              <button type="button" class="interest-chip" data-interest="all" aria-pressed="true">Everything</button>
+              <button type="button" class="interest-chip" data-interest="music" aria-pressed="false">Music &amp; live performance</button>
+              <button type="button" class="interest-chip" data-interest="teaching" aria-pressed="false">Teaching &amp; learning</button>
+              <button type="button" class="interest-chip" data-interest="creative" aria-pressed="false">Creative tools &amp; maps</button>
+              <button type="button" class="interest-chip" data-interest="work" aria-pressed="false">Work &amp; professional</button>
+              <button type="button" class="interest-chip" data-interest="community" aria-pressed="false">Community &amp; civic tech</button>
+              <button type="button" class="interest-chip" data-interest="personal" aria-pressed="false">Personal &amp; writing</button>
+            </div>
+          </fieldset>
+          <p class="interest-status" id="interest-status" aria-live="polite" role="status"></p>
+        </div>
+      </div>
+      <div class="hub-section" data-hub-section="projects">
+      <h2 class="section-heading"><span class="sec-num" aria-hidden="true">01</span> <span class="sec-title">Anthemic projects</span></h2>
+      <section class="grid" aria-label="Anthemic projects">
         <a class="card card--live card--live-wave card--flagship" href="/setlist/" data-interests="music gigs creative">
           <span class="badge live">Live</span>
           <div class="title">Set List Generator</div>
@@ -1060,6 +1410,7 @@
       </div>
 
       <div class="hub-section" data-hub-section="music">
+      <p class="section-script" aria-hidden="true">Where?</p>
       <h2 class="section-heading"><span class="sec-num" aria-hidden="true">02</span> <span class="sec-title">Music</span></h2>
       <section class="grid" aria-label="Music">
         <a class="card card--live card--live-wave" href="/gigs/" data-interests="music gigs">
@@ -1080,6 +1431,12 @@
           <div class="desc">Solo recordings and releases on Bandcamp: Melbourne-based project with languid laments and soulful tunes - streaming and downloads.</div>
         </a>
       </section>
+
+      <div class="favourite-bands-wrap" aria-labelledby="favourite-bands-heading">
+        <h3 class="subheading" id="favourite-bands-heading">Favourite bands</h3>
+        <p class="favourite-bands-lede">Bands on rotation at home. The list is edited in <strong>Admin → Site content → Favourite bands</strong> (<code>hub.json</code>).</p>
+        <ul id="favourite-bands-list" class="favourite-bands-list"></ul>
+      </div>
 
       <div id="photo-gallery-wrap" class="photo-gallery-wrap">
         <h3 class="subheading">Photo gallery</h3>
@@ -1106,6 +1463,7 @@
       </div>
 
       <div class="hub-section" data-hub-section="music-bio" data-interests="music personal">
+      <p class="section-script" aria-hidden="true">When?</p>
       <h2 class="section-heading"><span class="sec-num" aria-hidden="true">03</span> <span class="sec-title">Music bio</span></h2>
       <article class="bio-card">
         <div>
@@ -1161,13 +1519,26 @@
       </div>
 
       <div class="hub-section" id="reading-list" data-hub-section="reading-list" data-interests="personal creative work teaching">
+      <p class="section-script" aria-hidden="true">On my desk</p>
       <h2 class="section-heading"><span class="sec-num" aria-hidden="true">04</span> <span class="sec-title">Reading list</span></h2>
       <article class="reading-board" aria-label="Books read and in progress">
+        <figure class="reading-board-figure">
+          <img
+            src="/assets/andy-bookshelf.png"
+            width="1200"
+            height="1600"
+            alt="Floor-to-ceiling bookshelf with political and economics non-fiction, two electric guitars, and a studio microphone in the foreground."
+            loading="lazy"
+            decoding="async"
+          />
+          <figcaption class="reading-board-caption">The shelf behind the desk — many of the spines below were read off this photo.</figcaption>
+        </figure>
         <div id="reading-list-root"><p class="reading-skeleton">Loading reading list…</p></div>
       </article>
       </div>
 
       <div class="hub-section" data-hub-section="work">
+      <p class="section-script" aria-hidden="true">Day job</p>
       <h2 class="section-heading"><span class="sec-num" aria-hidden="true">05</span> <span class="sec-title">Work</span></h2>
       <section class="grid" aria-label="Professional work">
         <a class="card card--out" href="https://meccamedialight.com.au" target="_blank" rel="noopener noreferrer" data-interests="work">
