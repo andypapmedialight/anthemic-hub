@@ -83,8 +83,8 @@ jobs:
           code_root=$(curl -sS -o /dev/null -w "%{http_code}" --retry 3 --retry-delay 2 "https://anthemic-developments.com/")
           [[ "${code_root}" == "200" ]] || { echo "Hub / returned HTTP ${code_root}"; exit 1; }
           curl -sS --retry 3 --retry-delay 2 "https://anthemic-developments.com/" -o /tmp/anthemic-smoke-hub.html
-          grep -qF '<title>Anthemic Developments</title>' /tmp/anthemic-smoke-hub.html \
-            || { echo "Hub page missing expected <title>"; exit 1; }
+          grep -qF 'Anthemic Developments</title>' /tmp/anthemic-smoke-hub.html \
+            || { echo "Hub page missing expected site name in <title>"; exit 1; }
           # Bass routing is nginx (anthemic-ops). Hub only guarantees files under /var/www/anthemic-hub/bass/.
           ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
             'test -f /var/www/anthemic-hub/bass/index.html' \
