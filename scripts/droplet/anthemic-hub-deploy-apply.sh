@@ -40,6 +40,10 @@ if [[ ! -f "${INCOMING}/gigs/index.html" ]] || [[ ! -f "${INCOMING}/gigs/gigs.js
   echo "anthemic-hub-deploy-apply: missing gigs/index.html or gigs/gigs.json (rsync must ship gigs/ from repo)" >&2
   exit 1
 fi
+if [[ ! -d "${INCOMING}/personal" ]] || [[ ! -f "${INCOMING}/personal/writing/index.html" ]]; then
+  echo "anthemic-hub-deploy-apply: missing ${INCOMING}/personal/ or personal/writing/index.html (CI must rsync ./personal/)" >&2
+  exit 1
+fi
 
 mkdir -p "${DEST}/bass" "${DEST}/brain" "${DEST}/gigs" "${DEST}/content" "${DEST}/anth-dev-ad" "${DEST}/personal/writing"
 
@@ -59,9 +63,7 @@ rsync -a --delete "${INCOMING}/bass/" "${DEST}/bass/"
 rsync -a --delete "${INCOMING}/brain/" "${DEST}/brain/"
 rsync -a --delete "${INCOMING}/gigs/" "${DEST}/gigs/"
 rsync -a --delete "${INCOMING}/anth-dev-ad/" "${DEST}/anth-dev-ad/"
-if [[ -d "${INCOMING}/personal" ]]; then
-  rsync -a --delete "${INCOMING}/personal/" "${DEST}/personal/"
-fi
+rsync -a --delete "${INCOMING}/personal/" "${DEST}/personal/"
 rsync -a --delete "${INCOMING}/content/" "${DEST}/content/"
 
 # Restore live admin-managed files so edits survive deploys.

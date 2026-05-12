@@ -109,8 +109,11 @@ jobs:
           ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
             'grep -qF "Bass Teacher" /var/www/anthemic-hub/bass/index.html' \
             || { echo "bass/index.html on droplet missing expected content marker"; exit 1; }
+          ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            'test -f /var/www/anthemic-hub/personal/writing/index.html' \
+            || { echo "After apply, /var/www/anthemic-hub/personal/writing/index.html missing (check incoming-hub/personal/ and apply logs)"; exit 1; }
           code_writing=$(curl -sS -o /dev/null -w "%{http_code}" --retry 3 --retry-delay 2 "https://anthemic-developments.com/personal/writing/")
-          [[ "${code_writing}" == "200" ]] || { echo "Writing holding page /personal/writing/ returned HTTP ${code_writing} (sync nginx from anthemic-ops if 404)"; exit 1; }
+          [[ "${code_writing}" == "200" ]] || { echo "Writing holding page /personal/writing/ returned HTTP ${code_writing} (sync anthemic-ops nginx to droplet; verify sites-enabled -> sites-available/anthemic-hub)"; exit 1; }
           curl -sS --retry 3 --retry-delay 2 "https://anthemic-developments.com/personal/writing/" -o /tmp/anthemic-smoke-writing.html
           grep -qF 'Writing — coming soon' /tmp/anthemic-smoke-writing.html \
             || { echo "Writing page missing expected <title> marker"; exit 1; }
