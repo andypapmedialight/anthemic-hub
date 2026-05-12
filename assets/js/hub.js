@@ -50,71 +50,85 @@
     });
     return parts.join('');
   }
+  /** Always clear the loading skeleton once hub.json has been fetched (even if reading_list is absent). */
+  function applyReadingListFromHub(c) {
+    var readingRoot = document.getElementById('reading-list-root');
+    if (!readingRoot) return;
+    var rl = c && c.reading_list;
+    if (rl && typeof rl === 'object' && !Array.isArray(rl)) {
+      var html = renderReadingListHtml(rl);
+      readingRoot.innerHTML =
+        html ||
+        '<p class="reading-fallback">Nothing listed yet. Add categories and books under <code>reading_list</code> in <code>/content/hub.json</code> or in admin → Site content.</p>';
+      return;
+    }
+    readingRoot.innerHTML =
+      '<p class="reading-fallback">Reading list is missing from <code>/content/hub.json</code> on the server. Add a <code>reading_list</code> object (or open admin → Site content and save) then redeploy.</p>';
+  }
   fetch('/content/hub.json', { cache: 'no-store' })
     .then(function (r) { if (!r.ok) throw new Error('no content'); return r.json(); })
     .then(function (c) {
-      var hn = document.getElementById('hero-name');
-      if (hn && c.hero_name) hn.textContent = c.hero_name;
-      var ht = document.getElementById('hero-tagline');
-      if (ht && c.hero_tagline) ht.textContent = c.hero_tagline;
+      try {
+        var hn = document.getElementById('hero-name');
+        if (hn && c.hero_name) hn.textContent = c.hero_name;
+        var ht = document.getElementById('hero-tagline');
+        if (ht && c.hero_tagline) ht.textContent = c.hero_tagline;
 
-      var skillsEl = document.getElementById('employer-skills');
-      if (skillsEl && Array.isArray(c.employer_skills) && c.employer_skills.length) {
-        skillsEl.innerHTML = c.employer_skills.map(function (s) {
-          return '<span class="employer-skill">' + esc(s) + '</span>';
-        }).join('');
-      }
+        var skillsEl = document.getElementById('employer-skills');
+        if (skillsEl && Array.isArray(c.employer_skills) && c.employer_skills.length) {
+          skillsEl.innerHTML = c.employer_skills.map(function (s) {
+            return '<span class="employer-skill">' + esc(s) + '</span>';
+          }).join('');
+        }
 
-      var gh = document.getElementById('employer-github');
-      if (gh && c.github_url) gh.setAttribute('href', c.github_url);
-      var cs = document.getElementById('employer-case');
-      if (cs && c.case_study_url) cs.setAttribute('href', c.case_study_url);
-      if (cs && c.case_study_label) cs.textContent = c.case_study_label;
+        var gh = document.getElementById('employer-github');
+        if (gh && c.github_url) gh.setAttribute('href', c.github_url);
+        var cs = document.getElementById('employer-case');
+        if (cs && c.case_study_url) cs.setAttribute('href', c.case_study_url);
+        if (cs && c.case_study_label) cs.textContent = c.case_study_label;
 
-      var ships = document.getElementById('profile-ships');
-      if (ships && c.ships_line) {
-        ships.textContent = c.ships_line;
-      }
+        var ships = document.getElementById('profile-ships');
+        if (ships && c.ships_line) {
+          ships.textContent = c.ships_line;
+        }
 
-      var gtag = document.getElementById('photo-gallery-tagline');
-      if (gtag && c.gallery_tagline) {
-        gtag.textContent = c.gallery_tagline;
-      }
+        var gtag = document.getElementById('photo-gallery-tagline');
+        if (gtag && c.gallery_tagline) {
+          gtag.textContent = c.gallery_tagline;
+        }
 
-      var wai = document.getElementById('who-am-i-body');
-      if (wai && c.who_am_i) wai.textContent = c.who_am_i;
+        var wai = document.getElementById('who-am-i-body');
+        if (wai && c.who_am_i) wai.textContent = c.who_am_i;
 
-      var origin = document.getElementById('bio-origin');
-      if (origin && Array.isArray(c.music_bio_origin)) {
-        origin.innerHTML = '<h3>How it all began</h3>' +
-          c.music_bio_origin.map(function (p) { return '<p>' + esc(p) + '</p>'; }).join('');
-      }
+        var origin = document.getElementById('bio-origin');
+        if (origin && Array.isArray(c.music_bio_origin)) {
+          origin.innerHTML = '<h3>How it all began</h3>' +
+            c.music_bio_origin.map(function (p) { return '<p>' + esc(p) + '</p>'; }).join('');
+        }
 
-      var anthems = document.getElementById('bio-anthems');
-      if (anthems && Array.isArray(c.music_bio_anthems)) {
-        anthems.innerHTML = "<h3>Why ‘Anthems to the Fall’?</h3>" +
-          c.music_bio_anthems.map(function (p) { return '<p>' + esc(p) + '</p>'; }).join('');
-      }
+        var anthems = document.getElementById('bio-anthems');
+        if (anthems && Array.isArray(c.music_bio_anthems)) {
+          anthems.innerHTML = "<h3>Why ‘Anthems to the Fall’?</h3>" +
+            c.music_bio_anthems.map(function (p) { return '<p>' + esc(p) + '</p>'; }).join('');
+        }
 
-      var instruments = document.getElementById('bio-instruments');
-      if (instruments && Array.isArray(c.instruments)) {
-        instruments.innerHTML = c.instruments.map(function (inst) {
-          var cls = 'chip' + (inst.primary ? ' chip--primary' : '');
-          return '<span class="' + cls + '">' + esc(inst.name) + '</span>';
-        }).join('');
-      }
+        var instruments = document.getElementById('bio-instruments');
+        if (instruments && Array.isArray(c.instruments)) {
+          instruments.innerHTML = c.instruments.map(function (inst) {
+            var cls = 'chip' + (inst.primary ? ' chip--primary' : '');
+            return '<span class="' + cls + '">' + esc(inst.name) + '</span>';
+          }).join('');
+        }
 
-      var projects = document.getElementById('bio-projects');
-      if (projects && Array.isArray(c.projects)) {
-        projects.innerHTML = c.projects.map(function (p) {
-          var dates = p.dates ? '<span class="proj-dates">' + esc(p.dates) + '</span>' : '';
-          return '<span class="project-chip">' + esc(p.name) + dates + '</span>';
-        }).join('');
-      }
-
-      var readingRoot = document.getElementById('reading-list-root');
-      if (readingRoot && c.reading_list && typeof c.reading_list === 'object') {
-        readingRoot.innerHTML = renderReadingListHtml(c.reading_list);
+        var projects = document.getElementById('bio-projects');
+        if (projects && Array.isArray(c.projects)) {
+          projects.innerHTML = c.projects.map(function (p) {
+            var dates = p.dates ? '<span class="proj-dates">' + esc(p.dates) + '</span>' : '';
+            return '<span class="project-chip">' + esc(p.name) + dates + '</span>';
+          }).join('');
+        }
+      } finally {
+        applyReadingListFromHub(c);
       }
     })
     .catch(function () {
