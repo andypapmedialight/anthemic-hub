@@ -127,6 +127,29 @@ document.querySelectorAll('a, button, .bc, .slink').forEach(el => {
   el.addEventListener('mouseleave', () => document.body.classList.remove('c-hover'));
 });
 
+(function () {
+  var key = 'anthemic-hub-theme';
+  var root = document.documentElement;
+  function syncThemeButtons() {
+    var t = root.getAttribute('data-theme') || 'dark';
+    var d = document.getElementById('theme-dark');
+    var l = document.getElementById('theme-light');
+    if (d) d.setAttribute('aria-pressed', t === 'dark' ? 'true' : 'false');
+    if (l) l.setAttribute('aria-pressed', t === 'light' ? 'true' : 'false');
+  }
+  function setTheme(theme) {
+    if (theme !== 'light' && theme !== 'dark') return;
+    root.setAttribute('data-theme', theme);
+    try { localStorage.setItem(key, theme); } catch (e) {}
+    syncThemeButtons();
+  }
+  var td = document.getElementById('theme-dark');
+  var tl = document.getElementById('theme-light');
+  if (td) td.addEventListener('click', function () { setTheme('dark'); });
+  if (tl) tl.addEventListener('click', function () { setTheme('light'); });
+  syncThemeButtons();
+})();
+
 // ── NAV SCROLL ──
 const nav = document.getElementById('nav');
 window.addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 50), { passive: true });
@@ -159,6 +182,10 @@ resize();
 window.addEventListener('resize', resize, { passive: true });
 document.addEventListener('mousemove', e => { canvasMouseY = e.clientY / innerHeight; }, { passive: true });
 
+function isLightTheme() {
+  return document.documentElement.getAttribute('data-theme') === 'light';
+}
+
 // Load the actual bass guitar photo
 const guitarPhoto = new Image();
 guitarPhoto.src = 'brand_assets/AndyPBass.png';
@@ -178,12 +205,28 @@ function drawGuitarPNG(W, H, t) {
   ctx.save();
 
   const iW = guitarPhoto.naturalWidth, iH = guitarPhoto.naturalHeight;
-  // Scale guitar to 74% of canvas width
   const dw = W * 0.74;
   const dh = iH * (dw / iW);
-  // Center horizontally; sit at ~50% vertically (on the clef's body curve)
   const dx = (W - dw) / 2;
-  const dy = H * 0.50 - dh * 0.5 + Math.sin(t * 0.28) * 4; // gentle float
+  const dy = H * 0.50 - dh * 0.5 + Math.sin(t * 0.28) * 4;
+
+  if (isLightTheme()) {
+    const aura = ctx.createRadialGradient(W * 0.5, H * 0.5, 0, W * 0.5, H * 0.5, W * 0.42);
+    aura.addColorStop(0, 'rgba(37, 99, 235, 0.07)');
+    aura.addColorStop(0.5, 'rgba(154, 116, 22, 0.05)');
+    aura.addColorStop(1, 'transparent');
+    ctx.fillStyle = aura;
+    ctx.fillRect(0, 0, W, H);
+    ctx.shadowBlur = 18;
+    ctx.shadowColor = 'rgba(20, 24, 32, 0.14)';
+    ctx.globalAlpha = 0.96;
+    ctx.drawImage(guitarPhoto, dx, dy, dw, dh);
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1;
+    ctx.drawImage(guitarPhoto, dx, dy, dw, dh);
+    ctx.restore();
+    return;
+  }
 
   // Warm neon glow behind guitar (stage-light effect)
   const aura = ctx.createRadialGradient(W * 0.5, H * 0.5, 0, W * 0.5, H * 0.5, W * 0.42);
@@ -208,6 +251,26 @@ function drawGuitarPNG(W, H, t) {
 }
 
 function drawColorOverlay(W, H, t) {
+  if (isLightTheme()) {
+    ctx.globalCompositeOperation = 'source-over';
+    const wash = ctx.createLinearGradient(0, 0, W, H);
+    wash.addColorStop(0, 'rgba(37, 99, 235, 0.07)');
+    wash.addColorStop(0.5, 'rgba(244, 246, 251, 0.12)');
+    wash.addColorStop(1, 'rgba(154, 116, 22, 0.05)');
+    ctx.fillStyle = wash;
+    ctx.fillRect(0, 0, W, H);
+    const spot = ctx.createRadialGradient(W * 0.5, H * 0.48, 0, W * 0.5, H * 0.48, W * 0.42);
+    spot.addColorStop(0, 'rgba(255, 255, 255, 0.35)');
+    spot.addColorStop(1, 'transparent');
+    ctx.fillStyle = spot;
+    ctx.fillRect(0, 0, W, H);
+    const vg = ctx.createRadialGradient(W * 0.5, H * 0.5, H * 0.18, W * 0.5, H * 0.5, H * 0.92);
+    vg.addColorStop(0, 'rgba(244, 246, 251, 0)');
+    vg.addColorStop(1, 'rgba(244, 246, 251, 0.72)');
+    ctx.fillStyle = vg;
+    ctx.fillRect(0, 0, W, H);
+    return;
+  }
   // Neon screen wash
   ctx.globalCompositeOperation = 'screen';
   const wash = ctx.createLinearGradient(0, 0, W, H);
@@ -235,48 +298,67 @@ function drawColorOverlay(W, H, t) {
 }
 
 function drawStaffLines(W, H, t) {
-  const sp   = H * 0.055;
+  const sp = H * 0.055;
   const midY = H * 0.5 + (canvasMouseY - 0.5) * 12;
   ctx.lineWidth = 1;
   for (let i = 0; i < 5; i++) {
     const y = midY - sp * 2 + sp * i;
-    ctx.strokeStyle = `rgba(0,243,255,${0.05 + 0.02 * Math.sin(t * 0.5 + i * 0.8)})`;
+    if (isLightTheme()) {
+      ctx.strokeStyle = `rgba(37, 99, 235, ${0.06 + 0.025 * Math.sin(t * 0.5 + i * 0.8)})`;
+    } else {
+      ctx.strokeStyle = `rgba(0,243,255,${0.05 + 0.02 * Math.sin(t * 0.5 + i * 0.8)})`;
+    }
     ctx.beginPath(); ctx.moveTo(W * 0.03, y); ctx.lineTo(W * 0.97, y); ctx.stroke();
   }
 }
 
 function drawBassClef(W, H, t) {
-  const size  = Math.min(W, H) * 0.78;
-  const x     = W * 0.50;
-  const y     = H * 0.62 + size * 0.08;
-  const alpha = 0.12 + 0.045 * Math.sin(t * 0.55);
+  const size = Math.min(W, H) * 0.78;
+  const x = W * 0.50;
+  const y = H * 0.62 + size * 0.08;
+  const alpha = isLightTheme()
+    ? 0.04 + 0.02 * Math.sin(t * 0.55)
+    : 0.12 + 0.045 * Math.sin(t * 0.55);
   ctx.save();
-  ctx.font         = `${size}px "Times New Roman", Georgia, serif`;
-  ctx.textAlign    = 'center';
+  ctx.font = `${size}px "Times New Roman", Georgia, serif`;
+  ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
-  ctx.shadowBlur   = 100;
-  ctx.shadowColor  = 'rgba(0,243,255,0.6)';
-  ctx.fillStyle    = `rgba(0,243,255,${alpha})`;
+  if (isLightTheme()) {
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = `rgba(37, 99, 235, ${alpha})`;
+  } else {
+    ctx.shadowBlur = 100;
+    ctx.shadowColor = 'rgba(0,243,255,0.6)';
+    ctx.fillStyle = `rgba(0,243,255,${alpha})`;
+  }
   ctx.fillText('\u{1D122}', x, y);
-  ctx.shadowBlur   = 32;
-  ctx.fillStyle    = `rgba(0,243,255,${alpha * 0.5})`;
-  ctx.fillText('\u{1D122}', x, y);
+  if (!isLightTheme()) {
+    ctx.shadowBlur = 32;
+    ctx.fillStyle = `rgba(0,243,255,${alpha * 0.5})`;
+    ctx.fillText('\u{1D122}', x, y);
+  }
   ctx.restore();
 }
 
 function drawFloatingNotes(W, H, t) {
   ctx.save();
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const light = isLightTheme();
   floatNotes.forEach(n => {
     n.y -= n.speed;
     if (n.y < -0.06) { n.y = 1.06; n.x = 0.05 + Math.random() * 0.9; }
     const wx = (n.x + Math.sin(t * 1.4 + n.phase) * 0.018) * W;
     const wy = n.y * H;
-    const a  = n.alpha * Math.min(1, n.y * 12) * Math.min(1, (1 - n.y) * 10);
-    ctx.font        = `${n.size * Math.min(W, H)}px serif`;
-    ctx.fillStyle   = `rgba(0,243,255,${a})`;
-    ctx.shadowBlur  = 10;
-    ctx.shadowColor = `rgba(0,243,255,${a * 0.5})`;
+    const a = n.alpha * Math.min(1, n.y * 12) * Math.min(1, (1 - n.y) * 10) * (light ? 0.45 : 1);
+    ctx.font = `${n.size * Math.min(W, H)}px serif`;
+    if (light) {
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = `rgba(90, 99, 119, ${a * 0.9})`;
+    } else {
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = `rgba(0,243,255,${a * 0.5})`;
+      ctx.fillStyle = `rgba(0,243,255,${a})`;
+    }
     ctx.fillText(n.char, wx, wy);
   });
   ctx.restore();
