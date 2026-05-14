@@ -111,21 +111,23 @@ function assertContactProvidersConfigured() {
 // ── CURSOR ──
 const cur  = document.getElementById('cursor');
 const ring = document.getElementById('cursor-ring');
-let mx = 0, my = 0, rx = 0, ry = 0;
+if (cur && ring) {
+  let mx = 0, my = 0, rx = 0, ry = 0;
 
-document.addEventListener('mousemove', e => {
-  mx = e.clientX; my = e.clientY;
-  cur.style.left = mx + 'px'; cur.style.top = my + 'px';
-});
-(function tick() {
-  rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12;
-  ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
-  requestAnimationFrame(tick);
-})();
-document.querySelectorAll('a, button, .bc, .slink').forEach(el => {
-  el.addEventListener('mouseenter', () => document.body.classList.add('c-hover'));
-  el.addEventListener('mouseleave', () => document.body.classList.remove('c-hover'));
-});
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    cur.style.left = mx + 'px'; cur.style.top = my + 'px';
+  });
+  (function tick() {
+    rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12;
+    ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+    requestAnimationFrame(tick);
+  })();
+  document.querySelectorAll('a, button, .bc, .slink').forEach(el => {
+    el.addEventListener('mouseenter', () => document.body.classList.add('c-hover'));
+    el.addEventListener('mouseleave', () => document.body.classList.remove('c-hover'));
+  });
+}
 
 (function () {
   var key = 'anthemic-hub-theme';
@@ -152,29 +154,34 @@ document.querySelectorAll('a, button, .bc, .slink').forEach(el => {
 
 // ── NAV SCROLL ──
 const nav = document.getElementById('nav');
-window.addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 50), { passive: true });
+if (nav) {
+  window.addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 50), { passive: true });
+}
 
 // ── HERO NAME KINETIC REVEAL ──
-const words = 'Andy Pap'.split(' ');
 const nameEl = document.getElementById('hero-name');
-let delay = 0.5;
-words.forEach(word => {
-  const wEl = document.createElement('span');
-  wEl.className = 'word';
-  [...word].forEach(ch => {
-    const cEl = document.createElement('span');
-    cEl.className = 'char';
-    cEl.textContent = ch;
-    cEl.style.animationDelay = delay + 's';
-    delay += 0.065;
-    wEl.appendChild(cEl);
+if (nameEl) {
+  const words = 'Andy Pap'.split(' ');
+  let delay = 0.5;
+  words.forEach(word => {
+    const wEl = document.createElement('span');
+    wEl.className = 'word';
+    [...word].forEach(ch => {
+      const cEl = document.createElement('span');
+      cEl.className = 'char';
+      cEl.textContent = ch;
+      cEl.style.animationDelay = delay + 's';
+      delay += 0.065;
+      wEl.appendChild(cEl);
+    });
+    nameEl.appendChild(wEl);
   });
-  nameEl.appendChild(wEl);
-});
+}
 
-// ── CANVAS: PHOTO + OVERLAYS ──
+// ── CANVAS: PHOTO + OVERLAYS (legacy bass hub hero only) ──
 const canvas = document.getElementById('hero-canvas');
-const ctx = canvas.getContext('2d');
+const ctx = canvas && canvas.getContext ? canvas.getContext('2d') : null;
+if (canvas && ctx) {
 let canvasMouseY = 0.5;
 
 function resize() { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; }
@@ -376,6 +383,7 @@ let aT = 0;
   aT += 0.009;
   requestAnimationFrame(drawScene);
 })();
+}
 
 // ── SCROLL REVEAL ──
 const io = new IntersectionObserver(entries => {

@@ -110,7 +110,7 @@ jobs:
             'test -f /var/www/anthemic-hub/bass/index.html' \
             || { echo "bass/index.html missing under /var/www/anthemic-hub/bass/ (reinstall apply script from repo; check incoming-hub/bass/ after upload)"; exit 1; }
           ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            'grep -qF "Bass Teacher" /var/www/anthemic-hub/bass/index.html' \
+            'grep -qF "Andy Pap — Bass" /var/www/anthemic-hub/bass/index.html' \
             || { echo "bass/index.html on droplet missing expected content marker"; exit 1; }
           ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
             'test -f /var/www/anthemic-hub/personal/writing/index.html' \
