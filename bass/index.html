@@ -742,7 +742,7 @@
   <div class="section-wrap">
   <div class="section-label">Live dates</div>
   <h2>Catch it <em>live</em></h2>
-  <p class="gigs-lede">Upcoming dates from the same list as the <a href="/gigs/">hub gig calendar</a> — edit <code style="font-size:0.85em;">gigs/gigs.json</code> to update.</p>
+  <!-- <p class="gigs-lede">Upcoming dates from the same list as the <a href="/gigs/">hub gig calendar</a> — edit <code style="font-size:0.85em;">gigs/gigs.json</code> to update.</p> -->
   <div id="gigs-warmth-list" class="gigs-list"></div>
   <p id="gigs-warmth-empty" class="gigs-lede" style="margin-top:1.25rem;display:none;">No upcoming gigs in the calendar yet. <a href="/gigs/">Open the full calendar</a></p>
   <p id="gigs-warmth-err" class="gigs-load-err" hidden></p>
@@ -848,7 +848,7 @@
     <div>
       <div class="section-label">Contact</div>
       <h2>Let's <em>talk</em></h2>
-      <p style="color: var(--chrome); margin-top: 0.5rem; margin-bottom: 2rem;">Lesson enquiries, gig bookings, session work — drop me a message and I'll get back to you within 24 hours.</p>
+      <p style="color: var(--chrome); margin-top: 0.5rem; margin-bottom: 2rem;">Lesson enquiries, gig bookings, session work — drop me a message and I'll get back to you ASAP.</p>
       <div style="display: flex; flex-direction: column; gap: 0.75rem; font-family: 'Courier Prime', monospace; font-size: 0.75rem; color: var(--chrome); letter-spacing: 0.08em;">
         <!-- <div><span style="color: var(--amber);">Email</span> — <a href="mailto:hello@andypap.dev" style="color: var(--cream); text-decoration: none; border-bottom: 1px solid rgba(200,131,26,0.35);">hello@andypap.dev</a></div>
         <div><span style="color: var(--amber);">GitHub</span> — <a href="https://github.com/andypapmedialight" target="_blank" rel="noopener noreferrer" style="color: var(--cream); text-decoration: none; border-bottom: 1px solid rgba(200,131,26,0.35);">andypapmedialight</a></div>
@@ -1023,7 +1023,10 @@
 })();
 
 (function () {
-  var GIGS_JSON = new URL('../gigs/gigs.json', window.location.href).toString();
+  var GIGS_JSON =
+    window.location.protocol === 'file:'
+      ? new URL('../gigs/gigs.json', window.location.href).toString()
+      : new URL('/gigs/gigs.json', window.location.origin).toString();
   var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   var listEl = document.getElementById('gigs-warmth-list');
   var emptyEl = document.getElementById('gigs-warmth-empty');
@@ -1123,7 +1126,8 @@
     .catch(function () {
       if (errEl) {
         errEl.hidden = false;
-        errEl.textContent = 'Could not load gigs/gigs.json — open from a server with the hub root, or check the path.';
+        errEl.textContent =
+          'Could not load /gigs/gigs.json (check deploy and nginx). If you opened this file from disk, use a local server from the hub root.';
       }
       listEl.innerHTML = '';
       if (emptyEl) emptyEl.style.display = 'none';
@@ -1131,7 +1135,10 @@
 })();
 
 (function () {
-  var HUB_JSON = new URL('../content/hub.json', window.location.href).toString();
+  var HUB_JSON =
+    window.location.protocol === 'file:'
+      ? new URL('../content/hub.json', window.location.href).toString()
+      : new URL('/content/hub.json', window.location.origin).toString();
   var root = document.getElementById('warmth-projects');
   var errEl = document.getElementById('warmth-projects-err');
   if (!root) return;
@@ -1181,7 +1188,7 @@
       if (errEl) {
         errEl.hidden = false;
         errEl.textContent =
-          'Could not load content/hub.json — open from the hub site root, or check the path.';
+          'Could not load /content/hub.json (check deploy). Use a local server from the hub root if testing from disk.';
       }
     });
 })();
