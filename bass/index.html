@@ -1023,10 +1023,9 @@
 })();
 
 (function () {
-  var GIGS_JSON =
-    window.location.protocol === 'file:'
-      ? new URL('../gigs/gigs.json', window.location.href).toString()
-      : new URL('/gigs/gigs.json', window.location.origin).toString();
+  /* Resolve next to this page so /prefix/hub/bass/ still hits ../gigs and ../content (root-only /gigs/... breaks subpaths). */
+  var jsonBase = document.baseURI || window.location.href;
+  var GIGS_JSON = new URL('../gigs/gigs.json', jsonBase).toString();
   var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   var listEl = document.getElementById('gigs-warmth-list');
   var emptyEl = document.getElementById('gigs-warmth-empty');
@@ -1076,11 +1075,18 @@
     return 'Calendar →';
   }
 
+  function jsonFromResponse(r) {
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.text().then(function (t) {
+      var u = t.replace(/^\uFEFF/, '').trim();
+      if (u.charAt(0) === '<')
+        throw new Error('HTML not JSON — check URL and server routing for gigs.json');
+      return JSON.parse(u);
+    });
+  }
+
   fetch(GIGS_JSON, { cache: 'no-store' })
-    .then(function (r) {
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return r.json();
-    })
+    .then(jsonFromResponse)
     .then(function (data) {
       var raw = data && Array.isArray(data.gigs) ? data.gigs : [];
       var today = todayYmd();
@@ -1088,9 +1094,13 @@
       for (var i = 0; i < raw.length; i++) {
         var g = raw[i];
         if (!g || typeof g !== 'object') continue;
-        if (!g.date || !g.title) continue;
-        if (!parseYmd(g.date)) continue;
-        if (g.date >= today) upcoming.push(g);
+        var dateStr = g.date != null ? String(g.date).trim() : '';
+        if (!dateStr || !g.title) continue;
+        if (!parseYmd(dateStr)) continue;
+        if (dateStr >= today) {
+          g.date = dateStr;
+          upcoming.push(g);
+        }
       }
       upcoming.sort(function (a, b) { return compareYmd(parseYmd(a.date), parseYmd(b.date)); });
       var show = upcoming.slice(0, 12);
@@ -1123,11 +1133,12 @@
         );
       }).join('');
     })
-    .catch(function () {
+    .catch(function (e) {
       if (errEl) {
         errEl.hidden = false;
         errEl.textContent =
-          'Could not load /gigs/gigs.json (check deploy and nginx). If you opened this file from disk, use a local server from the hub root.';
+          (e && e.message) ||
+          'Could not load gigs.json (path is ../gigs/gigs.json from this page — check deploy and nginx). If you opened this file from disk, use a local server from the hub root.';
       }
       listEl.innerHTML = '';
       if (emptyEl) emptyEl.style.display = 'none';
@@ -1135,10 +1146,8 @@
 })();
 
 (function () {
-  var HUB_JSON =
-    window.location.protocol === 'file:'
-      ? new URL('../content/hub.json', window.location.href).toString()
-      : new URL('/content/hub.json', window.location.origin).toString();
+  var jsonBase = document.baseURI || window.location.href;
+  var HUB_JSON = new URL('../content/hub.json', jsonBase).toString();
   var root = document.getElementById('warmth-projects');
   var errEl = document.getElementById('warmth-projects-err');
   if (!root) return;
@@ -1152,11 +1161,18 @@
       .replace(/"/g, '&quot;');
   }
 
+  function jsonFromResponse(r) {
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.text().then(function (t) {
+      var u = t.replace(/^\uFEFF/, '').trim();
+      if (u.charAt(0) === '<')
+        throw new Error('HTML not JSON — check URL and server routing for hub.json');
+      return JSON.parse(u);
+    });
+  }
+
   fetch(HUB_JSON, { cache: 'no-store' })
-    .then(function (r) {
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return r.json();
-    })
+    .then(jsonFromResponse)
     .then(function (c) {
       var arr = c && Array.isArray(c.projects) ? c.projects : [];
       var chips = [];
@@ -1183,12 +1199,13 @@
       }
       root.innerHTML = chips.join('');
     })
-    .catch(function () {
+    .catch(function (e) {
       root.innerHTML = '';
       if (errEl) {
         errEl.hidden = false;
         errEl.textContent =
-          'Could not load /content/hub.json (check deploy). Use a local server from the hub root if testing from disk.';
+          (e && e.message) ||
+          'Could not load hub.json (path is ../content/hub.json from this page — check deploy). Use a local server from the hub root if testing from disk.';
       }
     });
 })();
