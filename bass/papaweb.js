@@ -81,7 +81,7 @@ function readSanitizedContact() {
   const email = stripCtrl(emailEl.value).trim().slice(0, 254);
   const interest = interestEl.value;
   const msg = stripCtrl(msgEl.value).trim().slice(0, CONTACT_MAX_MSG);
-  const allowedInterest = { lesson: true, software: true, both: true };
+  const allowedInterest = { beginner: true, intermediate: true, advanced: true, online: true };
   if (!name || !email || !msg) return { ok: false, error: 'Please fill in all fields.' };
   if (!isValidEmail(email)) return { ok: false, error: 'Enter a valid email address.' };
   if (!allowedInterest[interest]) return { ok: false, error: 'Select a valid topic.' };
@@ -552,7 +552,12 @@ async function handleSubmit(e) {
   const interest = pack.interest;
   const msg = pack.msg;
 
-  const interestLabels = { lesson: 'Bass lesson', software: 'Software project', both: 'Both' };
+  const interestLabels = {
+    beginner: 'Bass lesson — Beginner (Foundation)',
+    intermediate: 'Bass lesson — Intermediate (Groove & theory)',
+    advanced: 'Bass lesson — Advanced (Pro development)',
+    online: 'Bass lesson — Online (Remote)',
+  };
   const interestLabel = interestLabels[interest] || interest || 'Not specified';
   const subjectLine = contactSubject(interestLabel, name);
   const fullMessage = contactBody(interestLabel, msg);

@@ -206,6 +206,7 @@
 
   var upcomingEl = document.getElementById("gigs-upcoming");
   var pastEl = document.getElementById("gigs-past");
+  var pastSection = document.getElementById("gigs-past-section");
   var errEl = document.getElementById("load-err");
 
   fetch("gigs.json", { cache: "no-store" })
@@ -238,9 +239,13 @@
       upcomingEl.innerHTML = upcoming.length
         ? upcoming.map(function (g) { return buildCard(g, true); }).join("")
         : "<p class=\"empty\">No upcoming gigs.</p>";
-      pastEl.innerHTML = past.length
-        ? past.map(function (g) { return buildCard(g, false); }).join("")
-        : "<p class=\"empty\">No past gigs yet.</p>";
+      if (past.length) {
+        pastEl.innerHTML = past.map(function (g) { return buildCard(g, false); }).join("");
+        if (pastSection) pastSection.hidden = false;
+      } else {
+        pastEl.innerHTML = "";
+        if (pastSection) pastSection.hidden = true;
+      }
 
       // Jump to the month of the first upcoming gig if it exists
       if (upcoming.length > 0) {
