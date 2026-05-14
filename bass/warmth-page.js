@@ -124,6 +124,7 @@
   var jsonBase = document.baseURI || window.location.href;
   var GIGS_JSON = new URL('../gigs/gigs.json', jsonBase).toString();
   var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var WEEKDAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   var listEl = document.getElementById('gigs-warmth-list');
   var emptyEl = document.getElementById('gigs-warmth-empty');
   var errEl = document.getElementById('gigs-warmth-err');
@@ -147,6 +148,13 @@
     if (a.raw < b.raw) return -1;
     if (a.raw > b.raw) return 1;
     return 0;
+  }
+
+  /** e.g. Fri 22 May — UTC from YMD so local TZ does not shift the calendar day */
+  function formatGigDateLine(ymd) {
+    var dt = new Date(Date.UTC(ymd.y, ymd.m - 1, ymd.d));
+    var wd = WEEKDAYS[dt.getUTCDay()];
+    return wd + ' ' + ymd.d + ' ' + MONTHS[ymd.m - 1];
   }
 
   function esc(s) {
@@ -211,8 +219,7 @@
 
       listEl.innerHTML = show.map(function (g) {
         var ymd = parseYmd(g.date);
-        var dayNum = ymd.d;
-        var mon = MONTHS[ymd.m - 1];
+        var dateLine = formatGigDateLine(ymd);
         var where = [g.venue, g.city].filter(Boolean).join(', ');
         var loc = where;
         if (g.time && String(g.time).trim()) loc += (loc ? ' · ' : '') + String(g.time).trim();
@@ -223,7 +230,7 @@
         var aAttr = ext ? ' target="_blank" rel="noopener noreferrer"' : '';
         return (
           '<div class="gig-item">' +
-            '<div class="gig-date"><div class="gig-day">' + esc(String(dayNum)) + '</div><div class="gig-month">' + esc(mon) + '</div></div>' +
+            '<div class="gig-date"><div class="gig-date-full">' + esc(dateLine) + '</div></div>' +
             '<div><div class="gig-title">' + esc(g.title) + '</div><div class="gig-location">' + esc(loc || 'TBC') + '</div></div>' +
             '<a href="' + href + '" class="gig-ticket"' + aAttr + '>' + lab + '</a>' +
           '</div>'
