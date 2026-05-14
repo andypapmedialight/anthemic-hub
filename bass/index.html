@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700&family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700&family=Fredoka:wght@500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <script src="/assets/js/theme-init.js"></script>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -260,6 +260,12 @@
       font-weight: 700; line-height: .9; letter-spacing: -.04em;
       margin-bottom: 1.5rem;
       display: flex; gap: 0; justify-content: center; flex-wrap: wrap;
+    }
+    html[data-theme="light"] .hero-name {
+      font-family: "Fredoka", "Figtree", ui-sans-serif, system-ui, sans-serif;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      line-height: 0.88;
     }
     .hero-name .word { display: inline-flex; }
     .hero-name .word + .word { margin-left: .28em; }
