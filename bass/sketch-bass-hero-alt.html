@@ -3,450 +3,818 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sketch alt — Bass hero (Andy P)</title>
+  <meta name="description" content="Sketch-style alternate hero for Andy P — Melbourne bassist. Green field, blue disc, waterfall cards.">
+  <title>Andy Pap — Bass (sketch hero alt)</title>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
-      --sketch-bg: #c4dcb4;
-      --sketch-bg-deep: #a8c89a;
-      --sketch-ink: #1e1a14;
-      --sketch-muted: #3d362c;
-      --sketch-blue-outer: rgba(110, 160, 205, 0.92);
-      --sketch-orange: #d8892e;
-      --sketch-orange-deep: #b86f18;
-      --sketch-card: rgba(252, 249, 242, 0.94);
-      --sketch-card-edge: rgba(30, 26, 20, 0.12);
+      --field: #cfe8c4;
+      --field-deep: #c0dcc0;
+      --field-mist: rgba(255, 255, 252, 0.45);
+      --lilac: #ebe4f7;
+      --lilac-mid: #e2d9f2;
+      --lilac-deep: #d8cee9;
+      --lilac-mist: rgba(250, 245, 255, 0.55);
+      --ink: #2a3228;
+      --ink-soft: #5a6654;
+      --card: #fefcf9;
+      --dash: rgba(90, 102, 84, 0.28);
+      --orb-highlight: rgba(236, 244, 252, 0.95);
+      --orb-mid: rgba(198, 218, 238, 0.92);
+      --orb-edge: rgba(168, 198, 224, 0.88);
+      --orb-shadow: rgba(130, 160, 190, 0.22);
+      --orange-light: #fdebd8;
+      --orange: #e8b896;
+      --orange-mid: #ddb08a;
+      --orange-deep: #c49a74;
+      --orange-text: #3d2a22;
+      --chip-red: #e8a8a8;
+      --chip-coral: #f0b8a0;
+      --chip-green: #a8d4a0;
+      --chip-blue: #a8c8e8;
+      --chip-tan: #ddcba8;
+      --chip-lilac: #c8b8e0;
+      --max: 26rem;
+      /* ≥720px default; <720px overrides in @media (max-width: 719px) */
+      --orb-backdrop-top: 48%;
+      --orb-backdrop-size: min(132vmin, 145vw);
+      --orb-trigger-size: clamp(9.5rem, min(19vmin, 30vw), 14rem);
+      --orb-trigger-y-lift: max(min(29vmin, 20vw), calc(var(--orb-trigger-size) * 0.5));
+      --sk-content-offset: calc(var(--orb-backdrop-top) - var(--orb-trigger-y-lift) + var(--orb-trigger-size) * 0.5 + 4.25rem);
+      --wf-open-peek-h: 3.1rem;
+      --wf-open-peek-gap: 0.45rem;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      overflow-x: hidden;
+      overflow-x: clip;
     }
 
     body {
       min-height: 100dvh;
+      overflow-x: clip;
       font-family: 'Crimson Text', Georgia, serif;
       font-size: 17px;
       line-height: 1.55;
-      color: var(--sketch-ink);
-      background: var(--sketch-bg);
+      color: var(--ink);
+      background-color: var(--lilac-deep);
+      background-image:
+        radial-gradient(ellipse 95% 55% at 50% 8%, var(--field-mist) 0%, transparent 50%),
+        radial-gradient(ellipse 85% 50% at 50% 100%, var(--lilac-mist) 0%, transparent 52%),
+        linear-gradient(
+          180deg,
+          var(--field) 0%,
+          var(--field) 36%,
+          #e0d8f0 46%,
+          var(--lilac) 58%,
+          var(--lilac-mid) 82%,
+          var(--lilac-deep) 100%
+        );
     }
 
-    .sketch-hero {
-      min-height: 100dvh;
+    a { color: #5c5a68; font-weight: 600; }
+    a:hover { color: var(--ink); }
+
+    /* —— Menu: coloured blocks (sketch) + readable labels —— */
+    .sk-top {
+      position: sticky;
+      top: 0;
+      z-index: 80;
       display: flex;
-      flex-direction: column;
-      background: var(--sketch-bg);
-      position: relative;
-      overflow: hidden;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem 0.65rem;
+      padding: 0.85rem 1rem;
+      background: rgba(207, 232, 196, 0.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(90, 102, 84, 0.1);
     }
 
-    /* Uniform green wash — sketch: no pink fail zone at bottom */
-    .sketch-hero::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      background: radial-gradient(ellipse 120% 80% at 50% 0%, rgba(255, 255, 252, 0.35) 0%, transparent 55%);
-      opacity: 0.9;
+    .sk-logo {
+      font-family: 'Playfair Display', serif;
+      font-weight: 900;
+      font-size: 1.05rem;
+      color: var(--ink);
+      text-decoration: none;
+      letter-spacing: 0.02em;
+      margin-right: 0.35rem;
     }
 
-    /* —— Menu strip (coloured blocks) —— */
-    .sketch-menu {
-      position: relative;
-      z-index: 20;
+    .sk-logo span { font-weight: 400; opacity: 0.75; }
+
+    .sk-menu {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       justify-content: center;
       gap: 0.45rem;
-      flex-wrap: wrap;
-      padding: 1rem 1rem 0.75rem;
+      list-style: none;
     }
 
-    .sketch-menu a {
-      display: block;
-      width: 2.35rem;
-      height: 0.85rem;
-      border-radius: 6px;
-      text-indent: -9999px;
-      overflow: hidden;
+    .sk-menu a {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.2rem;
       text-decoration: none;
-      box-shadow: 0 2px 0 rgba(30, 26, 20, 0.12);
-      transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+      color: var(--ink);
+      font-family: 'Courier Prime', monospace;
+      font-size: 0.52rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      max-width: 4.2rem;
+      text-align: center;
+      line-height: 1.2;
     }
 
-    .sketch-menu a:focus-visible {
-      outline: 2px solid var(--sketch-ink);
+    .sk-menu-bar {
+      display: block;
+      width: 100%;
+      height: 0.72rem;
+      border-radius: 6px;
+      box-shadow: 0 1px 0 rgba(255, 255, 255, 0.65), 0 2px 4px rgba(90, 102, 84, 0.12);
+      transition: transform 0.18s ease-out;
+    }
+
+    .sk-menu a:hover .sk-menu-bar { transform: translateY(-2px); }
+
+    .sk-menu a:focus-visible {
+      outline: 2px solid var(--ink);
       outline-offset: 3px;
+      border-radius: 6px;
     }
 
-    .sketch-menu a:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(30, 26, 20, 0.15); }
-    .sketch-menu a:nth-child(1) { background: #c94c4c; width: 2.1rem; }
-    .sketch-menu a:nth-child(2) { background: #e89aab; width: 2.5rem; }
-    .sketch-menu a:nth-child(3) { background: #6ab06a; width: 1.9rem; }
-    .sketch-menu a:nth-child(4) { background: #5a9fd4; width: 2.35rem; }
-    .sketch-menu a:nth-child(5) { background: #c9a86b; width: 2.2rem; }
-    .sketch-menu a:nth-child(6) { background: #8b7bc9; width: 2rem; }
+    .sk-menu li:nth-child(1) .sk-menu-bar { background: var(--chip-red); height: 0.68rem; }
+    .sk-menu li:nth-child(2) .sk-menu-bar { background: var(--chip-coral); width: 110%; }
+    .sk-menu li:nth-child(3) .sk-menu-bar { background: var(--chip-green); height: 0.78rem; }
+    .sk-menu li:nth-child(4) .sk-menu-bar { background: var(--chip-blue); }
+    .sk-menu li:nth-child(5) .sk-menu-bar { background: var(--chip-tan); }
+    .sk-menu li:nth-child(6) .sk-menu-bar { background: var(--chip-lilac); height: 0.65rem; }
 
-    .sketch-menu-label {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
-    }
-
-    /* —— Stage: waterfall + orb —— */
-    .sketch-stage {
+    /* —— Hero: full viewport column; cards centred in space below fixed orange —— */
+    .sk-stage {
       position: relative;
-      z-index: 5;
+      z-index: 2;
+      width: 100%;
+      max-width: 100%;
+      min-height: min(100dvh, 100svh);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 1.15rem 1.25rem;
+      padding-top: max(0.5rem, var(--sk-content-offset));
+      box-sizing: border-box;
+    }
+
+    .sk-stage-main {
       flex: 1 1 auto;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 0.5rem 1.25rem 2rem;
+      width: 100%;
       min-height: 0;
     }
 
-    .sketch-waterfall {
-      position: relative;
-      width: min(100%, 22rem);
-      height: min(58vh, 26rem);
-      perspective: 900px;
-    }
-
-    .wf-card {
-      position: absolute;
+    /* Massive blue disc — fixed so it extends past viewport (sketch) */
+    .sk-orb-backdrop {
+      position: fixed;
       left: 50%;
-      width: 92%;
-      max-width: 20rem;
-      background: var(--sketch-card);
-      border-radius: 18px;
-      border: 1px solid var(--sketch-card-edge);
-      padding: 1.15rem 1.25rem 1.35rem;
-      box-shadow: 0 12px 28px rgba(30, 26, 20, 0.12);
-      cursor: pointer;
-      text-align: left;
-      transition:
-        opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-        transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-        filter 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-        box-shadow 0.35s ease-out;
-    }
-
-    .wf-card h3 {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: var(--sketch-ink);
-      margin-bottom: 0.35rem;
-    }
-
-    .wf-card p {
-      font-size: 0.95rem;
-      color: var(--sketch-muted);
-    }
-
-    .wf-card .wf-kicker {
-      font-family: 'Courier Prime', monospace;
-      font-size: 0.58rem;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--sketch-orange-deep);
-      margin-bottom: 0.5rem;
-    }
-
-    /* Stacked waterfall: 3 behind, 1 dominant */
-    .wf-card[data-layer="3"] {
-      top: 0;
-      transform: translateX(-50%) translateY(0) scale(0.92) rotateX(4deg);
-      z-index: 1;
-      opacity: 0.42;
-      filter: saturate(0.85);
-    }
-
-    .wf-card[data-layer="2"] {
-      top: 2.4rem;
-      transform: translateX(-50%) translateY(0) scale(0.96) rotateX(2deg);
-      z-index: 2;
-      opacity: 0.48;
-      filter: saturate(0.9);
-    }
-
-    .wf-card[data-layer="1"] {
-      top: 5.1rem;
-      transform: translateX(-50%) translateY(0) scale(1) rotateX(0deg);
-      z-index: 3;
-      opacity: 0.52;
-      filter: saturate(0.95);
-    }
-
-    .sketch-hero.is-activated .wf-card[data-layer="3"] {
-      opacity: 0.88;
-      transform: translateX(-50%) translateY(-0.35rem) scale(0.94) rotateX(3deg);
-      filter: none;
-    }
-
-    .sketch-hero.is-activated .wf-card[data-layer="2"] {
-      opacity: 0.92;
-      transform: translateX(-50%) translateY(2.1rem) scale(0.98) rotateX(1deg);
-      filter: none;
-    }
-
-    .sketch-hero.is-activated .wf-card[data-layer="1"] {
-      opacity: 1;
-      transform: translateX(-50%) translateY(4.85rem) scale(1.02) rotateX(0deg);
-      filter: none;
-      box-shadow: 0 18px 40px rgba(30, 26, 20, 0.16);
-    }
-
-    .wf-card.is-front {
-      z-index: 15 !important;
-      opacity: 1 !important;
-      filter: none !important;
-    }
-
-    .sketch-hero.is-activated .wf-card.is-front {
-      box-shadow: 0 20px 48px rgba(30, 26, 20, 0.2);
-    }
-
-    /* —— Heavily opaque blue ring + orange core —— */
-    .sketch-orb-wrap {
-      position: absolute;
-      left: 50%;
-      top: 52%;
+      top: var(--orb-backdrop-top);
       transform: translate(-50%, -50%);
-      z-index: 10;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      width: var(--orb-backdrop-size);
+      height: var(--orb-backdrop-size);
+      z-index: 0;
       pointer-events: none;
-      width: min(78vw, 20rem);
-      height: min(78vw, 20rem);
     }
 
-    .sketch-orb-outer {
-      width: 100%;
-      height: 100%;
+    .sk-orb-ring {
+      position: absolute;
+      inset: 0;
       border-radius: 50%;
-      background: var(--sketch-blue-outer);
+      background: radial-gradient(
+        circle at 36% 28%,
+        var(--orb-highlight) 0%,
+        var(--orb-mid) 42%,
+        var(--orb-edge) 72%,
+        rgba(190, 214, 232, 0.75) 100%
+      );
       box-shadow:
-        inset 0 -20px 40px rgba(255, 255, 255, 0.22),
-        0 16px 40px rgba(30, 60, 90, 0.25);
+        inset 0 0 0 1px rgba(255, 255, 255, 0.45),
+        inset 0 -24px 48px rgba(180, 205, 228, 0.35),
+        inset 12px 20px 48px rgba(255, 255, 255, 0.55),
+        0 16px 40px var(--orb-shadow);
+    }
+
+    /* Limb + rim: darkens toward the real circular edge so the silhouette reads as a sphere against the field */
+    .sk-orb-ring::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      pointer-events: none;
+      background: radial-gradient(
+        circle at 38% 30%,
+        rgba(255, 255, 255, 0) 52%,
+        rgba(255, 255, 255, 0.04) 68%,
+        rgba(120, 150, 182, 0.14) 85%,
+        rgba(88, 118, 148, 0.22) 94%,
+        rgba(72, 102, 128, 0.26) 100%
+      );
+    }
+
+    /* Outer flexbox: centres the card stack horizontally & vertically in the band below the orbs */
+    .sk-waterfall {
       display: flex;
       align-items: center;
       justify-content: center;
-      pointer-events: none;
+      width: 100%;
+      flex: 1 1 auto;
+      min-height: 0;
     }
 
-    .sketch-orb-inner {
-      pointer-events: auto;
-      width: 38%;
-      height: 38%;
-      min-width: 4.5rem;
-      min-height: 4.5rem;
+    .sk-waterfall-stack {
+      position: relative;
+      width: min(100%, var(--max));
+      height: min(52vh, 26rem);
+      margin-inline: auto;
+      z-index: 5;
+    }
+
+    .sk-orb-trigger {
+      position: fixed;
+      left: 50%;
+      top: calc(var(--orb-backdrop-top) - var(--orb-trigger-y-lift));
+      transform: translate(-50%, -50%);
+      width: var(--orb-trigger-size);
+      height: var(--orb-trigger-size);
       border-radius: 50%;
       border: none;
       cursor: pointer;
-      background: linear-gradient(160deg, #f0a848 0%, var(--sketch-orange) 45%, var(--sketch-orange-deep) 100%);
+      z-index: 40;
+      pointer-events: auto;
+      background: radial-gradient(circle at 32% 28%, var(--orange-light) 0%, var(--orange) 42%, var(--orange-mid) 78%, var(--orange-deep) 100%);
       box-shadow:
-        0 6px 0 rgba(90, 50, 10, 0.35),
-        inset 0 2px 12px rgba(255, 240, 200, 0.45);
+        0 0 0 3px rgba(255, 255, 255, 0.55),
+        0 5px 0 rgba(180, 150, 130, 0.28),
+        inset 0 -6px 16px rgba(200, 140, 100, 0.15),
+        inset 0 4px 14px rgba(255, 250, 245, 0.85);
       transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
     }
 
-    .sketch-orb-inner:hover {
-      transform: scale(1.04);
+    .sk-orb-trigger:hover {
+      transform: translate(-50%, -50%) scale(1.06);
+    }
+
+    .sk-orb-trigger:active {
+      transform: translate(-50%, -48%) scale(0.98);
+    }
+
+    .sk-page.is-open .sk-orb-trigger {
+      transform: translate(-50%, -50%) scale(0.96);
       box-shadow:
-        0 8px 0 rgba(90, 50, 10, 0.32),
-        inset 0 2px 14px rgba(255, 240, 200, 0.5);
+        0 0 0 2px rgba(255, 255, 255, 0.5),
+        0 3px 0 rgba(180, 150, 130, 0.35);
     }
 
-    .sketch-orb-inner:active {
-      transform: scale(0.97);
-      box-shadow: 0 3px 0 rgba(90, 50, 10, 0.4);
-    }
-
-    .sketch-hero.is-activated .sketch-orb-inner {
-      transform: scale(0.96);
-    }
-
-    .sketch-orb-hint {
-      position: absolute;
-      bottom: -2.35rem;
+    .sk-orb-hint {
+      position: fixed;
       left: 50%;
+      top: calc(var(--orb-backdrop-top) - var(--orb-trigger-y-lift) + var(--orb-trigger-size) * 0.5 + 0.85rem);
       transform: translateX(-50%);
       font-family: 'Courier Prime', monospace;
-      font-size: 0.58rem;
-      letter-spacing: 0.14em;
+      font-size: 0.55rem;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: var(--sketch-muted);
-      white-space: nowrap;
+      color: var(--ink-soft);
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+      z-index: 39;
       pointer-events: none;
-      opacity: 0.85;
+      opacity: 0.88;
+      max-width: min(90vw, 16rem);
+      text-align: center;
+      white-space: normal;
+      line-height: 1.35;
     }
 
-    .sketch-hero.is-activated .sketch-orb-hint {
-      opacity: 0;
+    .sk-page.is-open .sk-orb-hint { opacity: 0; max-height: 0; overflow: hidden; }
+
+    /* Waterfall cards — dashed outline, rounded */
+    .wf {
+      position: absolute;
+      left: 50%;
+      width: min(90%, 20.5rem);
+      max-width: 20.5rem;
+      transform: translateX(-50%);
+      border-radius: 18px;
+      border: 2px dashed var(--dash);
+      background: var(--card);
+      padding: 0.85rem 1rem 1rem;
+      box-shadow: 0 10px 32px rgba(100, 120, 100, 0.12);
+      text-align: left;
+      cursor: pointer;
+      transition:
+        opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+        max-height 0.4s ease-out,
+        padding 0.35s ease-out,
+        box-shadow 0.35s ease-out;
     }
 
-    /* —— Bottom orange content buttons —— */
-    .sketch-bottom {
+    .wf h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.08rem;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 0.35rem;
+      line-height: 1.2;
+    }
+
+    .wf p {
+      font-size: 0.95rem;
+      color: var(--ink-soft);
+    }
+
+    .wf .wf-body { overflow: hidden; }
+
+    /* Idle: stacked deck still layered; cards stay opaque so they read above the fixed blue orb */
+    .sk-page:not(.is-open) .wf {
+      opacity: 1;
+      filter: saturate(0.96);
+    }
+
+    .sk-page:not(.is-open) .wf[data-wf="3"] {
+      top: 0.5rem;
+      transform: translateX(-50%) scale(0.9);
+      z-index: 2;
+    }
+
+    .sk-page:not(.is-open) .wf[data-wf="2"] {
+      top: 2.6rem;
+      transform: translateX(-50%) scale(0.94);
+      z-index: 3;
+    }
+
+    .sk-page:not(.is-open) .wf[data-wf="1"] {
+      top: 5rem;
+      transform: translateX(-50%) scale(0.98);
+      z-index: 4;
+    }
+
+    .sk-page:not(.is-open) .wf p { opacity: 0.86; }
+
+    /* Open: shared peek chrome */
+    .sk-page.is-open .wf--front {
+      transform: translateX(-50%);
+      z-index: 20 !important;
+      opacity: 1 !important;
+      filter: none !important;
+      max-height: none;
+      padding-bottom: 1.15rem;
+      box-shadow: 0 18px 44px rgba(100, 118, 100, 0.14);
+    }
+
+    .sk-page.is-open .wf--front p {
+      opacity: 1;
+    }
+
+    .sk-page.is-open .wf--peek {
+      max-height: var(--wf-open-peek-h);
+      padding-top: 0.55rem;
+      padding-bottom: 0.55rem;
+      overflow: hidden;
+      opacity: 1 !important;
+      filter: none !important;
+      z-index: 15;
+    }
+
+    .sk-page.is-open .wf--peek p { display: none; }
+
+    /* Mobile only: dvh-based orb anchor + flex-start so all three cards sit below the orange */
+    @media (max-width: 719px) {
+      :root {
+        /* dvh: vertical position; % here was resolving against width and pulled cards under the orb */
+        --orb-backdrop-top: clamp(11rem, 40dvh, 48dvh);
+        --orb-backdrop-size: min(138vmin, 158vw);
+        --orb-trigger-size: clamp(13.5rem, min(30vmin, 51vw), 20.25rem);
+        --orb-trigger-y-lift: max(min(34vmin, 26vw), calc(var(--orb-trigger-size) * 0.66));
+        /*
+          Cards live in .sk-stage below the sticky header; the orange is fixed to the viewport.
+          Offset = (orange bottom) + (hint block) + gap, with a dvh floor and extra tied to trigger radius
+          so the deck clears the button on tall / large-trigger phones.
+        */
+        --sk-content-offset: max(
+          64dvh,
+          calc(
+            var(--orb-backdrop-top)
+            - var(--orb-trigger-y-lift)
+            + var(--orb-trigger-size) * 0.5
+            + 0.85rem
+            + 6.25rem
+            + max(5.5rem, calc(var(--orb-trigger-size) * 0.4))
+            + 1.25rem
+          )
+        );
+      }
+
+      .sk-stage {
+        padding-top: max(
+          0.75rem,
+          var(--sk-content-offset),
+          calc(env(safe-area-inset-top, 0px) + 4.5rem)
+        );
+      }
+
+      .sk-stage-main {
+        align-items: flex-start;
+      }
+
+      .sk-waterfall {
+        align-items: stretch;
+        justify-content: flex-start;
+      }
+
+      /* Cards above the orange in overlap so the top card stays readable (layout still below the orb) */
+      .sk-orb-trigger {
+        z-index: 35;
+      }
+
+      .sk-orb-hint {
+        z-index: 36;
+      }
+
+      .sk-waterfall-stack {
+        height: auto;
+        min-height: min(52vh, 28rem);
+        z-index: 45;
+      }
+
+      .sk-page.is-open .sk-waterfall-stack {
+        height: auto;
+        min-height: min(58vh, 36rem);
+      }
+
+      .sk-page.is-open .wf--front {
+        top: calc(2 * var(--wf-open-peek-h) + 2 * var(--wf-open-peek-gap) + 0.35rem);
+        bottom: auto;
+      }
+
+      .sk-page.is-open .wf--peek-b {
+        top: 0;
+        bottom: auto;
+        transform: translateX(-50%) scale(0.96);
+      }
+
+      .sk-page.is-open .wf--peek-a {
+        top: calc(var(--wf-open-peek-h) + var(--wf-open-peek-gap));
+        bottom: auto;
+        transform: translateX(-50%) scale(0.98);
+      }
+
+      @media (max-width: 380px) {
+        .sk-page.is-open .sk-waterfall-stack {
+          min-height: min(52vh, 32rem);
+        }
+      }
+    }
+
+    /* Bottom band: light pastel purple */
+    .sk-bottom {
       position: relative;
-      z-index: 20;
-      padding: 1rem 1.35rem calc(1.25rem + env(safe-area-inset-bottom, 0px));
+      z-index: 3;
+      padding: 1rem 1.35rem calc(1.35rem + env(safe-area-inset-bottom, 0px));
+      background: linear-gradient(180deg, rgba(235, 228, 247, 0.65) 0%, var(--lilac) 40%, var(--lilac-mid) 100%);
       display: flex;
       flex-direction: column;
       gap: 0.65rem;
       max-width: 24rem;
-      width: 100%;
       margin: 0 auto;
-      background: linear-gradient(180deg, transparent 0%, var(--sketch-bg-deep) 28%);
     }
 
-    .sketch-content-btn {
+    .sk-btn {
       display: block;
       text-align: center;
       text-decoration: none;
       font-family: 'Courier Prime', monospace;
       font-size: 0.72rem;
-      letter-spacing: 0.16em;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
-      color: #fdfaf4;
-      background: linear-gradient(180deg, #e49835 0%, var(--sketch-orange) 35%, var(--sketch-orange-deep) 100%);
-      padding: 0.95rem 1.25rem;
+      font-weight: 700;
+      color: var(--orange-text);
+      background: linear-gradient(180deg, #f2d2b8 0%, var(--orange) 38%, var(--orange-mid) 70%, var(--orange-deep) 100%);
+      padding: 0.95rem 1.2rem;
       border-radius: 14px;
-      border: 1px solid rgba(70, 45, 10, 0.25);
-      box-shadow: 0 4px 0 rgba(90, 55, 12, 0.28);
-      transition: transform 0.18s ease-out, box-shadow 0.18s ease-out, filter 0.18s ease-out;
+      border: 1px solid rgba(200, 170, 150, 0.45);
+      box-shadow: 0 3px 0 rgba(180, 150, 130, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+      transition: transform 0.18s ease-out, filter 0.18s ease-out;
     }
 
-    .sketch-content-btn:hover {
+    .sk-btn:hover {
       transform: translateY(-2px);
-      filter: brightness(1.05);
-      box-shadow: 0 6px 0 rgba(90, 55, 12, 0.26);
+      filter: brightness(1.03);
     }
 
-    .sketch-content-btn:active {
+    .sk-btn:active {
       transform: translateY(2px);
-      box-shadow: 0 2px 0 rgba(90, 55, 12, 0.35);
+      box-shadow: 0 1px 0 rgba(180, 150, 130, 0.3);
     }
 
-    .sketch-back {
+    .sk-foot {
       position: relative;
-      z-index: 20;
+      z-index: 3;
       text-align: center;
-      padding-bottom: 1.25rem;
+      padding: 0 1rem 1.75rem;
+      font-family: 'Courier Prime', monospace;
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      background: var(--lilac-deep);
     }
 
-    .sketch-back a {
-      font-family: 'Courier Prime', monospace;
-      font-size: 0.65rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--sketch-muted);
+    .sk-foot a { color: var(--ink); text-decoration: none; font-weight: 700; }
+    .sk-foot a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+    .wf:focus-visible {
+      outline: 3px solid var(--orange-mid);
+      outline-offset: 2px;
+    }
+
+    /* —— Desktop: breathing room, wider stack, CTAs in a row —— */
+    @media (min-width: 720px) {
+      .sk-top {
+        justify-content: space-between;
+        padding: 1rem clamp(1.5rem, 4vw, 3rem);
+        max-width: 72rem;
+        margin: 0 auto;
+        width: 100%;
+      }
+
+      .sk-logo {
+        font-size: 1.22rem;
+        margin-right: 0;
+      }
+
+      .sk-menu {
+        justify-content: flex-end;
+        gap: 0.55rem 0.75rem;
+      }
+
+      .sk-menu a {
+        font-size: 0.58rem;
+        max-width: 5rem;
+      }
+
+      .sk-stage {
+        padding-left: clamp(1.5rem, 4vw, 3rem);
+        padding-right: clamp(1.5rem, 4vw, 3rem);
+        padding-bottom: 1.5rem;
+        padding-top: max(0.75rem, var(--sk-content-offset));
+        min-height: min(100dvh, 100svh);
+      }
+
+      .sk-stage-main {
+        min-height: 0;
+      }
+
+      .sk-waterfall-stack {
+        height: min(50vh, 30rem);
+      }
+
+      :root {
+        --max: 30rem;
+        --orb-backdrop-top: 48%;
+        --orb-backdrop-size: min(132vmin, 145vw);
+        --orb-trigger-size: clamp(9.5rem, min(19vmin, 30vw), 14rem);
+        --orb-trigger-y-lift: max(min(29vmin, 20vw), calc(var(--orb-trigger-size) * 0.5));
+        --sk-content-offset: calc(var(--orb-backdrop-top) - var(--orb-trigger-y-lift) + var(--orb-trigger-size) * 0.5 + 4.25rem);
+      }
+
+      .sk-page.is-open .sk-stage-main {
+        align-items: center;
+      }
+
+      .sk-page.is-open .sk-waterfall {
+        align-items: center;
+        justify-content: center;
+      }
+
+      .sk-page.is-open .sk-waterfall-stack {
+        height: min(50vh, 30rem);
+        min-height: 0;
+      }
+
+      .sk-page.is-open .wf--front {
+        bottom: 0.5rem;
+        top: auto;
+      }
+
+      .sk-page.is-open .wf--peek-a {
+        bottom: 9.25rem;
+        top: auto;
+        transform: translateX(-50%) scale(0.98);
+      }
+
+      .sk-page.is-open .wf--peek-b {
+        bottom: 12.35rem;
+        top: auto;
+        transform: translateX(-50%) scale(0.96);
+      }
+
+      .sk-orb-hint {
+        font-size: 0.6rem;
+        max-width: 18rem;
+      }
+
+      .wf h3 {
+        font-size: 1.12rem;
+      }
+
+      .sk-bottom {
+        max-width: 48rem;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.75rem 1rem;
+        padding: 1.25rem clamp(1.5rem, 4vw, 3rem) calc(1.5rem + env(safe-area-inset-bottom, 0px));
+      }
+
+      .sk-btn {
+        flex: 1 1 12rem;
+        max-width: 16rem;
+      }
+
+      .sk-foot {
+        padding-bottom: 2.25rem;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .sk-stage {
+        padding-top: max(1rem, var(--sk-content-offset));
+      }
+
+      .sk-stage-main {
+        min-height: 0;
+      }
+
+      .sk-waterfall-stack {
+        height: min(48vh, 32rem);
+      }
+
+      :root {
+        --max: 32rem;
+        --orb-backdrop-top: 46%;
+        --orb-backdrop-size: min(128vmin, 138vw);
+        --orb-trigger-size: clamp(10rem, min(18vmin, 28vw), 14.5rem);
+        --orb-trigger-y-lift: max(min(31vmin, 18vw), calc(var(--orb-trigger-size) * 0.5));
+        --sk-content-offset: calc(var(--orb-backdrop-top) - var(--orb-trigger-y-lift) + var(--orb-trigger-size) * 0.5 + 4.25rem);
+      }
+
+      body {
+        font-size: 18px;
+      }
+
+      .sk-page.is-open .wf--peek-a {
+        bottom: 11.25rem;
+      }
+
+      .sk-page.is-open .wf--peek-b {
+        bottom: 14.75rem;
+      }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .sketch-menu a,
-      .wf-card,
-      .sketch-orb-inner,
-      .sketch-content-btn {
+      .wf,
+      .sk-menu-bar,
+      .sk-orb-trigger,
+      .sk-btn {
         transition: none !important;
       }
     }
-
-    @media (min-width: 480px) {
-      .sketch-waterfall { max-width: 22rem; }
-    }
   </style>
 </head>
-<body>
+<body class="sk-page" id="sk-page">
 
-  <section class="sketch-hero" id="sketch-hero" aria-label="Alternative bass hero, sketch concept">
-    <nav class="sketch-menu" aria-label="Section shortcuts">
-      <span class="sketch-menu-label">Jump to</span>
-      <a href="index.html#lessons" title="Lessons">Lessons</a>
-      <a href="index.html#gigs" title="Gigs">Gigs</a>
-      <a href="index.html#musical-adventures" title="Projects">Projects</a>
-      <a href="index.html#about" title="About">About</a>
-      <a href="index.html#contact" title="Contact">Contact</a>
-      <a href="index.html" title="Full site">Hub</a>
+  <header class="sk-top">
+    <a class="sk-logo" href="index.html">Andy P <span>/ Bass</span></a>
+    <nav aria-label="Menu">
+      <ul class="sk-menu">
+        <li><a href="index.html#lessons"><span class="sk-menu-bar" aria-hidden="true"></span>Lessons</a></li>
+        <li><a href="index.html#gigs"><span class="sk-menu-bar" aria-hidden="true"></span>Gigs</a></li>
+        <li><a href="index.html#musical-adventures"><span class="sk-menu-bar" aria-hidden="true"></span>Projects</a></li>
+        <li><a href="index.html#about"><span class="sk-menu-bar" aria-hidden="true"></span>About</a></li>
+        <li><a href="index.html#contact"><span class="sk-menu-bar" aria-hidden="true"></span>Contact</a></li>
+        <li><a href="index.html"><span class="sk-menu-bar" aria-hidden="true"></span>Classic</a></li>
+      </ul>
     </nav>
+  </header>
 
-    <div class="sketch-stage">
-      <div class="sketch-waterfall" id="waterfall">
-        <article class="wf-card" data-layer="3" tabindex="0" role="button" aria-label="Bring card to front: Who are you?">
-          <div class="wf-kicker">Card 3</div>
-          <h3>Who are you?</h3>
-          <p>Melbourne bassist and teacher — originals, sessions, and stages for decades.</p>
-        </article>
-        <article class="wf-card" data-layer="2" tabindex="0" role="button" aria-label="Bring card to front: What is this?">
-          <div class="wf-kicker">Card 2</div>
-          <h3>What the hell is this?</h3>
-          <p>A one-page home for lessons, gigs, and low-end philosophy. No mystery, just bass.</p>
-        </article>
-        <article class="wf-card" data-layer="1" tabindex="0" role="button" aria-label="Bring card to front: Resume summary">
-          <div class="wf-kicker">Card 1 · front</div>
-          <h3>Resume summary?</h3>
-          <p>Precision player, patient coach, gigging lifer. Tap the orange circle to focus the stack — then tap a card to pull it forward.</p>
-        </article>
-      </div>
+  <div class="sk-orb-backdrop" aria-hidden="true">
+    <div class="sk-orb-ring"></div>
+  </div>
 
-      <div class="sketch-orb-wrap">
-        <div class="sketch-orb-outer" aria-hidden="true">
-          <button
-            type="button"
-            class="sketch-orb-inner"
-            id="orb-activate"
-            aria-expanded="false"
-            aria-controls="waterfall"
-            title="Activate content stack"
-          ></button>
+  <section class="sk-stage" aria-label="Intro">
+    <button
+      type="button"
+      class="sk-orb-trigger"
+      id="sk-trigger"
+      aria-expanded="false"
+      aria-controls="waterfall"
+      aria-label="Show stacked answers"
+    ></button>
+    <span class="sk-orb-hint" id="sk-hint">Tap the orange circle to open the stack — then tap a card to bring it forward.</span>
+    <div class="sk-stage-main">
+    <div class="sk-waterfall">
+    <div class="sk-waterfall-stack" id="waterfall">
+      <article class="wf" data-wf="3" tabindex="0" role="button" aria-label="Card 3: Who are you again?">
+        <h3>Who are you again?</h3>
+        <div class="wf-body">
+          <p>Melbourne bassist and teacher — originals, sessions, and stages for decades. Mostly a beat-up Precision and a lot of coffee.</p>
         </div>
-        <span class="sketch-orb-hint" id="orb-hint">Tap orange — wake the stack</span>
-      </div>
+      </article>
+      <article class="wf" data-wf="2" tabindex="0" role="button" aria-label="Card 2: What the hell is this?">
+        <h3>What the hell is this?</h3>
+        <div class="wf-body">
+          <p>A one-page home for lessons, gigs, projects, and contact. Low end, straight answers, no stock-photo mystique.</p>
+        </div>
+      </article>
+      <article class="wf" data-wf="1" tabindex="0" role="button" aria-label="Card 1: Résumé summary">
+        <h3>Résumé summary?</h3>
+        <div class="wf-body">
+          <p>Precision player, patient coach, gigging lifer. Groove and timing before flash — whether you&rsquo;re starting out or tightening up for the band.</p>
+        </div>
+      </article>
     </div>
-
-    <div class="sketch-bottom">
-      <a class="sketch-content-btn" href="index.html#lessons">Book a lesson</a>
-      <a class="sketch-content-btn" href="/gigs/">Gig calendar</a>
-      <a class="sketch-content-btn" href="index.html#contact">Get in touch</a>
     </div>
-
-    <p class="sketch-back"><a href="index.html">← Main bass page</a></p>
+    </div>
   </section>
+
+  <div class="sk-bottom">
+    <a class="sk-btn" href="index.html#lessons">Book a lesson</a>
+    <a class="sk-btn" href="/gigs/">Gig calendar</a>
+    <a class="sk-btn" href="index.html#contact">Get in touch</a>
+  </div>
+
+  <p class="sk-foot"><a href="index.html">Standard hero with bass photo</a></p>
 
   <script>
     (function () {
-      var root = document.getElementById('sketch-hero');
-      var orb = document.getElementById('orb-activate');
-      var cards = [].slice.call(document.querySelectorAll('.wf-card'));
+      var root = document.getElementById('sk-page');
+      var trigger = document.getElementById('sk-trigger');
+      var cards = [].slice.call(document.querySelectorAll('.wf'));
+      var frontId = 1;
 
-      function setActivated(on) {
-        root.classList.toggle('is-activated', on);
-        orb.setAttribute('aria-expanded', on ? 'true' : 'false');
+      function peekSlots(forFront) {
+        if (forFront === 1) return [3, 2];
+        if (forFront === 2) return [3, 1];
+        return [2, 1];
       }
 
-      orb.addEventListener('click', function () {
-        setActivated(!root.classList.contains('is-activated'));
+      function syncLayout() {
+        var open = root.classList.contains('is-open');
+        trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+        cards.forEach(function (c) {
+          c.classList.remove('wf--front', 'wf--peek', 'wf--peek-a', 'wf--peek-b');
+        });
+        if (!open) return;
+        var order = peekSlots(frontId);
+        cards.forEach(function (c) {
+          var id = +c.getAttribute('data-wf');
+          if (id === frontId) c.classList.add('wf--front');
+          else {
+            c.classList.add('wf--peek');
+            if (id === order[0]) c.classList.add('wf--peek-b');
+            else c.classList.add('wf--peek-a');
+          }
+        });
+      }
+
+      trigger.addEventListener('click', function () {
+        root.classList.toggle('is-open');
+        syncLayout();
       });
 
       cards.forEach(function (card) {
-        function focusCard() {
-          cards.forEach(function (c) { c.classList.remove('is-front'); });
-          card.classList.add('is-front');
-          setActivated(true);
-        }
-        card.addEventListener('click', focusCard);
+        card.addEventListener('click', function () {
+          frontId = +card.getAttribute('data-wf');
+          root.classList.add('is-open');
+          syncLayout();
+        });
         card.addEventListener('keydown', function (e) {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            focusCard();
+            frontId = +card.getAttribute('data-wf');
+            root.classList.add('is-open');
+            syncLayout();
           }
         });
       });
+
+      syncLayout();
     })();
   </script>
 </body>
