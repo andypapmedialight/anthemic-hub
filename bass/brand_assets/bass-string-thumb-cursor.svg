@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <filter id="emoji-shadow" x="-35%" y="-35%" width="170%" height="170%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="1.8" flood-color="#000" flood-opacity="0.55"/>
+    </filter>
+  </defs>
+  <text
+    x="32"
+    y="44"
+    text-anchor="middle"
+    dominant-baseline="middle"
+    font-size="52"
+    filter="url(#emoji-shadow)"
+    font-family="system-ui, 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif"
+  >👍</text>
+</svg>

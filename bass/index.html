@@ -8,6 +8,10 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   :root {
     --amber: #C8831A;
     --amber-light: #E8A84A;
@@ -121,7 +125,8 @@
     margin: 0;
     border: 0;
     background: transparent;
-    cursor: pointer;
+    /* 👍 emoji in SVG (OS may scale cursor ~32–64px); hotspot near center of glyph */
+    cursor: url("brand_assets/bass-string-thumb-cursor.svg") 32 36, pointer;
     pointer-events: auto;
     border-radius: 2px;
     -webkit-tap-highlight-color: transparent;
@@ -188,13 +193,14 @@
   }
   .hero-bass-stage .bass-caption-kicker {
     font-family: 'Courier Prime', monospace;
-    font-size: clamp(0.58rem, 1.35vw, 0.68rem);
-    letter-spacing: 0.26em;
+    font-size: clamp(0.8rem, 0.52rem + 2.2vw, 0.95rem);
+    letter-spacing: 0.17em;
+    line-height: 1.4;
     text-transform: uppercase;
     color: var(--cream);
     background: rgba(26, 18, 8, 0.78);
     border: 1px solid rgba(200, 131, 26, 0.55);
-    padding: 0.42em 1em 0.38em;
+    padding: 0.5em 1.15em 0.42em;
     border-radius: 2px;
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.55);
   }
@@ -263,18 +269,103 @@
     text-align: center;
     pointer-events: none;
     flex: 0 0 auto;
-    transform: translateY(calc(-2.75rem - 5vh));
+    transform: translateY(calc(-2.35rem - 4.35vh));
   }
   .hero-lower .btn { pointer-events: auto; }
-  .hero-actions {
+  .hero-cta-cluster {
     display: flex;
-    gap: 1rem;
     flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    column-gap: 0.55rem;
+    row-gap: 0.35rem;
+    max-width: 100%;
+    pointer-events: none;
+  }
+  .hero-cta-cluster .hero-actions,
+  .hero-cta-cluster .hero-scroll-more {
+    pointer-events: auto;
+  }
+  .hero-actions {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    gap: 0.55rem;
+    align-items: center;
     justify-content: center;
     margin-top: 0;
     pointer-events: none;
   }
-  .hero-actions .btn { pointer-events: auto; }
+  .hero-actions .btn {
+    pointer-events: auto;
+    padding: 0.58rem 1.15rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+  }
+  .hero-scroll-more {
+    pointer-events: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.42rem;
+    font-family: 'Courier Prime', monospace;
+    font-size: clamp(0.62rem, 1.15vw, 0.72rem);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--chrome);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    padding: 0.25rem 0.15rem;
+    margin: 0;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .hero-scroll-more:hover {
+    color: var(--amber-light);
+    border-bottom-color: rgba(200, 131, 26, 0.45);
+  }
+  .hero-scroll-more-copy {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    line-height: 1.25;
+  }
+  .hero-scroll-below-cue {
+    font-size: 0.58em;
+    font-weight: 400;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(200, 200, 184, 0.78);
+    margin-top: 0.15em;
+    line-height: 1.25;
+  }
+  .hero-scroll-more:hover .hero-scroll-below-cue {
+    color: rgba(232, 168, 74, 0.88);
+  }
+  @keyframes hero-scroll-arrow-bounce {
+    0%, 100% { transform: translateY(-2px); }
+    50% { transform: translateY(5px); }
+  }
+  .hero-scroll-more-icon {
+    display: flex;
+    color: var(--amber-light);
+    flex-shrink: 0;
+    filter: drop-shadow(0 0 8px rgba(200, 131, 26, 0.35));
+    animation: hero-scroll-arrow-bounce 1.35s ease-in-out infinite;
+  }
+  .hero-scroll-more-icon svg {
+    display: block;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero-scroll-more-icon {
+      animation: none;
+    }
+  }
+  .hero-scroll-more:focus {
+    outline: none;
+  }
+  .hero-scroll-more:focus-visible {
+    outline: 2px solid var(--amber-light);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
   .hero::before {
     content: '';
     position: absolute;
@@ -377,6 +468,23 @@
     display: flex; align-items: center; gap: 0.75rem;
   }
   .section-label::after { content: ''; flex: 1; max-width: 48px; height: 1px; background: var(--amber); opacity: 0.5; }
+  /* Primary actions + “Next section” in one wrap (matches hero CTA cluster idea) */
+  .section-cta-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.65rem 1rem;
+    margin-top: 2rem;
+  }
+  .section-cta-row .hero-scroll-more {
+    margin: 0;
+  }
+  #gigs .section-cta-row {
+    margin-top: 2.25rem;
+  }
+  .about-text .section-cta-row {
+    margin-top: 1.5rem;
+  }
   h2 {
     font-family: 'Playfair Display', serif;
     font-size: clamp(1.8rem, 3vw, 2.8rem);
@@ -712,6 +820,9 @@
   .footer-sample-credit a:hover { color: var(--amber-light); }
 
   @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
     .music-section-deco .music-deco-note,
     .music-section-deco .music-deco-clef {
       animation: none !important;
@@ -729,12 +840,38 @@
     .hero-head h1 { font-size: clamp(1.95rem, 9vw, 2.85rem); }
     .hero-lower {
       padding: 0.35rem 0.75rem calc(0.65rem + env(safe-area-inset-bottom, 0px));
-      transform: translateY(calc(-2rem - 3.5vh));
+      transform: translateY(calc(-2rem - 3.85vh));
+    }
+    .hero-cta-cluster {
+      row-gap: 0.28rem;
+      column-gap: 0.45rem;
+    }
+    .hero-actions .btn {
+      padding: 0.52rem 0.95rem;
+      font-size: 0.68rem;
+    }
+    .hero-scroll-more {
+      font-size: clamp(0.58rem, 2.65vw, 0.68rem);
+      letter-spacing: 0.1em;
+    }
+    .hero-scroll-below-cue {
+      font-size: 0.52em;
+      letter-spacing: 0.14em;
     }
     .hero-bass-stage { padding: 4rem 0 0; align-items: center; }
     .hero-bass-stage .bass-wrap { max-width: min(104vw, 620px); }
     .hero-bass-stage .bass-figure-main { transform: rotate(-2.5deg) scale(1.04); }
     .hero-bass-stage .bass-wrap:hover .bass-figure-main { transform: rotate(-1.5deg) scale(1.06); }
+    .hero-bass-stage .bass-caption {
+      max-width: min(92vw, 30rem);
+      transform: translateX(-50%) translateY(0.45rem);
+    }
+    .hero-bass-stage .bass-caption-kicker {
+      font-size: clamp(0.72rem, 0.48rem + 2.05vw, 0.84rem);
+      letter-spacing: 0.11em;
+      line-height: 1.36;
+      padding: 0.4em 0.95em 0.36em;
+    }
     section { padding: 3rem 1.5rem; }
     .divider { padding: 0 1.5rem; }
     .about-inner, .contact-inner { grid-template-columns: 1fr; gap: 2rem; }
@@ -769,15 +906,15 @@
           alt="Photograph of Andy P's own road-worn Fender Precision Bass — the same instrument used for teaching and gigs, not stock imagery"
           decoding="async"
         />
-        <div class="bass-string-map" role="group" aria-label="Open strings — click to hear. Press Space to stop sound." aria-keyshortcuts="Space">
-          <button type="button" class="bass-string-hit bass-str-e" data-open-string="E" aria-label="Play open E string"></button>
-          <button type="button" class="bass-string-hit bass-str-a" data-open-string="A" aria-label="Play open A string"></button>
-          <button type="button" class="bass-string-hit bass-str-d" data-open-string="D" aria-label="Play open D string"></button>
-          <button type="button" class="bass-string-hit bass-str-g" data-open-string="G" aria-label="Play open G string"></button>
+        <div class="bass-string-map" role="group" aria-label="Open strings — press and hold to hear. Release to stop. Press Space to stop sound." aria-keyshortcuts="Space">
+          <button type="button" class="bass-string-hit bass-str-e" data-open-string="E" aria-label="Open E string — hold to play, release to stop"></button>
+          <button type="button" class="bass-string-hit bass-str-a" data-open-string="A" aria-label="Open A string — hold to play, release to stop"></button>
+          <button type="button" class="bass-string-hit bass-str-d" data-open-string="D" aria-label="Open D string — hold to play, release to stop"></button>
+          <button type="button" class="bass-string-hit bass-str-g" data-open-string="G" aria-label="Open G string — hold to play, release to stop"></button>
         </div>
         </div>
         <figcaption class="bass-caption">
-          <span class="bass-caption-kicker">Andy' bass - Fender Precision 1960's body, with a 70's neck. My main gigging &amp; teaching bass</span>
+          <span class="bass-caption-kicker">Andy's bass - Fender Precision 1960's body, with a 70's neck. My main gigging &amp; teaching bass</span>
 
         </figcaption>
       </figure>
@@ -791,9 +928,22 @@
       <div class="hero-tag">Melbourne, Australia</div>
     </div>
     <div class="hero-lower">
-      <div class="hero-actions">
-        <a href="#lessons" class="btn btn-primary">Book a lesson</a>
-        <a href="/gigs/" class="btn btn-ghost">Gig calendar</a>
+      <div class="hero-cta-cluster">
+        <div class="hero-actions">
+          <a href="#lessons" class="btn btn-primary">Book a lesson</a>
+          <a href="/gigs/" class="btn btn-ghost">Gig calendar</a>
+        </div>
+        <a href="#lessons" class="hero-scroll-more" aria-label="Next section: Bass lessons">
+          <span class="hero-scroll-more-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" aria-hidden="true">
+              <path stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" d="M12 5v9l-5 5 5 5 5-5"/>
+            </svg>
+          </span>
+          <span class="hero-scroll-more-copy">
+            <span class="hero-scroll-more-text">Next section</span>
+            <span class="hero-scroll-below-cue">Bass lessons</span>
+          </span>
+        </a>
       </div>
     </div>
   </div>
@@ -833,7 +983,20 @@
       <div class="lesson-price">$70 <span>/ 60 min</span></div>
     </div>
   </div>
-  <div style="margin-top: 2rem;"><a href="#contact" class="btn btn-primary">Book a lesson</a></div>
+  <div class="section-cta-row">
+    <a href="#contact" class="btn btn-primary">Book a lesson</a>
+    <a href="#gigs" class="hero-scroll-more" aria-label="Next section: Live dates">
+      <span class="hero-scroll-more-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" aria-hidden="true">
+          <path stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" d="M12 5v9l-5 5 5 5 5-5"/>
+        </svg>
+      </span>
+      <span class="hero-scroll-more-copy">
+        <span class="hero-scroll-more-text">Next section</span>
+        <span class="hero-scroll-below-cue">Live dates</span>
+      </span>
+    </a>
+  </div>
   </div>
 </section>
 
@@ -848,6 +1011,20 @@
   <div id="gigs-warmth-list" class="gigs-list"></div>
   <p id="gigs-warmth-empty" class="gigs-lede" style="margin-top:1.25rem;display:none;">No upcoming gigs in the calendar yet. <a href="/gigs/">Open the full calendar</a></p>
   <p id="gigs-warmth-err" class="gigs-load-err" hidden></p>
+  <div class="section-cta-row">
+    <a href="/gigs/" class="btn btn-ghost">Full gig calendar</a>
+    <a href="#musical-adventures" class="hero-scroll-more" aria-label="Next section: Musical adventures">
+      <span class="hero-scroll-more-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" aria-hidden="true">
+          <path stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" d="M12 5v9l-5 5 5 5 5-5"/>
+        </svg>
+      </span>
+      <span class="hero-scroll-more-copy">
+        <span class="hero-scroll-more-text">Next section</span>
+        <span class="hero-scroll-below-cue">Musical adventures</span>
+      </span>
+    </a>
+  </div>
   </div>
 </section>
 
@@ -915,6 +1092,17 @@
           <div class="boycott-sub">Pay artists fairly · Buy direct</div>
         </div>
       </div>
+      <a href="#about" class="hero-scroll-more" aria-label="Next section: About">
+        <span class="hero-scroll-more-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" aria-hidden="true">
+            <path stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" d="M12 5v9l-5 5 5 5 5-5"/>
+          </svg>
+        </span>
+        <span class="hero-scroll-more-copy">
+          <span class="hero-scroll-more-text">Next section</span>
+          <span class="hero-scroll-below-cue">About</span>
+        </span>
+      </a>
     </div>
   </div>
   </div>
@@ -936,7 +1124,20 @@
       <p>OK, so Dewey Finn was not technically correct in this quote (cello's are tuned differently), but his vibe is bang on. Same with me!</p>
       <p>I've been playing bass for over four decades, across original bands, session work, and live touring. My main weapon is a beat-up Fender Precision that's been on more stages than I can count.</p>
       <p>I teach all styles and levels from my studio in Melbourne, with a focus on feel, timing, and musicality over flash. I believe every bassist finds their own voice — my job is to help you find yours faster.</p>
-      <div style="margin-top: 1.5rem;"><a href="#contact" class="btn btn-primary">Get in touch</a></div>
+      <div class="section-cta-row">
+        <a href="#contact" class="btn btn-primary">Get in touch</a>
+        <a href="#contact" class="hero-scroll-more" aria-label="Next section: Contact">
+          <span class="hero-scroll-more-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" aria-hidden="true">
+              <path stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" d="M12 5v9l-5 5 5 5 5-5"/>
+            </svg>
+          </span>
+          <span class="hero-scroll-more-copy">
+            <span class="hero-scroll-more-text">Next section</span>
+            <span class="hero-scroll-below-cue">Contact</span>
+          </span>
+        </a>
+      </div>
     </div>
   </div>
   </div>
