@@ -10,6 +10,8 @@
 
   html {
     scroll-behavior: smooth;
+    /* Sticky nav + small gap so section labels sit below the bar */
+    scroll-padding-top: calc(5.75rem + env(safe-area-inset-top, 0px));
   }
 
   :root {
@@ -438,8 +440,10 @@
   .divider-line { flex: 1; height: 1px; background: rgba(200,131,26,0.2); }
   .divider-icon { width: 8px; height: 8px; background: var(--amber); transform: rotate(45deg); flex-shrink: 0; }
 
-  /* SECTIONS — full-bleed bands; content contained like the original */
-  section { padding: 5rem clamp(1.5rem, 4vw, 3rem); }
+  /* SECTIONS — full-bleed bands; tighter top under dividers so labels sit closer */
+  section {
+    padding: 3.15rem clamp(1.5rem, 4vw, 3rem) 5rem;
+  }
   .section-wrap {
     width: 100%;
     max-width: var(--section-max);
@@ -830,6 +834,9 @@
   }
 
   @media (max-width: 768px) {
+    html {
+      scroll-padding-top: calc(4.35rem + env(safe-area-inset-top, 0px));
+    }
     nav { padding: 1rem 1.5rem; }
     nav ul { display: none; }
     .hero { min-height: 100dvh; min-height: 100vh; }
@@ -872,7 +879,9 @@
       line-height: 1.36;
       padding: 0.4em 0.95em 0.36em;
     }
-    section { padding: 3rem 1.5rem; }
+    section {
+      padding: 2rem 1.5rem 3rem;
+    }
     .divider { padding: 0 1.5rem; }
     .about-inner, .contact-inner { grid-template-columns: 1fr; gap: 2rem; }
     footer .footer-inner { flex-direction: column; justify-content: center; text-align: center; }
@@ -1122,7 +1131,7 @@
       <div class="section-label" style="margin-bottom: 1rem;">About</div>
       <h2 style="margin-bottom: 1rem;">Melbourne bassist,<br><em>teacher &amp; lifer</em></h2>
       <p>OK, so Dewey Finn was not technically correct in this quote (cello's are tuned differently), but his vibe is bang on. Same with me!</p>
-      <p>I've been playing bass for over four decades, across original bands, session work, and live touring. My main weapon is a beat-up Fender Precision that's been on more stages than I can count.</p>
+      <p>I've been playing bass for four decades, across original bands, session work, and live touring. My main weapon is a beat-up Fender Precision that's been on more stages than I can count.</p>
       <p>I teach all styles and levels from my studio in Melbourne, with a focus on feel, timing, and musicality over flash. I believe every bassist finds their own voice — my job is to help you find yours faster.</p>
       <div class="section-cta-row">
         <a href="#contact" class="btn btn-primary">Get in touch</a>
