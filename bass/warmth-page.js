@@ -141,13 +141,17 @@
         var ny = wy / (H || 1);
         a =
           n.alpha *
-          0.92 *
           Math.min(1, ny * 10) *
           Math.min(1, (1 - ny) * 8);
+        var alphaFill = Math.min(0.98, a * 2.9);
         ctx.font = n.size * Math.min(W, H) + 'px serif';
-        ctx.shadowBlur = 18;
-        ctx.shadowColor = 'rgba(255,255,255,' + (a * 0.35) + ')';
-        ctx.fillStyle = 'rgba(255,255,255,' + (a * 0.72) + ')';
+        ctx.shadowBlur = 32;
+        ctx.shadowColor =
+          'rgba(255,255,255,' + Math.min(0.75, alphaFill * 0.5) + ')';
+        ctx.fillStyle = 'rgba(255,255,255,' + (alphaFill * 0.55) + ')';
+        ctx.fillText(n.char, wx, wy);
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = 'rgba(255,255,255,' + alphaFill + ')';
         ctx.fillText(n.char, wx, wy);
         return;
       }
