@@ -28,12 +28,12 @@
 
   var floatNotes = [];
   var i;
-  for (i = 0; i < 11; i++) {
+  for (i = 0; i < 22; i++) {
     floatNotes.push({
       x: 0.05 + Math.random() * 0.9,
       y: 0.1 + Math.random() * 0.85,
-      speed: 0.00022 + Math.random() * 0.00032,
-      size: 0.012 + Math.random() * 0.012,
+      speed: 0.00044 + Math.random() * 0.00064,
+      size: 0.024 + Math.random() * 0.024,
       alpha: 0.08 + Math.random() * 0.11,
       char: ['\u2669', '\u266a', '\u266b', '\u266c'][i % 4],
       phase: Math.random() * Math.PI * 2,
@@ -95,7 +95,7 @@
         Math.min(1, n.y * 11) *
         Math.min(1, (1 - n.y) * 9);
       ctx.font = n.size * Math.min(W, H) + 'px serif';
-      ctx.shadowBlur = 12;
+      ctx.shadowBlur = 22;
       ctx.shadowColor = 'rgba(200,131,26,' + a * 0.45 + ')';
       ctx.fillStyle = 'rgba(232,168,74,' + a + ')';
       ctx.fillText(n.char, wx, wy);

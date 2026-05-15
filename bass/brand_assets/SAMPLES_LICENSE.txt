@@ -1,0 +1,18 @@
+Open-string click sounds (pbass-open-*.mp3)
+
+Source: Freesound pack "Old Fender P-Bass Picked" by tim.kahn
+https://freesound.org/people/tim.kahn/packs/9130/
+
+Per-file pages (CC BY 4.0 — attribution required):
+  E string … /sounds/148249/  (C_S P-Bass pick E1.wav)
+  A string … /sounds/148237/  (C_S P-Bass pick A1.wav)
+  D string … /sounds/148251/  (C_S P-Bass pick D2.wav)
+  G string … /sounds/148246/  (C_S P-Bass pick G2.wav)
+
+Files here are the Freesound CDN “-hq.mp3” previews of those recordings.
+
+License: Creative Commons Attribution 4.0 International (CC BY 4.0)
+https://creativecommons.org/licenses/by/4.0/
+
+Credit when publishing: include the author name (tim.kahn), Freesound, and
+the license (see also site “Get attribution text” on each sound page).
