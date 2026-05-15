@@ -2,11 +2,22 @@
   var canvas = document.getElementById('warmth-motif-canvas');
   if (!canvas || !canvas.getContext) return;
   var ctx = canvas.getContext('2d');
+  var canvasMouseX = 0.5;
   var canvasMouseY = 0.5;
   var aT = 0;
   var reduceMotion =
     window.matchMedia &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function canvasPointerNorm(clientX, clientY) {
+    var rect = canvas.getBoundingClientRect();
+    var rw = rect.width || 1;
+    var rh = rect.height || 1;
+    return {
+      nx: Math.max(0, Math.min(1, (clientX - rect.left) / rw)),
+      ny: Math.max(0, Math.min(1, (clientY - rect.top) / rh)),
+    };
+  }
 
   function resize() {
     var hero = canvas.closest('.hero');
@@ -18,10 +29,34 @@
   }
   resize();
   window.addEventListener('resize', resize, { passive: true });
+  function setCanvasPointer(clientX, clientY) {
+    var p = canvasPointerNorm(clientX, clientY);
+    canvasMouseX = p.nx;
+    canvasMouseY = p.ny;
+  }
+
   document.addEventListener(
     'mousemove',
     function (e) {
-      canvasMouseY = e.clientY / (window.innerHeight || 1);
+      setCanvasPointer(e.clientX, e.clientY);
+    },
+    { passive: true }
+  );
+  document.addEventListener(
+    'touchstart',
+    function (e) {
+      if (e.touches && e.touches.length) {
+        setCanvasPointer(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    },
+    { passive: true }
+  );
+  document.addEventListener(
+    'touchmove',
+    function (e) {
+      if (e.touches && e.touches.length) {
+        setCanvasPointer(e.touches[0].clientX, e.touches[0].clientY);
+      }
     },
     { passive: true }
   );
@@ -37,12 +72,13 @@
       alpha: 0.08 + Math.random() * 0.11,
       char: ['\u2669', '\u266a', '\u266b', '\u266c'][i % 4],
       phase: Math.random() * Math.PI * 2,
+      follow: i % 4 === 0,
     });
   }
 
   function drawStaffLines(W, H, t) {
     var sp = H * 0.052;
-    var midY = H * 0.5 + (canvasMouseY - 0.5) * 14;
+    var midY = H * 0.5 + (canvasMouseY - 0.5) * Math.min(100, H * 0.07);
     ctx.lineWidth = 1;
     for (i = 0; i < 5; i++) {
       var y = midY - sp * 2 + sp * i;
@@ -81,6 +117,41 @@
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     floatNotes.forEach(function (n) {
+      var wx;
+      var wy;
+      var a;
+      var orbitR = Math.min(W, H) * 0.028;
+
+      if (n.follow) {
+        var tx =
+          canvasMouseX * W +
+          Math.sin(t * 1.65 + n.phase) * orbitR * 1.15;
+        var ty =
+          canvasMouseY * H +
+          Math.cos(t * 1.45 + n.phase * 1.1) * orbitR;
+        if (n.fx == null) {
+          n.fx = tx;
+          n.fy = ty;
+        }
+        var lag = reduceMotion ? 0.22 : 0.085;
+        n.fx += (tx - n.fx) * lag;
+        n.fy += (ty - n.fy) * lag;
+        wx = n.fx;
+        wy = n.fy;
+        var ny = wy / (H || 1);
+        a =
+          n.alpha *
+          0.92 *
+          Math.min(1, ny * 10) *
+          Math.min(1, (1 - ny) * 8);
+        ctx.font = n.size * Math.min(W, H) + 'px serif';
+        ctx.shadowBlur = 18;
+        ctx.shadowColor = 'rgba(255,255,255,' + (a * 0.35) + ')';
+        ctx.fillStyle = 'rgba(255,255,255,' + (a * 0.72) + ')';
+        ctx.fillText(n.char, wx, wy);
+        return;
+      }
+
       if (!reduceMotion) {
         n.y -= n.speed;
         if (n.y < -0.06) {
@@ -88,9 +159,9 @@
           n.x = 0.05 + Math.random() * 0.9;
         }
       }
-      var wx = (n.x + Math.sin(t * 1.35 + n.phase) * 0.02) * W;
-      var wy = n.y * H;
-      var a =
+      wx = (n.x + Math.sin(t * 1.35 + n.phase) * 0.02) * W;
+      wy = n.y * H;
+      a =
         n.alpha *
         Math.min(1, n.y * 11) *
         Math.min(1, (1 - n.y) * 9);

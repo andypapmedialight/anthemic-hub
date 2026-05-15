@@ -2,6 +2,7 @@
  * Open-string clicks on the hero bass photo: E (top) → G (bottom).
  * Plays Freesound P-Bass recordings (see brand_assets/SAMPLES_LICENSE.txt); falls back to Web Audio if playback fails.
  * Space stops ringing (samples + synth), except when focus is in a form control.
+ * Samples + synth share a master gain + compressor to reduce clipping when notes overlap.
  */
 (function () {
   'use strict';
@@ -23,19 +24,40 @@
   };
 
   var ctx;
+  /** Shared trim + light compression before destination (tames overlapping notes) */
+  var masterIn;
+  var masterComp;
   var sampleAudio = {};
+  /** @type {Record<string, MediaElementAudioSourceNode>} */
+  var mediaSources = {};
   /** @type {{ osc: OscillatorNode, gain: GainNode, tid: number }[]} */
   var synthVoices = [];
+
+  function wireMaster(audioCtx) {
+    if (masterIn) return;
+    masterIn = audioCtx.createGain();
+    masterIn.gain.setValueAtTime(0.65, audioCtx.currentTime);
+    masterComp = audioCtx.createDynamicsCompressor();
+    masterComp.threshold.setValueAtTime(-22, audioCtx.currentTime);
+    masterComp.knee.setValueAtTime(14, audioCtx.currentTime);
+    masterComp.ratio.setValueAtTime(2.75, audioCtx.currentTime);
+    masterComp.attack.setValueAtTime(0.002, audioCtx.currentTime);
+    masterComp.release.setValueAtTime(0.16, audioCtx.currentTime);
+    masterIn.connect(masterComp);
+    masterComp.connect(audioCtx.destination);
+  }
 
   function getCtx() {
     if (ctx) return ctx;
     var Ctor = window.AudioContext || window.webkitAudioContext;
     if (!Ctor) return null;
     ctx = new Ctor();
+    wireMaster(ctx);
     return ctx;
   }
 
   function playSynthPluck(audioCtx, note) {
+    if (!masterIn) wireMaster(audioCtx);
     var hz = OPEN_HZ[note];
     if (!hz) return;
 
@@ -54,14 +76,15 @@
     filter.frequency.setValueAtTime(fHi, t0);
     filter.frequency.exponentialRampToValueAtTime(fLo, t0 + 0.2);
 
-    var peak = note === 'E' ? 0.4 : note === 'A' ? 0.38 : 0.36;
+    var peak =
+      (note === 'E' ? 0.4 : note === 'A' ? 0.38 : 0.36) * 0.72;
     gain.gain.setValueAtTime(0.0001, t0);
     gain.gain.linearRampToValueAtTime(peak, t0 + 0.003);
     gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.72);
 
     osc.connect(filter);
     filter.connect(gain);
-    gain.connect(audioCtx.destination);
+    gain.connect(masterIn);
 
     var voice = { osc: osc, gain: gain, tid: 0 };
     synthVoices.push(voice);
@@ -123,27 +146,61 @@
     }
   }
 
+  function ensureMediaRouted(audioCtx, note, el) {
+    if (mediaSources[note]) return;
+    var src = audioCtx.createMediaElementSource(el);
+    src.connect(masterIn);
+    mediaSources[note] = src;
+  }
+
   function playSample(note) {
     var path = SAMPLE_PATH[note];
     if (!path) {
       playSynthFallback(note);
       return;
     }
+    var audioCtx = getCtx();
     if (!sampleAudio[note]) {
       var a = new Audio(path);
       a.preload = 'auto';
       sampleAudio[note] = a;
     }
     var el = sampleAudio[note];
+
+    function startPlayback() {
+      try {
+        el.pause();
+      } catch (err1) {}
+      el.currentTime = 0;
+      var p = el.play();
+      if (p && typeof p.then === 'function') {
+        p.catch(function () {
+          playSynthFallback(note);
+        });
+      }
+    }
+
+    if (!audioCtx) {
+      el.volume = 0.52;
+      startPlayback();
+      return;
+    }
+
+    wireMaster(audioCtx);
     try {
-      el.pause();
-    } catch (err) {}
-    el.currentTime = 0;
-    var p = el.play();
-    if (p && typeof p.then === 'function') {
-      p.catch(function () {
-        playSynthFallback(note);
-      });
+      ensureMediaRouted(audioCtx, note, el);
+    } catch (err2) {
+      el.volume = 0.52;
+      startPlayback();
+      return;
+    }
+
+    el.volume = 1;
+    var resume = audioCtx.resume();
+    if (resume && typeof resume.then === 'function') {
+      resume.then(startPlayback).catch(startPlayback);
+    } else {
+      startPlayback();
     }
   }
 
