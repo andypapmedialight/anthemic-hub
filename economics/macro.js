@@ -33,39 +33,40 @@ function setProvider(p) {
 let VIS = {};
 function loadVIS() { try { VIS = JSON.parse(localStorage.getItem('mmd:vis') || '{}'); } catch { VIS = {}; } }
 function saveVIS() { try { localStorage.setItem('mmd:vis', JSON.stringify(VIS)); } catch {} }
-function itemKey(item) {
+function getItemKey(item) {
   if (item.id)   return item.id;
   if (item.from) return `${item.from}${item.to}`;
   return item.sym;
 }
-function isOn(item) { const k = itemKey(item); return k in VIS ? VIS[k] : item.def; }
+function isOn(item) { const k = getItemKey(item); return k in VIS ? VIS[k] : item.def; }
 function visOf(items) { return items.filter(isOn); }
 
 // ── Data Store ────────────────────────────────────
 const DATA = {};  // itemKey → { price, change, pct }
 
 // ── Symbol Config ─────────────────────────────────
+// sym = Yahoo quote symbol; ticker = short label on card (index/futures, not ETF share price)
 const EQUITIES = [
-  { sym: 'SPY',    label: 'S&P 500',        ticker: 'SPY',    def: true  },
-  { sym: 'QQQ',    label: 'NASDAQ 100',     ticker: 'QQQ',    def: true  },
-  { sym: 'DIA',    label: 'Dow Jones',      ticker: 'DIA',    def: true  },
-  { sym: 'IWM',    label: 'Russell 2000',   ticker: 'IWM',    def: true  },
-  { sym: 'STW.AX', label: 'ASX 200',        ticker: 'STW.AX', def: true  },
-  { sym: 'EEM',    label: 'Emerg. Markets', ticker: 'EEM',    def: false },
-  { sym: 'VGK',    label: 'Europe',         ticker: 'VGK',    def: false },
-  { sym: 'EWJ',    label: 'Japan',          ticker: 'EWJ',    def: false },
-  { sym: 'VIXY',   label: 'VIX (Proxy)',    ticker: 'VIXY',   def: false },
-  { sym: 'ARKK',   label: 'ARK Innov.',     ticker: 'ARKK',   def: false },
+  { sym: '^GSPC', label: 'S&P 500',        ticker: 'SPX',   def: true,  dp: 2 },
+  { sym: '^NDX',  label: 'NASDAQ 100',     ticker: 'NDX',   def: true,  dp: 2 },
+  { sym: '^DJI',  label: 'Dow Jones',      ticker: 'DJI',   def: true,  dp: 2 },
+  { sym: '^RUT',  label: 'Russell 2000',   ticker: 'RUT',   def: true,  dp: 2 },
+  { sym: '^AXJO', label: 'ASX 200',        ticker: 'AXJO',  def: true,  dp: 2 },
+  { sym: 'EEM',   label: 'Emerg. Markets', ticker: 'EEM',   def: false, dp: 2 },
+  { sym: 'VGK',   label: 'Europe',         ticker: 'VGK',   def: false, dp: 2 },
+  { sym: 'EWJ',   label: 'Japan',          ticker: 'EWJ',   def: false, dp: 2 },
+  { sym: 'VIXY',  label: 'VIX (Proxy)',    ticker: 'VIXY',  def: false, dp: 2 },
+  { sym: 'ARKK',  label: 'ARK Innov.',     ticker: 'ARKK',  def: false, dp: 2 },
 ];
 
 const COMMODITIES = [
-  { sym: 'GLD',  label: 'Gold',        ticker: 'GLD',  def: true  },
-  { sym: 'SLV',  label: 'Silver',      ticker: 'SLV',  def: true  },
-  { sym: 'USO',  label: 'Oil (WTI)',   ticker: 'USO',  def: true  },
-  { sym: 'UNG',  label: 'Natural Gas', ticker: 'UNG',  def: true  },
-  { sym: 'CPER', label: 'Copper',      ticker: 'CPER', def: false },
-  { sym: 'WEAT', label: 'Wheat',       ticker: 'WEAT', def: false },
-  { sym: 'CORN', label: 'Corn',        ticker: 'CORN', def: false },
+  { sym: 'GC=F', label: 'Gold',        ticker: 'GC',   def: true,  dp: 2 },
+  { sym: 'SI=F', label: 'Silver',      ticker: 'SI',   def: true,  dp: 2 },
+  { sym: 'CL=F', label: 'Oil (WTI)',   ticker: 'WTI',  def: true,  dp: 2 },
+  { sym: 'NG=F', label: 'Nat. Gas',    ticker: 'NG',   def: true,  dp: 2 },
+  { sym: 'CPER', label: 'Copper (ETF)', ticker: 'CPER', def: false, dp: 2 },
+  { sym: 'WEAT', label: 'Wheat (ETF)',  ticker: 'WEAT', def: false, dp: 2 },
+  { sym: 'CORN', label: 'Corn (ETF)',   ticker: 'CORN', def: false, dp: 2 },
 ];
 
 const FX_PAIRS = [
@@ -120,14 +121,12 @@ const SECTIONS = [
   {
     key: 'eq',   gridId: 'equities-grid',    custId: 'cust-eq',   items: EQUITIES,
     fetch: (item, force) => fetchQuote(item.sym, force),
-    card:  (item, d) => ({ ticker: item.ticker, label: item.label,
-      price: d ? fmt(d.price) : null, change: d ? d.change : null, pct: d ? d.pct : null }),
+    card:  (item, d) => formatQuoteCard(item, d, 'eq'),
   },
   {
     key: 'comm', gridId: 'commodities-grid', custId: 'cust-comm', items: COMMODITIES,
     fetch: (item, force) => fetchQuote(item.sym, force),
-    card:  (item, d) => ({ ticker: item.ticker, label: item.label,
-      price: d ? fmt(d.price) : null, change: d ? d.change : null, pct: d ? d.pct : null }),
+    card:  (item, d) => formatQuoteCard(item, d, 'comm'),
   },
   {
     key: 'bond', gridId: 'bonds-grid',       custId: 'cust-bond', items: BOND_SERIES,
@@ -146,8 +145,7 @@ const SECTIONS = [
   {
     key: 'crypto', gridId: 'crypto-grid',      custId: 'cust-crypto', items: CRYPTO,
     fetch: (item, force) => fetchCrypto(item.sym, force),
-    card:  (item, d) => ({ ticker: item.ticker, label: item.label,
-      price: d ? fmt(d.price, item.dp ?? 2) : null, change: d ? d.change : null, pct: d ? d.pct : null }),
+    card:  (item, d) => formatQuoteCard(item, d, 'crypto'),
   },
 ];
 
@@ -157,6 +155,27 @@ function fmt(n, dp=2) {
   return parseFloat(n).toLocaleString('en-AU', { minimumFractionDigits: dp, maximumFractionDigits: dp });
 }
 function sign(n) { return n === null ? '' : n >= 0 ? '+' : ''; }
+
+function quoteDecimals(item, sectionKey) {
+  if (sectionKey === 'crypto') return item.dp ?? 2;
+  if (sectionKey === 'fx') return item.to === 'JPY' ? 2 : 4;
+  return item.dp ?? 2;
+}
+
+function formatQuotePrice(d, item, sectionKey) {
+  if (!d || d.price == null || Number.isNaN(Number(d.price))) return null;
+  return fmt(d.price, quoteDecimals(item, sectionKey));
+}
+
+function formatQuoteCard(item, d, sectionKey) {
+  return {
+    ticker: item.ticker,
+    label: item.label,
+    price: formatQuotePrice(d, item, sectionKey),
+    change: d ? d.change : null,
+    pct: d ? d.pct : null,
+  };
+}
 function cardClass(pct) { return pct === null ? 'neu' : pct >= 0 ? 'up' : 'dn'; }
 function pillClass(pct) { return pct === null ? 'neu' : pct >= 0 ? 'up' : 'dn'; }
 function pillText(pct) {
@@ -164,23 +183,46 @@ function pillText(pct) {
   return `${pct >= 0 ? '▲' : '▼'} ${Math.abs(pct).toFixed(2)}%`;
 }
 
-function renderCard(data, delay=0) {
-  const cls = cardClass(data.pct);
-  const priceStr = data.price !== null ? data.price : '–';
-  const absStr = data.change !== null ? `${sign(data.change)}${fmt(data.change)}` : '';
-  return `
-    <div class="card ${cls}" style="animation-delay:${delay}s">
-      <div class="card-ticker">${data.ticker}</div>
-      <div class="card-name">${data.label}</div>
-      <div class="card-price">${priceStr}</div>
-      <div class="card-change">
-        <span class="pill ${pillClass(data.pct)}">${pillText(data.pct)}</span>
-        ${absStr ? `<span class="card-abs">${absStr}</span>` : ''}
-      </div>
-      ${data.extra || ''}
-    </div>`;
+const CARD_LOADING = new Set();
+
+function cardIsFailed(meta) {
+  if (meta.failed != null) return meta.failed;
+  return meta.price === null || meta.price === '–';
 }
 
+function renderCard(meta, delay = 0) {
+  const cls = cardClass(meta.pct);
+  const priceStr = meta.price !== null && meta.price !== '' ? meta.price : '–';
+  const absStr = meta.isYield
+    ? formatYieldChange(meta.change)
+    : (meta.change !== null ? `${sign(meta.change)}${fmt(meta.change)}` : '');
+  const failed = cardIsFailed(meta);
+  const loading = CARD_LOADING.has(meta.itemKey);
+  const refreshLabel = `Refresh ${meta.label}`;
+  return `
+    <div class="card card--clickable ${cls}${failed ? ' card--failed' : ''}${loading ? ' card--loading' : ''}"
+         style="animation-delay:${delay}s"
+         data-item-key="${meta.itemKey}"
+         data-section-key="${meta.sectionKey}"
+         tabindex="0"
+         role="button"
+         aria-label="View ${meta.label} chart">
+      <button type="button" class="card-refresh" aria-label="${refreshLabel}" title="${refreshLabel}">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+          <path d="M23 4v6h-6M1 20v-6h6"/>
+          <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+        </svg>
+      </button>
+      <div class="card-ticker">${meta.ticker}</div>
+      <div class="card-name">${meta.label}</div>
+      <div class="card-price">${priceStr}</div>
+      <div class="card-change">
+        <span class="pill ${pillClass(meta.pct)}">${pillText(meta.pct)}</span>
+        ${absStr ? `<span class="card-abs">${absStr}</span>` : ''}
+      </div>
+      ${meta.extra || ''}
+    </div>`;
+}
 // Throttle concurrent proxied fetches
 const proxyThrottle = (() => {
   let active = 0; const queue = [];
@@ -198,7 +240,7 @@ async function detectLocalProxy() {
     location.origin + '/economics/proxy?url=',
     location.origin + '/proxy?url=',
   ];
-  const probe = 'https://query1.finance.yahoo.com/v8/finance/chart/SPY?interval=1d&range=1d';
+  const probe = 'https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPC?interval=1d&range=1d';
   for (const prefix of candidates) {
     try {
       const r = await fetch(prefix + encodeURIComponent(probe));
@@ -262,12 +304,34 @@ async function fetchRemote(targetUrl, { asJson = true } = {}) {
 
 function parseYahooChart(d) {
   if (!d?.chart?.result?.[0]) throw new Error('no data');
-  const meta = d.chart.result[0].meta;
-  const price = meta.regularMarketPrice;
-  const prevClose = meta.chartPreviousClose ?? meta.previousClose;
-  const change = prevClose != null ? price - prevClose : null;
-  const pct = (change !== null && prevClose) ? (change / prevClose) * 100 : null;
+  const r = d.chart.result[0];
+  const meta = r.meta;
+  const closes = (r.indicators?.quote?.[0]?.close || []).filter(v => v != null && !Number.isNaN(v));
+  const metaPrice = meta.regularMarketPrice;
+  // Prefer last daily close so card, change %, and chart history use the same scale
+  let price = closes.length ? closes[closes.length - 1] : metaPrice;
+  if (price == null || Number.isNaN(price)) price = metaPrice;
+  if (closes.length && metaPrice != null && Math.abs(metaPrice - price) / price > 0.15) {
+    price = closes[closes.length - 1];
+  }
+  let prevClose = meta.chartPreviousClose ?? meta.previousClose;
+  if ((prevClose == null || Number.isNaN(prevClose)) && closes.length > 1) {
+    prevClose = closes[closes.length - 2];
+  }
+  const change = (price != null && prevClose != null) ? price - prevClose : null;
+  const pct = (change != null && prevClose) ? (change / prevClose) * 100 : null;
   return { price, change, pct };
+}
+
+function formatYieldPrice(d) {
+  if (!d || d.price == null || Number.isNaN(Number(d.price))) return null;
+  return `${Number(d.price).toFixed(2)}%`;
+}
+
+function formatYieldChange(change) {
+  if (change == null || Number.isNaN(change)) return '';
+  const v = Number(change);
+  return `${sign(v)}${Math.abs(v).toFixed(2)} pp`;
 }
 
 // ── Yahoo Finance ──────────────────────────────────────────────────
@@ -397,9 +461,18 @@ async function fetchFX(from, to, force = false) {
 
 async function fetchBond(series_id, force = false) {
   const bondDef = BOND_SERIES.find(b => b.id === series_id);
-  if (bondDef?.yTicker) return fetchQuote(bondDef.yTicker, force);
-
   const key = `b:${series_id}`;
+  if (bondDef?.yTicker) {
+    if (!force) { const c = cacheGet(key); if (c) return c; }
+    try {
+      const result = activeProvider === 'yahoo'
+        ? await yahooChart(bondDef.yTicker)
+        : await avQuote(bondDef.yTicker);
+      if (result) cacheSet(key, result);
+      return result;
+    } catch { return null; }
+  }
+
   if (!force) { const c = cacheGet(key); if (c) return c; }
   const start = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString().slice(0, 10);
   const fredUrl = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=${series_id}&observation_start=${start}`;
@@ -446,13 +519,37 @@ function renderSectionGrid(section) {
           <span class="spread-val ${cls}">${spread >= 0 ? '+' : ''}${spread}%</span></div>`;
       }
       return { ticker: item.ticker, label: item.label,
-        price: d ? `${d.price.toFixed(2)}%` : null,
-        change: d ? d.change : null, pct: d ? d.pct : null, extra };
+        price: formatYieldPrice(d),
+        change: d ? d.change : null, pct: d ? d.pct : null, extra,
+        isYield: true,
+        itemKey: item.id, sectionKey: section.key, failed: !d || !formatYieldPrice(d) };
     }));
     return;
   }
 
-  renderGrid(section.gridId, visible.map(item => section.card(item, DATA[itemKey(item)])));
+  renderGrid(section.gridId, visible.map(item => {
+    const k = getItemKey(item);
+    const d = DATA[k];
+    const card = section.card(item, d);
+    return { ...card, itemKey: k, sectionKey: section.key, failed: !d };
+  }));
+}
+
+async function refreshCard(itemKey, sectionKey) {
+  const section = SECTIONS.find(s => s.key === sectionKey);
+  if (!section) return;
+  const item = section.items.find(i => getItemKey(i) === itemKey);
+  if (!item) return;
+
+  CARD_LOADING.add(itemKey);
+  renderSectionGrid(section);
+
+  const result = await section.fetch(item, true);
+  if (result) DATA[itemKey] = result;
+  else delete DATA[itemKey];
+
+  CARD_LOADING.delete(itemKey);
+  renderSectionGrid(section);
 }
 
 // ── Customize Rows ────────────────────────────────
@@ -460,7 +557,7 @@ function renderCust(section) {
   const el = document.getElementById(section.custId);
   if (!el) return;
   el.innerHTML = section.items.map(item => {
-    const k = itemKey(item);
+    const k = getItemKey(item);
     const on = isOn(item);
     const lbl = item.ticker || `${item.from}/${item.to}`;
     return `<button type="button" class="sym-pill ${on ? 'on' : 'off'}" data-sym-key="${k}" data-section-key="${section.key}">${lbl}</button>`;
@@ -481,7 +578,7 @@ function toggleCustomize(sectionKey) {
 async function toggleSym(key, sectionKey) {
   const section = SECTIONS.find(s => s.key === sectionKey);
   if (!section) return;
-  const item = section.items.find(i => itemKey(i) === key);
+  const item = section.items.find(i => getItemKey(i) === key);
   if (!item) return;
   VIS[key] = !isOn(item);
   saveVIS();
@@ -683,7 +780,7 @@ async function loadAll(force = false) {
     const visible = visOf(section.items);
     if (!visible.length) return;
     const results = await Promise.all(visible.map(item => section.fetch(item, force)));
-    visible.forEach((item, i) => { if (results[i]) DATA[itemKey(item)] = results[i]; });
+    visible.forEach((item, i) => { if (results[i]) DATA[getItemKey(item)] = results[i]; });
     renderSectionGrid(section);
     renderCust(section);
   }));
@@ -702,6 +799,277 @@ async function loadAll(force = false) {
     status.textContent = `✓ Updated ${now}`;
   }
   updateApiUsageDisplay();
+}
+
+// ── Chart modal ───────────────────────────────────
+const HISTORY_CACHE_TTL = 15 * 60 * 1000;
+const chartState = { itemKey: null, sectionKey: null, days: 7 };
+
+function historyCacheGet(key) {
+  try {
+    const raw = localStorage.getItem(`mmd:hist:${key}`);
+    if (!raw) return null;
+    const { ts, data } = JSON.parse(raw);
+    return (Date.now() - ts < HISTORY_CACHE_TTL) ? data : null;
+  } catch { return null; }
+}
+function historyCacheSet(key, data) {
+  try { localStorage.setItem(`mmd:hist:${key}`, JSON.stringify({ ts: Date.now(), data })); } catch {}
+}
+
+function resolveItem(itemKey, sectionKey) {
+  const section = SECTIONS.find(s => s.key === sectionKey);
+  const item = section?.items.find(i => getItemKey(i) === itemKey);
+  return section && item ? { section, item } : null;
+}
+
+function parseYahooSeries(data) {
+  const r = data?.chart?.result?.[0];
+  if (!r) return null;
+  const timestamps = r.timestamp || [];
+  const quote = r.indicators?.quote?.[0] || {};
+  const closes = quote.close || quote.adjclose || [];
+  const series = [];
+  for (let i = 0; i < timestamps.length; i++) {
+    const v = closes[i];
+    if (v == null || Number.isNaN(v)) continue;
+    series.push({ t: timestamps[i] * 1000, v });
+  }
+  return series.length ? series : null;
+}
+
+async function fetchYahooHistory(sym, days) {
+  const cacheKey = `yh:${sym}:${days}`;
+  const cached = historyCacheGet(cacheKey);
+  if (cached) return cached;
+  const range = days <= 7 ? '5d' : '1mo';
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=${range}`;
+  const data = await fetchRemote(url, { asJson: true });
+  const series = data ? parseYahooSeries(data) : null;
+  if (series) historyCacheSet(cacheKey, series);
+  return series;
+}
+
+async function fetchFredHistory(seriesId, days) {
+  const cacheKey = `fred:${seriesId}:${days}`;
+  const cached = historyCacheGet(cacheKey);
+  if (cached) return cached;
+  const start = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
+  const url = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=${seriesId}&observation_start=${start}`;
+  const txt = await fetchRemote(url, { asJson: false });
+  if (!txt) return null;
+  const series = [];
+  for (const line of txt.trim().split('\n')) {
+    if (line.startsWith('observation_date') || line.endsWith(',')) continue;
+    const [date, val] = line.split(',');
+    const v = parseFloat(val);
+    if (!date || Number.isNaN(v)) continue;
+    series.push({ t: new Date(date).getTime(), v });
+  }
+  if (!series.length) return null;
+  historyCacheSet(cacheKey, series);
+  return series;
+}
+
+async function fetchFxHistory(from, to, days) {
+  const cacheKey = `fx:${from}:${to}:${days}`;
+  const cached = historyCacheGet(cacheKey);
+  if (cached) return cached;
+  const end = new Date().toISOString().slice(0, 10);
+  const start = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
+  try {
+    const r = await fetch(`https://api.frankfurter.dev/v1/${start}..${end}?from=${from}&to=${to}`);
+    if (!r.ok) return null;
+    const d = await r.json();
+    const series = Object.keys(d.rates).sort().map(date => ({
+      t: new Date(date).getTime(),
+      v: d.rates[date][to],
+    })).filter(p => p.v != null);
+    if (!series.length) return null;
+    historyCacheSet(cacheKey, series);
+    return series;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchCryptoHistory(sym, days) {
+  const id = CG_IDS[sym];
+  if (!id) return null;
+  const cacheKey = `cg:${sym}:${days}`;
+  const cached = historyCacheGet(cacheKey);
+  if (cached) return cached;
+  try {
+    const r = await fetch(
+      `https://api.coingecko.com/api/v3/coins/${id}/market_chart?vs_currency=usd&days=${days}`
+    );
+    if (!r.ok) return null;
+    const d = await r.json();
+    const series = (d.prices || []).map(([t, v]) => ({ t, v }));
+    if (!series.length) return null;
+    historyCacheSet(cacheKey, series);
+    return series;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchHistory(item, section, days) {
+  if (section.key === 'eq' || section.key === 'comm') {
+    return fetchYahooHistory(item.sym, days);
+  }
+  if (section.key === 'bond') {
+    if (item.yTicker) return fetchYahooHistory(item.yTicker, days);
+    return fetchFredHistory(item.id, days);
+  }
+  if (section.key === 'fx') {
+    return fetchFxHistory(item.from, item.to, days);
+  }
+  if (section.key === 'crypto') {
+    return fetchCryptoHistory(item.sym, days);
+  }
+  return null;
+}
+
+function formatChartDate(ts) {
+  return new Date(ts).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+}
+
+function buildChartSvg(series, opts = {}) {
+  const { isPercent = false, dp = 2 } = opts;
+  if (!series?.length) return { html: '<p class="chart-empty">No history available for this period.</p>', statsHtml: '' };
+
+  const w = 560, h = 200;
+  const pad = { t: 14, r: 14, b: 30, l: 52 };
+  const iw = w - pad.l - pad.r;
+  const ih = h - pad.t - pad.b;
+  const vals = series.map(p => p.v);
+  let minV = Math.min(...vals);
+  let maxV = Math.max(...vals);
+  if (minV === maxV) { minV -= 1; maxV += 1; }
+  const range = maxV - minV;
+  const n = series.length;
+
+  const pts = series.map((p, i) => ({
+    x: pad.l + (n > 1 ? (i / (n - 1)) * iw : iw / 2),
+    y: pad.t + ih - ((p.v - minV) / range) * ih,
+    v: p.v,
+    t: p.t,
+  }));
+
+  const line = pts.map((p, i) => `${i ? 'L' : 'M'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+  const area = `${line} L${pts[n - 1].x.toFixed(1)},${pad.t + ih} L${pts[0].x.toFixed(1)},${pad.t + ih} Z`;
+  const first = series[0];
+  const last = series[series.length - 1];
+  const chg = last.v - first.v;
+  const chgPct = first.v ? (chg / first.v) * 100 : 0;
+  const up = chg >= 0;
+  const stroke = up ? '#34d399' : '#f87171';
+  const fmtV = v => isPercent ? `${v.toFixed(2)}%` : fmt(v, dp);
+
+  const yTicks = [minV, (minV + maxV) / 2, maxV];
+  const yLabels = yTicks.map((v, i) => {
+    const y = pad.t + ih - ((v - minV) / range) * ih;
+    return `<text x="${pad.l - 8}" y="${y + 3}" text-anchor="end" fill="#4a5568" font-size="9" font-family="DM Mono, monospace">${fmtV(v)}</text>`;
+  }).join('');
+
+  const svg = `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+    <defs>
+      <linearGradient id="chart-fill" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${stroke}" stop-opacity="0.28"/>
+        <stop offset="100%" stop-color="${stroke}" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    ${yTicks.map(v => {
+      const y = pad.t + ih - ((v - minV) / range) * ih;
+      return `<line x1="${pad.l}" y1="${y.toFixed(1)}" x2="${pad.l + iw}" y2="${y.toFixed(1)}" stroke="#252b33" stroke-width="1"/>`;
+    }).join('')}
+    <path d="${area}" fill="url(#chart-fill)"/>
+    <path d="${line}" fill="none" stroke="${stroke}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    ${yLabels}
+    <text x="${pad.l}" y="${h - 8}" fill="#4a5568" font-size="9" font-family="DM Mono, monospace">${formatChartDate(first.t)}</text>
+    <text x="${pad.l + iw}" y="${h - 8}" text-anchor="end" fill="#4a5568" font-size="9" font-family="DM Mono, monospace">${formatChartDate(last.t)}</text>
+  </svg>`;
+
+  const statsHtml = `
+    <div><div class="chart-stat-label">Period change</div><div class="chart-stat-val ${up ? 'up' : 'dn'}">${sign(chg)}${fmtV(Math.abs(chg))} (${sign(chgPct)}${Math.abs(chgPct).toFixed(2)}%)</div></div>
+    <div><div class="chart-stat-label">High</div><div class="chart-stat-val">${fmtV(maxV)}</div></div>
+    <div><div class="chart-stat-label">Low</div><div class="chart-stat-val">${fmtV(minV)}</div></div>
+    <div><div class="chart-stat-label">Latest</div><div class="chart-stat-val">${fmtV(last.v)}</div></div>`;
+
+  return { html: svg, statsHtml };
+}
+
+function chartOpts(item, section) {
+  const isPercent = section.key === 'bond';
+  const dp = quoteDecimals(item, section.key);
+  return { isPercent, dp };
+}
+
+function closeChart() {
+  const modal = document.getElementById('chart-modal');
+  if (!modal) return;
+  modal.hidden = true;
+  modal.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+  chartState.itemKey = null;
+  chartState.sectionKey = null;
+}
+
+async function loadChartModal() {
+  const body = document.getElementById('chart-modal-body');
+  const stats = document.getElementById('chart-modal-stats');
+  if (!body || !chartState.itemKey) return;
+
+  const resolved = resolveItem(chartState.itemKey, chartState.sectionKey);
+  if (!resolved) {
+    body.innerHTML = '<p class="chart-empty">Unknown instrument.</p>';
+    stats.innerHTML = '';
+    return;
+  }
+
+  const { item, section } = resolved;
+  const opts = chartOpts(item, section);
+  body.textContent = 'Loading…';
+  stats.innerHTML = '';
+
+  try {
+    const series = await fetchHistory(item, section, chartState.days);
+    const { html, statsHtml } = buildChartSvg(series, opts);
+    body.innerHTML = html;
+    stats.innerHTML = statsHtml;
+  } catch (err) {
+    console.error('chart load failed', err);
+    body.innerHTML = '<p class="chart-empty">Could not load chart data. Try Refresh on the card.</p>';
+    stats.innerHTML = '';
+  }
+}
+
+async function openChart(itemKey, sectionKey) {
+  const resolved = resolveItem(itemKey, sectionKey);
+  if (!resolved) return;
+
+  const { item, section } = resolved;
+  chartState.itemKey = itemKey;
+  chartState.sectionKey = sectionKey;
+  chartState.days = 7;
+
+  const modal = document.getElementById('chart-modal');
+  const ticker = item.ticker || `${item.from}/${item.to}`;
+  document.getElementById('chart-modal-ticker').textContent = ticker;
+  document.getElementById('chart-modal-title').textContent = item.label;
+
+  document.querySelectorAll('.chart-period-tabs button').forEach(btn => {
+    const on = Number(btn.dataset.days) === chartState.days;
+    btn.classList.toggle('active', on);
+    btn.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+
+  modal.hidden = false;
+  modal.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+  document.getElementById('chart-modal-close')?.focus();
+  await loadChartModal();
 }
 
 // ── API Key Management ─────────────────────────────
@@ -729,7 +1097,39 @@ function wireUi() {
   document.getElementById('api-key-input')?.addEventListener('keydown', e => {
     if (e.key === 'Enter') saveKey();
   });
+
+  document.getElementById('chart-modal-close')?.addEventListener('click', closeChart);
+  document.querySelectorAll('[data-chart-close]').forEach(el => {
+    el.addEventListener('click', closeChart);
+  });
+  document.querySelectorAll('.chart-period-tabs button').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      chartState.days = Number(btn.dataset.days) || 7;
+      document.querySelectorAll('.chart-period-tabs button').forEach(b => {
+        const on = b === btn;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+      await loadChartModal();
+    });
+  });
+
   document.addEventListener('click', e => {
+    const refreshBtn = e.target.closest('.card-refresh');
+    if (refreshBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      const card = refreshBtn.closest('.card');
+      if (card?.dataset.itemKey && card.dataset.sectionKey) {
+        refreshCard(card.dataset.itemKey, card.dataset.sectionKey);
+      }
+      return;
+    }
+    const card = e.target.closest('.card[data-item-key]');
+    if (card?.dataset.itemKey && card.dataset.sectionKey) {
+      openChart(card.dataset.itemKey, card.dataset.sectionKey);
+      return;
+    }
     const pill = e.target.closest('.sym-pill');
     if (pill?.dataset.symKey) {
       toggleSym(pill.dataset.symKey, pill.dataset.sectionKey);
@@ -737,6 +1137,20 @@ function wireUi() {
     }
     const providerBtn = e.target.closest('.info-btn[data-provider]');
     if (providerBtn && !providerBtn.disabled) setProvider(providerBtn.dataset.provider);
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !document.getElementById('chart-modal')?.hidden) {
+      closeChart();
+      return;
+    }
+    if (!(e.target instanceof Element)) return;
+    const card = e.target.closest('.card[data-item-key]');
+    if (!card || e.target.closest('.card-refresh')) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      openChart(card.dataset.itemKey, card.dataset.sectionKey);
+    }
   });
 }
 
