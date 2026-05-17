@@ -235,15 +235,32 @@ const proxyThrottle = (() => {
 // Same-origin CORS proxy (serve-hub.py locally, nginx /economics/proxy in prod)
 let LOCAL_PROXY_PREFIX = null;
 
+/** Yahoo chart URL with raw symbol in path — encode once via encodeURIComponent(fullUrl) for proxy. */
+function yahooChartUrl(sym, range = '5d') {
+  return `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=${range}`;
+}
+
+function yahooChartUrlDirect(canonicalUrl) {
+  return canonicalUrl.replace(/\/chart\/([^?]+)/, (_, s) => `/chart/${encodeURIComponent(s)}`);
+}
+
+function proxyFetchUrl(prefix, canonicalUrl) {
+  return prefix + encodeURIComponent(canonicalUrl);
+}
+
+function isCorsProxiedHost(url) {
+  return /^https:\/\/(query1\.finance\.yahoo\.com|fred\.stlouisfed\.org)\//.test(url);
+}
+
 async function detectLocalProxy() {
   const candidates = [
     location.origin + '/economics/proxy?url=',
     location.origin + '/proxy?url=',
   ];
-  const probe = 'https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPC?interval=1d&range=1d';
+  const probe = yahooChartUrl('^GSPC', '1d');
   for (const prefix of candidates) {
     try {
-      const r = await fetch(prefix + encodeURIComponent(probe));
+      const r = await fetch(proxyFetchUrl(prefix, probe));
       if (r.ok) {
         LOCAL_PROXY_PREFIX = prefix;
         return;
@@ -253,32 +270,34 @@ async function detectLocalProxy() {
   LOCAL_PROXY_PREFIX = null;
 }
 
-function publicProxyUrls(targetUrl) {
+function publicProxyUrls(canonicalUrl) {
   return [
-    `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
-    `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
+    `https://corsproxy.io/?${encodeURIComponent(canonicalUrl)}`,
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(canonicalUrl)}`,
   ];
 }
 
-async function fetchRemote(targetUrl, { asJson = true } = {}) {
+async function fetchRemote(canonicalUrl, { asJson = true } = {}) {
   const attempts = [];
-
-  attempts.push(async () => {
-    const r = await fetch(targetUrl);
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    return asJson ? r.json() : r.text();
-  });
+  const corsOnly = isCorsProxiedHost(canonicalUrl);
 
   if (LOCAL_PROXY_PREFIX) {
-    const proxied = LOCAL_PROXY_PREFIX + encodeURIComponent(targetUrl);
     attempts.push(async () => {
-      const r = await fetch(proxied);
+      const r = await fetch(proxyFetchUrl(LOCAL_PROXY_PREFIX, canonicalUrl));
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       return asJson ? r.json() : r.text();
     });
   }
 
-  for (const url of publicProxyUrls(targetUrl)) {
+  if (!corsOnly) {
+    attempts.push(async () => {
+      const r = await fetch(canonicalUrl);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return asJson ? r.json() : r.text();
+    });
+  }
+
+  for (const url of publicProxyUrls(canonicalUrl)) {
     attempts.push(async () => {
       const r = await fetch(url);
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -287,12 +306,23 @@ async function fetchRemote(targetUrl, { asJson = true } = {}) {
   }
 
   attempts.push(async () => {
-    const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`);
+    const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(canonicalUrl)}`);
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const wrap = await r.json();
     const body = wrap.contents;
     return asJson ? JSON.parse(body) : body;
   });
+
+  if (corsOnly && !LOCAL_PROXY_PREFIX) {
+    attempts.push(async () => {
+      const direct = canonicalUrl.includes('query1.finance.yahoo.com')
+        ? yahooChartUrlDirect(canonicalUrl)
+        : canonicalUrl;
+      const r = await fetch(direct);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return asJson ? r.json() : r.text();
+    });
+  }
 
   for (const fn of attempts) {
     try {
@@ -336,9 +366,8 @@ function formatYieldChange(change) {
 
 // ── Yahoo Finance ──────────────────────────────────────────────────
 async function yahooChart(sym) {
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=5d`;
   try {
-    const data = await fetchRemote(url, { asJson: true });
+    const data = await fetchRemote(yahooChartUrl(sym, '5d'), { asJson: true });
     return data ? parseYahooChart(data) : null;
   } catch {
     return null;
@@ -843,8 +872,7 @@ async function fetchYahooHistory(sym, days) {
   const cached = historyCacheGet(cacheKey);
   if (cached) return cached;
   const range = days <= 7 ? '5d' : '1mo';
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=${range}`;
-  const data = await fetchRemote(url, { asJson: true });
+  const data = await fetchRemote(yahooChartUrl(sym, range), { asJson: true });
   const series = data ? parseYahooSeries(data) : null;
   if (series) historyCacheSet(cacheKey, series);
   return series;
