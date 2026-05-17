@@ -669,17 +669,47 @@ async function fetchFredSeriesRows(seriesId, start) {
 const VAL_FRED_IDS = ['GDP', 'NCBEILQ027S', 'GFDEGDQ188S', 'TCMDO', 'FGSDODNS'];
 let valuationFredPromise = null;
 
-function valuationStartDate() {
-  return new Date(Date.now() - 5 * 365 * 86400000).toISOString().slice(0, 10);
+function fredStartDate(lookbackDays) {
+  return new Date(Date.now() - lookbackDays * 86400000).toISOString().slice(0, 10);
 }
 
-async function loadValuationFredRows(force = false) {
-  const batchKey = 'val:fred-batch';
+function valuationStartDate() {
+  return fredStartDate(5 * 365);
+}
+
+/** Charts need enough quarters; 7D/30D tabs still slice to recent observations. */
+function valuationHistoryLookbackDays(days) {
+  return Math.max(days, 5 * 365);
+}
+
+function buildFredLookup(rows) {
+  const sorted = [...(rows || [])].sort((a, b) => a.date.localeCompare(b.date));
+  return date => {
+    let val = null;
+    for (const r of sorted) {
+      if (r.date <= date) val = r.v;
+      else break;
+    }
+    return val;
+  };
+}
+
+function sliceSeriesForChart(series, days) {
+  if (!series?.length) return series;
+  const cutoff = Date.now() - days * 86400000;
+  const inWindow = series.filter(p => p.t >= cutoff);
+  if (inWindow.length >= 2) return inWindow;
+  const keep = days <= 7 ? 2 : days <= 30 ? 4 : 8;
+  return series.slice(-Math.min(series.length, Math.max(2, keep)));
+}
+
+async function loadValuationFredRows(force = false, lookbackDays = 5 * 365) {
+  const batchKey = lookbackDays === 5 * 365 ? 'val:fred-batch' : `val:fred-batch:${lookbackDays}`;
   if (!force) {
     const cached = cacheGet(batchKey);
     if (cached) return cached;
   }
-  const start = valuationStartDate();
+  const start = fredStartDate(lookbackDays);
   const data = {};
   for (const seriesId of VAL_FRED_IDS) {
     data[seriesId] = await fetchFredSeriesRows(seriesId, start);
@@ -697,10 +727,10 @@ function getValuationFredRows(force = false) {
 
 function buildBuffettRatios(capRows, gdpRows) {
   if (!capRows?.length || !gdpRows?.length) return null;
-  const gdpMap = new Map(gdpRows.map(r => [r.date, r.v]));
+  const gdpAt = buildFredLookup(gdpRows);
   const ratios = [];
   for (const row of capRows) {
-    const gdp = gdpMap.get(row.date);
+    const gdp = gdpAt(row.date);
     if (gdp == null || gdp <= 0) continue;
     ratios.push({
       date: row.date,
@@ -713,12 +743,12 @@ function buildBuffettRatios(capRows, gdpRows) {
 
 function buildPrivateDebtRatios(totalRows, fedRows, gdpRows) {
   if (!totalRows?.length || !fedRows?.length || !gdpRows?.length) return null;
-  const fedMap = new Map(fedRows.map(r => [r.date, r.v]));
-  const gdpMap = new Map(gdpRows.map(r => [r.date, r.v]));
+  const fedAt = buildFredLookup(fedRows);
+  const gdpAt = buildFredLookup(gdpRows);
   const ratios = [];
   for (const row of totalRows) {
-    const fed = fedMap.get(row.date);
-    const gdp = gdpMap.get(row.date);
+    const fed = fedAt(row.date);
+    const gdp = gdpAt(row.date);
     if (fed == null || gdp == null || gdp <= 0) continue;
     const privateMillions = row.v - fed;
     if (privateMillions <= 0) continue;
@@ -738,16 +768,6 @@ function quoteFromRatioSeries(ratios) {
   const change = prev != null ? last - prev : null;
   const pct = (change != null && prev) ? (change / prev) * 100 : null;
   return { price: last, change, pct };
-}
-
-async function fetchBuffettRatios(start) {
-  const fred = await getValuationFredRows();
-  return buildBuffettRatios(fred.NCBEILQ027S, fred.GDP);
-}
-
-async function fetchPrivateDebtRatios(start) {
-  const fred = await getValuationFredRows();
-  return buildPrivateDebtRatios(fred.TCMDO, fred.FGSDODNS, fred.GDP);
 }
 
 async function fetchValuation(metricId, force = false) {
@@ -1296,22 +1316,24 @@ async function fetchValuationHistory(metricId, days) {
   const cacheKey = `val:${metricId}:${days}`;
   const cached = historyCacheGet(cacheKey);
   if (cached) return cached;
-  const lookback = Math.max(days, 400);
-  const start = new Date(Date.now() - lookback * 86400000).toISOString().slice(0, 10);
+
+  const lookback = valuationHistoryLookbackDays(days);
+  const fred = await loadValuationFredRows(false, lookback);
   let series = null;
+
   if (metricId === 'buffett') {
-    const ratios = await fetchBuffettRatios(start);
+    const ratios = buildBuffettRatios(fred.NCBEILQ027S, fred.GDP);
     series = ratios?.map(r => ({ t: r.t, v: r.ratio })) ?? null;
   } else if (metricId === 'us-gdp') {
-    const fred = await getValuationFredRows();
     series = fred.GDP?.map(r => ({ t: new Date(r.date).getTime(), v: r.v })) ?? null;
   } else if (metricId === 'public-debt') {
-    const rows = await fetchFredSeriesRows('GFDEGDQ188S', start);
-    series = rows?.map(r => ({ t: new Date(r.date).getTime(), v: r.v })) ?? null;
+    series = fred.GFDEGDQ188S?.map(r => ({ t: new Date(r.date).getTime(), v: r.v })) ?? null;
   } else if (metricId === 'private-debt') {
-    const ratios = await fetchPrivateDebtRatios(start);
+    const ratios = buildPrivateDebtRatios(fred.TCMDO, fred.FGSDODNS, fred.GDP);
     series = ratios?.map(r => ({ t: r.t, v: r.ratio })) ?? null;
   }
+
+  series = sliceSeriesForChart(series, days);
   if (!series?.length) return null;
   historyCacheSet(cacheKey, series);
   return series;
@@ -1322,7 +1344,7 @@ function formatChartDate(ts) {
 }
 
 function buildChartSvg(series, opts = {}) {
-  const { isPercent = false, dp = 2 } = opts;
+  const { isPercent = false, dp = 2, quarterlyNote = false } = opts;
   if (!series?.length) return { html: '<p class="chart-empty">No history available for this period.</p>', statsHtml: '' };
 
   const w = 560, h = 200;
@@ -1351,9 +1373,10 @@ function buildChartSvg(series, opts = {}) {
   const chgPct = first.v ? (chg / first.v) * 100 : 0;
   const up = chg >= 0;
   const stroke = up ? '#34d399' : '#f87171';
+  const pctDp = opts.pctDp ?? dp;
   const fmtV = v => {
     if (opts.usdBillions) return formatUsdCompact(v) || '–';
-    if (isPercent) return `${v.toFixed(2)}%`;
+    if (isPercent) return `${v.toFixed(pctDp)}%`;
     return fmt(v, dp);
   };
 
@@ -1387,15 +1410,22 @@ function buildChartSvg(series, opts = {}) {
     <div><div class="chart-stat-label">Low</div><div class="chart-stat-val">${fmtV(minV)}</div></div>
     <div><div class="chart-stat-label">Latest</div><div class="chart-stat-val">${fmtV(last.v)}</div></div>`;
 
-  return { html: svg, statsHtml };
+  const noteHtml = quarterlyNote
+    ? '<p class="chart-note">Quarterly FRED data — short periods show the latest observations.</p>'
+    : '';
+  return { html: noteHtml + svg, statsHtml };
 }
 
 function chartOpts(item, section) {
   if (section.key === 'val' && item.id === 'us-gdp') {
-    return { isPercent: false, usdBillions: true, dp: 2 };
+    return { isPercent: false, usdBillions: true, dp: 2, quarterlyNote: true };
   }
-  const isPercent = section.key === 'bond' || section.key === 'val';
-  const dp = section.key === 'val' ? 0 : quoteDecimals(item, section.key);
+  if (section.key === 'val') {
+    const pctDp = item.id === 'buffett' ? 0 : 1;
+    return { isPercent: true, dp: 2, pctDp, quarterlyNote: true };
+  }
+  const isPercent = section.key === 'bond';
+  const dp = quoteDecimals(item, section.key);
   return { isPercent, dp };
 }
 
