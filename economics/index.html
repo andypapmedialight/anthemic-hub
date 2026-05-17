@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Morning Macro</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230c0e10'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-size='16' fill='%23fbbf24'%3E%24%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -772,7 +773,7 @@ function renderCard(data, delay=0) {
     </div>`;
 }
 
-// Throttle: max 4 concurrent allorigins.win calls — prevents 522 overload
+// Throttle concurrent proxied fetches
 const proxyThrottle = (() => {
   let active = 0; const queue = [];
   return fn => new Promise((res, rej) => {
@@ -781,44 +782,95 @@ const proxyThrottle = (() => {
   });
 })();
 
-// Local proxy (server.py) is reliable; allorigins.win is the public fallback.
-// On non-localhost origins, try Yahoo direct first (may not need any proxy).
-const ON_LOCALHOST = ['localhost', '127.0.0.1', ''].includes(location.hostname);
-const LOCAL_PROXY  = location.origin + '/proxy?url=';   // served by server.py
+// Same-origin CORS proxy (serve-hub.py locally, nginx /economics/proxy in prod)
+let LOCAL_PROXY_PREFIX = null;
+
+async function detectLocalProxy() {
+  const candidates = [
+    location.origin + '/economics/proxy?url=',
+    location.origin + '/proxy?url=',
+  ];
+  const probe = 'https://query1.finance.yahoo.com/v8/finance/chart/SPY?interval=1d&range=1d';
+  for (const prefix of candidates) {
+    try {
+      const r = await fetch(prefix + encodeURIComponent(probe));
+      if (r.ok) {
+        LOCAL_PROXY_PREFIX = prefix;
+        return;
+      }
+    } catch {}
+  }
+  LOCAL_PROXY_PREFIX = null;
+}
+
+function publicProxyUrls(targetUrl) {
+  return [
+    `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
+  ];
+}
+
+async function fetchRemote(targetUrl, { asJson = true } = {}) {
+  const attempts = [];
+
+  attempts.push(async () => {
+    const r = await fetch(targetUrl);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return asJson ? r.json() : r.text();
+  });
+
+  if (LOCAL_PROXY_PREFIX) {
+    const proxied = LOCAL_PROXY_PREFIX + encodeURIComponent(targetUrl);
+    attempts.push(async () => {
+      const r = await fetch(proxied);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return asJson ? r.json() : r.text();
+    });
+  }
+
+  for (const url of publicProxyUrls(targetUrl)) {
+    attempts.push(async () => {
+      const r = await fetch(url);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return asJson ? r.json() : r.text();
+    });
+  }
+
+  attempts.push(async () => {
+    const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const wrap = await r.json();
+    const body = wrap.contents;
+    return asJson ? JSON.parse(body) : body;
+  });
+
+  for (const fn of attempts) {
+    try {
+      return await proxyThrottle(fn);
+    } catch {}
+  }
+  return null;
+}
+
+function parseYahooChart(d) {
+  if (!d?.chart?.result?.[0]) throw new Error('no data');
+  const meta = d.chart.result[0].meta;
+  const price = meta.regularMarketPrice;
+  const prevClose = meta.chartPreviousClose ?? meta.previousClose;
+  const change = prevClose != null ? price - prevClose : null;
+  const pct = (change !== null && prevClose) ? (change / prevClose) * 100 : null;
+  return { price, change, pct };
+}
 
 // ── Yahoo Finance ──────────────────────────────────────────────────
 async function yahooChart(sym) {
-  const yUrl   = `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=5d`;
-  const direct = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=5d`;
-  const localP = LOCAL_PROXY  + encodeURIComponent(yUrl);
-  const pubP   = `https://api.allorigins.win/raw?url=${encodeURIComponent(yUrl)}`;
-
-  function parseData(d) {
-    if (!d.chart?.result?.[0]) throw new Error('no data');
-    const meta = d.chart.result[0].meta;
-    const price = meta.regularMarketPrice;
-    const prevClose = meta.chartPreviousClose ?? meta.previousClose;
-    const change = prevClose != null ? price - prevClose : null;
-    const pct    = (change !== null && prevClose) ? (change / prevClose) * 100 : null;
-    return { price, change, pct };
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=5d`;
+  try {
+    const data = await fetchRemote(url, { asJson: true });
+    return data ? parseYahooChart(data) : null;
+  } catch {
+    return null;
   }
-
-  async function tryUrl(url) {
-    const r = await fetch(url);
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    return parseData(await r.json());
-  }
-
-  // Non-localhost: direct Yahoo first
-  if (!ON_LOCALHOST) {
-    try { const r = await fetch(direct); if (r.ok) return parseData(await r.json()); } catch {}
-  }
-
-  // Local proxy (server.py) → public proxy → retry public proxy
-  try { return await proxyThrottle(() => tryUrl(localP)); } catch {}
-  try { return await proxyThrottle(() => tryUrl(pubP));   } catch {}
-  try { return await proxyThrottle(() => tryUrl(pubP));   } catch {}
-  return null;
 }
 
 // ── Frankfurter.dev FX (CORS-friendly, no key needed) ─────────────
@@ -942,12 +994,9 @@ async function fetchBond(series_id, force = false) {
   const key = `b:${series_id}`;
   if (!force) { const c = cacheGet(key); if (c) return c; }
   const start = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString().slice(0, 10);
-  const direct = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=${series_id}&observation_start=${start}`;
-  const proxy  = `https://api.allorigins.win/raw?url=${encodeURIComponent(direct)}`;
+  const fredUrl = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=${series_id}&observation_start=${start}`;
 
-  async function parseCsv(url) {
-    const r = await fetch(url);
-    const txt = await r.text();
+  function parseCsvText(txt) {
     const lines = txt.trim().split('\n').filter(l => !l.startsWith('observation_date') && !l.endsWith(','));
     if (lines.length < 2) return null;
     const last = parseFloat(lines[lines.length - 1].split(',')[1]);
@@ -958,18 +1007,14 @@ async function fetchBond(series_id, force = false) {
     return { price: last, change, pct };
   }
 
-  const localProxy = LOCAL_PROXY + encodeURIComponent(direct);
-
   try {
-    let result;
-    try { result = await parseCsv(direct); }
-    catch {
-      try { result = await proxyThrottle(() => parseCsv(localProxy)); }
-      catch { result = await proxyThrottle(() => parseCsv(proxy)); }
-    }
+    const txt = await fetchRemote(fredUrl, { asJson: false });
+    const result = txt ? parseCsvText(txt) : null;
     if (result) cacheSet(key, result);
     return result;
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 
 // ── Render Grids ──────────────────────────────────
@@ -1262,7 +1307,7 @@ function saveKey() {
   loadAll(true);
 }
 
-function init() {
+async function init() {
   loadVIS();
   const saved = localStorage.getItem('av_key');
   if (saved && saved !== 'YOUR_API_KEY_HERE') {
@@ -1275,6 +1320,7 @@ function init() {
   updateMarketStatus();
   renderInfoBox();
   updateApiUsageDisplay();
+  await detectLocalProxy();
   loadAll(false);
 }
 

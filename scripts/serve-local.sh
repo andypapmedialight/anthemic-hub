@@ -13,9 +13,11 @@ echo "Anthemic hub root: $ROOT"
 echo "Open http://127.0.0.1:${PORT}/  (Ctrl+C to stop)"
 
 if command -v python3 >/dev/null 2>&1; then
-  exec python3 -m http.server -b 127.0.0.1 "$PORT"
+  export PORT BIND=127.0.0.1
+  exec python3 "$ROOT/scripts/serve-hub.py"
 elif command -v python >/dev/null 2>&1; then
-  exec python -m http.server -b 127.0.0.1 "$PORT"
+  export PORT BIND=127.0.0.1
+  exec python "$ROOT/scripts/serve-hub.py"
 else
   echo "error: need python3 or python on PATH" >&2
   exit 1
