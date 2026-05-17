@@ -4,11 +4,13 @@
 Usage: python3 scripts/serve-hub.py
        PORT=8000 python3 scripts/serve-hub.py
 
-Proxy: GET /economics/proxy?url=<https://...>  (also /proxy?url= for legacy)
+Proxy: GET /economics/proxy/yahoo?sym=^GSPC&range=5d
+       GET /economics/proxy/fred?id=DGS2&start=2026-04-01
 """
 from __future__ import annotations
 
 import os
+import re
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -23,6 +25,9 @@ ALLOWED_HOSTS = (
     "fred.stlouisfed.org",
 )
 
+_SYM_RE = re.compile(r"^[%^A-Za-z0-9=.\-]+$")
+_FRED_ID_RE = re.compile(r"^[A-Z0-9]+$")
+
 
 class HubHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -30,24 +35,19 @@ class HubHandler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         path = urllib.parse.urlparse(self.path).path
-        if path in ("/proxy", "/economics/proxy"):
-            self._proxy()
+        if path == "/economics/proxy/yahoo":
+            self._proxy_yahoo()
+            return
+        if path == "/economics/proxy/fred":
+            self._proxy_fred()
             return
         if path.startswith("/.well-known/"):
             self.send_error(404)
             return
         super().do_GET()
 
-    def _proxy(self):
-        qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
-        url = qs.get("url", [""])[0]
-        if not url:
-            self.send_error(400, "Missing url parameter")
-            return
+    def _send_upstream(self, url: str) -> None:
         parsed = urllib.parse.urlparse(url)
-        if parsed.scheme not in ("http", "https") or not parsed.netloc:
-            self.send_error(400, "Invalid url")
-            return
         if parsed.hostname not in ALLOWED_HOSTS:
             self.send_error(403, "Host not allowed")
             return
@@ -88,8 +88,34 @@ class HubHandler(SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(msg)
 
+    def _proxy_yahoo(self) -> None:
+        qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        sym = qs.get("sym", [""])[0]
+        yrange = qs.get("range", ["5d"])[0] or "5d"
+        if not sym or not _SYM_RE.match(sym):
+            self.send_error(400, "Invalid sym")
+            return
+        url = (
+            "https://query1.finance.yahoo.com/v8/finance/chart/"
+            f"{urllib.parse.quote(sym, safe='')}?interval=1d&range={urllib.parse.quote(yrange, safe='')}"
+        )
+        self._send_upstream(url)
+
+    def _proxy_fred(self) -> None:
+        qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        series_id = qs.get("id", [""])[0]
+        start = qs.get("start", [""])[0]
+        if not series_id or not _FRED_ID_RE.match(series_id):
+            self.send_error(400, "Invalid id")
+            return
+        url = (
+            "https://fred.stlouisfed.org/graph/fredgraph.csv"
+            f"?id={urllib.parse.quote(series_id)}&observation_start={urllib.parse.quote(start)}"
+        )
+        self._send_upstream(url)
+
     def log_message(self, fmt, *args):
-        if args and isinstance(args[0], str) and "/proxy?" in args[0]:
+        if args and isinstance(args[0], str) and "/economics/proxy/" in args[0]:
             return
         super().log_message(fmt, *args)
 
@@ -99,7 +125,7 @@ def main():
     httpd = HTTPServer((BIND, PORT), HubHandler)
     print(f"Anthemic hub: http://{BIND}:{PORT}/")
     print(f"Morning Macro: http://{BIND}:{PORT}/economics/")
-    print(f"CORS proxy:    http://{BIND}:{PORT}/economics/proxy?url=…\n")
+    print(f"CORS proxy:    http://{BIND}:{PORT}/economics/proxy/yahoo?sym=…\n")
     httpd.serve_forever()
 
 

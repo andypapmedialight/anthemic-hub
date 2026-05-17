@@ -232,10 +232,10 @@ const proxyThrottle = (() => {
   });
 })();
 
-// Same-origin CORS proxy (serve-hub.py locally, nginx /economics/proxy in prod)
-let LOCAL_PROXY_PREFIX = null;
+// Same-origin CORS proxy (serve-hub.py locally, nginx /economics/proxy/* in prod)
+let LOCAL_PROXY_OK = false;
 
-/** Yahoo chart URL with raw symbol in path — encode once via encodeURIComponent(fullUrl) for proxy. */
+/** Yahoo chart URL with raw symbol in path. */
 function yahooChartUrl(sym, range = '5d') {
   return `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=${range}`;
 }
@@ -244,30 +244,53 @@ function yahooChartUrlDirect(canonicalUrl) {
   return canonicalUrl.replace(/\/chart\/([^?]+)/, (_, s) => `/chart/${encodeURIComponent(s)}`);
 }
 
-function proxyFetchUrl(prefix, canonicalUrl) {
-  return prefix + encodeURIComponent(canonicalUrl);
-}
-
 function isCorsProxiedHost(url) {
   return /^https:\/\/(query1\.finance\.yahoo\.com|fred\.stlouisfed\.org)\//.test(url);
 }
 
-async function detectLocalProxy() {
-  const candidates = [
-    location.origin + '/economics/proxy?url=',
-    location.origin + '/proxy?url=',
-  ];
-  const probe = yahooChartUrl('^GSPC', '1d');
-  for (const prefix of candidates) {
-    try {
-      const r = await fetch(proxyFetchUrl(prefix, probe));
-      if (r.ok) {
-        LOCAL_PROXY_PREFIX = prefix;
-        return;
-      }
-    } catch {}
+function parseRemoteTarget(canonicalUrl) {
+  try {
+    const u = new URL(canonicalUrl);
+    if (u.hostname === 'query1.finance.yahoo.com') {
+      const sym = decodeURIComponent(u.pathname.split('/').pop() || '');
+      const range = u.searchParams.get('range') || '5d';
+      return { type: 'yahoo', sym, range };
+    }
+    if (u.hostname === 'fred.stlouisfed.org') {
+      return {
+        type: 'fred',
+        id: u.searchParams.get('id') || '',
+        start: u.searchParams.get('observation_start') || '',
+      };
+    }
+  } catch {}
+  return { type: 'raw', url: canonicalUrl };
+}
+
+function localProxyUrl(target) {
+  if (!LOCAL_PROXY_OK) return null;
+  const base = location.origin;
+  if (target.type === 'yahoo') {
+    const p = new URLSearchParams({ sym: target.sym, range: target.range });
+    return `${base}/economics/proxy/yahoo?${p}`;
   }
-  LOCAL_PROXY_PREFIX = null;
+  if (target.type === 'fred') {
+    const p = new URLSearchParams({ id: target.id, start: target.start });
+    return `${base}/economics/proxy/fred?${p}`;
+  }
+  return null;
+}
+
+async function detectLocalProxy() {
+  const probe = `${location.origin}/economics/proxy/yahoo?${new URLSearchParams({ sym: '^GSPC', range: '1d' })}`;
+  try {
+    const r = await fetch(probe);
+    if (r.ok) {
+      LOCAL_PROXY_OK = true;
+      return;
+    }
+  } catch {}
+  LOCAL_PROXY_OK = false;
 }
 
 function publicProxyUrls(canonicalUrl) {
@@ -280,10 +303,11 @@ function publicProxyUrls(canonicalUrl) {
 async function fetchRemote(canonicalUrl, { asJson = true } = {}) {
   const attempts = [];
   const corsOnly = isCorsProxiedHost(canonicalUrl);
+  const localUrl = localProxyUrl(parseRemoteTarget(canonicalUrl));
 
-  if (LOCAL_PROXY_PREFIX) {
+  if (localUrl) {
     attempts.push(async () => {
-      const r = await fetch(proxyFetchUrl(LOCAL_PROXY_PREFIX, canonicalUrl));
+      const r = await fetch(localUrl);
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       return asJson ? r.json() : r.text();
     });
@@ -313,7 +337,7 @@ async function fetchRemote(canonicalUrl, { asJson = true } = {}) {
     return asJson ? JSON.parse(body) : body;
   });
 
-  if (corsOnly && !LOCAL_PROXY_PREFIX) {
+  if (corsOnly && !LOCAL_PROXY_OK) {
     attempts.push(async () => {
       const direct = canonicalUrl.includes('query1.finance.yahoo.com')
         ? yahooChartUrlDirect(canonicalUrl)
