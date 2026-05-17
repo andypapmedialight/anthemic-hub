@@ -89,7 +89,7 @@ const FX_PAIRS = [
 
 // yTicker: Yahoo Finance CBOE index — used first (no CORS); null falls back to FRED
 const BOND_SERIES = [
-  { id: 'DGS2',   label: 'US 2Y Yield',    ticker: '2Y',  def: true,  yTicker: null   },
+  { id: 'DGS2',   label: 'US 2Y Yield',    ticker: '2Y',  def: true,  yTicker: '2YY=F' },
   { id: '^FVX',   label: 'US 5Y Yield',    ticker: '5Y',  def: false, yTicker: '^FVX' },
   { id: '^TNX',   label: 'US 10Y Yield',   ticker: '10Y', def: true,  yTicker: '^TNX' },
   { id: '^TYX',   label: 'US 30Y Yield',   ticker: '30Y', def: true,  yTicker: '^TYX' },
@@ -235,6 +235,18 @@ function renderCard(meta, delay = 0) {
       ${meta.extra || ''}
     </div>`;
 }
+const FETCH_TIMEOUT_MS = 12000;
+
+async function fetchWithTimeout(resource, options = {}, ms = FETCH_TIMEOUT_MS) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), ms);
+  try {
+    return await fetch(resource, { ...options, signal: ctrl.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 // Throttle concurrent proxied fetches
 const proxyThrottle = (() => {
   let active = 0; const queue = [];
@@ -296,13 +308,18 @@ function localProxyUrl(target) {
 async function detectLocalProxy() {
   const probe = `${location.origin}/economics/proxy/yahoo?${new URLSearchParams({ sym: '^GSPC', range: '1d' })}`;
   try {
-    const r = await fetch(probe);
+    const r = await fetchWithTimeout(probe, {}, 8000);
     if (r.ok) {
       LOCAL_PROXY_OK = true;
       return;
     }
   } catch {}
   LOCAL_PROXY_OK = false;
+}
+
+function localFredProxyUrl(seriesId, start) {
+  const p = new URLSearchParams({ id: seriesId, start: start || '' });
+  return `${location.origin}/economics/proxy/fred?${p}`;
 }
 
 function publicProxyUrls(canonicalUrl) {
@@ -319,7 +336,7 @@ async function fetchRemote(canonicalUrl, { asJson = true } = {}) {
 
   if (localUrl) {
     attempts.push(async () => {
-      const r = await fetch(localUrl);
+      const r = await fetchWithTimeout(localUrl);
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       return asJson ? r.json() : r.text();
     });
@@ -327,7 +344,7 @@ async function fetchRemote(canonicalUrl, { asJson = true } = {}) {
 
   if (!corsOnly) {
     attempts.push(async () => {
-      const r = await fetch(canonicalUrl);
+      const r = await fetchWithTimeout(canonicalUrl);
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       return asJson ? r.json() : r.text();
     });
@@ -335,14 +352,14 @@ async function fetchRemote(canonicalUrl, { asJson = true } = {}) {
 
   for (const url of publicProxyUrls(canonicalUrl)) {
     attempts.push(async () => {
-      const r = await fetch(url);
+      const r = await fetchWithTimeout(url);
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       return asJson ? r.json() : r.text();
     });
   }
 
   attempts.push(async () => {
-    const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(canonicalUrl)}`);
+    const r = await fetchWithTimeout(`https://api.allorigins.win/get?url=${encodeURIComponent(canonicalUrl)}`);
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const wrap = await r.json();
     const body = wrap.contents;
@@ -354,7 +371,7 @@ async function fetchRemote(canonicalUrl, { asJson = true } = {}) {
       const direct = canonicalUrl.includes('query1.finance.yahoo.com')
         ? yahooChartUrlDirect(canonicalUrl)
         : canonicalUrl;
-      const r = await fetch(direct);
+      const r = await fetchWithTimeout(direct);
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       return asJson ? r.json() : r.text();
     });
@@ -536,6 +553,32 @@ function parseFredCsvRows(txt) {
   return rows;
 }
 
+function parseFredApiRows(data) {
+  const obs = data?.observations;
+  if (!Array.isArray(obs)) return null;
+  const rows = [];
+  for (const o of obs) {
+    if (!o?.date || o.value === '.') continue;
+    const v = parseFloat(o.value);
+    if (Number.isNaN(v)) continue;
+    rows.push({ date: o.date, v });
+  }
+  return rows.length ? rows : null;
+}
+
+function parseFredResponseBody(body, contentType = '') {
+  const trimmed = (body || '').trim();
+  if (!trimmed) return null;
+  if (trimmed.startsWith('{') || contentType.includes('json')) {
+    try {
+      return parseFredApiRows(JSON.parse(trimmed));
+    } catch {
+      return null;
+    }
+  }
+  return parseFredCsvRows(trimmed);
+}
+
 function buffettRatio(capMillions, gdpBillions) {
   return (capMillions / 1000 / gdpBillions) * 100;
 }
@@ -564,6 +607,17 @@ function fredRowsToQuote(rows) {
 }
 
 async function fetchFredSeriesRows(seriesId, start) {
+  if (LOCAL_PROXY_OK) {
+    try {
+      const r = await fetchWithTimeout(localFredProxyUrl(seriesId, start));
+      if (r.ok) {
+        const ct = r.headers.get('content-type') || '';
+        const body = await r.text();
+        const rows = parseFredResponseBody(body, ct);
+        if (rows?.length) return rows;
+      }
+    } catch {}
+  }
   const url = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=${seriesId}&observation_start=${start}`;
   const txt = await fetchRemote(url, { asJson: false });
   return txt ? parseFredCsvRows(txt) : null;
@@ -1073,19 +1127,11 @@ async function fetchFredHistory(seriesId, days) {
   const cacheKey = `fred:${seriesId}:${days}`;
   const cached = historyCacheGet(cacheKey);
   if (cached) return cached;
-  const start = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
-  const url = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=${seriesId}&observation_start=${start}`;
-  const txt = await fetchRemote(url, { asJson: false });
-  if (!txt) return null;
-  const series = [];
-  for (const line of txt.trim().split('\n')) {
-    if (line.startsWith('observation_date') || line.endsWith(',')) continue;
-    const [date, val] = line.split(',');
-    const v = parseFloat(val);
-    if (!date || Number.isNaN(v)) continue;
-    series.push({ t: new Date(date).getTime(), v });
-  }
-  if (!series.length) return null;
+  const lookback = Math.max(days, 400);
+  const start = new Date(Date.now() - lookback * 86400000).toISOString().slice(0, 10);
+  const rows = await fetchFredSeriesRows(seriesId, start);
+  if (!rows?.length) return null;
+  const series = rows.map(r => ({ t: new Date(r.date).getTime(), v: r.v }));
   historyCacheSet(cacheKey, series);
   return series;
 }

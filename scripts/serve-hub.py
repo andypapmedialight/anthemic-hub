@@ -23,7 +23,10 @@ BIND = os.environ.get("BIND", "127.0.0.1")
 ALLOWED_HOSTS = (
     "query1.finance.yahoo.com",
     "fred.stlouisfed.org",
+    "api.stlouisfed.org",
 )
+
+FRED_API_KEY = os.environ.get("FRED_API_KEY", "").strip()
 
 _SYM_RE = re.compile(r"^[%^A-Za-z0-9=.\-]+$")
 _FRED_ID_RE = re.compile(r"^[A-Z0-9]+$")
@@ -104,14 +107,23 @@ class HubHandler(SimpleHTTPRequestHandler):
     def _proxy_fred(self) -> None:
         qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
         series_id = qs.get("id", [""])[0]
-        start = qs.get("start", [""])[0]
+        start = qs.get("start", [""])[0] or "2020-01-01"
         if not series_id or not _FRED_ID_RE.match(series_id):
             self.send_error(400, "Invalid id")
             return
-        url = (
-            "https://fred.stlouisfed.org/graph/fredgraph.csv"
-            f"?id={urllib.parse.quote(series_id)}&observation_start={urllib.parse.quote(start)}"
-        )
+        if FRED_API_KEY:
+            url = (
+                "https://api.stlouisfed.org/fred/series/observations"
+                f"?series_id={urllib.parse.quote(series_id)}"
+                f"&file_type=json&sort_order=asc"
+                f"&observation_start={urllib.parse.quote(start)}"
+                f"&api_key={urllib.parse.quote(FRED_API_KEY)}"
+            )
+        else:
+            url = (
+                "https://fred.stlouisfed.org/graph/fredgraph.csv"
+                f"?id={urllib.parse.quote(series_id)}&observation_start={urllib.parse.quote(start)}"
+            )
         self._send_upstream(url)
 
     def log_message(self, fmt, *args):

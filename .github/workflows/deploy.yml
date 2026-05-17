@@ -35,6 +35,20 @@ jobs:
           fs.writeFileSync('bass/papaweb.config.js', body);
           NODE
 
+      - name: Write economics FRED API key (server-side proxy only)
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const key = (process.env.FRED_API_KEY || '').trim();
+          if (key) {
+            fs.writeFileSync('economics/.fred-api-key', key + '\n', { mode: 0o600 });
+          } else {
+            try { fs.unlinkSync('economics/.fred-api-key'); } catch {}
+          }
+          NODE
+
       - name: Install SSH key
         uses: webfactory/ssh-agent@v0.10.0
         with:

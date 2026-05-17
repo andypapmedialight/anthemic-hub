@@ -153,7 +153,23 @@ if [[ -d "${INCOMING}/assets" ]]; then
   preserve_restore "${MANIFEST_LIVE}" "${MANIFEST_BACKUP}"
 fi
 
+# Morning Macro: install FRED API key for nginx proxy (Valuation + FRED bonds).
+SNIP="/etc/nginx/snippets/mmd-fred-api-key.conf"
+FRED_KEY_FILE="${INCOMING}/economics/.fred-api-key"
+mkdir -p /etc/nginx/snippets
+if [[ -f "${FRED_KEY_FILE}" ]]; then
+  KEY="$(tr -d '\r\n' < "${FRED_KEY_FILE}")"
+  printf 'set $mmd_fred_api_key "%s";\n' "${KEY}" > "${SNIP}"
+else
+  printf 'set $mmd_fred_api_key "";\n' > "${SNIP}"
+fi
+chmod 644 "${SNIP}"
+
 chown -R www-data:www-data "${DEST}"
 chmod -R a+rX "${DEST}"
+
+if command -v nginx >/dev/null 2>&1; then
+  nginx -t && systemctl reload nginx
+fi
 
 echo "anthemic-hub-deploy-apply: OK"
