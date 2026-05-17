@@ -62,7 +62,7 @@ if [[ ! -d "${INCOMING}/personal" ]] || [[ ! -f "${INCOMING}/personal/writing/in
   exit 1
 fi
 
-mkdir -p "${DEST}/bass" "${DEST}/brain" "${DEST}/gigs" "${DEST}/content" "${DEST}/anth-dev-ad" "${DEST}/personal/writing"
+mkdir -p "${DEST}/bass" "${DEST}/brain" "${DEST}/gigs" "${DEST}/content" "${DEST}/anth-dev-ad" "${DEST}/personal/writing" "${DEST}/economics"
 
 # Preserve admin-managed files: back up before rsync, restore after.
 # Git copies act as seeds on first deploy only.
@@ -81,6 +81,9 @@ rsync -a --delete "${INCOMING}/brain/" "${DEST}/brain/"
 rsync -a --delete "${INCOMING}/gigs/" "${DEST}/gigs/"
 rsync -a --delete "${INCOMING}/anth-dev-ad/" "${DEST}/anth-dev-ad/"
 rsync -a --delete "${INCOMING}/personal/" "${DEST}/personal/"
+if [[ -d "${INCOMING}/economics" ]]; then
+  rsync -a --delete "${INCOMING}/economics/" "${DEST}/economics/"
+fi
 rsync -a --delete "${INCOMING}/content/" "${DEST}/content/"
 
 # Restore live admin-managed files so edits survive deploys.
