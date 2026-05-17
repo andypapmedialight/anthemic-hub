@@ -617,17 +617,43 @@ async function fetchFredSeriesRows(seriesId, start) {
         if (rows?.length) return rows;
       }
     } catch {}
+    return null;
   }
   const url = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=${seriesId}&observation_start=${start}`;
   const txt = await fetchRemote(url, { asJson: false });
   return txt ? parseFredCsvRows(txt) : null;
 }
 
-async function fetchBuffettRatios(start) {
-  const [capRows, gdpRows] = await Promise.all([
-    fetchFredSeriesRows('NCBEILQ027S', start),
-    fetchFredSeriesRows('GDP', start),
-  ]);
+const VAL_FRED_IDS = ['GDP', 'NCBEILQ027S', 'GFDEGDQ188S', 'TCMDO', 'FGSDODNS'];
+let valuationFredPromise = null;
+
+function valuationStartDate() {
+  return new Date(Date.now() - 5 * 365 * 86400000).toISOString().slice(0, 10);
+}
+
+async function loadValuationFredRows(force = false) {
+  const batchKey = 'val:fred-batch';
+  if (!force) {
+    const cached = cacheGet(batchKey);
+    if (cached) return cached;
+  }
+  const start = valuationStartDate();
+  const data = {};
+  for (const seriesId of VAL_FRED_IDS) {
+    data[seriesId] = await fetchFredSeriesRows(seriesId, start);
+  }
+  cacheSet(batchKey, data);
+  return data;
+}
+
+function getValuationFredRows(force = false) {
+  if (!valuationFredPromise || force) {
+    valuationFredPromise = loadValuationFredRows(force);
+  }
+  return valuationFredPromise;
+}
+
+function buildBuffettRatios(capRows, gdpRows) {
   if (!capRows?.length || !gdpRows?.length) return null;
   const gdpMap = new Map(gdpRows.map(r => [r.date, r.v]));
   const ratios = [];
@@ -643,12 +669,7 @@ async function fetchBuffettRatios(start) {
   return ratios.length ? ratios : null;
 }
 
-async function fetchPrivateDebtRatios(start) {
-  const [totalRows, fedRows, gdpRows] = await Promise.all([
-    fetchFredSeriesRows('TCMDO', start),
-    fetchFredSeriesRows('FGSDODNS', start),
-    fetchFredSeriesRows('GDP', start),
-  ]);
+function buildPrivateDebtRatios(totalRows, fedRows, gdpRows) {
   if (!totalRows?.length || !fedRows?.length || !gdpRows?.length) return null;
   const fedMap = new Map(fedRows.map(r => [r.date, r.v]));
   const gdpMap = new Map(gdpRows.map(r => [r.date, r.v]));
@@ -668,31 +689,37 @@ async function fetchPrivateDebtRatios(start) {
   return ratios.length ? ratios : null;
 }
 
+function quoteFromRatioSeries(ratios) {
+  if (!ratios?.length) return null;
+  const last = ratios[ratios.length - 1].ratio;
+  const prev = ratios.length > 1 ? ratios[ratios.length - 2].ratio : null;
+  const change = prev != null ? last - prev : null;
+  const pct = (change != null && prev) ? (change / prev) * 100 : null;
+  return { price: last, change, pct };
+}
+
+async function fetchBuffettRatios(start) {
+  const fred = await getValuationFredRows();
+  return buildBuffettRatios(fred.NCBEILQ027S, fred.GDP);
+}
+
+async function fetchPrivateDebtRatios(start) {
+  const fred = await getValuationFredRows();
+  return buildPrivateDebtRatios(fred.TCMDO, fred.FGSDODNS, fred.GDP);
+}
+
 async function fetchValuation(metricId, force = false) {
   const key = `val:${metricId}`;
   if (!force) { const c = cacheGet(key); if (c) return c; }
-  const start = new Date(Date.now() - 5 * 365 * 86400000).toISOString().slice(0, 10);
   try {
+    const fred = await getValuationFredRows(force);
     let result = null;
     if (metricId === 'buffett') {
-      const ratios = await fetchBuffettRatios(start);
-      if (!ratios?.length) return null;
-      const last = ratios[ratios.length - 1].ratio;
-      const prev = ratios.length > 1 ? ratios[ratios.length - 2].ratio : null;
-      const change = prev != null ? last - prev : null;
-      const pct = (change != null && prev) ? (change / prev) * 100 : null;
-      result = { price: last, change, pct };
+      result = quoteFromRatioSeries(buildBuffettRatios(fred.NCBEILQ027S, fred.GDP));
     } else if (metricId === 'public-debt') {
-      const rows = await fetchFredSeriesRows('GFDEGDQ188S', start);
-      result = fredRowsToQuote(rows);
+      result = fredRowsToQuote(fred.GFDEGDQ188S);
     } else if (metricId === 'private-debt') {
-      const ratios = await fetchPrivateDebtRatios(start);
-      if (!ratios?.length) return null;
-      const last = ratios[ratios.length - 1].ratio;
-      const prev = ratios.length > 1 ? ratios[ratios.length - 2].ratio : null;
-      const change = prev != null ? last - prev : null;
-      const pct = (change != null && prev) ? (change / prev) * 100 : null;
-      result = { price: last, change, pct };
+      result = quoteFromRatioSeries(buildPrivateDebtRatios(fred.TCMDO, fred.FGSDODNS, fred.GDP));
     }
     if (result) cacheSet(key, result);
     return result;
@@ -1049,7 +1076,13 @@ async function loadAll(force = false) {
     updateApiUsageDisplay();
   }
 
-  // All sections in parallel; only fetches visible items
+  // Valuation: one batched FRED load, then fill all cards (avoids duplicate parallel FRED calls).
+  const valSection = SECTIONS.find(s => s.key === 'val');
+  if (valSection && visOf(valSection.items).length) {
+    if (force) valuationFredPromise = null;
+    await getValuationFredRows(force);
+  }
+
   await Promise.all(SECTIONS.map(async section => {
     const visible = visOf(section.items);
     if (!visible.length) return;
