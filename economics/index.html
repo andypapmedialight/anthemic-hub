@@ -286,6 +286,10 @@
   }
   .spread-pos { color: var(--up); }
   .spread-neg { color: var(--dn); }
+  .buffett-cool { color: var(--up); }
+  .buffett-fair { color: var(--gold); }
+  .buffett-warm { color: #f0a060; }
+  .buffett-hot { color: var(--dn); }
 
   /* ── API Key Banner ───────────────────────────────────── */
   .api-banner {
@@ -712,6 +716,17 @@
   </div>
   <div class="customize-row" id="cust-eq"></div>
   <div class="cards" id="equities-grid"></div>
+</div>
+
+<!-- ── Valuation ── -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-label">Valuation</span>
+    <div class="section-line"></div>
+    <button type="button" class="section-edit-btn" id="edit-val" data-section="val">⊞ Edit</button>
+  </div>
+  <div class="customize-row" id="cust-val"></div>
+  <div class="cards" id="valuation-grid"></div>
 </div>
 
 <!-- ── Commodities ── -->

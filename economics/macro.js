@@ -59,6 +59,13 @@ const EQUITIES = [
   { sym: 'ARKK',  label: 'ARK Innov.',     ticker: 'ARKK',  def: false, dp: 2 },
 ];
 
+// FRED-based valuation / debt ratios (% of GDP unless noted)
+const VALUATION = [
+  { id: 'buffett',      label: 'Buffett Indicator', ticker: 'BI',  def: true  },
+  { id: 'public-debt',  label: 'US Public Debt',    ticker: 'PUB', def: true  },
+  { id: 'private-debt', label: 'US Private Debt',   ticker: 'PRV', def: true  },
+];
+
 const COMMODITIES = [
   { sym: 'GC=F', label: 'Gold',        ticker: 'GC',   def: true,  dp: 2 },
   { sym: 'SI=F', label: 'Silver',      ticker: 'SI',   def: true,  dp: 2 },
@@ -122,6 +129,11 @@ const SECTIONS = [
     key: 'eq',   gridId: 'equities-grid',    custId: 'cust-eq',   items: EQUITIES,
     fetch: (item, force) => fetchQuote(item.sym, force),
     card:  (item, d) => formatQuoteCard(item, d, 'eq'),
+  },
+  {
+    key: 'val',  gridId: 'valuation-grid',   custId: 'cust-val',  items: VALUATION,
+    fetch: (item, force) => fetchValuation(item.id, force),
+    card:  null,
   },
   {
     key: 'comm', gridId: 'commodities-grid', custId: 'cust-comm', items: COMMODITIES,
@@ -193,7 +205,7 @@ function cardIsFailed(meta) {
 function renderCard(meta, delay = 0) {
   const cls = cardClass(meta.pct);
   const priceStr = meta.price !== null && meta.price !== '' ? meta.price : '–';
-  const absStr = meta.isYield
+  const absStr = (meta.isYield || meta.isRatio)
     ? formatYieldChange(meta.change)
     : (meta.change !== null ? `${sign(meta.change)}${fmt(meta.change)}` : '');
   const failed = cardIsFailed(meta);
@@ -512,6 +524,129 @@ async function fetchFX(from, to, force = false) {
   } catch { return null; }
 }
 
+function parseFredCsvRows(txt) {
+  const rows = [];
+  for (const line of txt.trim().split('\n')) {
+    if (line.startsWith('observation_date') || line.endsWith(',')) continue;
+    const [date, val] = line.split(',');
+    const v = parseFloat(val);
+    if (!date || Number.isNaN(v)) continue;
+    rows.push({ date, v });
+  }
+  return rows;
+}
+
+function buffettRatio(capMillions, gdpBillions) {
+  return (capMillions / 1000 / gdpBillions) * 100;
+}
+
+function buffettZone(ratio) {
+  if (ratio == null || Number.isNaN(ratio)) return null;
+  if (ratio < 75)  return { label: 'Strongly undervalued', cls: 'buffett-cool' };
+  if (ratio < 90)  return { label: 'Undervalued', cls: 'buffett-cool' };
+  if (ratio <= 115) return { label: 'Fair value', cls: 'buffett-fair' };
+  if (ratio <= 135) return { label: 'Overvalued', cls: 'buffett-warm' };
+  return { label: 'Strongly overvalued', cls: 'buffett-hot' };
+}
+
+function formatRatioPrice(d, dp = 1) {
+  if (!d || d.price == null || Number.isNaN(Number(d.price))) return null;
+  return `${Number(d.price).toFixed(dp)}%`;
+}
+
+function fredRowsToQuote(rows) {
+  if (!rows?.length) return null;
+  const last = rows[rows.length - 1].v;
+  const prev = rows.length > 1 ? rows[rows.length - 2].v : null;
+  const change = prev != null ? last - prev : null;
+  const pct = (change != null && prev) ? (change / prev) * 100 : null;
+  return { price: last, change, pct };
+}
+
+async function fetchFredSeriesRows(seriesId, start) {
+  const url = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=${seriesId}&observation_start=${start}`;
+  const txt = await fetchRemote(url, { asJson: false });
+  return txt ? parseFredCsvRows(txt) : null;
+}
+
+async function fetchBuffettRatios(start) {
+  const [capRows, gdpRows] = await Promise.all([
+    fetchFredSeriesRows('NCBEILQ027S', start),
+    fetchFredSeriesRows('GDP', start),
+  ]);
+  if (!capRows?.length || !gdpRows?.length) return null;
+  const gdpMap = new Map(gdpRows.map(r => [r.date, r.v]));
+  const ratios = [];
+  for (const row of capRows) {
+    const gdp = gdpMap.get(row.date);
+    if (gdp == null || gdp <= 0) continue;
+    ratios.push({
+      date: row.date,
+      t: new Date(row.date).getTime(),
+      ratio: buffettRatio(row.v, gdp),
+    });
+  }
+  return ratios.length ? ratios : null;
+}
+
+async function fetchPrivateDebtRatios(start) {
+  const [totalRows, fedRows, gdpRows] = await Promise.all([
+    fetchFredSeriesRows('TCMDO', start),
+    fetchFredSeriesRows('FGSDODNS', start),
+    fetchFredSeriesRows('GDP', start),
+  ]);
+  if (!totalRows?.length || !fedRows?.length || !gdpRows?.length) return null;
+  const fedMap = new Map(fedRows.map(r => [r.date, r.v]));
+  const gdpMap = new Map(gdpRows.map(r => [r.date, r.v]));
+  const ratios = [];
+  for (const row of totalRows) {
+    const fed = fedMap.get(row.date);
+    const gdp = gdpMap.get(row.date);
+    if (fed == null || gdp == null || gdp <= 0) continue;
+    const privateMillions = row.v - fed;
+    if (privateMillions <= 0) continue;
+    ratios.push({
+      date: row.date,
+      t: new Date(row.date).getTime(),
+      ratio: (privateMillions / 1000 / gdp) * 100,
+    });
+  }
+  return ratios.length ? ratios : null;
+}
+
+async function fetchValuation(metricId, force = false) {
+  const key = `val:${metricId}`;
+  if (!force) { const c = cacheGet(key); if (c) return c; }
+  const start = new Date(Date.now() - 5 * 365 * 86400000).toISOString().slice(0, 10);
+  try {
+    let result = null;
+    if (metricId === 'buffett') {
+      const ratios = await fetchBuffettRatios(start);
+      if (!ratios?.length) return null;
+      const last = ratios[ratios.length - 1].ratio;
+      const prev = ratios.length > 1 ? ratios[ratios.length - 2].ratio : null;
+      const change = prev != null ? last - prev : null;
+      const pct = (change != null && prev) ? (change / prev) * 100 : null;
+      result = { price: last, change, pct };
+    } else if (metricId === 'public-debt') {
+      const rows = await fetchFredSeriesRows('GFDEGDQ188S', start);
+      result = fredRowsToQuote(rows);
+    } else if (metricId === 'private-debt') {
+      const ratios = await fetchPrivateDebtRatios(start);
+      if (!ratios?.length) return null;
+      const last = ratios[ratios.length - 1].ratio;
+      const prev = ratios.length > 1 ? ratios[ratios.length - 2].ratio : null;
+      const change = prev != null ? last - prev : null;
+      const pct = (change != null && prev) ? (change / prev) * 100 : null;
+      result = { price: last, change, pct };
+    }
+    if (result) cacheSet(key, result);
+    return result;
+  } catch {
+    return null;
+  }
+}
+
 async function fetchBond(series_id, force = false) {
   const bondDef = BOND_SERIES.find(b => b.id === series_id);
   const key = `b:${series_id}`;
@@ -558,6 +693,38 @@ function renderGrid(id, items) {
 
 function renderSectionGrid(section) {
   const visible = visOf(section.items);
+
+  if (section.key === 'val') {
+    renderGrid(section.gridId, visible.map(item => {
+      const d = DATA[item.id];
+      const dp = item.id === 'buffett' ? 0 : 1;
+      const price = formatRatioPrice(d, dp);
+      let extra = '';
+      if (item.id === 'buffett') {
+        const zone = buffettZone(d?.price);
+        if (zone) {
+          extra = `<div class="yield-extra"><span class="spread-label">Zone</span>
+            <span class="spread-val ${zone.cls}">${zone.label}</span></div>`;
+        }
+      } else {
+        extra = `<div class="yield-extra"><span class="spread-label">Measure</span>
+          <span class="spread-val buffett-fair">% of GDP</span></div>`;
+      }
+      return {
+        ticker: item.ticker,
+        label: item.label,
+        price,
+        change: d ? d.change : null,
+        pct: d ? d.pct : null,
+        extra,
+        isRatio: true,
+        itemKey: item.id,
+        sectionKey: section.key,
+        failed: !d || !price,
+      };
+    }));
+    return;
+  }
 
   if (section.key === 'bond') {
     const b2  = DATA['DGS2']  ? DATA['DGS2'].price  : null;
@@ -980,7 +1147,32 @@ async function fetchHistory(item, section, days) {
   if (section.key === 'crypto') {
     return fetchCryptoHistory(item.sym, days);
   }
+  if (section.key === 'val') {
+    return fetchValuationHistory(item.id, days);
+  }
   return null;
+}
+
+async function fetchValuationHistory(metricId, days) {
+  const cacheKey = `val:${metricId}:${days}`;
+  const cached = historyCacheGet(cacheKey);
+  if (cached) return cached;
+  const lookback = Math.max(days, 400);
+  const start = new Date(Date.now() - lookback * 86400000).toISOString().slice(0, 10);
+  let series = null;
+  if (metricId === 'buffett') {
+    const ratios = await fetchBuffettRatios(start);
+    series = ratios?.map(r => ({ t: r.t, v: r.ratio })) ?? null;
+  } else if (metricId === 'public-debt') {
+    const rows = await fetchFredSeriesRows('GFDEGDQ188S', start);
+    series = rows?.map(r => ({ t: new Date(r.date).getTime(), v: r.v })) ?? null;
+  } else if (metricId === 'private-debt') {
+    const ratios = await fetchPrivateDebtRatios(start);
+    series = ratios?.map(r => ({ t: r.t, v: r.ratio })) ?? null;
+  }
+  if (!series?.length) return null;
+  historyCacheSet(cacheKey, series);
+  return series;
 }
 
 function formatChartDate(ts) {
@@ -1053,8 +1245,8 @@ function buildChartSvg(series, opts = {}) {
 }
 
 function chartOpts(item, section) {
-  const isPercent = section.key === 'bond';
-  const dp = quoteDecimals(item, section.key);
+  const isPercent = section.key === 'bond' || section.key === 'val';
+  const dp = section.key === 'val' ? 0 : quoteDecimals(item, section.key);
   return { isPercent, dp };
 }
 
