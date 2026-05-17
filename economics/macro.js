@@ -59,9 +59,10 @@ const EQUITIES = [
   { sym: 'ARKK',  label: 'ARK Innov.',     ticker: 'ARKK',  def: false, dp: 2 },
 ];
 
-// FRED-based valuation / debt ratios (% of GDP unless noted)
+// FRED-based valuation / debt (GDP & debt levels in billions USD from FRED)
 const VALUATION = [
   { id: 'buffett',      label: 'Buffett Indicator', ticker: 'BI',  def: true  },
+  { id: 'us-gdp',       label: 'US GDP',            ticker: 'GDP', def: true  },
   { id: 'public-debt',  label: 'US Public Debt',    ticker: 'PUB', def: true  },
   { id: 'private-debt', label: 'US Private Debt',   ticker: 'PRV', def: true  },
 ];
@@ -205,9 +206,11 @@ function cardIsFailed(meta) {
 function renderCard(meta, delay = 0) {
   const cls = cardClass(meta.pct);
   const priceStr = meta.price !== null && meta.price !== '' ? meta.price : '–';
-  const absStr = (meta.isYield || meta.isRatio)
-    ? formatYieldChange(meta.change)
-    : (meta.change !== null ? `${sign(meta.change)}${fmt(meta.change)}` : '');
+  const absStr = meta.isUsd
+    ? formatUsdChange(meta.change)
+    : (meta.isYield || meta.isRatio)
+      ? formatYieldChange(meta.change)
+      : (meta.change !== null ? `${sign(meta.change)}${fmt(meta.change)}` : '');
   const failed = cardIsFailed(meta);
   const loading = CARD_LOADING.has(meta.itemKey);
   const refreshLabel = `Refresh ${meta.label}`;
@@ -597,6 +600,45 @@ function formatRatioPrice(d, dp = 1) {
   return `${Number(d.price).toFixed(dp)}%`;
 }
 
+/** @param {number} billions nominal USD (FRED GDP / debt series) */
+function formatUsdCompact(billions) {
+  if (billions == null || Number.isNaN(billions)) return null;
+  const abs = Math.abs(billions);
+  if (abs >= 1000) return `$${(billions / 1000).toFixed(2)}T`;
+  if (abs >= 1) return `$${billions.toFixed(1)}B`;
+  return `$${(billions * 1000).toFixed(0)}M`;
+}
+
+function formatUsdChange(changeBillions) {
+  if (changeBillions == null || Number.isNaN(changeBillions)) return '';
+  const v = Number(changeBillions);
+  return `${sign(v)}${formatUsdCompact(Math.abs(v))}`;
+}
+
+function latestFredRow(rows) {
+  return rows?.length ? rows[rows.length - 1] : null;
+}
+
+function federalDebtBillions(fred) {
+  const row = latestFredRow(fred.FGSDODNS);
+  return row ? row.v / 1000 : null;
+}
+
+function privateDebtBillions(fred) {
+  const total = latestFredRow(fred.TCMDO);
+  const fed = latestFredRow(fred.FGSDODNS);
+  if (!total || fed == null) return null;
+  const privateMillions = total.v - fed.v;
+  return privateMillions > 0 ? privateMillions / 1000 : null;
+}
+
+function valuationUsdExtra(label, billions) {
+  const usd = formatUsdCompact(billions);
+  if (!usd) return '';
+  return `<div class="yield-extra"><span class="spread-label">${label}</span>
+    <span class="spread-val buffett-fair">${usd}</span></div>`;
+}
+
 function fredRowsToQuote(rows) {
   if (!rows?.length) return null;
   const last = rows[rows.length - 1].v;
@@ -716,10 +758,14 @@ async function fetchValuation(metricId, force = false) {
     let result = null;
     if (metricId === 'buffett') {
       result = quoteFromRatioSeries(buildBuffettRatios(fred.NCBEILQ027S, fred.GDP));
+    } else if (metricId === 'us-gdp') {
+      result = fredRowsToQuote(fred.GDP);
     } else if (metricId === 'public-debt') {
       result = fredRowsToQuote(fred.GFDEGDQ188S);
+      if (result) result.usdBillions = federalDebtBillions(fred);
     } else if (metricId === 'private-debt') {
       result = quoteFromRatioSeries(buildPrivateDebtRatios(fred.TCMDO, fred.FGSDODNS, fred.GDP));
+      if (result) result.usdBillions = privateDebtBillions(fred);
     }
     if (result) cacheSet(key, result);
     return result;
@@ -778,19 +824,32 @@ function renderSectionGrid(section) {
   if (section.key === 'val') {
     renderGrid(section.gridId, visible.map(item => {
       const d = DATA[item.id];
-      const dp = item.id === 'buffett' ? 0 : 1;
-      const price = formatRatioPrice(d, dp);
+      let price = null;
       let extra = '';
-      if (item.id === 'buffett') {
+      let isRatio = false;
+      let isUsd = false;
+
+      if (item.id === 'us-gdp') {
+        isUsd = true;
+        price = formatUsdCompact(d?.price);
+        extra = `<div class="yield-extra"><span class="spread-label">Series</span>
+          <span class="spread-val buffett-fair">Nominal GDP (FRED)</span></div>`;
+      } else if (item.id === 'buffett') {
+        isRatio = true;
+        price = formatRatioPrice(d, 0);
         const zone = buffettZone(d?.price);
         if (zone) {
           extra = `<div class="yield-extra"><span class="spread-label">Zone</span>
             <span class="spread-val ${zone.cls}">${zone.label}</span></div>`;
         }
       } else {
-        extra = `<div class="yield-extra"><span class="spread-label">Measure</span>
+        isRatio = true;
+        price = formatRatioPrice(d, 1);
+        extra = valuationUsdExtra('Est. (USD)', d?.usdBillions);
+        extra += `<div class="yield-extra"><span class="spread-label">Measure</span>
           <span class="spread-val buffett-fair">% of GDP</span></div>`;
       }
+
       return {
         ticker: item.ticker,
         label: item.label,
@@ -798,7 +857,8 @@ function renderSectionGrid(section) {
         change: d ? d.change : null,
         pct: d ? d.pct : null,
         extra,
-        isRatio: true,
+        isRatio,
+        isUsd,
         itemKey: item.id,
         sectionKey: section.key,
         failed: !d || !price,
@@ -1242,6 +1302,9 @@ async function fetchValuationHistory(metricId, days) {
   if (metricId === 'buffett') {
     const ratios = await fetchBuffettRatios(start);
     series = ratios?.map(r => ({ t: r.t, v: r.ratio })) ?? null;
+  } else if (metricId === 'us-gdp') {
+    const fred = await getValuationFredRows();
+    series = fred.GDP?.map(r => ({ t: new Date(r.date).getTime(), v: r.v })) ?? null;
   } else if (metricId === 'public-debt') {
     const rows = await fetchFredSeriesRows('GFDEGDQ188S', start);
     series = rows?.map(r => ({ t: new Date(r.date).getTime(), v: r.v })) ?? null;
@@ -1288,7 +1351,11 @@ function buildChartSvg(series, opts = {}) {
   const chgPct = first.v ? (chg / first.v) * 100 : 0;
   const up = chg >= 0;
   const stroke = up ? '#34d399' : '#f87171';
-  const fmtV = v => isPercent ? `${v.toFixed(2)}%` : fmt(v, dp);
+  const fmtV = v => {
+    if (opts.usdBillions) return formatUsdCompact(v) || '–';
+    if (isPercent) return `${v.toFixed(2)}%`;
+    return fmt(v, dp);
+  };
 
   const yTicks = [minV, (minV + maxV) / 2, maxV];
   const yLabels = yTicks.map((v, i) => {
@@ -1324,6 +1391,9 @@ function buildChartSvg(series, opts = {}) {
 }
 
 function chartOpts(item, section) {
+  if (section.key === 'val' && item.id === 'us-gdp') {
+    return { isPercent: false, usdBillions: true, dp: 2 };
+  }
   const isPercent = section.key === 'bond' || section.key === 'val';
   const dp = section.key === 'val' ? 0 : quoteDecimals(item, section.key);
   return { isPercent, dp };
