@@ -361,8 +361,16 @@ let LOCAL_PROXY_OK = false;
 let LOCAL_FRED_PROXY_OK = false;
 
 /** Yahoo chart URL with raw symbol in path. */
-function yahooChartUrl(sym, range = '5d') {
-  return `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=${range}`;
+function yahooChartUrl(sym, range = '5d', interval = '1d') {
+  return `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=${interval}&range=${range}`;
+}
+
+function yahooHistoryParams(days) {
+  if (days <= 1) return { range: '1d', interval: '5m' };
+  if (days <= 7) return { range: '7d', interval: '1h' };
+  if (days <= 30) return { range: '1mo', interval: '1d' };
+  if (days <= 180) return { range: '6mo', interval: '1d' };
+  return { range: '1y', interval: '1d' };
 }
 
 function yahooChartUrlDirect(canonicalUrl) {
@@ -379,7 +387,8 @@ function parseRemoteTarget(canonicalUrl) {
     if (u.hostname === 'query1.finance.yahoo.com') {
       const sym = decodeURIComponent(u.pathname.split('/').pop() || '');
       const range = u.searchParams.get('range') || '5d';
-      return { type: 'yahoo', sym, range };
+      const interval = u.searchParams.get('interval') || '1d';
+      return { type: 'yahoo', sym, range, interval };
     }
     if (u.hostname === 'fred.stlouisfed.org') {
       return {
@@ -396,7 +405,7 @@ function localProxyUrl(target) {
   if (!LOCAL_PROXY_OK) return null;
   const base = location.origin;
   if (target.type === 'yahoo') {
-    const p = new URLSearchParams({ sym: target.sym, range: target.range });
+    const p = new URLSearchParams({ sym: target.sym, range: target.range, interval: target.interval || '1d' });
     return `${base}/economics/proxy/yahoo?${p}`;
   }
   if (target.type === 'fred') {
@@ -806,7 +815,7 @@ function sliceSeriesForChart(series, days) {
   const cutoff = Date.now() - days * 86400000;
   const inWindow = series.filter(p => p.t >= cutoff);
   if (inWindow.length >= 2) return inWindow;
-  const keep = days <= 7 ? 2 : days <= 30 ? 4 : 8;
+  const keep = days <= 1 ? 2 : days <= 7 ? 2 : days <= 30 ? 4 : days <= 180 ? 12 : 24;
   return series.slice(-Math.min(series.length, Math.max(2, keep)));
 }
 
@@ -1448,12 +1457,19 @@ function renderInfoBox() {
   }).join('');
 }
 
-function toggleInfo() {
+function setInfoOpen(open) {
   const body = document.getElementById('info-body');
   const chevron = document.getElementById('info-chevron');
-  const isOpen = body.style.display !== 'none';
-  body.style.display = isOpen ? 'none' : 'grid';
-  chevron.style.transform = isOpen ? 'rotate(-90deg)' : '';
+  const header = document.getElementById('info-header-toggle');
+  body?.classList.toggle('is-open', open);
+  chevron?.classList.toggle('info-chevron--closed', !open);
+  header?.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+
+function toggleInfo() {
+  const body = document.getElementById('info-body');
+  if (!body) return;
+  setInfoOpen(!body.classList.contains('is-open'));
 }
 
 // ── API Usage Tracker ─────────────────────────────
@@ -1582,7 +1598,39 @@ async function loadAll(force = false) {
 
 // ── Chart modal ───────────────────────────────────
 const HISTORY_CACHE_TTL = 15 * 60 * 1000;
-const chartState = { itemKey: null, sectionKey: null, days: 7 };
+const CHART_PERIODS = [
+  { days: 1, label: '1D' },
+  { days: 7, label: '7D' },
+  { days: 30, label: '30D' },
+  { days: 180, label: '6M' },
+  { days: 365, label: '1Y' },
+];
+const chartState = { itemKey: null, sectionKey: null, days: 7, returnFocus: null };
+
+function chartPeriodsFor(item, section) {
+  if (section.key === 'val') return CHART_PERIODS.filter(p => p.days >= 30);
+  if (section.key === 'bond' && !item.yTicker) return CHART_PERIODS.filter(p => p.days >= 30);
+  if (section.key === 'fx') return CHART_PERIODS.filter(p => p.days >= 7);
+  return CHART_PERIODS;
+}
+
+function renderChartPeriodTabs(periods, activeDays) {
+  const el = document.getElementById('chart-period-tabs');
+  if (!el) return;
+  el.innerHTML = periods.map(p => `
+    <button type="button" role="tab" data-days="${p.days}"
+      class="${p.days === activeDays ? 'active' : ''}"
+      aria-selected="${p.days === activeDays ? 'true' : 'false'}">${p.label}</button>
+  `).join('');
+}
+
+function syncChartPeriodTabs(activeDays) {
+  document.querySelectorAll('#chart-period-tabs button').forEach(btn => {
+    const on = Number(btn.dataset.days) === activeDays;
+    btn.classList.toggle('active', on);
+    btn.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+}
 
 function historyCacheGet(key) {
   try {
@@ -1621,9 +1669,10 @@ async function fetchYahooHistory(sym, days) {
   const cacheKey = `yh:${sym}:${days}`;
   const cached = historyCacheGet(cacheKey);
   if (cached) return cached;
-  const range = days <= 7 ? '5d' : '1mo';
-  const data = await fetchRemote(yahooChartUrl(sym, range), { asJson: true });
-  const series = data ? parseYahooSeries(data) : null;
+  const { range, interval } = yahooHistoryParams(days);
+  const data = await fetchRemote(yahooChartUrl(sym, range, interval), { asJson: true });
+  let series = data ? parseYahooSeries(data) : null;
+  if (series) series = sliceSeriesForChart(series, days);
   if (series) historyCacheSet(cacheKey, series);
   return series;
 }
@@ -1636,7 +1685,9 @@ async function fetchFredHistory(seriesId, days) {
   const start = new Date(Date.now() - lookback * 86400000).toISOString().slice(0, 10);
   const rows = await fetchFredSeriesRows(seriesId, start);
   if (!rows?.length) return null;
-  const series = rows.map(r => ({ t: new Date(r.date).getTime(), v: r.v }));
+  let series = rows.map(r => ({ t: new Date(r.date).getTime(), v: r.v }));
+  series = sliceSeriesForChart(series, days);
+  if (!series?.length) return null;
   historyCacheSet(cacheKey, series);
   return series;
 }
@@ -1651,11 +1702,13 @@ async function fetchFxHistory(from, to, days) {
     const r = await fetch(`https://api.frankfurter.dev/v1/${start}..${end}?from=${from}&to=${to}`);
     if (!r.ok) return null;
     const d = await r.json();
-    const series = Object.keys(d.rates).sort().map(date => ({
+    let series = Object.keys(d.rates).sort().map(date => ({
       t: new Date(date).getTime(),
       v: d.rates[date][to],
     })).filter(p => p.v != null);
     if (!series.length) return null;
+    series = sliceSeriesForChart(series, days);
+    if (!series?.length) return null;
     historyCacheSet(cacheKey, series);
     return series;
   } catch {
@@ -1675,8 +1728,10 @@ async function fetchCryptoHistory(sym, days) {
     );
     if (!r.ok) return null;
     const d = await r.json();
-    const series = (d.prices || []).map(([t, v]) => ({ t, v }));
+    let series = (d.prices || []).map(([t, v]) => ({ t, v }));
     if (!series.length) return null;
+    series = sliceSeriesForChart(series, days);
+    if (!series?.length) return null;
     historyCacheSet(cacheKey, series);
     return series;
   } catch {
@@ -1824,11 +1879,16 @@ function chartOpts(item, section) {
 function closeChart() {
   const modal = document.getElementById('chart-modal');
   if (!modal) return;
-  modal.hidden = true;
-  modal.setAttribute('aria-hidden', 'true');
-  document.body.style.overflow = '';
+  const restore = chartState.returnFocus;
+  chartState.returnFocus = null;
   chartState.itemKey = null;
   chartState.sectionKey = null;
+  modal.hidden = true;
+  modal.inert = true;
+  document.body.style.overflow = '';
+  if (restore instanceof HTMLElement && document.contains(restore)) {
+    restore.focus({ preventScroll: true });
+  }
 }
 
 async function loadChartModal() {
@@ -1867,21 +1927,21 @@ async function openChart(itemKey, sectionKey) {
   const { item, section } = resolved;
   chartState.itemKey = itemKey;
   chartState.sectionKey = sectionKey;
-  chartState.days = 7;
+  const periods = chartPeriodsFor(item, section);
+  chartState.days = periods.find(p => p.days === 7)?.days ?? periods[0]?.days ?? 7;
 
   const modal = document.getElementById('chart-modal');
   const ticker = item.ticker || `${item.from}/${item.to}`;
   document.getElementById('chart-modal-ticker').textContent = ticker;
   document.getElementById('chart-modal-title').textContent = item.label;
 
-  document.querySelectorAll('.chart-period-tabs button').forEach(btn => {
-    const on = Number(btn.dataset.days) === chartState.days;
-    btn.classList.toggle('active', on);
-    btn.setAttribute('aria-selected', on ? 'true' : 'false');
-  });
+  renderChartPeriodTabs(periods, chartState.days);
 
+  chartState.returnFocus = document.activeElement instanceof HTMLElement
+    ? document.activeElement
+    : null;
   modal.hidden = false;
-  modal.setAttribute('aria-hidden', 'false');
+  modal.inert = false;
   document.body.style.overflow = 'hidden';
   document.getElementById('chart-modal-close')?.focus();
   await loadChartModal();
@@ -1917,17 +1977,16 @@ function wireUi() {
   document.getElementById('chart-modal-close')?.addEventListener('click', closeChart);
   document.querySelectorAll('[data-chart-close]').forEach(el => {
     el.addEventListener('click', closeChart);
+    if (el.classList.contains('chart-modal-backdrop')) {
+      el.addEventListener('mousedown', e => e.preventDefault());
+    }
   });
-  document.querySelectorAll('.chart-period-tabs button').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      chartState.days = Number(btn.dataset.days) || 7;
-      document.querySelectorAll('.chart-period-tabs button').forEach(b => {
-        const on = b === btn;
-        b.classList.toggle('active', on);
-        b.setAttribute('aria-selected', on ? 'true' : 'false');
-      });
-      await loadChartModal();
-    });
+  document.getElementById('chart-period-tabs')?.addEventListener('click', async e => {
+    const btn = e.target.closest('button[data-days]');
+    if (!btn) return;
+    chartState.days = Number(btn.dataset.days) || 7;
+    syncChartPeriodTabs(chartState.days);
+    await loadChartModal();
   });
 
   document.addEventListener('click', e => {

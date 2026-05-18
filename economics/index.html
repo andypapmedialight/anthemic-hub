@@ -393,11 +393,18 @@
   .info-chevron { margin-left: auto; font-size: 0.7rem; transition: transform 0.2s; }
 
   .info-body {
-    display: grid;
+    display: none;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 1px;
     background: var(--border);
     border-top: 1px solid var(--border);
+  }
+  .info-body.is-open {
+    display: grid;
+  }
+
+  .info-chevron--closed {
+    transform: rotate(-90deg);
   }
 
   .info-source {
@@ -753,6 +760,7 @@
 
   .chart-period-tabs {
     display: flex;
+    flex-wrap: wrap;
     gap: 6px;
     margin-bottom: 0.85rem;
   }
@@ -839,10 +847,10 @@
 
 <!-- ── Info Box ── -->
 <div class="info-box">
-  <div class="info-header" id="info-header-toggle" role="button" tabindex="0">
+  <div class="info-header" id="info-header-toggle" role="button" tabindex="0" aria-expanded="false">
     <span class="info-icon">ⓘ</span>
     Data Sources &amp; API Options
-    <span class="info-chevron" id="info-chevron">▾</span>
+    <span class="info-chevron info-chevron--closed" id="info-chevron">▾</span>
   </div>
   <div class="info-body" id="info-body"></div>
 </div>
@@ -932,8 +940,8 @@
 </div>
 
 <!-- ── Chart modal ── -->
-<div id="chart-modal" class="chart-modal" hidden aria-hidden="true">
-  <div class="chart-modal-backdrop" data-chart-close tabindex="-1"></div>
+<div id="chart-modal" class="chart-modal" hidden inert>
+  <div class="chart-modal-backdrop" data-chart-close aria-hidden="true"></div>
   <div class="chart-modal-panel" role="dialog" aria-modal="true" aria-labelledby="chart-modal-title">
     <div class="chart-modal-head">
       <div>
@@ -942,10 +950,7 @@
       </div>
       <button type="button" class="chart-modal-close" id="chart-modal-close" aria-label="Close chart">&times;</button>
     </div>
-    <div class="chart-period-tabs" role="tablist" aria-label="Chart period">
-      <button type="button" role="tab" data-days="7" class="active" aria-selected="true">7D</button>
-      <button type="button" role="tab" data-days="30" aria-selected="false">30D</button>
-    </div>
+    <div class="chart-period-tabs" id="chart-period-tabs" role="tablist" aria-label="Chart period"></div>
     <div class="chart-modal-body" id="chart-modal-body">Loading…</div>
     <div class="chart-modal-stats" id="chart-modal-stats"></div>
   </div>

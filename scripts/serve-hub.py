@@ -102,12 +102,17 @@ class HubHandler(SimpleHTTPRequestHandler):
         qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
         sym = qs.get("sym", [""])[0]
         yrange = qs.get("range", ["5d"])[0] or "5d"
+        interval = qs.get("interval", ["1d"])[0] or "1d"
         if not sym or not _SYM_RE.match(sym):
             self.send_error(400, "Invalid sym")
             return
+        if interval not in ("1m", "2m", "5m", "15m", "30m", "60m", "90m", "1h", "1d", "5d", "1wk", "1mo", "3mo"):
+            interval = "1d"
         url = (
             "https://query1.finance.yahoo.com/v8/finance/chart/"
-            f"{urllib.parse.quote(sym, safe='')}?interval=1d&range={urllib.parse.quote(yrange, safe='')}"
+            f"{urllib.parse.quote(sym, safe='')}"
+            f"?interval={urllib.parse.quote(interval, safe='')}"
+            f"&range={urllib.parse.quote(yrange, safe='')}"
         )
         self._send_upstream(url)
 
