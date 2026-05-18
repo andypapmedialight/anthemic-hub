@@ -687,7 +687,13 @@ async function detectLocalProxy() {
     }
   } catch {}
 
-  LOCAL_VALUATION_PROXY_OK = LOCAL_PROXY_OK;
+  const valProbe = `${location.origin}/economics/proxy/valuation?${new URLSearchParams({ metric: 'otc-notional' })}`;
+  try {
+    const rv = await fetchWithTimeout(valProbe, {}, 15000);
+    LOCAL_VALUATION_PROXY_OK = rv.ok;
+  } catch {
+    LOCAL_VALUATION_PROXY_OK = false;
+  }
 }
 
 function localFredProxyUrl(seriesId, start) {

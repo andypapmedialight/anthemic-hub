@@ -1,0 +1,22 @@
+[Unit]
+Description=Morning Macro valuation API (BIS/FRED fetcher)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/anthemic-mmd
+Environment=BIND=127.0.0.1
+Environment=PORT=8071
+EnvironmentFile=-/etc/anthemic-mmd/valuation.env
+ExecStart=/usr/bin/python3 /opt/anthemic-mmd/valuation_server.py
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=30
+# BIS semi-annual pulls can take ~60s
+TimeoutStopSec=15
+
+[Install]
+WantedBy=multi-user.target

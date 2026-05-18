@@ -171,8 +171,34 @@ def fetch_finra_margin() -> dict:
     raise RuntimeError("FINRA margin parse failed")
 
 
+def _fred_api_observations(series_id: str, start: str, api_key: str) -> list[tuple[str, float]]:
+    url = (
+        "https://api.stlouisfed.org/fred/series/observations"
+        f"?series_id={series_id}&file_type=json&sort_order=asc"
+        f"&limit=100000&observation_start={start}&api_key={api_key}"
+    )
+    body = _fetch(url, timeout=25).decode("utf-8", "replace")
+    payload = json.loads(body)
+    obs = payload.get("observations") or []
+    rows = [
+        (o["date"], float(o["value"]))
+        for o in obs
+        if o.get("value") not in (None, ".", "")
+    ]
+    if not rows:
+        raise RuntimeError("FRED API returned no observations")
+    return rows
+
+
 def _fred_observations(series_id: str, start: str = "2015-01-01") -> list[tuple[str, float]]:
-    """Prefer local hub FRED proxy (uses FRED_API_KEY); fall back to public CSV."""
+    """FRED API key, then hub proxy, then public CSV."""
+    api_key = os.environ.get("FRED_API_KEY", "").strip()
+    if api_key:
+        try:
+            return _fred_api_observations(series_id, start, api_key)
+        except Exception:
+            pass
+
     hub = os.environ.get("HUB_ORIGIN", "http://127.0.0.1:8000").rstrip("/")
     try:
         proxy_url = (

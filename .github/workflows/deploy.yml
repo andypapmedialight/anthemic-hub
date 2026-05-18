@@ -81,6 +81,11 @@ jobs:
           rsync -avz -e "${RSYNC_SSH}" ./anth-dev-ad/ "${DEST}anth-dev-ad/"
           rsync -avz -e "${RSYNC_SSH}" ./personal/ "${DEST}personal/"
           rsync -avz -e "${RSYNC_SSH}" ./economics/ "${DEST}economics/"
+          mkdir -p ./incoming-mmd-staging/mmd
+          cp ./scripts/valuation_fetch.py ./scripts/valuation_server.py ./incoming-mmd-staging/mmd/
+          cp ./scripts/droplet/mmd-valuation.service ./incoming-mmd-staging/mmd/
+          rsync -avz -e "${RSYNC_SSH}" ./incoming-mmd-staging/mmd/ "${DEST}mmd/"
+          rm -rf ./incoming-mmd-staging
           rsync -avz -e "${RSYNC_SSH}" ./content/ "${DEST}content/"
           if [[ -d assets ]]; then
             rsync -avz -e "${RSYNC_SSH}" ./assets/ "${DEST}assets/"
@@ -97,7 +102,7 @@ jobs:
         run: |
           HUB_IN="/home/${DEPLOY_USER}/incoming-hub"
           ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            "test -f ${HUB_IN}/index.html && test -f ${HUB_IN}/bass/index.html && test -f ${HUB_IN}/brain/index.html && test -f ${HUB_IN}/gigs/index.html && test -f ${HUB_IN}/gigs/gigs.json && test -f ${HUB_IN}/content/hub.json && test -f ${HUB_IN}/content/reading-list.seed.json && test -f ${HUB_IN}/personal/index.html && test -f ${HUB_IN}/personal/writing/index.html && test -f ${HUB_IN}/personal/writing/quill-ink.svg && test -f ${HUB_IN}/economics/index.html" \
+            "test -f ${HUB_IN}/index.html && test -f ${HUB_IN}/bass/index.html && test -f ${HUB_IN}/brain/index.html && test -f ${HUB_IN}/gigs/index.html && test -f ${HUB_IN}/gigs/gigs.json && test -f ${HUB_IN}/content/hub.json && test -f ${HUB_IN}/content/reading-list.seed.json && test -f ${HUB_IN}/personal/index.html && test -f ${HUB_IN}/personal/writing/index.html && test -f ${HUB_IN}/personal/writing/quill-ink.svg && test -f ${HUB_IN}/economics/index.html && test -f ${HUB_IN}/mmd/valuation_server.py && test -f ${HUB_IN}/mmd/valuation_fetch.py" \
             || { echo "incoming-hub missing hub, bass, brain, gigs, content, reading-list.seed, or personal/ files after upload (expected under ${HUB_IN})"; exit 1; }
 
       - name: Apply on Droplet

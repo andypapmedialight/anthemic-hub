@@ -165,6 +165,35 @@ else
 fi
 chmod 644 "${SNIP}"
 
+# Morning Macro: valuation API (BIS/FRED) on loopback for nginx proxy_pass.
+MMD_OPT=/opt/anthemic-mmd
+MMD_ENV=/etc/anthemic-mmd/valuation.env
+mkdir -p "${MMD_OPT}"
+if [[ -f "${INCOMING}/mmd/valuation_server.py" && -f "${INCOMING}/mmd/valuation_fetch.py" ]]; then
+  install -o root -g root -m 644 "${INCOMING}/mmd/valuation_fetch.py" "${MMD_OPT}/valuation_fetch.py"
+  install -o root -g root -m 755 "${INCOMING}/mmd/valuation_server.py" "${MMD_OPT}/valuation_server.py"
+  if [[ -f "${INCOMING}/mmd/mmd-valuation.service" ]]; then
+    install -o root -g root -m 644 "${INCOMING}/mmd/mmd-valuation.service" \
+      /etc/systemd/system/mmd-valuation.service
+  fi
+  mkdir -p /etc/anthemic-mmd
+  if [[ -f "${FRED_KEY_FILE}" ]]; then
+    KEY="$(tr -d '\r\n' < "${FRED_KEY_FILE}")"
+    printf 'FRED_API_KEY=%s\n' "${KEY}" > "${MMD_ENV}"
+  else
+    printf '# FRED_API_KEY not set — margin-debt uses public FRED CSV fallback\n' > "${MMD_ENV}"
+  fi
+  chmod 640 "${MMD_ENV}"
+  chown root:www-data "${MMD_ENV}"
+  if command -v systemctl >/dev/null 2>&1; then
+    systemctl daemon-reload
+    systemctl enable mmd-valuation.service
+    systemctl restart mmd-valuation.service
+  fi
+else
+  echo "anthemic-hub-deploy-apply: warning: missing incoming-hub/mmd/ (valuation API not updated)" >&2
+fi
+
 chown -R www-data:www-data "${DEST}"
 chmod -R a+rX "${DEST}"
 
