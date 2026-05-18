@@ -71,5 +71,17 @@ if (!indexHtml.includes('id="api-banner" hidden')) {
   fail('api-banner should start hidden in HTML');
 }
 
+if (!indexHtml.includes('src="macro.js"')) {
+  fail('economics/index.html should load macro.js with a relative script path');
+}
+
+if (!indexHtml.includes('prefers-reduced-motion')) {
+  fail('economics/index.html missing prefers-reduced-motion media queries');
+}
+
+if (!indexHtml.includes('@media (hover: none)')) {
+  fail('economics/index.html missing touch-friendly card action visibility');
+}
+
 if (failed) process.exit(1);
 console.log('check-economics: OK');

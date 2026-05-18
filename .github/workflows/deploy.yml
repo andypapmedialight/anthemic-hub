@@ -21,6 +21,9 @@ jobs:
       - name: Validate economics static assets
         run: node scripts/check-economics.js
 
+      - name: Stamp macro.js SRI for production
+        run: node scripts/stamp-economics-sri.js
+
       - name: Write bass/papaweb.config.js (Slack webhook from secret)
         env:
           PAPAWEB_SLACK_WEBHOOK: ${{ secrets.PAPAWEB_SLACK_WEBHOOK }}

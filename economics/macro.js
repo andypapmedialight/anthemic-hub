@@ -1882,7 +1882,7 @@ function renderInfoBox() {
         ['FX % change',  'No ✗'],
         ['Coverage',     'Equities, FX, Comms'],
       ],
-      note: 'Official API with an SLA. Free tier is tight (25 req/day). Crypto always uses CoinGecko regardless of provider. Paid plans from ~$50/mo remove limits.',
+      note: 'Official API with an SLA. Free tier is tight (25 req/day). Your API key is stored in this browser\'s localStorage (visible to any script on this site). Crypto always uses CoinGecko regardless of provider. Paid plans from ~$50/mo remove limits.',
     },
     {
       id: 'frank',
@@ -1916,21 +1916,30 @@ function renderInfoBox() {
     },
   ];
 
-  box.innerHTML = sources.map(s => {
+  const privacyHtml = `
+    <div class="info-source info-privacy">
+      <div class="info-source-header">
+        <span class="info-source-name">Privacy &amp; local storage</span>
+        <span class="info-tag" style="color:var(--muted);border-color:var(--border2)">Read first</span>
+      </div>
+      <div class="info-note">Card visibility, provider choice, and Alpha Vantage keys are saved in <strong>localStorage</strong> on this device (plain text). Any script running on this origin could read them. Fonts load from Google Fonts. Do not paste production keys on a shared or untrusted machine.</div>
+    </div>`;
+
+  box.innerHTML = privacyHtml + sources.map(s => {
     const isSelectable = s.id !== 'fred' && s.id !== 'frank' && s.id !== 'coingecko';
     const active = isSelectable && s.id === activeProvider;
     return `
       <div class="info-source${active ? ' info-source-active' : ''}">
         <div class="info-source-header">
-          <span class="info-source-name">${s.name}</span>
+          <span class="info-source-name">${escapeHtml(s.name)}</span>
           <span class="info-tag" style="color:${s.tagColor};border-color:${s.tagColor}">
             ${active ? '✓ Active' : s.tag}
           </span>
         </div>
         <table class="info-table">
-          ${s.rows.map(([k, v]) => `<tr><td class="info-key">${k}</td><td class="info-val">${v}</td></tr>`).join('')}
+          ${s.rows.map(([k, v]) => `<tr><td class="info-key">${escapeHtml(k)}</td><td class="info-val">${escapeHtml(v)}</td></tr>`).join('')}
         </table>
-        <div class="info-note">${s.note}</div>
+        <div class="info-note">${escapeHtml(s.note)}</div>
         ${isSelectable
           ? `<button type="button" class="info-btn${active ? ' info-btn-active' : ''}" data-provider="${s.id}" ${active ? 'disabled' : ''}>${active ? 'Active' : 'Use this source'}</button>`
           : ''}
