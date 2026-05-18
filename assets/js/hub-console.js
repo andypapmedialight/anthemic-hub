@@ -1,4 +1,5 @@
 (function () {
+  var MOBILE_MQ = window.matchMedia("(max-width: 1079px)");
   var CAPTIONS = {
     intro: "What — skills & links",
     who: "Who — profile & QA",
@@ -15,6 +16,26 @@
   var targets = document.querySelectorAll("[data-console-scene]");
   var current = "intro";
   var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var mobileToggle = document.getElementById("console-mobile-toggle");
+
+  function isMobile() {
+    return MOBILE_MQ.matches;
+  }
+
+  function syncMobileToggle() {
+    if (!mobileToggle) return;
+    var collapsed = document.body.classList.contains("console-mobile-collapsed");
+    mobileToggle.textContent = collapsed ? "Expand" : "Collapse";
+    mobileToggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
+  }
+
+  if (mobileToggle) {
+    mobileToggle.addEventListener("click", function () {
+      document.body.classList.toggle("console-mobile-collapsed");
+      syncMobileToggle();
+    });
+    syncMobileToggle();
+  }
 
   function setScene(id, fromScroll) {
     if (!CAPTIONS[id]) id = "intro";
@@ -33,7 +54,12 @@
     });
     if (!fromScroll && !reduced) {
       var t = document.querySelector('[data-console-scene="' + id + '"]');
-      if (t) t.scrollIntoView({ behavior: "smooth", block: "center" });
+      if (t) {
+        t.scrollIntoView({
+          behavior: "smooth",
+          block: isMobile() ? "start" : "center"
+        });
+      }
     }
   }
 
@@ -43,8 +69,14 @@
     });
   });
 
-  if ("IntersectionObserver" in window && targets.length) {
-    var io = new IntersectionObserver(
+  var io = null;
+  function ioRootMargin() {
+    return isMobile() ? "-18% 0px -52% 0px" : "-35% 0px -40% 0px";
+  }
+  function bindScrollSync() {
+    if (!("IntersectionObserver" in window) || !targets.length) return;
+    if (io) io.disconnect();
+    io = new IntersectionObserver(
       function (entries) {
         var best = null;
         var bestRatio = 0;
@@ -59,11 +91,19 @@
           if (id && id !== current) setScene(id, true);
         }
       },
-      { root: null, rootMargin: "-35% 0px -40% 0px", threshold: [0, 0.15, 0.35, 0.55, 0.75] }
+      {
+        root: null,
+        rootMargin: ioRootMargin(),
+        threshold: [0, 0.15, 0.35, 0.55, 0.75]
+      }
     );
     targets.forEach(function (t) {
       io.observe(t);
     });
+  }
+  bindScrollSync();
+  if (typeof MOBILE_MQ.addEventListener === "function") {
+    MOBILE_MQ.addEventListener("change", bindScrollSync);
   }
 
   setScene("intro", true);

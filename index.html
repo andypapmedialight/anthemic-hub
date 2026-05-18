@@ -1452,7 +1452,85 @@
       }
     }
     @media (max-width: 1079px) {
-      .split-console { margin-top: 8px; margin-bottom: 24px; }
+      body.layout-alt {
+        --console-mobile-pad: 200px;
+      }
+      body.layout-alt.console-mobile-collapsed {
+        --console-mobile-pad: 72px;
+      }
+      .split-scroll {
+        padding-bottom: calc(var(--console-mobile-pad) + env(safe-area-inset-bottom, 0px));
+      }
+      .split-console {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 500;
+        margin: 0;
+        padding: 0 12px calc(10px + env(safe-area-inset-bottom, 0px));
+        pointer-events: none;
+      }
+      .split-console .workshop-console {
+        pointer-events: auto;
+        max-width: 1120px;
+        margin: 0 auto;
+      }
+      .split-console .console-chrome {
+        box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.45);
+      }
+      html[data-theme="light"] .split-console .console-chrome {
+        box-shadow: 0 -6px 24px rgba(20, 24, 32, 0.14);
+      }
+      .console-titlebar {
+        padding-right: 8px;
+      }
+      .console-mobile-toggle {
+        margin-left: auto;
+        font-family: var(--font-ui);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        padding: 5px 10px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: var(--bg-card);
+        color: var(--fg-dim);
+        cursor: pointer;
+      }
+      .console-mobile-toggle:hover {
+        border-color: var(--accent-live);
+        color: var(--fg);
+      }
+      .console-body {
+        min-height: 108px;
+        max-height: 28vh;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      body.layout-alt.console-mobile-collapsed .console-body,
+      body.layout-alt.console-mobile-collapsed .console-foot {
+        display: none;
+      }
+      .console-foot {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+        padding-bottom: 8px;
+      }
+      .console-scene-btn {
+        flex-shrink: 0;
+      }
+      [data-console-scene] {
+        scroll-margin-bottom: calc(var(--console-mobile-pad) + 16px);
+      }
+    }
+    @media (min-width: 1080px) {
+      .console-mobile-toggle {
+        display: none;
+      }
     }
     body.layout-alt main .wrap {
       padding-top: 0;
@@ -1612,6 +1690,7 @@
           <div class="console-titlebar">
             <span class="console-dots" aria-hidden="true"><i></i><i></i><i></i></span>
             <span class="console-title">anthemic@hub — workshop</span>
+            <button type="button" class="console-mobile-toggle" id="console-mobile-toggle" aria-expanded="true" aria-controls="console-body">Collapse</button>
           </div>
           <p class="console-caption" id="console-caption">What — skills &amp; links</p>
           <div class="console-body" id="console-body">
