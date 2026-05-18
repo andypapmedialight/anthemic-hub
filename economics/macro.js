@@ -140,8 +140,12 @@ function cacheSet(key, data) {
 }
 
 // ── Provider ──────────────────────────────────────
+const PROVIDERS = ['yahoo', 'google', 'alphavantage'];
 let activeProvider = localStorage.getItem('mmd:provider') || 'yahoo';
+if (!PROVIDERS.includes(activeProvider)) activeProvider = 'yahoo';
+
 function setProvider(p) {
+  if (!PROVIDERS.includes(p)) return;
   activeProvider = p;
   localStorage.setItem('mmd:provider', p);
   renderInfoBox();
@@ -152,7 +156,10 @@ function setProvider(p) {
 
 function syncApiBanner() {
   const el = document.getElementById('api-banner');
-  if (el) el.hidden = activeProvider !== 'alphavantage';
+  if (!el) return;
+  const show = activeProvider === 'alphavantage';
+  el.hidden = !show;
+  el.setAttribute('aria-hidden', show ? 'false' : 'true');
 }
 
 // ── Visibility ────────────────────────────────────

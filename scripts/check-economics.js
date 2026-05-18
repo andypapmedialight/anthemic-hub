@@ -63,5 +63,13 @@ if (!indexHtml.includes('aria-controls="info-body"')) {
   fail('info-header-toggle missing aria-controls="info-body"');
 }
 
+if (!indexHtml.includes('.api-banner[hidden]')) {
+  fail('api-banner missing .api-banner[hidden] CSS (display:flex overrides hidden)');
+}
+
+if (!indexHtml.includes('id="api-banner" hidden')) {
+  fail('api-banner should start hidden in HTML');
+}
+
 if (failed) process.exit(1);
 console.log('check-economics: OK');
