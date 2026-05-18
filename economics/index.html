@@ -103,6 +103,12 @@
   }
   .status-line.ok { color: var(--up); }
   .status-line.err { color: var(--dn); }
+  .status-line.warn { color: var(--gold); }
+
+  .refresh-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
 
   /* ── Section ──────────────────────────────────────────── */
   .section {
@@ -150,6 +156,14 @@
 
   .card:hover { border-color: var(--border2); transform: translateY(-1px); }
 
+  a.card.card--link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .card--link:hover .card-name { color: var(--accent); }
+
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(8px); }
     to   { opacity: 1; transform: translateY(0); }
@@ -162,10 +176,10 @@
   .card--loading .card-refresh { opacity: 1; pointer-events: none; }
   .card--loading .card-refresh svg { animation: spin 0.8s linear infinite; }
 
+  .card-chart,
   .card-refresh {
     position: absolute;
     top: 7px;
-    right: 7px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -180,15 +194,27 @@
     opacity: 0;
     transition: opacity 0.15s, border-color 0.15s, color 0.15s;
   }
+
+  .card-chart { right: 34px; }
+
+  .card-refresh {
+    right: 7px;
+  }
+
+  .card:hover .card-chart,
   .card:hover .card-refresh,
+  .card--failed .card-chart,
   .card--failed .card-refresh,
+  .card-chart:focus-visible,
   .card-refresh:focus-visible {
     opacity: 1;
   }
+  .card--failed .card-chart,
   .card--failed .card-refresh {
     border-color: #6b4040;
     color: var(--dn);
   }
+  .card-chart:hover,
   .card-refresh:hover {
     border-color: var(--accent);
     color: var(--text);
@@ -682,8 +708,7 @@
     line-height: 1.4;
   }
 
-  .card--clickable { cursor: pointer; }
-  .card--clickable:focus-visible {
+  .card--link:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
   }

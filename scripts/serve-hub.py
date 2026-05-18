@@ -6,6 +6,7 @@ Usage: python3 scripts/serve-hub.py
 
 Proxy: GET /economics/proxy/yahoo?sym=^GSPC&range=5d
        GET /economics/proxy/fred?id=DGS2&start=2026-04-01
+       GET /economics/proxy/google?path=AAPL:NASDAQ
 """
 from __future__ import annotations
 
@@ -24,6 +25,7 @@ ALLOWED_HOSTS = (
     "query1.finance.yahoo.com",
     "fred.stlouisfed.org",
     "api.stlouisfed.org",
+    "www.google.com",
 )
 
 FRED_API_KEY = os.environ.get("FRED_API_KEY", "").strip()
@@ -31,6 +33,7 @@ UPSTREAM_TIMEOUT = int(os.environ.get("MMD_UPSTREAM_TIMEOUT", "25"))
 
 _SYM_RE = re.compile(r"^[%^A-Za-z0-9=.\-]+$")
 _FRED_ID_RE = re.compile(r"^[A-Z0-9]+$")
+_GF_PATH_RE = re.compile(r"^[A-Za-z0-9.^=:\-]+$")
 
 
 class HubHandler(SimpleHTTPRequestHandler):
@@ -44,6 +47,9 @@ class HubHandler(SimpleHTTPRequestHandler):
             return
         if path == "/economics/proxy/fred":
             self._proxy_fred()
+            return
+        if path == "/economics/proxy/google":
+            self._proxy_google()
             return
         if path.startswith("/.well-known/"):
             self.send_error(404)
@@ -116,6 +122,15 @@ class HubHandler(SimpleHTTPRequestHandler):
         )
         self._send_upstream(url)
 
+    def _proxy_google(self) -> None:
+        qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        gf_path = qs.get("path", [""])[0]
+        if not gf_path or not _GF_PATH_RE.match(gf_path):
+            self.send_error(400, "Invalid path")
+            return
+        url = f"https://www.google.com/finance/quote/{urllib.parse.quote(gf_path, safe='')}"
+        self._send_upstream(url)
+
     def _proxy_fred(self) -> None:
         qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
         series_id = qs.get("id", [""])[0]
@@ -150,6 +165,7 @@ def main():
     print(f"Anthemic hub: http://{BIND}:{PORT}/")
     print(f"Morning Macro: http://{BIND}:{PORT}/economics/")
     print(f"CORS proxy:    http://{BIND}:{PORT}/economics/proxy/yahoo?sym=…")
+    print(f"Google proxy:  http://{BIND}:{PORT}/economics/proxy/google?path=AAPL:NASDAQ")
     if FRED_API_KEY:
         print("FRED proxy:    api.stlouisfed.org (FRED_API_KEY set)")
     else:

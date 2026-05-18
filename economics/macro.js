@@ -5,6 +5,128 @@ let AV_KEY = 'YOUR_API_KEY_HERE';
 
 // ── Cache (5-min TTL) ─────────────────────────────
 const CACHE_TTL = 5 * 60 * 1000;
+
+// ── Load throttle (per-browser, limits refresh spam / bots) ──
+const REFRESH_MIN_GAP_MS = 60 * 1000;
+const REFRESH_MAX_PER_HOUR = 15;
+const PAGE_LOAD_MIN_GAP_MS = 20 * 1000;
+const PAGE_LOAD_MAX_PER_HOUR = 30;
+const CARD_REFRESH_MIN_GAP_MS = 15 * 1000;
+const THROTTLE_WINDOW_MS = 60 * 60 * 1000;
+let refreshBtnTimer = null;
+const cardRefreshAt = new Map(); // itemKey → last forced fetch ts
+
+function getThrottleState() {
+  const now = Date.now();
+  const cutoff = now - THROTTLE_WINDOW_MS;
+  try {
+    const raw = localStorage.getItem('mmd:throttle');
+    const state = raw ? JSON.parse(raw) : {};
+    return {
+      lastForce: state.lastForce || 0,
+      lastPageLoad: state.lastPageLoad || 0,
+      forceHits: (state.forceHits || []).filter(ts => ts > cutoff),
+      pageHits: (state.pageHits || []).filter(ts => ts > cutoff),
+    };
+  } catch {
+    return { lastForce: 0, lastPageLoad: 0, forceHits: [], pageHits: [] };
+  }
+}
+
+function saveThrottleState(state) {
+  try { localStorage.setItem('mmd:throttle', JSON.stringify(state)); } catch {}
+}
+
+function formatThrottleWait(ms) {
+  const sec = Math.max(1, Math.ceil(ms / 1000));
+  if (sec < 60) return `${sec}s`;
+  return `${Math.ceil(sec / 60)} min`;
+}
+
+function setRefreshButtonBlocked(blocked, retryAfterMs = 0) {
+  const btn = document.getElementById('refresh-btn');
+  if (!btn) return;
+  btn.disabled = blocked;
+  btn.setAttribute('aria-disabled', blocked ? 'true' : 'false');
+  clearTimeout(refreshBtnTimer);
+  if (blocked && retryAfterMs > 0) {
+    refreshBtnTimer = setTimeout(() => setRefreshButtonBlocked(false), retryAfterMs);
+  }
+}
+
+/** @returns {{ ok: true } | { ok: false, message: string, retryAfterMs: number }} */
+function checkForceRefreshThrottle() {
+  const state = getThrottleState();
+  const now = Date.now();
+  const gapWait = REFRESH_MIN_GAP_MS - (now - state.lastForce);
+  if (state.lastForce && gapWait > 0) {
+    return {
+      ok: false,
+      message: `Please wait ${formatThrottleWait(gapWait)} before refreshing again`,
+      retryAfterMs: gapWait,
+    };
+  }
+  if (state.forceHits.length >= REFRESH_MAX_PER_HOUR) {
+    const retryAfterMs = state.forceHits[0] + THROTTLE_WINDOW_MS - now;
+    return {
+      ok: false,
+      message: `Refresh limit reached — try again in ${formatThrottleWait(retryAfterMs)}`,
+      retryAfterMs,
+    };
+  }
+  return { ok: true };
+}
+
+function recordForceRefreshThrottle() {
+  const state = getThrottleState();
+  const now = Date.now();
+  state.lastForce = now;
+  state.forceHits.push(now);
+  saveThrottleState(state);
+}
+
+/** @returns {{ ok: true } | { ok: false, message: string, cacheOnly: true }} */
+function checkPageLoadThrottle() {
+  const state = getThrottleState();
+  const now = Date.now();
+  const gapWait = PAGE_LOAD_MIN_GAP_MS - (now - state.lastPageLoad);
+  if (state.lastPageLoad && gapWait > 0) {
+    return {
+      ok: false,
+      message: `Loaded recently — wait ${formatThrottleWait(gapWait)} for fresh data`,
+      cacheOnly: true,
+    };
+  }
+  if (state.pageHits.length >= PAGE_LOAD_MAX_PER_HOUR) {
+    return {
+      ok: false,
+      message: 'Hourly load limit reached — showing cached quotes',
+      cacheOnly: true,
+    };
+  }
+  return { ok: true };
+}
+
+function recordPageLoadThrottle() {
+  const state = getThrottleState();
+  const now = Date.now();
+  state.lastPageLoad = now;
+  state.pageHits.push(now);
+  saveThrottleState(state);
+}
+
+function checkCardRefreshThrottle(itemKey) {
+  const last = cardRefreshAt.get(itemKey) || 0;
+  const wait = CARD_REFRESH_MIN_GAP_MS - (Date.now() - last);
+  if (wait > 0) {
+    return { ok: false, message: `Wait ${formatThrottleWait(wait)} before refreshing this card` };
+  }
+  return { ok: true };
+}
+
+function recordCardRefreshThrottle(itemKey) {
+  cardRefreshAt.set(itemKey, Date.now());
+}
 function cacheGet(key) {
   try {
     const raw = localStorage.getItem(`mmd:${key}`);
@@ -144,11 +266,13 @@ function catalogEntryToEquity(entry) {
 }
 
 const EQUITIES = [
-  { sym: '^GSPC', label: 'S&P 500',        ticker: 'SPX',   def: true,  dp: 2 },
-  { sym: '^NDX',  label: 'NASDAQ 100',     ticker: 'NDX',   def: true,  dp: 2 },
-  { sym: '^DJI',  label: 'Dow Jones',      ticker: 'DJI',   def: true,  dp: 2 },
-  { sym: '^RUT',  label: 'Russell 2000',   ticker: 'RUT',   def: true,  dp: 2 },
-  { sym: '^AXJO', label: 'ASX 200',        ticker: 'AXJO',  def: true,  dp: 2 },
+  { sym: '^GSPC', label: 'S&P 500',           ticker: 'SPX',   def: true,  dp: 2 },
+  { sym: '^IXIC', label: 'NASDAQ Composite',  ticker: 'COMP',  def: true,  dp: 2 },
+  { sym: '^NDX',  label: 'NASDAQ 100',        ticker: 'NDX',   def: true,  dp: 2 },
+  { sym: '^DJI',  label: 'Dow Jones',         ticker: 'DJI',   def: true,  dp: 2 },
+  { sym: '^RUT',  label: 'Russell 2000',      ticker: 'RUT',   def: true,  dp: 2 },
+  { sym: '^AXJO', label: 'ASX 200',           ticker: 'AXJO',  def: true,  dp: 2 },
+  { sym: '^AORD', label: 'ASX All Ords',      ticker: 'AORD',  def: true,  dp: 2 },
   { sym: 'EEM',   label: 'Emerg. Markets', ticker: 'EEM',   def: false, dp: 2 },
   { sym: 'VGK',   label: 'Europe',         ticker: 'VGK',   def: false, dp: 2 },
   { sym: 'EWJ',   label: 'Japan',          ticker: 'EWJ',   def: false, dp: 2 },
@@ -311,20 +435,24 @@ function renderCard(meta, delay = 0) {
   const failed = cardIsFailed(meta);
   const loading = CARD_LOADING.has(meta.itemKey);
   const refreshLabel = `Refresh ${meta.label}`;
-  return `
-    <div class="card card--clickable ${cls}${failed ? ' card--failed' : ''}${loading ? ' card--loading' : ''}"
-         style="animation-delay:${delay}s"
-         data-item-key="${meta.itemKey}"
-         data-section-key="${meta.sectionKey}"
-         tabindex="0"
-         role="button"
-         aria-label="View ${meta.label} chart">
+  const chartLabel = `View ${meta.label} chart`;
+  const chartBtn = `
+      <button type="button" class="card-chart" data-item-key="${meta.itemKey}" data-section-key="${meta.sectionKey}"
+        aria-label="${chartLabel}" title="${chartLabel}">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M3 17l5-6 4 4 5-7 4 5"/>
+        </svg>
+      </button>`;
+  const refreshBtn = `
       <button type="button" class="card-refresh" aria-label="${refreshLabel}" title="${refreshLabel}">
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
           <path d="M23 4v6h-6M1 20v-6h6"/>
           <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
         </svg>
-      </button>
+      </button>`;
+  const body = `
+      ${chartBtn}
+      ${refreshBtn}
       <div class="card-ticker">${meta.ticker}</div>
       <div class="card-name">${meta.label}</div>
       <div class="card-price">${priceStr}</div>
@@ -332,8 +460,21 @@ function renderCard(meta, delay = 0) {
         <span class="pill ${pillClass(meta.pct)}">${pillText(meta.pct)}</span>
         ${absStr ? `<span class="card-abs">${absStr}</span>` : ''}
       </div>
-      ${meta.extra || ''}
-    </div>`;
+      ${meta.extra || ''}`;
+
+  const stateCls = `${cls}${failed ? ' card--failed' : ''}${loading ? ' card--loading' : ''}`;
+  const style = `style="animation-delay:${delay}s"`;
+
+  if (meta.googleUrl) {
+    return `
+    <a class="card card--link ${stateCls}" href="${meta.googleUrl}" target="_blank" rel="noopener noreferrer"
+       ${style}
+       aria-label="View ${meta.label} on Google Finance">${body}</a>`;
+  }
+
+  return `
+    <div class="card card--has-chart ${stateCls}" ${style}
+         data-item-key="${meta.itemKey}" data-section-key="${meta.sectionKey}">${body}</div>`;
 }
 const FETCH_TIMEOUT_MS = 12000;
 
@@ -378,7 +519,7 @@ function yahooChartUrlDirect(canonicalUrl) {
 }
 
 function isCorsProxiedHost(url) {
-  return /^https:\/\/(query1\.finance\.yahoo\.com|fred\.stlouisfed\.org)\//.test(url);
+  return /^https:\/\/(query1\.finance\.yahoo\.com|fred\.stlouisfed\.org|www\.google\.com)\//.test(url);
 }
 
 function parseRemoteTarget(canonicalUrl) {
@@ -397,6 +538,10 @@ function parseRemoteTarget(canonicalUrl) {
         start: u.searchParams.get('observation_start') || '',
       };
     }
+    if (u.hostname === 'www.google.com' && u.pathname.startsWith('/finance/quote/')) {
+      const path = decodeURIComponent(u.pathname.slice('/finance/quote/'.length));
+      return { type: 'google', path };
+    }
   } catch {}
   return { type: 'raw', url: canonicalUrl };
 }
@@ -411,6 +556,10 @@ function localProxyUrl(target) {
   if (target.type === 'fred') {
     const p = new URLSearchParams({ id: target.id, start: target.start });
     return `${base}/economics/proxy/fred?${p}`;
+  }
+  if (target.type === 'google') {
+    const p = new URLSearchParams({ path: target.path });
+    return `${base}/economics/proxy/google?${p}`;
   }
   return null;
 }
@@ -537,6 +686,120 @@ function formatYieldChange(change) {
   return `${sign(v)}${Math.abs(v).toFixed(2)} pp`;
 }
 
+// ── Google Finance (unofficial — quote HTML scrape) ────────────────
+const GOOGLE_FINANCE_BASE = {
+  '^GSPC':  { path: '.INX:INDEXSP',     ticker: '.INX',  exchange: 'INDEXSP' },
+  '^IXIC':  { path: '.IXIC:INDEXNASDAQ', ticker: '.IXIC', exchange: 'INDEXNASDAQ' },
+  '^NDX':   { path: 'NDX:INDEXNASDAQ',  ticker: 'NDX',   exchange: 'INDEXNASDAQ' },
+  '^AORD':  { path: 'XAO:INDEXASX',     ticker: 'XAO',   exchange: 'INDEXASX' },
+  '^DJI':   { path: '.DJI:INDEXDJX',    ticker: '.DJI',  exchange: 'INDEXDJX' },
+  '^RUT':   { path: 'RUT:INDEXRUSSELL', ticker: 'RUT',   exchange: 'INDEXRUSSELL' },
+  '^AXJO':  { path: 'XJO:INDEXASX',     ticker: 'XJO',   exchange: 'INDEXASX' },
+  'EEM':    { path: 'EEM:NYSEARCA',     ticker: 'EEM',   exchange: 'NYSEARCA' },
+  'VGK':    { path: 'VGK:NYSEARCA',     ticker: 'VGK',   exchange: 'NYSEARCA' },
+  'EWJ':    { path: 'EWJ:NYSEARCA',     ticker: 'EWJ',   exchange: 'NYSEARCA' },
+  'VIXY':   { path: 'VIXY:NYSEARCA',    ticker: 'VIXY',  exchange: 'NYSEARCA' },
+  'ARKK':   { path: 'ARKK:NYSEARCA',    ticker: 'ARKK',  exchange: 'NYSEARCA' },
+  'GC=F':   { path: 'GCW00:COMEX',      ticker: 'GCW00', exchange: 'COMEX' },
+  'SI=F':   { path: 'SIW00:COMEX',      ticker: 'SIW00', exchange: 'COMEX' },
+  'CL=F':   { path: 'CLW00:NYMEX',      ticker: 'CLW00', exchange: 'NYMEX' },
+  'NG=F':   { path: 'NGW00:NYMEX',      ticker: 'NGW00', exchange: 'NYMEX' },
+  'CPER':   { path: 'CPER:NYSEARCA',    ticker: 'CPER',  exchange: 'NYSEARCA' },
+  'WEAT':   { path: 'WEAT:NYSEARCA',    ticker: 'WEAT',  exchange: 'NYSEARCA' },
+  'CORN':   { path: 'CORN:NYSEARCA',    ticker: 'CORN',  exchange: 'NYSEARCA' },
+  '^FVX':   { path: 'FVX:INDEXCBOE',    ticker: 'FVX',   exchange: 'INDEXCBOE' },
+  '^TNX':   { path: 'TNX:INDEXCBOE',    ticker: 'TNX',   exchange: 'INDEXCBOE' },
+  '^TYX':   { path: 'TYX:INDEXCBOE',    ticker: 'TYX',   exchange: 'INDEXCBOE' },
+  '^IRX':   { path: 'IRX:INDEXCBOE',    ticker: 'IRX',   exchange: 'INDEXCBOE' },
+  'BRK-B':  { path: 'BRK.B:NYSE',       ticker: 'BRK.B', exchange: 'NYSE' },
+};
+
+function guessGoogleMeta(sym) {
+  if (sym.endsWith('.AX')) {
+    const t = sym.replace(/\.AX$/i, '');
+    return { path: `${t}:ASX`, ticker: t, exchange: 'ASX' };
+  }
+  if (sym.includes('-USD') || sym.includes('=')) return null;
+  if (sym.startsWith('^')) return null;
+  if (sym.includes('.')) {
+    const t = sym.replace(/\./g, '-');
+    return { path: `${t}:NYSE`, ticker: t, exchange: 'NYSE' };
+  }
+  if (sym.includes('-')) {
+    return { path: `${sym}:NYSE`, ticker: sym, exchange: 'NYSE' };
+  }
+  return { path: `${sym}:NASDAQ`, ticker: sym, exchange: 'NASDAQ' };
+}
+
+function resolveGoogleMeta(sym) {
+  return GOOGLE_FINANCE_BASE[sym] || guessGoogleMeta(sym);
+}
+
+for (const entry of STOCK_CATALOG) {
+  if (!GOOGLE_FINANCE_BASE[entry.sym]) {
+    const guessed = guessGoogleMeta(entry.sym);
+    if (guessed) GOOGLE_FINANCE_BASE[entry.sym] = guessed;
+  }
+}
+
+function googleFinancePageUrl(path) {
+  return `https://www.google.com/finance/quote/${encodeURIComponent(path)}`;
+}
+
+function googleFinanceUrlForItem(item, sectionKey) {
+  if (sectionKey === 'fx') {
+    return googleFinancePageUrl(`${item.from}-${item.to}`);
+  }
+  if (sectionKey === 'crypto') {
+    return googleFinancePageUrl(item.sym);
+  }
+  const sym = item.sym || item.yTicker || null;
+  if (sym) {
+    const meta = resolveGoogleMeta(sym);
+    if (meta) return googleFinancePageUrl(meta.path);
+  }
+  if (sectionKey === 'bond' && item.id?.startsWith('^')) {
+    const meta = resolveGoogleMeta(item.id);
+    if (meta) return googleFinancePageUrl(meta.path);
+  }
+  return null;
+}
+
+function withGoogleUrl(meta, item, sectionKey) {
+  const googleUrl = googleFinanceUrlForItem(item, sectionKey);
+  return googleUrl ? { ...meta, googleUrl } : meta;
+}
+
+function parseGoogleFinanceHtml(html, ticker, exchange) {
+  if (!html || !ticker || !exchange) return null;
+  const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const re = new RegExp(
+    `\\[\\["/[^"]+",\\["${esc(ticker)}","${esc(exchange)}"\\](?:,[^[]*)*,\\[(-?[\\d.]+),(-?[\\d.]+),(-?[\\d.]+),2,2,2\\]`
+  );
+  const m = html.match(re);
+  if (!m) return null;
+  const price = parseFloat(m[1]);
+  const change = parseFloat(m[2]);
+  const pct = parseFloat(m[3]);
+  if ([price, change, pct].some(v => Number.isNaN(v))) return null;
+  return { price, change, pct };
+}
+
+async function googleFinanceQuote(sym) {
+  const meta = resolveGoogleMeta(sym);
+  if (!meta) return null;
+  try {
+    const html = await fetchRemote(googleFinancePageUrl(meta.path), { asJson: false });
+    return html ? parseGoogleFinanceHtml(html, meta.ticker, meta.exchange) : null;
+  } catch {
+    return null;
+  }
+}
+
+function usesFrankfurterFx() {
+  return activeProvider === 'yahoo' || activeProvider === 'google';
+}
+
 // ── Yahoo Finance ──────────────────────────────────────────────────
 async function yahooChart(sym) {
   try {
@@ -642,7 +905,10 @@ async function fetchQuote(sym, force = false) {
   const key = `${activeProvider}:q:${sym}`;
   if (!force) { const c = cacheGet(key); if (c) return c; }
   try {
-    const result = activeProvider === 'yahoo' ? await yahooChart(sym) : await avQuote(sym);
+    let result = null;
+    if (activeProvider === 'yahoo') result = await yahooChart(sym);
+    else if (activeProvider === 'google') result = await googleFinanceQuote(sym);
+    else result = await avQuote(sym);
     if (result) cacheSet(key, result);
     return result;
   } catch { return null; }
@@ -652,8 +918,7 @@ async function fetchFX(from, to, force = false) {
   const key = `${activeProvider}:fx:${from}:${to}`;
   if (!force) { const c = cacheGet(key); if (c) return c; }
   try {
-    // Yahoo mode: use Frankfurter.dev (CORS-friendly); AV mode: Alpha Vantage
-    const result = activeProvider === 'yahoo'
+    const result = usesFrankfurterFx()
       ? await fetchFXFrank(from, to)
       : await avFX(from, to);
     if (result) cacheSet(key, result);
@@ -916,9 +1181,10 @@ async function fetchBond(series_id, force = false) {
   if (bondDef?.yTicker) {
     if (!force) { const c = cacheGet(key); if (c) return c; }
     try {
-      const result = activeProvider === 'yahoo'
-        ? await yahooChart(bondDef.yTicker)
-        : await avQuote(bondDef.yTicker);
+      let result = null;
+      if (activeProvider === 'yahoo') result = await yahooChart(bondDef.yTicker);
+      else if (activeProvider === 'google') result = await googleFinanceQuote(bondDef.yTicker);
+      else result = await avQuote(bondDef.yTicker);
       if (result) cacheSet(key, result);
       return result;
     } catch { return null; }
@@ -986,7 +1252,7 @@ function renderSectionGrid(section) {
           <span class="spread-val buffett-fair">% of GDP</span></div>`;
       }
 
-      return {
+      return withGoogleUrl({
         ticker: item.ticker,
         label: item.label,
         price,
@@ -998,7 +1264,7 @@ function renderSectionGrid(section) {
         itemKey: item.id,
         sectionKey: section.key,
         failed: !d || !price,
-      };
+      }, item, section.key);
     }));
     return;
   }
@@ -1015,11 +1281,11 @@ function renderSectionGrid(section) {
         extra = `<div class="yield-extra"><span class="spread-label">2s10s spread</span>
           <span class="spread-val ${cls}">${spread >= 0 ? '+' : ''}${spread}%</span></div>`;
       }
-      return { ticker: item.ticker, label: item.label,
+      return withGoogleUrl({ ticker: item.ticker, label: item.label,
         price: formatYieldPrice(d),
         change: d ? d.change : null, pct: d ? d.pct : null, extra,
         isYield: true,
-        itemKey: item.id, sectionKey: section.key, failed: !d || !formatYieldPrice(d) };
+        itemKey: item.id, sectionKey: section.key, failed: !d || !formatYieldPrice(d) }, item, section.key);
     }));
     return;
   }
@@ -1028,7 +1294,7 @@ function renderSectionGrid(section) {
     const k = getItemKey(item);
     const d = DATA[k];
     const card = section.card(item, d);
-    return { ...card, itemKey: k, sectionKey: section.key, failed: !d };
+    return withGoogleUrl({ ...card, itemKey: k, sectionKey: section.key, failed: !d }, item, section.key);
   }));
 }
 
@@ -1037,6 +1303,17 @@ async function refreshCard(itemKey, sectionKey) {
   if (!section) return;
   const item = section.items.find(i => getItemKey(i) === itemKey);
   if (!item) return;
+
+  const gate = checkCardRefreshThrottle(itemKey);
+  if (!gate.ok) {
+    const status = document.getElementById('status-line');
+    if (status) {
+      status.className = 'status-line warn';
+      status.textContent = `⚠ ${gate.message}`;
+    }
+    return;
+  }
+  recordCardRefreshThrottle(itemKey);
 
   CARD_LOADING.add(itemKey);
   renderSectionGrid(section);
@@ -1389,6 +1666,21 @@ function renderInfoBox() {
       note: 'Equities, commodities, and Treasury yields use Yahoo Finance via allorigins.win proxy (no key needed). FX rates come from Frankfurter.dev and crypto from CoinGecko — both CORS-friendly with no key required.',
     },
     {
+      id: 'google',
+      name: 'Google Finance',
+      tag: 'No key',
+      tagColor: 'var(--accent)',
+      rows: [
+        ['Key required', 'No'],
+        ['Daily limit',  'None (be gentle)'],
+        ['Rate limit',   'Self-throttled'],
+        ['API type',     'Unofficial'],
+        ['CORS proxy',   'Hub / allorigins'],
+        ['Coverage',     'Equities, Comms, Yields'],
+      ],
+      note: 'Live quotes from Google Finance quote pages (HTML parse). Charts still use Yahoo history. FX via Frankfurter, crypto via CoinGecko, valuation via FRED. Large page payloads — refresh sparingly.',
+    },
+    {
       id: 'alphavantage',
       name: 'Alpha Vantage',
       tag: 'Key required',
@@ -1500,8 +1792,13 @@ function getApiUsage() {
 function updateApiUsageDisplay() {
   const el = document.getElementById('api-usage');
   if (!el) return;
-  if (activeProvider !== 'alphavantage') {
+  if (activeProvider === 'yahoo') {
     el.textContent = 'Source: Yahoo Finance + Frankfurter (FX) + CoinGecko (Crypto) · No rate limit';
+    el.style.color = 'var(--dim)';
+    return;
+  }
+  if (activeProvider === 'google') {
+    el.textContent = 'Source: Google Finance (quotes) · Yahoo (charts) · Frankfurter · CoinGecko · Refresh sparingly';
     el.style.color = 'var(--dim)';
     return;
   }
@@ -1551,13 +1848,35 @@ function updateDateLine() {
 async function loadAll(force = false) {
   const btn = document.getElementById('refresh-btn');
   const status = document.getElementById('status-line');
+  let effectiveForce = force;
+  let throttleNote = null;
+
+  if (force) {
+    const gate = checkForceRefreshThrottle();
+    if (!gate.ok) {
+      status.className = 'status-line warn';
+      status.textContent = `⚠ ${gate.message}`;
+      setRefreshButtonBlocked(true, gate.retryAfterMs);
+      return;
+    }
+    recordForceRefreshThrottle();
+  } else {
+    const gate = checkPageLoadThrottle();
+    if (!gate.ok) {
+      effectiveForce = false;
+      throttleNote = gate.message;
+    } else {
+      recordPageLoadThrottle();
+    }
+  }
+
   btn.classList.add('spinning');
   status.className = 'status-line';
-  status.textContent = 'Loading…';
+  status.textContent = throttleNote ? 'Loading cached data…' : 'Loading…';
   updateDateLine();
   updateMarketStatus();
 
-  if (force && activeProvider === 'alphavantage') {
+  if (effectiveForce && activeProvider === 'alphavantage') {
     const eqItems = SECTIONS.find(s => s.key === 'eq')?.items || EQUITIES;
     trackApiCall(visOf(eqItems).length + visOf(COMMODITIES).length + visOf(FX_PAIRS).length);
     updateApiUsageDisplay();
@@ -1566,20 +1885,21 @@ async function loadAll(force = false) {
   // Valuation: one batched FRED load, then fill all cards (avoids duplicate parallel FRED calls).
   const valSection = SECTIONS.find(s => s.key === 'val');
   if (valSection && visOf(valSection.items).length) {
-    if (force) valuationFredPromise = null;
-    await getValuationFredRows(force);
+    if (effectiveForce) valuationFredPromise = null;
+    await getValuationFredRows(effectiveForce);
   }
 
   await Promise.all(SECTIONS.map(async section => {
     const visible = visOf(section.items);
     if (!visible.length) return;
-    const results = await Promise.all(visible.map(item => section.fetch(item, force)));
+    const results = await Promise.all(visible.map(item => section.fetch(item, effectiveForce)));
     visible.forEach((item, i) => { if (results[i]) DATA[getItemKey(item)] = results[i]; });
     renderSectionGrid(section);
     renderCust(section);
   }));
 
   btn.classList.remove('spinning');
+  if (force) setRefreshButtonBlocked(true, REFRESH_MIN_GAP_MS);
   const now = new Date().toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' });
   const eqItems = SECTIONS.find(s => s.key === 'eq')?.items || EQUITIES;
   const eqVisible = visOf(eqItems);
@@ -1589,6 +1909,9 @@ async function loadAll(force = false) {
     status.textContent = activeProvider === 'alphavantage'
       ? '⚠ AV key error or rate limit — check your key'
       : '⚠ Equities failed — allorigins.win proxy may be down, try refresh';
+  } else if (throttleNote) {
+    status.className = 'status-line warn';
+    status.textContent = `⚠ ${throttleNote} · cached ${now}`;
   } else {
     status.className = 'status-line ok';
     status.textContent = `✓ Updated ${now}`;
@@ -2000,9 +2323,13 @@ function wireUi() {
       }
       return;
     }
-    const card = e.target.closest('.card[data-item-key]');
-    if (card?.dataset.itemKey && card.dataset.sectionKey) {
-      openChart(card.dataset.itemKey, card.dataset.sectionKey);
+    const chartBtn = e.target.closest('.card-chart');
+    if (chartBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (chartBtn.dataset.itemKey && chartBtn.dataset.sectionKey) {
+        openChart(chartBtn.dataset.itemKey, chartBtn.dataset.sectionKey);
+      }
       return;
     }
     const pill = e.target.closest('.sym-pill');
@@ -2020,11 +2347,12 @@ function wireUi() {
       return;
     }
     if (!(e.target instanceof Element)) return;
-    const card = e.target.closest('.card[data-item-key]');
-    if (!card || e.target.closest('.card-refresh')) return;
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      openChart(card.dataset.itemKey, card.dataset.sectionKey);
+    const chartBtn = e.target.closest('.card-chart');
+    if (chartBtn?.dataset.itemKey && chartBtn.dataset.sectionKey) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openChart(chartBtn.dataset.itemKey, chartBtn.dataset.sectionKey);
+      }
     }
   });
 }
