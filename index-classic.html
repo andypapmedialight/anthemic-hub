@@ -3,8 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Andy Papadopoulos - Anthemic Developments</title>
-  <meta name="description" content="Andy Papadopoulos: full-stack engineer in Melbourne. Web apps, APIs, deployment, and creative tools - plus music and teaching. Anthemic Developments hub." />
+  <title>Andy Papadopoulos - Anthemic Developments (classic)</title>
+  <meta name="description" content="Andy Papadopoulos: full-stack engineer in Melbourne. Web apps, APIs, deployment, and creative tools - plus music and teaching. Anthemic Developments hub (classic layout)." />
+  <meta name="robots" content="noindex" />
   <meta property="og:title" content="Andy Papadopoulos - Anthemic Developments" />
   <meta property="og:description" content="Full-stack engineer in Melbourne. Web apps, APIs, deployment, civic tools, and creative experiments - Anthemic hub." />
   <meta property="og:type" content="website" />
@@ -18,7 +19,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700&display=swap" rel="stylesheet" />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%230e1015%22%2F%3E%3Cpath%20d%3D%22M8%2046%20C16%2024%2C24%2024%2C32%2046%20C40%2024%2C48%2024%2C56%2046%22%20fill%3D%22none%22%20stroke%3D%22%23c9a227%22%20stroke-width%3D%225%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%223%22%20fill%3D%22%236b9cff%22%2F%3E%3C%2Fsvg%3E" />
   <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%230e1015%22%2F%3E%3Cpath%20d%3D%22M8%2046%20C16%2024%2C24%2024%2C32%2046%20C40%2024%2C48%2024%2C56%2046%22%20fill%3D%22none%22%20stroke%3D%22%23c9a227%22%20stroke-width%3D%225%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%223%22%20fill%3D%22%236b9cff%22%2F%3E%3C%2Fsvg%3E" />
 
@@ -1413,175 +1414,25 @@
       line-height: 1.45;
       font-style: italic;
     }
-
-    /* --- workshop console layout --- */
-    :root {
-      --bg-console: #0a0c10;
-      --console-border: rgba(107, 156, 255, 0.22);
-      --console-titlebar: #12161e;
-      --font-mono: "JetBrains Mono", ui-monospace, monospace;
-    }
-    html[data-theme="light"] {
-      --bg-console: #f0f2f8;
-      --console-border: rgba(37, 99, 235, 0.2);
-      --console-titlebar: #e8ecf6;
-    }
-    body.layout-alt .wrap.split-shell {
-      max-width: 1280px;
-    }
-    .split-shell {
-      display: block;
-      padding-top: 8px;
-      padding-bottom: 48px;
-    }
-    @media (min-width: 1080px) {
-      .split-shell {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
-        gap: 28px 32px;
-        align-items: start;
-      }
-    }
-    .split-scroll { min-width: 0; order: 1; overflow-x: visible; }
-    .split-console { min-width: 0; order: 2; }
-    @media (min-width: 1080px) {
-      .split-console {
-        position: sticky;
-        top: 20px;
-        align-self: start;
-      }
-    }
-    @media (max-width: 1079px) {
-      .split-console { margin-top: 8px; margin-bottom: 24px; }
-    }
-    body.layout-alt main .wrap {
-      padding-top: 0;
-      padding-bottom: 0;
-      max-width: none;
-      padding-left: 0;
-      padding-right: 0;
-    }
-    .workshop-console { width: 100%; }
-    .console-chrome {
-      border: 1px solid var(--console-border);
-      border-radius: 14px;
-      overflow: hidden;
-      background: var(--bg-console);
-      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35), 0 24px 48px rgba(0, 0, 0, 0.35);
-    }
-    html[data-theme="light"] .console-chrome {
-      box-shadow: 0 12px 32px rgba(20, 24, 32, 0.1);
-    }
-    .console-titlebar {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 14px;
-      background: var(--console-titlebar);
-      border-bottom: 1px solid var(--border);
-      font-family: var(--font-ui);
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--fg-dim);
-    }
-    .console-dots { display: flex; gap: 5px; }
-    .console-dots i {
-      display: block;
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-    }
-    .console-dots i:nth-child(1) { background: #e06c6c; opacity: 0.85; }
-    .console-dots i:nth-child(2) { background: #d4a84b; opacity: 0.85; }
-    .console-dots i:nth-child(3) { background: #6bcf7f; opacity: 0.85; }
-    .console-caption {
-      margin: 0;
-      padding: 10px 14px 0;
-      font-family: var(--font-ui);
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--accent);
-    }
-    .console-body {
-      position: relative;
-      min-height: 240px;
-      padding: 8px 0 12px;
-    }
-    .console-scene {
-      margin: 0;
-      padding: 0 14px;
-      font-family: var(--font-mono);
-      font-size: 11.5px;
-      line-height: 1.55;
-      white-space: pre-wrap;
-      word-break: break-word;
-      opacity: 0;
-      transform: translateY(6px);
-      transition: opacity 0.22s ease, transform 0.22s ease;
-      position: absolute;
-      inset: 8px 0 12px;
-      pointer-events: none;
-    }
-    .console-scene.is-active {
-      opacity: 1;
-      transform: translateY(0);
-      position: relative;
-      inset: auto;
-      pointer-events: auto;
-    }
-    .console-scene[hidden] { display: block !important; }
-    .console-scene:not(.is-active) { visibility: hidden; }
-    .c-prompt { color: var(--accent); }
-    .c-cmd { color: var(--fg); }
-    .c-out { color: var(--fg-dim); }
-    .c-dim { color: var(--fg-dim); opacity: 0.75; }
-    .c-ok { color: var(--mml-blue); font-weight: 600; }
-    .c-warn { color: var(--accent); font-weight: 600; }
-    .c-link { color: var(--mml-blue); }
-    .console-foot {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      padding: 10px 12px 12px;
-      border-top: 1px solid var(--border);
-    }
-    .console-scene-btn {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      font-weight: 500;
-      padding: 4px 8px;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-      background: var(--bg-card);
-      color: var(--fg-dim);
-      cursor: pointer;
-    }
-    .console-scene-btn:hover { border-color: var(--accent-live); color: var(--fg); }
-    .console-scene-btn.is-active {
-      border-color: var(--accent-live);
-      color: var(--badge-live-fg);
-      background: var(--accent-live-soft);
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .console-scene { transition: none; transform: none; }
-    }
-    [data-console-scene].console-target-active {
-      outline: 2px solid var(--accent-live);
-      outline-offset: 6px;
-      border-radius: 12px;
-    }
-    @media (min-width: 880px) {
-      body.layout-alt .hub-section > .section-script:not(.section-script--aside),
-      body.layout-alt .hub-who-block > .section-script:not(.section-script--aside) {
-        right: calc(100% + 8px);
-      }
-    }
-
   </style>
   <script src="/assets/js/theme-init.js"></script>
-<body class="layout-alt">
+  <style>
+    .classic-banner {
+      font-family: var(--font-ui);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 10px 28px;
+      background: var(--bg-wash);
+      border-bottom: 1px solid var(--border);
+      color: var(--fg-dim);
+    }
+    .classic-banner a { color: var(--accent-live); font-weight: 600; }
+  </style>
+<body>
+  <p class="classic-banner" role="status">
+    <strong>Classic layout</strong> — saved backup.
+    <a href="/">Current hub</a>
+  </p>
   <header>
     <div class="wrap header-top">
       <div class="theme-group" role="group" aria-label="Colour theme">
@@ -1605,75 +1456,9 @@
     </div>
   </header>
 
-  <div class="wrap split-shell">
-    <aside class="split-console" aria-label="Workshop console preview">
-      <div class="workshop-console" id="workshop-console">
-        <div class="console-chrome">
-          <div class="console-titlebar">
-            <span class="console-dots" aria-hidden="true"><i></i><i></i><i></i></span>
-            <span class="console-title">anthemic@hub — workshop</span>
-          </div>
-          <p class="console-caption" id="console-caption">What — skills &amp; links</p>
-          <div class="console-body" id="console-body">
-            <pre class="console-scene is-active" data-scene="intro"><code><span class="c-dim"># welcome</span>
-<span class="c-prompt">$</span> <span class="c-cmd">anthemic hub --status</span>
-<span class="c-out">  setlist      </span><span class="c-ok">live</span>   <span class="c-dim">/setlist/</span>
-<span class="c-out">  brain-map    </span><span class="c-ok">live</span>   <span class="c-dim">/brain/</span>
-<span class="c-out">  morning-macro</span><span class="c-ok">live</span>   <span class="c-dim">/economics/</span>
-<span class="c-out">  swarm-report </span><span class="c-warn">ext</span>    <span class="c-dim">safermurrayroad.com</span>
-<span class="c-prompt">$</span> <span class="c-cmd">open /brain/</span>   <span class="c-dim"># 3D atlas</span></code></pre>
-            <pre class="console-scene" data-scene="who" hidden><code><span class="c-dim"># who's andy</span>
-<span class="c-prompt">$</span> <span class="c-cmd">whoami --verbose</span>
-<span class="c-out">  Mecca Medialight · Melbourne</span>
-<span class="c-out">  ships: UI · APIs · pipelines · AWS</span>
-<span class="c-prompt">$</span> <span class="c-cmd">qa status cinnamon</span>
-<span class="c-ok">✓ morale: high</span></code></pre>
-            <pre class="console-scene" data-scene="lens" hidden><code><span class="c-dim"># your lens</span>
-<span class="c-prompt">$</span> <span class="c-cmd">hub filter --interest music</span>
-<span class="c-out">  highlighting: gigs · setlist · bass · bandcamp</span>
-<span class="c-prompt">$</span> <span class="c-cmd">hub filter --interest community</span>
-<span class="c-out">  highlighting: SWARM reporter · civic tech</span>
-<span class="c-dim">  (tap chips to re-sort sections)</span></code></pre>
-            <pre class="console-scene" data-scene="projects" hidden><code><span class="c-dim"># 01 projects</span>
-<span class="c-prompt">$</span> <span class="c-cmd">setlist new "Friday at Bar Open"</span>
-<span class="c-ok">→ saved</span>  <span class="c-dim">React · Vite · Spring Boot</span>
-<span class="c-prompt">$</span> <span class="c-cmd">deploy swarm-reporter</span>
-<span class="c-out">  heatmap live · community reports</span></code></pre>
-            <pre class="console-scene" data-scene="music" hidden><code><span class="c-dim"># 02 music</span>
-<span class="c-prompt">$</span> <span class="c-cmd">gigs list --upcoming</span>  <span class="c-dim">/gigs/</span>
-<span class="c-prompt">$</span> <span class="c-cmd">bass lessons --book</span>   <span class="c-dim">/bass/</span>
-<span class="c-prompt">$</span> <span class="c-cmd">bandcamp open anthems-to-the-fall</span></code></pre>
-            <pre class="console-scene" data-scene="bio" hidden><code><span class="c-dim"># 03 music bio</span>
-<span class="c-prompt">$</span> <span class="c-cmd">projects --since 1989</span>
-<span class="c-out">  Helvellyn · Dollop · Deborah Conway …</span>
-<span class="c-out">  Anthems to the Fall — solo project</span>
-<span class="c-dim">  "you've got big hands — you can play bass!"</span></code></pre>
-            <pre class="console-scene" data-scene="reading" hidden><code><span class="c-dim"># 04 reading list</span>
-<span class="c-prompt">$</span> <span class="c-cmd">cat content/hub.json | jq .reading_list</span>
-<span class="c-out">  economics · politics · history …</span>
-<span class="c-dim">  shelf photo → spines matched below</span></code></pre>
-            <pre class="console-scene" data-scene="work" hidden><code><span class="c-dim"># 05 day job</span>
-<span class="c-prompt">$</span> <span class="c-cmd">stack describe mecca-medialight</span>
-<span class="c-out">  Laravel · modern front ends · CI/CD</span>
-<span class="c-out">  role: senior dev / full-stack / infra</span></code></pre>
-          </div>
-          <div class="console-foot">
-            <button type="button" class="console-scene-btn is-active" data-scene-jump="intro">intro</button>
-            <button type="button" class="console-scene-btn" data-scene-jump="who">who</button>
-            <button type="button" class="console-scene-btn" data-scene-jump="lens">lens</button>
-            <button type="button" class="console-scene-btn" data-scene-jump="projects">01</button>
-            <button type="button" class="console-scene-btn" data-scene-jump="music">02</button>
-            <button type="button" class="console-scene-btn" data-scene-jump="bio">03</button>
-            <button type="button" class="console-scene-btn" data-scene-jump="reading">04</button>
-            <button type="button" class="console-scene-btn" data-scene-jump="work">05</button>
-          </div>
-        </div>
-      </div>
-    </aside>
-    <div class="split-scroll">
-      <main>
+  <main>
     <div class="wrap">
-      <section class="employer-strip" data-console-scene="intro" aria-label="At a glance">
+      <section class="employer-strip" aria-label="At a glance">
         <p class="section-script section-script--aside" aria-hidden="true">What?</p>
         <div class="employer-strip-inner">
           <div class="employer-skills" id="employer-skills" aria-label="Focus areas">
@@ -1691,7 +1476,7 @@
           </div>
         </div>
       </section>
-      <div class="hub-who-block" data-console-scene="who" aria-label="About">
+      <div class="hub-who-block" aria-label="About">
         <p class="section-script" aria-hidden="true">Who?</p>
         <article class="card card--profile" id="who-am-i-card">
           <span class="badge">About</span>
@@ -1724,7 +1509,7 @@
           </div>
         </article>
       </div>
-      <div class="interest-bar" data-console-scene="lens">
+      <div class="interest-bar">
         <p class="section-script section-script--aside" aria-hidden="true">Your lens</p>
         <div class="interest-bar-main">
           <fieldset class="interest-fieldset">
@@ -1742,7 +1527,7 @@
           <p class="interest-status" id="interest-status" aria-live="polite" role="status"></p>
         </div>
       </div>
-      <div class="hub-section" data-hub-section="projects" data-console-scene="projects">
+      <div class="hub-section" data-hub-section="projects">
       <h2 class="section-heading"><span class="sec-num" aria-hidden="true">01</span> <span class="sec-title">Anthemic projects</span></h2>
       <section class="grid" aria-label="Anthemic projects">
         <a class="card card--live card--live-wave card--flagship" href="/setlist/" data-interests="music gigs creative">
@@ -1779,7 +1564,7 @@
       </section>
       </div>
 
-      <div class="hub-section" data-hub-section="music" data-console-scene="music">
+      <div class="hub-section" data-hub-section="music">
       <p class="section-script" aria-hidden="true">Where?</p>
       <h2 class="section-heading"><span class="sec-num" aria-hidden="true">02</span> <span class="sec-title">Music</span></h2>
       <section class="grid" aria-label="Music">
@@ -1832,7 +1617,7 @@
       </div>
       </div>
 
-      <div class="hub-section" data-hub-section="music-bio" data-console-scene="bio" data-interests="music personal">
+      <div class="hub-section" data-hub-section="music-bio" data-interests="music personal">
       <p class="section-script" aria-hidden="true">When?</p>
       <h2 class="section-heading"><span class="sec-num" aria-hidden="true">03</span> <span class="sec-title">Music bio</span></h2>
       <article class="bio-card">
@@ -1888,7 +1673,7 @@
       </article>
       </div>
 
-      <div class="hub-section" id="reading-list" data-hub-section="reading-list" data-console-scene="reading" data-interests="personal creative work teaching">
+      <div class="hub-section" id="reading-list" data-hub-section="reading-list" data-interests="personal creative work teaching">
       <p class="section-script" aria-hidden="true">On my desk</p>
       <h2 class="section-heading"><span class="sec-num" aria-hidden="true">04</span> <span class="sec-title">Reading list</span></h2>
       <article class="reading-board" aria-label="Books read and in progress">
@@ -1907,7 +1692,7 @@
       </article>
       </div>
 
-      <div class="hub-section" data-hub-section="work" data-console-scene="work">
+      <div class="hub-section" data-hub-section="work">
       <p class="section-script" aria-hidden="true">Day job</p>
       <h2 class="section-heading"><span class="sec-num" aria-hidden="true">05</span> <span class="sec-title">Work</span></h2>
       <section class="grid" aria-label="Professional work">
@@ -1924,16 +1709,13 @@
       </section>
       </div>
     </div>
-      </main>
-    </div>
-  </div>
+  </main>
 
   <footer>
     <div class="wrap">
-      <div>&copy; <span id="y"></span> Anthemic Developments · <a href="/index-classic.html">Classic layout</a></div>
+      <div>&copy; <span id="y"></span> Anthemic Developments · <a href="/">Current hub</a></div>
 
     </div>
   </footer>
   <script defer src="/assets/js/hub.js"></script>
-  <script defer src="/assets/js/hub-console.js"></script>
 </html>
