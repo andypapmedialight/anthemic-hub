@@ -143,3 +143,6 @@ jobs:
           curl -sS --retry 3 --retry-delay 2 "https://anthemic-developments.com/personal/writing/" -o /tmp/anthemic-smoke-writing.html
           grep -qF 'Writing — coming soon' /tmp/anthemic-smoke-writing.html \
             || { echo "Writing page missing expected <title> marker"; exit 1; }
+          ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            'systemctl is-active --quiet mmd-valuation.service && curl -fsS --max-time 10 http://127.0.0.1:8071/health | grep -q "\"ok\""' \
+            || { echo "mmd-valuation.service not healthy on loopback :8071 (check journalctl -u mmd-valuation)"; exit 1; }

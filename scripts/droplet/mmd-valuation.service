@@ -10,8 +10,9 @@ Group=www-data
 WorkingDirectory=/opt/anthemic-mmd
 Environment=BIND=127.0.0.1
 Environment=PORT=8071
+Environment=PYTHONUNBUFFERED=1
 EnvironmentFile=-/etc/anthemic-mmd/valuation.env
-ExecStart=/usr/bin/python3 /opt/anthemic-mmd/valuation_server.py
+ExecStart=/usr/bin/python3 -u /opt/anthemic-mmd/valuation_server.py
 Restart=on-failure
 RestartSec=5
 TimeoutStartSec=30

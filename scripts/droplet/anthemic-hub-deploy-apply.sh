@@ -189,9 +189,24 @@ if [[ -f "${INCOMING}/mmd/valuation_server.py" && -f "${INCOMING}/mmd/valuation_
     systemctl daemon-reload
     systemctl enable mmd-valuation.service
     systemctl restart mmd-valuation.service
+    sleep 2
+    if ! systemctl is-active --quiet mmd-valuation.service; then
+      echo "anthemic-hub-deploy-apply: mmd-valuation.service is not active" >&2
+      systemctl status mmd-valuation.service --no-pager >&2 || true
+      journalctl -u mmd-valuation.service -n 40 --no-pager >&2 || true
+      exit 1
+    fi
+    if command -v curl >/dev/null 2>&1; then
+      if ! curl -fsS --max-time 10 http://127.0.0.1:8071/health >/dev/null; then
+        echo "anthemic-hub-deploy-apply: mmd-valuation /health check failed" >&2
+        journalctl -u mmd-valuation.service -n 40 --no-pager >&2 || true
+        exit 1
+      fi
+    fi
   fi
 else
-  echo "anthemic-hub-deploy-apply: warning: missing incoming-hub/mmd/ (valuation API not updated)" >&2
+  echo "anthemic-hub-deploy-apply: missing incoming-hub/mmd/ (valuation API not updated)" >&2
+  exit 1
 fi
 
 chown -R www-data:www-data "${DEST}"
