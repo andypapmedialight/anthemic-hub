@@ -1159,7 +1159,7 @@ function valuationReferenceExtra(item, live = null) {
   }
   if (!live) {
     html += `<div class="yield-extra"><span class="spread-label">Note</span>
-      <span class="spread-val">Cached benchmark — start local hub for live data</span></div>`;
+      <span class="spread-val">Benchmark — use Refresh if live fetch did not run</span></div>`;
   }
   return html;
 }
