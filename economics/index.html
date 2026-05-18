@@ -156,13 +156,22 @@
 
   .card:hover { border-color: var(--border2); transform: translateY(-1px); }
 
-  a.card.card--link {
+  .card-actions {
+    position: absolute;
+    top: 7px;
+    right: 7px;
+    z-index: 2;
+    display: flex;
+    gap: 6px;
+  }
+
+  .card-main {
     display: block;
     text-decoration: none;
     color: inherit;
   }
 
-  .card--link:hover .card-name { color: var(--accent); }
+  a.card-main:hover .card-name { color: var(--accent); }
 
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(8px); }
@@ -173,13 +182,14 @@
   .card.dn  { border-bottom: 2px solid var(--dn); }
   .card.neu { border-bottom: 2px solid var(--border2); }
   .card--failed { border-color: #4a3030; }
+  .card--loading .card-chart,
   .card--loading .card-refresh { opacity: 1; pointer-events: none; }
   .card--loading .card-refresh svg { animation: spin 0.8s linear infinite; }
+  .card--loading.card--link-wrap .card-main { pointer-events: none; }
 
   .card-chart,
   .card-refresh {
-    position: absolute;
-    top: 7px;
+    position: static;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -193,12 +203,6 @@
     cursor: pointer;
     opacity: 0;
     transition: opacity 0.15s, border-color 0.15s, color 0.15s;
-  }
-
-  .card-chart { right: 34px; }
-
-  .card-refresh {
-    right: 7px;
   }
 
   .card:hover .card-chart,
@@ -309,6 +313,15 @@
     font-family: 'DM Mono', monospace;
     font-size: 0.62rem;
     font-weight: 500;
+  }
+  .yield-extra--usd {
+    flex-wrap: wrap;
+    gap: 2px 6px;
+  }
+  .spread-val--figure {
+    font-size: 0.92rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
   }
   .spread-pos { color: var(--up); }
   .spread-neg { color: var(--dn); }
@@ -708,9 +721,13 @@
     line-height: 1.4;
   }
 
-  .card--link:focus-visible {
+  a.card-main:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
+  }
+
+  .card--link-wrap:focus-within:has(.card-chart:focus-visible, .card-refresh:focus-visible) a.card-main:focus-visible {
+    outline: none;
   }
 
   /* ── Chart modal ──────────────────────────────────────── */
@@ -864,15 +881,15 @@
 <body>
 
 <!-- ── API Key Banner ── -->
-<div class="api-banner" id="api-banner">
+<div class="api-banner" id="api-banner" hidden>
   <span>⚡ Alpha Vantage API Key:</span>
-  <input type="text" id="api-key-input" placeholder="Paste your key here…" spellcheck="false">
+  <input type="password" id="api-key-input" placeholder="Paste your key here…" spellcheck="false" autocomplete="off">
   <button type="button" id="save-key-btn">Save &amp; Load</button>
 </div>
 
 <!-- ── Info Box ── -->
 <div class="info-box">
-  <div class="info-header" id="info-header-toggle" role="button" tabindex="0" aria-expanded="false">
+  <div class="info-header" id="info-header-toggle" role="button" tabindex="0" aria-expanded="false" aria-controls="info-body">
     <span class="info-icon">ⓘ</span>
     Data Sources &amp; API Options
     <span class="info-chevron info-chevron--closed" id="info-chevron">▾</span>
@@ -975,15 +992,15 @@
       </div>
       <button type="button" class="chart-modal-close" id="chart-modal-close" aria-label="Close chart">&times;</button>
     </div>
-    <div class="chart-period-tabs" id="chart-period-tabs" role="tablist" aria-label="Chart period"></div>
-    <div class="chart-modal-body" id="chart-modal-body">Loading…</div>
+    <div class="chart-period-tabs" id="chart-period-tabs" role="tablist" aria-label="Chart period" aria-controls="chart-modal-body"></div>
+    <div class="chart-modal-body" id="chart-modal-body" role="tabpanel" tabindex="-1">Loading…</div>
     <div class="chart-modal-stats" id="chart-modal-stats"></div>
   </div>
 </div>
 
 <!-- ── Footer ── -->
 <div class="footer">
-  <span class="footer-note"><a href="/" style="color:var(--muted);text-decoration:none">← Anthemic hub</a> · Data: Alpha Vantage · FRED (St. Louis Fed) · Prices are delayed</span>
+  <span class="footer-note"><a href="/" style="color:var(--muted);text-decoration:none">← Anthemic hub</a> · Multi-source quotes (see Data Sources) · FRED valuation · Prices may be delayed</span>
   <span class="footer-note" id="api-usage" style="font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--dim)"></span>
   <div class="market-status" id="market-status">
     <div class="dot closed" id="mkt-dot"></div>

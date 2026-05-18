@@ -146,9 +146,13 @@ function setProvider(p) {
   localStorage.setItem('mmd:provider', p);
   renderInfoBox();
   updateApiUsageDisplay();
-  const avNeedsKey = p === 'alphavantage' && AV_KEY === 'YOUR_API_KEY_HERE';
-  document.getElementById('api-banner').style.display = avNeedsKey ? 'flex' : 'none';
+  syncApiBanner();
   loadAll(true);
+}
+
+function syncApiBanner() {
+  const el = document.getElementById('api-banner');
+  if (el) el.hidden = activeProvider !== 'alphavantage';
 }
 
 // ── Visibility ────────────────────────────────────
@@ -434,8 +438,8 @@ function renderCard(meta, delay = 0) {
       : (meta.change !== null ? `${sign(meta.change)}${fmt(meta.change)}` : '');
   const failed = cardIsFailed(meta);
   const loading = CARD_LOADING.has(meta.itemKey);
-  const refreshLabel = `Refresh ${meta.label}`;
-  const chartLabel = `View ${meta.label} chart`;
+  const refreshLabel = `Refresh ${escapeHtml(meta.label)}`;
+  const chartLabel = `View ${escapeHtml(meta.label)} chart`;
   const chartBtn = `
       <button type="button" class="card-chart" data-item-key="${meta.itemKey}" data-section-key="${meta.sectionKey}"
         aria-label="${chartLabel}" title="${chartLabel}">
@@ -450,11 +454,10 @@ function renderCard(meta, delay = 0) {
           <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
         </svg>
       </button>`;
-  const body = `
-      ${chartBtn}
-      ${refreshBtn}
-      <div class="card-ticker">${meta.ticker}</div>
-      <div class="card-name">${meta.label}</div>
+  const actions = `<div class="card-actions">${chartBtn}${refreshBtn}</div>`;
+  const mainInner = `
+      <div class="card-ticker">${escapeHtml(meta.ticker)}</div>
+      <div class="card-name">${escapeHtml(meta.label)}</div>
       <div class="card-price">${priceStr}</div>
       <div class="card-change">
         <span class="pill ${pillClass(meta.pct)}">${pillText(meta.pct)}</span>
@@ -464,17 +467,23 @@ function renderCard(meta, delay = 0) {
 
   const stateCls = `${cls}${failed ? ' card--failed' : ''}${loading ? ' card--loading' : ''}`;
   const style = `style="animation-delay:${delay}s"`;
+  const dataAttrs = ` data-item-key="${meta.itemKey}" data-section-key="${meta.sectionKey}"`;
 
-  if (meta.googleUrl) {
+  if (meta.googleUrl && String(meta.googleUrl).startsWith('https://')) {
+    const gfLabel = `View ${escapeHtml(meta.label)} on Google Finance (opens in new tab)`;
     return `
-    <a class="card card--link ${stateCls}" href="${meta.googleUrl}" target="_blank" rel="noopener noreferrer"
-       ${style}
-       aria-label="View ${meta.label} on Google Finance">${body}</a>`;
+    <div class="card card--link-wrap ${stateCls}"${style}${dataAttrs}>
+      ${actions}
+      <a class="card-main" href="${meta.googleUrl}" target="_blank" rel="noopener noreferrer"
+         aria-label="${gfLabel}">${mainInner}</a>
+    </div>`;
   }
 
   return `
-    <div class="card card--has-chart ${stateCls}" ${style}
-         data-item-key="${meta.itemKey}" data-section-key="${meta.sectionKey}">${body}</div>`;
+    <div class="card card--has-chart ${stateCls}"${style}${dataAttrs}>
+      ${actions}
+      <div class="card-main">${mainInner}</div>
+    </div>`;
 }
 const FETCH_TIMEOUT_MS = 12000;
 
@@ -1017,8 +1026,8 @@ function privateDebtBillions(fred) {
 function valuationUsdExtra(label, billions) {
   const usd = formatUsdCompact(billions);
   if (!usd) return '';
-  return `<div class="yield-extra"><span class="spread-label">${label}</span>
-    <span class="spread-val buffett-fair">${usd}</span></div>`;
+  return `<div class="yield-extra yield-extra--usd"><span class="spread-label">${label}</span>
+    <span class="spread-val spread-val--figure buffett-fair">${usd}</span></div>`;
 }
 
 function fredRowsToQuote(rows) {
@@ -1941,10 +1950,17 @@ function renderChartPeriodTabs(periods, activeDays) {
   const el = document.getElementById('chart-period-tabs');
   if (!el) return;
   el.innerHTML = periods.map(p => `
-    <button type="button" role="tab" data-days="${p.days}"
+    <button type="button" role="tab" id="chart-tab-${p.days}" data-days="${p.days}"
       class="${p.days === activeDays ? 'active' : ''}"
-      aria-selected="${p.days === activeDays ? 'true' : 'false'}">${p.label}</button>
+      aria-selected="${p.days === activeDays ? 'true' : 'false'}"
+      aria-controls="chart-modal-body" tabindex="${p.days === activeDays ? '0' : '-1'}">${p.label}</button>
   `).join('');
+  const body = document.getElementById('chart-modal-body');
+  const activeTab = el.querySelector('button.active');
+  if (body) {
+    body.setAttribute('role', 'tabpanel');
+    if (activeTab) body.setAttribute('aria-labelledby', activeTab.id);
+  }
 }
 
 function syncChartPeriodTabs(activeDays) {
@@ -1952,7 +1968,11 @@ function syncChartPeriodTabs(activeDays) {
     const on = Number(btn.dataset.days) === activeDays;
     btn.classList.toggle('active', on);
     btn.setAttribute('aria-selected', on ? 'true' : 'false');
+    btn.tabIndex = on ? 0 : -1;
   });
+  const body = document.getElementById('chart-modal-body');
+  const activeTab = document.querySelector(`#chart-period-tabs button[data-days="${activeDays}"]`);
+  if (body && activeTab) body.setAttribute('aria-labelledby', activeTab.id);
 }
 
 function historyCacheGet(key) {
@@ -2199,6 +2219,45 @@ function chartOpts(item, section) {
   return { isPercent, dp };
 }
 
+let chartFocusTrapHandler = null;
+
+function chartModalFocusables() {
+  const panel = document.querySelector('#chart-modal .chart-modal-panel');
+  if (!panel) return [];
+  return [...panel.querySelectorAll(
+    'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  )];
+}
+
+function installChartFocusTrap() {
+  const modal = document.getElementById('chart-modal');
+  if (!modal) return;
+  removeChartFocusTrap();
+  chartFocusTrapHandler = e => {
+    if (e.key !== 'Tab' || modal.hidden) return;
+    const nodes = chartModalFocusables();
+    if (!nodes.length) return;
+    const first = nodes[0];
+    const last = nodes[nodes.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  };
+  modal.addEventListener('keydown', chartFocusTrapHandler);
+}
+
+function removeChartFocusTrap() {
+  const modal = document.getElementById('chart-modal');
+  if (modal && chartFocusTrapHandler) {
+    modal.removeEventListener('keydown', chartFocusTrapHandler);
+    chartFocusTrapHandler = null;
+  }
+}
+
 function closeChart() {
   const modal = document.getElementById('chart-modal');
   if (!modal) return;
@@ -2209,6 +2268,7 @@ function closeChart() {
   modal.hidden = true;
   modal.inert = true;
   document.body.style.overflow = '';
+  removeChartFocusTrap();
   if (restore instanceof HTMLElement && document.contains(restore)) {
     restore.focus({ preventScroll: true });
   }
@@ -2266,6 +2326,7 @@ async function openChart(itemKey, sectionKey) {
   modal.hidden = false;
   modal.inert = false;
   document.body.style.overflow = 'hidden';
+  installChartFocusTrap();
   document.getElementById('chart-modal-close')?.focus();
   await loadChartModal();
 }
@@ -2277,7 +2338,7 @@ function saveKey() {
   if (!key) return;
   AV_KEY = key;
   localStorage.setItem('av_key', key);
-  document.getElementById('api-banner').style.display = 'none';
+  syncApiBanner();
   loadAll(true);
 }
 
@@ -2367,8 +2428,7 @@ async function init() {
     AV_KEY = saved;
     document.getElementById('api-key-input').value = saved;
   }
-  const avNeedsKey = activeProvider === 'alphavantage' && AV_KEY === 'YOUR_API_KEY_HERE';
-  document.getElementById('api-banner').style.display = avNeedsKey ? 'flex' : 'none';
+  syncApiBanner();
   updateDateLine();
   updateMarketStatus();
   renderInfoBox();
