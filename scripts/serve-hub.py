@@ -27,6 +27,7 @@ ALLOWED_HOSTS = (
 )
 
 FRED_API_KEY = os.environ.get("FRED_API_KEY", "").strip()
+UPSTREAM_TIMEOUT = int(os.environ.get("MMD_UPSTREAM_TIMEOUT", "25"))
 
 _SYM_RE = re.compile(r"^[%^A-Za-z0-9=.\-]+$")
 _FRED_ID_RE = re.compile(r"^[A-Z0-9]+$")
@@ -67,7 +68,7 @@ class HubHandler(SimpleHTTPRequestHandler):
                     "Cache-Control": "no-cache",
                 },
             )
-            with urllib.request.urlopen(req, timeout=15) as resp:
+            with urllib.request.urlopen(req, timeout=UPSTREAM_TIMEOUT) as resp:
                 body = resp.read()
                 ct = resp.headers.get("Content-Type", "application/octet-stream")
             self.send_response(200)
@@ -75,21 +76,27 @@ class HubHandler(SimpleHTTPRequestHandler):
             self.send_header("Access-Control-Allow-Origin", "*")
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
-            self.wfile.write(body)
+            self._safe_write(body)
         except urllib.error.HTTPError as e:
             body = e.read()
             self.send_response(e.code)
             self.send_header("Access-Control-Allow-Origin", "*")
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
-            self.wfile.write(body)
+            self._safe_write(body)
         except Exception as e:
             msg = str(e).encode()
             self.send_response(502)
             self.send_header("Access-Control-Allow-Origin", "*")
             self.send_header("Content-Length", str(len(msg)))
             self.end_headers()
-            self.wfile.write(msg)
+            self._safe_write(msg)
+
+    def _safe_write(self, data: bytes) -> None:
+        try:
+            self.wfile.write(data)
+        except (BrokenPipeError, ConnectionResetError):
+            pass
 
     def _proxy_yahoo(self) -> None:
         qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
@@ -137,7 +144,14 @@ def main():
     httpd = HTTPServer((BIND, PORT), HubHandler)
     print(f"Anthemic hub: http://{BIND}:{PORT}/")
     print(f"Morning Macro: http://{BIND}:{PORT}/economics/")
-    print(f"CORS proxy:    http://{BIND}:{PORT}/economics/proxy/yahoo?sym=…\n")
+    print(f"CORS proxy:    http://{BIND}:{PORT}/economics/proxy/yahoo?sym=…")
+    if FRED_API_KEY:
+        print("FRED proxy:    api.stlouisfed.org (FRED_API_KEY set)")
+    else:
+        print(
+            "FRED proxy:    fredgraph CSV (slow; set FRED_API_KEY for reliable valuation data)"
+        )
+    print()
     httpd.serve_forever()
 
 
