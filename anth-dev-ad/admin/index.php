@@ -506,7 +506,7 @@ function showLogin(?string $error): void { ?>
 <html lang="en-AU">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Gig Admin - Login</title>
+  <title>Anthemic Admin - Login</title>
   <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
   <style>
     *{box-sizing:border-box}html,body{margin:0;min-height:100vh;background:#0e1015;color:#eceef4;font-family:'Figtree',system-ui,sans-serif;display:flex;align-items:center;justify-content:center}
@@ -522,7 +522,7 @@ function showLogin(?string $error): void { ?>
 </head>
 <body>
   <div class="box">
-    <h1>Gig Calendar Admin</h1>
+    <h1>Anthemic Admin</h1>
     <form method="post">
       <label for="pw">Password</label>
       <input type="password" id="pw" name="password" autofocus required />
@@ -632,7 +632,7 @@ function gigForm(string $action, array $g = [], int $idx = -1, string $csrf = ''
 <html lang="en-AU">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Gig Admin - Anthemic</title>
+  <title>Anthemic Admin</title>
   <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
   <style>
     *{box-sizing:border-box}html,body{margin:0;background:#0e1015;color:#eceef4;font-family:'Figtree',system-ui,sans-serif;font-size:16px;line-height:1.5;min-height:100vh}

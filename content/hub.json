@@ -1,18 +1,49 @@
 {
   "hero_name": "Andy Papadopoulos",
   "hero_tagline": "Full-stack engineer · Melbourne - web apps, APIs, and deployment",
-  "ships_line": "Ships: product UI · APIs · pipelines and cloud hosting",
+  "ships_line": "Full Stack Engineer · Infrastructure Architect · 4 String Groover · dog-approved",
+  "skills_quote": "I am the very model of a modern major-generalist.",
+  "skills_quote_attrib": "After Gilbert & Sullivan — with apologies to the Major-General",
   "employer_skills": [
-    "TypeScript & React",
-    "Node & APIs",
-    "Laravel",
-    "Database",
-    "Maps & data viz",
-    "AWS & CI/CD"
+    "Full-stack · React & TypeScript",
+    "Node.js & APIs",
+    "AWS cloud architecture",
+    "CI/CD & DevOps",
+    "SQL & data literacy",
+    "Laravel / PHP",
+    "AI & LLM integration",
+    "System design"
+  ],
+  "employer_skills_more": [
+    "Docker & Kubernetes",
+    "Git & deployment automation",
+    "Python & data processing",
+    "Microsoft Azure",
+    "Automated testing",
+    "REST & GraphQL",
+    "Maps & geospatial data",
+    "Performance & caching",
+    "Technical leadership",
+    "Security & accessibility"
   ],
   "github_url": "https://github.com/andypapmedialight",
+  "instagram_url": "https://www.instagram.com/anthemstothefall/",
   "case_study_url": "https://report.safermurrayroad.com",
   "case_study_label": "Case study: SWARM reporter",
+  "swarm_case_study": {
+    "title": "Safer Murray Road — SWARM Reporter",
+    "role_line": "Lead Developer — SWARM · Volunteer",
+    "dates": "June 2025 – Present",
+    "organisation": "Safer Walking & Riding for Murray Road",
+    "url": "https://report.safermurrayroad.com",
+    "stack": "React · Node.js · Docker · DigitalOcean",
+    "bullets": [
+      "Designed and delivered a mobile-friendly public road safety incident reporting application — built with React, Node.js, and Docker on Digital Ocean — enabling community members to log and visualise dangerous incidents on a shared street",
+      "Integrated interactive maps to geolocate and display reported incidents, giving residents and Council a clear spatial picture of road safety patterns across the community",
+      "Built moderation workflows, statistical visualisation, and email alerting to ensure data integrity and present evidence-quality reporting to local government stakeholders",
+      "Delivered working prototype and hosting within weeks on a shoestring budget — a practical example of scrappy, high-ownership engineering in service of genuine community safety outcomes"
+    ]
+  },
   "gallery_tagline": "Melbourne · stage · studio - and the studio dog on QA.",
   "favourite_bands": [
     "The Clash",

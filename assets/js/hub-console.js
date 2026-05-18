@@ -1,7 +1,7 @@
 (function () {
   var MOBILE_MQ = window.matchMedia("(max-width: 1079px)");
   var CAPTIONS = {
-    intro: "What — skills & links",
+    intro: "Skills — stack & links",
     who: "Who — profile & QA",
     lens: "Your lens — interest filter",
     projects: "01 — anthemic projects",
@@ -14,7 +14,7 @@
   var caption = document.getElementById("console-caption");
   var btns = document.querySelectorAll("[data-scene-jump]");
   var targets = document.querySelectorAll("[data-console-scene]");
-  var current = "intro";
+  var current = "who";
   var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var mobileToggle = document.getElementById("console-mobile-toggle");
 
@@ -106,5 +106,5 @@
     MOBILE_MQ.addEventListener("change", bindScrollSync);
   }
 
-  setScene("intro", true);
+  setScene("who", true);
 })();

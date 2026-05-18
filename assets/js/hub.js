@@ -91,6 +91,51 @@
     }
     return [];
   }
+  function renderSwarmCaseStudy(c) {
+    var root = document.getElementById('swarm-case-study-root');
+    var sc = c && c.swarm_case_study;
+    if (!root || !sc || typeof sc !== 'object') return;
+    var bullets = Array.isArray(sc.bullets) ? sc.bullets : [];
+    var bulletHtml = bullets.map(function (b) {
+      return '<li>' + esc(b) + '</li>';
+    }).join('');
+    var url = sc.url || c.case_study_url || 'https://report.safermurrayroad.com';
+    var host = url.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    root.innerHTML =
+      '<span class="badge external">Case study · Live &nearr;</span>' +
+      '<h3 class="case-study-title" id="swarm-case-study-title">' + esc(sc.title || 'Safer Murray Road — SWARM Reporter') + '</h3>' +
+      '<p class="case-study-meta">' + esc(sc.role_line || 'Lead Developer — SWARM · Volunteer') +
+      (sc.dates ? ' · ' + esc(sc.dates) : '') + '</p>' +
+      (sc.organisation ? '<p class="case-study-org">' + esc(sc.organisation) + '</p>' : '') +
+      (sc.stack ? '<p class="card-stack">' + esc(sc.stack) + '</p>' : '') +
+      (bulletHtml ? '<ul class="case-study-bullets">' + bulletHtml + '</ul>' : '') +
+      '<a class="case-study-cta" href="' + escAttr(url) + '" target="_blank" rel="noopener noreferrer">' + esc(host) + '</a>';
+  }
+
+  function renderEmployerSkills(c) {
+    var primary = c && Array.isArray(c.employer_skills) ? c.employer_skills : [];
+    var more = c && Array.isArray(c.employer_skills_more) ? c.employer_skills_more : [];
+    var allSkills = primary.concat(more);
+    if (!allSkills.length) return;
+    var skillChip = function (s) {
+      return '<span class="employer-skill">' + esc(s) + '</span>';
+    };
+    var previewEl = document.getElementById('employer-skills-preview');
+    var skillsRoot = document.getElementById('employer-skills-root');
+    var skillsCount = document.getElementById('employer-skills-count');
+    var previewSkills = primary.slice(0, 2);
+    if (previewEl && previewSkills.length) {
+      previewEl.innerHTML = previewSkills.map(skillChip).join('');
+    }
+    if (skillsRoot) {
+      skillsRoot.innerHTML =
+        '<div class="employer-skills">' + allSkills.map(skillChip).join('') + '</div>';
+    }
+    if (skillsCount) {
+      skillsCount.textContent = '(' + String(allSkills.length) + ')';
+    }
+  }
+
   function setupFavouriteBands(c) {
     var ul = document.getElementById('favourite-bands-list');
     if (!ul) return;
@@ -135,18 +180,30 @@
         var ht = document.getElementById('hero-tagline');
         if (ht && c.hero_tagline) ht.textContent = c.hero_tagline;
 
-        var skillsEl = document.getElementById('employer-skills');
-        if (skillsEl && Array.isArray(c.employer_skills) && c.employer_skills.length) {
-          skillsEl.innerHTML = c.employer_skills.map(function (s) {
-            return '<span class="employer-skill">' + esc(s) + '</span>';
-          }).join('');
-        }
+        renderEmployerSkills(c);
+
+        // Gilbert & Sullivan skills quote (paused)
+        // var skillsQuote = document.getElementById('employer-skills-quote');
+        // if (skillsQuote && c.skills_quote) {
+        //   var attrib = c.skills_quote_attrib
+        //     ? '<span class="employer-skills-quote-note">' + esc(c.skills_quote_attrib) + '</span>'
+        //     : '';
+        //   skillsQuote.innerHTML = '<q>' + esc(c.skills_quote) + '</q>' + attrib;
+        // }
 
         var gh = document.getElementById('employer-github');
         if (gh && c.github_url) gh.setAttribute('href', c.github_url);
+        var ig = document.getElementById('employer-instagram');
+        var profileIg = document.getElementById('profile-instagram');
+        if (c.instagram_url) {
+          if (ig) ig.setAttribute('href', c.instagram_url);
+          if (profileIg) profileIg.setAttribute('href', c.instagram_url);
+        }
         var cs = document.getElementById('employer-case');
         if (cs && c.case_study_url) cs.setAttribute('href', c.case_study_url);
         if (cs && c.case_study_label) cs.textContent = c.case_study_label;
+
+        renderSwarmCaseStudy(c);
 
         var ships = document.getElementById('profile-ships');
         if (ships && c.ships_line) {
@@ -426,7 +483,7 @@
     var safeAlt = escAttr(alt);
     return (
       "<li><a class=\"photo-gallery-link\" href=\"" + safeSrc + "\" data-full=\"" + safeSrc + "\">" +
-      "<img src=\"" + safeSrc + "\" alt=\"" + safeAlt + "\" width=\"640\" height=\"640\" loading=\"lazy\" decoding=\"async\" data-gallery-img /></a></li>"
+      "<img src=\"" + safeSrc + "\" alt=\"" + safeAlt + "\" width=\"88\" height=\"88\" loading=\"lazy\" decoding=\"async\" data-gallery-img /></a></li>"
     );
   }
 
@@ -440,16 +497,22 @@
     else wrap.removeAttribute("hidden");
   }
 
+  function dropBrokenImage(img) {
+    var li = img && img.closest("li");
+    if (li) li.remove();
+    checkVisible();
+  }
+
   function attachErrors() {
     ul.querySelectorAll("img[data-gallery-img]").forEach(function (img) {
-      img.addEventListener("error", function () {
-        var li = img.closest("li");
-        if (li) li.style.display = "none";
-        checkVisible();
-      });
+      if (!img.dataset.galleryBound) {
+        img.dataset.galleryBound = "1";
+        img.addEventListener("error", function () {
+          dropBrokenImage(img);
+        });
+      }
       if (img.complete && img.naturalWidth === 0) {
-        var li2 = img.closest("li");
-        if (li2) li2.style.display = "none";
+        dropBrokenImage(img);
       }
     });
     checkVisible();
@@ -704,5 +767,7 @@
       }).join("");
       attachErrors();
     })
-    .catch(attachErrors);
+    .catch(function () {
+      attachErrors();
+    });
 })();
