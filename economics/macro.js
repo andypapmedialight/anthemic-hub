@@ -297,7 +297,89 @@ const VALUATION = [
   { id: 'us-gdp',       label: 'US GDP',            ticker: 'GDP', def: true  },
   { id: 'public-debt',  label: 'US Public Debt',    ticker: 'PUB', def: true  },
   { id: 'private-debt', label: 'US Private Debt',   ticker: 'PRV', def: true  },
+  // Futures / leverage reference benchmarks (verify at source; not live FRED)
+  {
+    id: 'margin-debt',
+    kind: 'reference',
+    label: 'US Margin Debt',
+    ticker: 'MGN',
+    def: true,
+    headline: '$1.22T',
+    sublabel: 'FINRA investor debit balances',
+    lines: [
+      ['Use', 'Equities & leveraged derivatives'],
+      ['Risk', 'Margin calls if positions move against you'],
+    ],
+    source: 'FINRA',
+    href: 'https://www.finra.org/finra-data/browse-catalog/margin-statistics',
+  },
+  {
+    id: 'otc-notional',
+    kind: 'reference',
+    label: 'OTC Derivatives',
+    ticker: 'OTC',
+    def: true,
+    headline: '$845.7T',
+    sublabel: 'Notional outstanding (global)',
+    lines: [
+      ['Scope', 'Futures, swaps & other OTC'],
+      ['vs GMV', 'Notional ≠ economic exposure'],
+    ],
+    source: 'BIS / ISDA',
+    href: 'https://www.bis.org/statistics/dt20.htm',
+  },
+  {
+    id: 'otc-gmv',
+    kind: 'reference',
+    label: 'OTC Gross Exposure',
+    ticker: 'GMV',
+    def: true,
+    headline: '$21.8T',
+    sublabel: 'Gross market value (mark-to-market)',
+    lines: [
+      ['Meaning', 'Actual economic exposure'],
+      ['Context', 'Much smaller than notional'],
+    ],
+    source: 'BIS',
+    href: 'https://www.bis.org/statistics/dt20.htm',
+  },
+  {
+    id: 'au-cgs',
+    kind: 'reference',
+    label: 'AU Govt Securities',
+    ticker: 'CGS',
+    def: false,
+    headline: 'A$489B',
+    sublabel: 'Commonwealth bonds on issue',
+    lines: [
+      ['Market', 'Physical AU debt stock'],
+      ['Futures', '3Y & 10Y ASX bond contracts'],
+    ],
+    source: 'AU Treasury / ASX',
+    href: 'https://www.asx.com.au/markets/trade-our-derivatives-market/bond-derivatives',
+  },
+  {
+    id: 'asx-bond-fut',
+    kind: 'reference',
+    label: 'ASX Bond Futures',
+    ticker: 'ABF',
+    def: false,
+    headline: '3Y · 10Y',
+    sublabel: 'Treasury bond futures (ASX)',
+    lines: [
+      ['Liquidity', 'Highly liquid vs physical CGS'],
+      ['Turnover', 'Billions AUD daily (broad debt mkt)'],
+    ],
+    source: 'ASX Derivatives',
+    href: 'https://www.asx.com.au/markets/trade-our-derivatives-market/bond-derivatives/prices',
+  },
 ];
+
+function isValuationReference(itemOrId) {
+  const id = typeof itemOrId === 'string' ? itemOrId : itemOrId?.id;
+  const item = VALUATION.find(v => v.id === id);
+  return item?.kind === 'reference';
+}
 
 const COMMODITIES = [
   { sym: 'GC=F', label: 'Gold',        ticker: 'GC',   def: true,  dp: 2 },
@@ -447,7 +529,7 @@ function renderCard(meta, delay = 0) {
   const loading = CARD_LOADING.has(meta.itemKey);
   const refreshLabel = `Refresh ${escapeHtml(meta.label)}`;
   const chartLabel = `View ${escapeHtml(meta.label)} chart`;
-  const chartBtn = `
+  const chartBtn = meta.noChart ? '' : `
       <button type="button" class="card-chart" data-item-key="${meta.itemKey}" data-section-key="${meta.sectionKey}"
         aria-label="${chartLabel}" title="${chartLabel}">
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -467,12 +549,14 @@ function renderCard(meta, delay = 0) {
       <div class="card-name">${escapeHtml(meta.label)}</div>
       <div class="card-price">${priceStr}</div>
       <div class="card-change">
-        <span class="pill ${pillClass(meta.pct)}">${pillText(meta.pct)}</span>
+        ${meta.pillLabel != null
+    ? `<span class="pill neu">${escapeHtml(meta.pillLabel)}</span>`
+    : `<span class="pill ${pillClass(meta.pct)}">${pillText(meta.pct)}</span>`}
         ${absStr ? `<span class="card-abs">${absStr}</span>` : ''}
       </div>
       ${meta.extra || ''}`;
 
-  const stateCls = `${cls}${failed ? ' card--failed' : ''}${loading ? ' card--loading' : ''}`;
+  const stateCls = `${cls}${meta.cardClassExtra ? ` ${meta.cardClassExtra}` : ''}${failed ? ' card--failed' : ''}${loading ? ' card--loading' : ''}`;
   const style = `style="animation-delay:${delay}s"`;
   const dataAttrs = ` data-item-key="${meta.itemKey}" data-section-key="${meta.sectionKey}"`;
 
@@ -1037,6 +1121,28 @@ function valuationUsdExtra(label, billions) {
     <span class="spread-val spread-val--figure buffett-fair">${usd}</span></div>`;
 }
 
+function valuationReferenceExtra(item) {
+  let html = '';
+  if (item.sublabel) {
+    html += `<div class="yield-extra"><span class="spread-label">Measure</span>
+      <span class="spread-val buffett-fair">${escapeHtml(item.sublabel)}</span></div>`;
+  }
+  for (const [label, val] of item.lines || []) {
+    html += `<div class="yield-extra"><span class="spread-label">${escapeHtml(label)}</span>
+      <span class="spread-val">${escapeHtml(val)}</span></div>`;
+  }
+  if (item.source) {
+    const src = item.href
+      ? `<a class="val-ref-link" href="${item.href}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.source)}</a>`
+      : escapeHtml(item.source);
+    html += `<div class="yield-extra yield-extra--source"><span class="spread-label">Source</span>
+      <span class="spread-val">${src}</span></div>`;
+  }
+  html += `<div class="yield-extra"><span class="spread-label">Note</span>
+    <span class="spread-val">Benchmark · verify at source</span></div>`;
+  return html;
+}
+
 function fredRowsToQuote(rows) {
   if (!rows?.length) return null;
   const last = rows[rows.length - 1].v;
@@ -1168,6 +1274,15 @@ function quoteFromRatioSeries(ratios) {
 }
 
 async function fetchValuation(metricId, force = false) {
+  const refItem = VALUATION.find(v => v.id === metricId && v.kind === 'reference');
+  if (refItem) {
+    const key = `val:${metricId}`;
+    if (!force) { const c = cacheGet(key); if (c) return c; }
+    const result = { price: refItem.headline, static: true, reference: true };
+    cacheSet(key, result);
+    return result;
+  }
+
   const key = `val:${metricId}`;
   if (!force) { const c = cacheGet(key); if (c) return c; }
   try {
@@ -1246,6 +1361,23 @@ function renderSectionGrid(section) {
       let extra = '';
       let isRatio = false;
       let isUsd = false;
+
+      if (item.kind === 'reference') {
+        return {
+          ticker: item.ticker,
+          label: item.label,
+          price: item.headline,
+          change: null,
+          pct: null,
+          extra: valuationReferenceExtra(item),
+          itemKey: item.id,
+          sectionKey: section.key,
+          failed: false,
+          noChart: true,
+          pillLabel: 'Ref',
+          cardClassExtra: 'card--reference',
+        };
+      }
 
       if (item.id === 'us-gdp') {
         isUsd = true;
@@ -2110,6 +2242,8 @@ async function fetchHistory(item, section, days) {
 }
 
 async function fetchValuationHistory(metricId, days) {
+  if (isValuationReference(metricId)) return null;
+
   const cacheKey = `val:${metricId}:${days}`;
   const cached = historyCacheGet(cacheKey);
   if (cached) return cached;

@@ -323,6 +323,30 @@
     font-weight: 600;
     letter-spacing: -0.02em;
   }
+
+  .card--reference {
+    border-style: dashed;
+    border-color: var(--border2);
+  }
+  .card--reference .card-price {
+    font-size: 1.2rem;
+    color: var(--gold);
+    letter-spacing: -0.02em;
+  }
+  .val-ref-link {
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .val-ref-link:hover { text-decoration: underline; }
+
+  .section-hint {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--dim);
+    letter-spacing: 0.04em;
+    font-weight: 400;
+    text-transform: none;
+  }
   .spread-pos { color: var(--up); }
   .spread-neg { color: var(--dn); }
   .buffett-cool { color: var(--up); }
@@ -933,6 +957,7 @@
 <div class="section">
   <div class="section-header">
     <span class="section-label">Valuation</span>
+    <span class="section-hint">FRED metrics · futures &amp; leverage benchmarks</span>
     <div class="section-line"></div>
     <button type="button" class="section-edit-btn" id="edit-val" data-section="val">⊞ Edit</button>
   </div>
