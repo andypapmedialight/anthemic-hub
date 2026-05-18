@@ -687,13 +687,13 @@ async function detectLocalProxy() {
     }
   } catch {}
 
-  const valProbe = `${location.origin}/economics/proxy/valuation?${new URLSearchParams({ metric: 'otc-notional' })}`;
+  const valHealth = `${location.origin}/economics/proxy/valuation/health`;
   try {
-    const rv = await fetchWithTimeout(valProbe, {}, 15000);
-    LOCAL_VALUATION_PROXY_OK = rv.ok;
-  } catch {
-    LOCAL_VALUATION_PROXY_OK = false;
-  }
+    const rv = await fetchWithTimeout(valHealth, {}, 8000);
+    if (rv.ok) LOCAL_VALUATION_PROXY_OK = true;
+  } catch {}
+  // Production nginx: Yahoo proxy up implies valuation route exists (BIS pulls are slow).
+  if (!LOCAL_VALUATION_PROXY_OK && LOCAL_PROXY_OK) LOCAL_VALUATION_PROXY_OK = true;
 }
 
 function localFredProxyUrl(seriesId, start) {
@@ -1169,7 +1169,6 @@ async function fetchValuationLive(metricId, force = false) {
   if (!item) return null;
   const key = `val-live:${metricId}`;
   if (!force) { const c = cacheGet(key); if (c) return c; }
-  if (!LOCAL_VALUATION_PROXY_OK) return null;
   try {
     const url = `${location.origin}/economics/proxy/valuation?${new URLSearchParams({ metric: metricId })}`;
     const r = await fetchWithTimeout(url, {}, 90000);
