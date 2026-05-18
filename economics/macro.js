@@ -384,6 +384,7 @@ function isValuationLive(itemOrId) {
 const COMMODITIES = [
   { sym: 'GC=F', label: 'Gold',        ticker: 'GC',   def: true,  dp: 2 },
   { sym: 'SI=F', label: 'Silver',      ticker: 'SI',   def: true,  dp: 2 },
+  { sym: 'HG=F', label: 'LME Copper',  ticker: 'CU',   def: true,  dp: 2 },
   { sym: 'CL=F', label: 'Oil (WTI)',   ticker: 'WTI',  def: true,  dp: 2 },
   { sym: 'BZ=F', label: 'Brent Crude', ticker: 'BRENT', def: true,  dp: 2 },
   { sym: 'NG=F', label: 'Nat. Gas',    ticker: 'NG',   def: true,  dp: 2 },
@@ -812,7 +813,9 @@ const GOOGLE_FINANCE_BASE = {
   'ARKK':   { path: 'ARKK:NYSEARCA',    ticker: 'ARKK',  exchange: 'NYSEARCA' },
   'GC=F':   { path: 'GCW00:COMEX',      ticker: 'GCW00', exchange: 'COMEX' },
   'SI=F':   { path: 'SIW00:COMEX',      ticker: 'SIW00', exchange: 'COMEX' },
+  'HG=F':   { path: 'HGW00:COMEX',      ticker: 'HGW00', exchange: 'COMEX' },
   'CL=F':   { path: 'CLW00:NYMEX',      ticker: 'CLW00', exchange: 'NYMEX' },
+  'BZ=F':   { path: 'BZW00:NYMEX',      ticker: 'BZW00', exchange: 'NYMEX' },
   'NG=F':   { path: 'NGW00:NYMEX',      ticker: 'NGW00', exchange: 'NYMEX' },
   'CPER':   { path: 'CPER:NYSEARCA',    ticker: 'CPER',  exchange: 'NYSEARCA' },
   'WEAT':   { path: 'WEAT:NYSEARCA',    ticker: 'WEAT',  exchange: 'NYSEARCA' },
