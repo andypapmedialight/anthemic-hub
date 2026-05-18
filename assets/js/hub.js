@@ -136,6 +136,28 @@
     }
   }
 
+  function bindCaseStudyNav() {
+    var link = document.getElementById('employer-case');
+    var target = document.getElementById('swarm-case-study-root');
+    if (!link || !target || link.dataset.caseStudyBound) return;
+    link.dataset.caseStudyBound = '1';
+    link.addEventListener('click', function (e) {
+      e.preventDefault();
+      var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      target.scrollIntoView({
+        behavior: reduced ? 'auto' : 'smooth',
+        block: 'center'
+      });
+      if (history.replaceState) {
+        history.replaceState(null, '', '#swarm-case-study-root');
+      } else {
+        location.hash = 'swarm-case-study-root';
+      }
+      target.setAttribute('tabindex', '-1');
+      target.focus({ preventScroll: true });
+    });
+  }
+
   function setupFavouriteBands(c) {
     var ul = document.getElementById('favourite-bands-list');
     if (!ul) return;
@@ -200,8 +222,12 @@
           if (profileIg) profileIg.setAttribute('href', c.instagram_url);
         }
         var cs = document.getElementById('employer-case');
-        if (cs && c.case_study_url) cs.setAttribute('href', c.case_study_url);
-        if (cs && c.case_study_label) cs.textContent = c.case_study_label;
+        if (cs) {
+          cs.setAttribute('href', c.case_study_anchor || '#swarm-case-study-root');
+          cs.removeAttribute('target');
+          cs.removeAttribute('rel');
+          if (c.case_study_label) cs.textContent = c.case_study_label;
+        }
 
         renderSwarmCaseStudy(c);
 
@@ -248,6 +274,7 @@
       } finally {
         applyReadingListFromHub(c);
         setupFavouriteBands(c);
+        bindCaseStudyNav();
       }
     })
     .catch(function () {
@@ -256,7 +283,10 @@
         rr.innerHTML = '<p class="reading-fallback">Could not load the reading list. It is stored in <code>/content/hub.json</code> on the server.</p>';
       }
       setupFavouriteBands(null);
+      bindCaseStudyNav();
     });
+
+  bindCaseStudyNav();
 })();
 
 (function () {
