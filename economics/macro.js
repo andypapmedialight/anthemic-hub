@@ -297,14 +297,14 @@ const VALUATION = [
   { id: 'us-gdp',       label: 'US GDP',            ticker: 'GDP', def: true  },
   { id: 'public-debt',  label: 'US Public Debt',    ticker: 'PUB', def: true  },
   { id: 'private-debt', label: 'US Private Debt',   ticker: 'PRV', def: true  },
-  // Futures / leverage reference benchmarks (verify at source; not live FRED)
+  // Futures / leverage (live via hub /economics/proxy/valuation)
   {
     id: 'margin-debt',
-    kind: 'reference',
+    api: 'margin-debt',
     label: 'US Margin Debt',
     ticker: 'MGN',
     def: true,
-    headline: '$1.22T',
+    fallbackDisplay: '$1.22T',
     sublabel: 'FINRA investor debit balances',
     lines: [
       ['Use', 'Equities & leveraged derivatives'],
@@ -315,11 +315,11 @@ const VALUATION = [
   },
   {
     id: 'otc-notional',
-    kind: 'reference',
+    api: 'otc-notional',
     label: 'OTC Derivatives',
     ticker: 'OTC',
     def: true,
-    headline: '$845.7T',
+    fallbackDisplay: '$845.7T',
     sublabel: 'Notional outstanding (global)',
     lines: [
       ['Scope', 'Futures, swaps & other OTC'],
@@ -330,11 +330,11 @@ const VALUATION = [
   },
   {
     id: 'otc-gmv',
-    kind: 'reference',
+    api: 'otc-gmv',
     label: 'OTC Gross Exposure',
     ticker: 'GMV',
     def: true,
-    headline: '$21.8T',
+    fallbackDisplay: '$21.8T',
     sublabel: 'Gross market value (mark-to-market)',
     lines: [
       ['Meaning', 'Actual economic exposure'],
@@ -345,11 +345,11 @@ const VALUATION = [
   },
   {
     id: 'au-cgs',
-    kind: 'reference',
+    api: 'au-cgs',
     label: 'AU Govt Securities',
     ticker: 'CGS',
     def: false,
-    headline: 'A$489B',
+    fallbackDisplay: 'A$489B',
     sublabel: 'Commonwealth bonds on issue',
     lines: [
       ['Market', 'Physical AU debt stock'],
@@ -360,11 +360,11 @@ const VALUATION = [
   },
   {
     id: 'asx-bond-fut',
-    kind: 'reference',
+    api: 'asx-bond-fut',
     label: 'ASX Bond Futures',
     ticker: 'ABF',
     def: false,
-    headline: '3Y · 10Y',
+    fallbackDisplay: '3Y · 10Y',
     sublabel: 'Treasury bond futures (ASX)',
     lines: [
       ['Liquidity', 'Highly liquid vs physical CGS'],
@@ -375,16 +375,17 @@ const VALUATION = [
   },
 ];
 
-function isValuationReference(itemOrId) {
+function isValuationLive(itemOrId) {
   const id = typeof itemOrId === 'string' ? itemOrId : itemOrId?.id;
   const item = VALUATION.find(v => v.id === id);
-  return item?.kind === 'reference';
+  return Boolean(item?.api);
 }
 
 const COMMODITIES = [
   { sym: 'GC=F', label: 'Gold',        ticker: 'GC',   def: true,  dp: 2 },
   { sym: 'SI=F', label: 'Silver',      ticker: 'SI',   def: true,  dp: 2 },
   { sym: 'CL=F', label: 'Oil (WTI)',   ticker: 'WTI',  def: true,  dp: 2 },
+  { sym: 'BZ=F', label: 'Brent Crude', ticker: 'BRENT', def: true,  dp: 2 },
   { sym: 'NG=F', label: 'Nat. Gas',    ticker: 'NG',   def: true,  dp: 2 },
   { sym: 'CPER', label: 'Copper (ETF)', ticker: 'CPER', def: false, dp: 2 },
   { sym: 'WEAT', label: 'Wheat (ETF)',  ticker: 'WEAT', def: false, dp: 2 },
@@ -600,6 +601,7 @@ const proxyThrottle = (() => {
 // Same-origin CORS proxy (serve-hub.py locally, nginx /economics/proxy/* in prod)
 let LOCAL_PROXY_OK = false;
 let LOCAL_FRED_PROXY_OK = false;
+let LOCAL_VALUATION_PROXY_OK = false;
 
 /** Yahoo chart URL with raw symbol in path. */
 function yahooChartUrl(sym, range = '5d', interval = '1d') {
@@ -684,6 +686,8 @@ async function detectLocalProxy() {
       if (rows?.length) LOCAL_FRED_PROXY_OK = true;
     }
   } catch {}
+
+  LOCAL_VALUATION_PROXY_OK = LOCAL_PROXY_OK;
 }
 
 function localFredProxyUrl(seriesId, start) {
@@ -1121,26 +1125,58 @@ function valuationUsdExtra(label, billions) {
     <span class="spread-val spread-val--figure buffett-fair">${usd}</span></div>`;
 }
 
-function valuationReferenceExtra(item) {
+function valuationReferenceExtra(item, live = null) {
   let html = '';
-  if (item.sublabel) {
+  const measure = live?.measureLabel || item.sublabel;
+  if (measure) {
     html += `<div class="yield-extra"><span class="spread-label">Measure</span>
-      <span class="spread-val buffett-fair">${escapeHtml(item.sublabel)}</span></div>`;
+      <span class="spread-val buffett-fair">${escapeHtml(measure)}</span></div>`;
+  }
+  if (live?.turnoverLabel) {
+    html += `<div class="yield-extra"><span class="spread-label">Metric</span>
+      <span class="spread-val">${escapeHtml(live.turnoverLabel)}</span></div>`;
   }
   for (const [label, val] of item.lines || []) {
     html += `<div class="yield-extra"><span class="spread-label">${escapeHtml(label)}</span>
       <span class="spread-val">${escapeHtml(val)}</span></div>`;
   }
+  if (live?.asOf) {
+    html += `<div class="yield-extra"><span class="spread-label">As of</span>
+      <span class="spread-val">${escapeHtml(live.asOf)}</span></div>`;
+  }
   if (item.source) {
     const src = item.href
-      ? `<a class="val-ref-link" href="${item.href}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.source)}</a>`
-      : escapeHtml(item.source);
+      ? `<a class="val-ref-link" href="${item.href}" target="_blank" rel="noopener noreferrer">${escapeHtml(live?.source || item.source)}</a>`
+      : escapeHtml(live?.source || item.source);
     html += `<div class="yield-extra yield-extra--source"><span class="spread-label">Source</span>
       <span class="spread-val">${src}</span></div>`;
   }
-  html += `<div class="yield-extra"><span class="spread-label">Note</span>
-    <span class="spread-val">Benchmark · verify at source</span></div>`;
+  if (!live) {
+    html += `<div class="yield-extra"><span class="spread-label">Note</span>
+      <span class="spread-val">Cached benchmark — start local hub for live data</span></div>`;
+  }
   return html;
+}
+
+async function fetchValuationLive(metricId, force = false) {
+  const item = VALUATION.find(v => v.id === metricId && v.api);
+  if (!item) return null;
+  const key = `val-live:${metricId}`;
+  if (!force) { const c = cacheGet(key); if (c) return c; }
+  if (!LOCAL_VALUATION_PROXY_OK) return null;
+  try {
+    const url = `${location.origin}/economics/proxy/valuation?${new URLSearchParams({ metric: metricId })}`;
+    const r = await fetchWithTimeout(url, {}, 90000);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const data = await r.json();
+    if (data?.error) throw new Error(data.error);
+    const result = { ...data, live: true };
+    cacheSet(key, result);
+    return result;
+  } catch (err) {
+    console.warn('valuation live fetch failed', metricId, err);
+    return null;
+  }
 }
 
 function fredRowsToQuote(rows) {
@@ -1274,13 +1310,11 @@ function quoteFromRatioSeries(ratios) {
 }
 
 async function fetchValuation(metricId, force = false) {
-  const refItem = VALUATION.find(v => v.id === metricId && v.kind === 'reference');
-  if (refItem) {
-    const key = `val:${metricId}`;
-    if (!force) { const c = cacheGet(key); if (c) return c; }
-    const result = { price: refItem.headline, static: true, reference: true };
-    cacheSet(key, result);
-    return result;
+  if (isValuationLive(metricId)) {
+    const live = await fetchValuationLive(metricId, force);
+    if (live) return live;
+    const item = VALUATION.find(v => v.id === metricId);
+    return item ? { display: item.fallbackDisplay, static: true, fallback: true } : null;
   }
 
   const key = `val:${metricId}`;
@@ -1362,19 +1396,21 @@ function renderSectionGrid(section) {
       let isRatio = false;
       let isUsd = false;
 
-      if (item.kind === 'reference') {
+      if (item.api) {
+        const d = DATA[item.id];
+        const display = d?.display || item.fallbackDisplay || '–';
         return {
           ticker: item.ticker,
           label: item.label,
-          price: item.headline,
-          change: null,
-          pct: null,
-          extra: valuationReferenceExtra(item),
+          price: display,
+          change: d?.change ?? null,
+          pct: d?.pct ?? null,
+          extra: valuationReferenceExtra(item, d?.live ? d : null),
           itemKey: item.id,
           sectionKey: section.key,
           failed: false,
+          pillLabel: d?.live ? 'Live' : (d?.fallback ? 'Ref' : null),
           noChart: true,
-          pillLabel: 'Ref',
           cardClassExtra: 'card--reference',
         };
       }
@@ -2242,7 +2278,7 @@ async function fetchHistory(item, section, days) {
 }
 
 async function fetchValuationHistory(metricId, days) {
-  if (isValuationReference(metricId)) return null;
+  if (isValuationLive(metricId)) return null;
 
   const cacheKey = `val:${metricId}:${days}`;
   const cached = historyCacheGet(cacheKey);

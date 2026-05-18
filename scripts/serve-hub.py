@@ -10,12 +10,19 @@ Proxy: GET /economics/proxy/yahoo?sym=^GSPC&range=5d
 """
 from __future__ import annotations
 
+import json
 import os
 import re
+import sys
 import urllib.error
 import urllib.parse
 import urllib.request
 from http.server import HTTPServer, SimpleHTTPRequestHandler
+
+_SCRIPTS = os.path.dirname(os.path.abspath(__file__))
+if _SCRIPTS not in sys.path:
+    sys.path.insert(0, _SCRIPTS)
+from valuation_fetch import fetch_valuation_metric, METRICS  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PORT = int(os.environ.get("PORT", "8000"))
@@ -50,6 +57,9 @@ class HubHandler(SimpleHTTPRequestHandler):
             return
         if path == "/economics/proxy/google":
             self._proxy_google()
+            return
+        if path == "/economics/proxy/valuation":
+            self._proxy_valuation()
             return
         if path.startswith("/.well-known/"):
             self.send_error(404)
@@ -131,6 +141,27 @@ class HubHandler(SimpleHTTPRequestHandler):
         url = f"https://www.google.com/finance/quote/{urllib.parse.quote(gf_path, safe='')}"
         self._send_upstream(url)
 
+    def _send_json(self, payload: dict, status: int = 200) -> None:
+        body = json.dumps(payload).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self._safe_write(body)
+
+    def _proxy_valuation(self) -> None:
+        qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        metric = qs.get("metric", [""])[0]
+        if metric not in METRICS:
+            self.send_error(400, "Invalid metric")
+            return
+        try:
+            data = fetch_valuation_metric(metric)
+            self._send_json(data)
+        except Exception as e:
+            self._send_json({"error": str(e)}, status=502)
+
     def _proxy_fred(self) -> None:
         qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
         series_id = qs.get("id", [""])[0]
@@ -166,6 +197,7 @@ def main():
     print(f"Morning Macro: http://{BIND}:{PORT}/economics/")
     print(f"CORS proxy:    http://{BIND}:{PORT}/economics/proxy/yahoo?sym=…")
     print(f"Google proxy:  http://{BIND}:{PORT}/economics/proxy/google?path=AAPL:NASDAQ")
+    print(f"Valuation API: http://{BIND}:{PORT}/economics/proxy/valuation?metric=margin-debt")
     if FRED_API_KEY:
         print("FRED proxy:    api.stlouisfed.org (FRED_API_KEY set)")
     else:
