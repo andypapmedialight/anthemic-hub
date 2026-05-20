@@ -1,8 +1,7 @@
 /* Contact form — first non-empty option wins.
- * Security (static site limits):
- * - Honeypot + rate limit + validation reduce casual bots; they are not proof against a determined attacker.
- * - Secrets (Slack webhook, Web3 key, …) must NOT live in this file if the repo has push protection: set repo secret PAPAWEB_SLACK_WEBHOOK and deploy writes bass/papaweb.config.js (see .github/workflows/deploy.yml), or edit papaweb.config.js only on the server.
- * Options: 1) CONTACT_FORM_ENDPOINT  2) CONTACT_FORMSPREE_ID  3) CONTACT_FORM_ACCESS_KEY  4) CONTACT_SLACK_WEBHOOK_URL  5) mailto CONTACT_TO_EMAIL */
+ * Security: honeypot + browser rate limit; production uses same-origin POST /bass/api/contact (Slack on server).
+ * Never put webhooks or API keys in papaweb.config.js — only public endpoints like /bass/api/contact.
+ * Options: 1) CONTACT_FORM_ENDPOINT  2) CONTACT_FORMSPREE_ID  3) CONTACT_FORM_ACCESS_KEY  4) mailto */
 const _PAPAWEB_SEC = typeof globalThis.PAPAWEB_CONTACT_SECRETS === 'object' && globalThis.PAPAWEB_CONTACT_SECRETS !== null
   ? globalThis.PAPAWEB_CONTACT_SECRETS
   : {};
@@ -13,7 +12,6 @@ function pickContactStr(key) {
 const CONTACT_FORM_ENDPOINT = pickContactStr('CONTACT_FORM_ENDPOINT');
 const CONTACT_FORMSPREE_ID = pickContactStr('CONTACT_FORMSPREE_ID');
 const CONTACT_FORM_ACCESS_KEY = pickContactStr('CONTACT_FORM_ACCESS_KEY');
-const CONTACT_SLACK_WEBHOOK_URL = pickContactStr('CONTACT_SLACK_WEBHOOK_URL');
 const CONTACT_TO_EMAIL = pickContactStr('CONTACT_TO_EMAIL') || 'hello@andypap.dev';
 
 const CONTACT_MAX_NAME = 120;
@@ -31,20 +29,12 @@ function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
 }
 
-function isAllowedHttpsUrl(url) {
+function isAllowedContactEndpoint(url) {
+  const s = String(url || '').trim();
+  if (!s) return false;
+  if (s.startsWith('/') && !s.startsWith('//') && /^\/[a-zA-Z0-9/_.-]+$/.test(s)) return true;
   try {
-    return new URL(url).protocol === 'https:';
-  } catch (_) {
-    return false;
-  }
-}
-
-function isAllowedSlackWebhookUrl(url) {
-  try {
-    const u = new URL(url);
-    if (u.protocol !== 'https:' || u.hostname !== 'hooks.slack.com') return false;
-    const parts = u.pathname.split('/').filter(Boolean);
-    return parts[0] === 'services' && parts.length === 4;
+    return new URL(s).protocol === 'https:';
   } catch (_) {
     return false;
   }
@@ -94,17 +84,14 @@ function isHoneypotFilled() {
 }
 
 function assertContactProvidersConfigured() {
-  if (CONTACT_FORM_ENDPOINT && !isAllowedHttpsUrl(CONTACT_FORM_ENDPOINT)) {
-    return 'Contact form endpoint must be an https URL.';
+  if (CONTACT_FORM_ENDPOINT && !isAllowedContactEndpoint(CONTACT_FORM_ENDPOINT)) {
+    return 'Contact form endpoint must be an https URL or same-origin path (e.g. /bass/api/contact).';
   }
   if (CONTACT_FORMSPREE_ID && !isCleanFormspreeId(CONTACT_FORMSPREE_ID)) {
     return 'Formspree form id looks invalid.';
   }
   if (CONTACT_FORM_ACCESS_KEY && CONTACT_FORM_ACCESS_KEY.length < 16) {
     return 'Web3Forms access key looks invalid.';
-  }
-  if (CONTACT_SLACK_WEBHOOK_URL && !isAllowedSlackWebhookUrl(CONTACT_SLACK_WEBHOOK_URL)) {
-    return 'Slack webhook URL must be https://hooks.slack.com/services/…';
   }
   return '';
 }
@@ -458,35 +445,6 @@ async function postContactJson(url, body) {
   return { res: res, data: data };
 }
 
-function slackMrkdwnEscape(s) {
-  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
-async function postSlackContact(webhookUrl, payload) {
-  /* Slack webhooks + application/json triggers a CORS preflight that hooks.slack.com does not satisfy.
-   * application/x-www-form-urlencoded with `payload=` is treated as a simple request in browsers. */
-  const body = 'payload=' + encodeURIComponent(JSON.stringify(payload));
-  const res = await fetch(webhookUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: body,
-  });
-  const raw = await res.text().catch(function () { return ''; });
-  let okJson = false;
-  try {
-    okJson = JSON.parse(raw).ok === true;
-  } catch (e) { /* ignore */ }
-  const okText = raw.trim() === 'ok';
-  if (!res.ok || (!okText && !okJson)) {
-    let err = 'Could not post to Slack';
-    try {
-      const j = JSON.parse(raw);
-      if (j.error) err = j.error;
-    } catch (e2) { /* ignore */ }
-    throw new Error(err);
-  }
-}
-
 async function handleSubmit(e) {
   e.preventDefault();
   const form = e.target;
@@ -566,7 +524,7 @@ async function handleSubmit(e) {
   btn.disabled = true;
   btn.innerHTML = 'Sending…';
 
-  if (!CONTACT_FORM_ENDPOINT && !CONTACT_FORMSPREE_ID && !CONTACT_FORM_ACCESS_KEY && !CONTACT_SLACK_WEBHOOK_URL) {
+  if (!CONTACT_FORM_ENDPOINT && !CONTACT_FORMSPREE_ID && !CONTACT_FORM_ACCESS_KEY) {
     mailtoFallback(name, email, interestLabel, msg, subjectLine);
     return;
   }
@@ -608,28 +566,6 @@ async function handleSubmit(e) {
       if (!res.ok || !data.success) {
         throw new Error((data && data.message) || 'Could not send message');
       }
-    } else if (CONTACT_SLACK_WEBHOOK_URL) {
-      const sn = slackMrkdwnEscape(name);
-      const se = slackMrkdwnEscape(email);
-      const si = slackMrkdwnEscape(interestLabel);
-      const sm = slackMrkdwnEscape(msg);
-      const mailtoHref = 'mailto:' + encodeURIComponent(email);
-      const subEsc = slackMrkdwnEscape(subjectLine);
-      await postSlackContact(CONTACT_SLACK_WEBHOOK_URL, {
-        text: subEsc,
-        blocks: [
-          { type: 'header', text: { type: 'plain_text', text: 'New PapaWeb contact', emoji: true } },
-          {
-            type: 'section',
-            fields: [
-              { type: 'mrkdwn', text: '*Name*\n' + sn },
-              { type: 'mrkdwn', text: '*Email*\n<' + mailtoHref + '|' + se + '>' },
-            ],
-          },
-          { type: 'section', text: { type: 'mrkdwn', text: '*Interest*\n' + si } },
-          { type: 'section', text: { type: 'mrkdwn', text: '*Message*\n' + sm } },
-        ],
-      });
     }
     finishSuccess();
   } catch (err) {

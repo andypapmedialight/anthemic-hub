@@ -151,6 +151,11 @@ sudo -u deploy mkdir -p /home/deploy/incoming-hub
 | `DEPLOY_PORT` | SSH port |
 | `DEPLOY_USER` | `deploy` |
 | `DEPLOY_SSH_KEY` | Private key matching deploy's `authorized_keys` |
+| `FRED_API_KEY` | St. Louis Fed API key (server-side economics proxy only) |
+| `PAPAWEB_SLACK_WEBHOOK` | Slack incoming webhook (installed to `/etc/anthemic-contact/contact.env`, never in static JS) |
+| `CONTACT_ADMIN_TOKEN` | Long random string for `GET /bass/api/contacts` (Bearer); optional until you use the admin contacts page |
+
+After hub deploy, reload **anthemic-ops** nginx so `/bass/api/contact`, dotfile blocking, and `/bass/admin/` auth are active.
 
 ## Interest filter
 

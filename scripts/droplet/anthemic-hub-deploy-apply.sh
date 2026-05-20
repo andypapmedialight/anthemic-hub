@@ -85,7 +85,8 @@ rsync -a --delete "${INCOMING}/brain/" "${DEST}/brain/"
 rsync -a --delete "${INCOMING}/gigs/" "${DEST}/gigs/"
 rsync -a --delete "${INCOMING}/anth-dev-ad/" "${DEST}/anth-dev-ad/"
 rsync -a --delete "${INCOMING}/personal/" "${DEST}/personal/"
-rsync -a --delete "${INCOMING}/economics/" "${DEST}/economics/"
+rsync -a --delete --exclude '.fred-api-key' "${INCOMING}/economics/" "${DEST}/economics/"
+rm -f "${DEST}/economics/.fred-api-key"
 rsync -a --delete "${INCOMING}/content/" "${DEST}/content/"
 
 # Restore live admin-managed files so edits survive deploys.
@@ -164,6 +165,51 @@ else
   printf 'set $mmd_fred_api_key "";\n' > "${SNIP}"
 fi
 chmod 644 "${SNIP}"
+
+# PapaWeb contact API (Slack + JSON store on loopback; nginx proxies /bass/api/*).
+CONTACT_OPT=/opt/anthemic-contact
+CONTACT_ENV=/etc/anthemic-contact/contact.env
+CONTACT_INCOMING_ENV="${INCOMING}/private/contact.env"
+if [[ -f "${INCOMING}/contact/server.mjs" ]]; then
+  if ! command -v node >/dev/null 2>&1; then
+    echo "anthemic-hub-deploy-apply: node is required for papaweb-contact.service" >&2
+    exit 1
+  fi
+  mkdir -p "${CONTACT_OPT}/data"
+  install -o root -g root -m 644 "${INCOMING}/contact/server.mjs" "${CONTACT_OPT}/server.mjs"
+  if [[ -f "${INCOMING}/contact/papaweb-contact.service" ]]; then
+    install -o root -g root -m 644 "${INCOMING}/contact/papaweb-contact.service" \
+      /etc/systemd/system/papaweb-contact.service
+  fi
+  mkdir -p /etc/anthemic-contact
+  if [[ -f "${CONTACT_INCOMING_ENV}" ]]; then
+    install -o root -g www-data -m 640 "${CONTACT_INCOMING_ENV}" "${CONTACT_ENV}"
+  else
+    printf '# contact.env not deployed — set GitHub secrets PAPAWEB_SLACK_WEBHOOK + CONTACT_ADMIN_TOKEN\n' > "${CONTACT_ENV}"
+    chmod 640 "${CONTACT_ENV}"
+    chown root:www-data "${CONTACT_ENV}"
+  fi
+  chown -R www-data:www-data "${CONTACT_OPT}/data"
+  if command -v systemctl >/dev/null 2>&1; then
+    systemctl daemon-reload
+    systemctl enable papaweb-contact.service
+    systemctl restart papaweb-contact.service
+    sleep 1
+    if ! systemctl is-active --quiet papaweb-contact.service; then
+      echo "anthemic-hub-deploy-apply: papaweb-contact.service is not active" >&2
+      systemctl status papaweb-contact.service --no-pager >&2 || true
+      journalctl -u papaweb-contact.service -n 40 --no-pager >&2 || true
+      exit 1
+    fi
+    if command -v curl >/dev/null 2>&1; then
+      if ! curl -fsS --max-time 10 http://127.0.0.1:8072/health >/dev/null; then
+        echo "anthemic-hub-deploy-apply: papaweb-contact /health check failed" >&2
+        journalctl -u papaweb-contact.service -n 40 --no-pager >&2 || true
+        exit 1
+      fi
+    fi
+  fi
+fi
 
 # Morning Macro: valuation API (BIS/FRED) on loopback for nginx proxy_pass.
 MMD_OPT=/opt/anthemic-mmd

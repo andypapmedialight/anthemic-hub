@@ -1,0 +1,20 @@
+[Unit]
+Description=PapaWeb contact form API (Slack + JSON store)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/anthemic-contact
+Environment=BIND=127.0.0.1
+Environment=PORT=8072
+EnvironmentFile=-/etc/anthemic-contact/contact.env
+ExecStart=/usr/bin/node /opt/anthemic-contact/server.mjs
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=20
+
+[Install]
+WantedBy=multi-user.target

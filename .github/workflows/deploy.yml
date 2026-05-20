@@ -24,22 +24,41 @@ jobs:
       - name: Stamp macro.js SRI for production
         run: node scripts/stamp-economics-sri.js
 
-      - name: Write bass/papaweb.config.js (Slack webhook from secret)
-        env:
-          PAPAWEB_SLACK_WEBHOOK: ${{ secrets.PAPAWEB_SLACK_WEBHOOK }}
+      - name: Write bass/papaweb.config.js (public contact endpoint only)
         run: |
           node <<'NODE'
           const fs = require('fs');
-          const url = (process.env.PAPAWEB_SLACK_WEBHOOK || '').trim();
-          const o = {};
-          if (url) o.CONTACT_SLACK_WEBHOOK_URL = url;
+          const o = { CONTACT_FORM_ENDPOINT: '/bass/api/contact' };
           const body =
-            '/* Generated in CI — do not edit on the droplet (redeploy overwrites). */\n' +
+            '/* Generated in CI — no secrets here; Slack webhook is server-side only. */\n' +
             'globalThis.PAPAWEB_CONTACT_SECRETS = ' +
             JSON.stringify(o) +
             ';\n';
           fs.writeFileSync('bass/papaweb.config.js', body);
           NODE
+
+      - name: Stage contact API + server env (not in public web root)
+        env:
+          PAPAWEB_SLACK_WEBHOOK: ${{ secrets.PAPAWEB_SLACK_WEBHOOK }}
+          CONTACT_ADMIN_TOKEN: ${{ secrets.CONTACT_ADMIN_TOKEN }}
+        run: |
+          set -euo pipefail
+          mkdir -p incoming-hub/contact incoming-hub/private
+          cp bass/contact-backend/server.mjs incoming-hub/contact/
+          cp scripts/droplet/papaweb-contact.service incoming-hub/contact/
+          {
+            echo 'CONTACT_CORS_ORIGIN=https://anthemic-developments.com,https://www.anthemic-developments.com'
+            if [[ -n "${PAPAWEB_SLACK_WEBHOOK:-}" ]]; then
+              printf 'SLACK_WEBHOOK_URL=%s\n' "${PAPAWEB_SLACK_WEBHOOK}"
+            fi
+            if [[ -n "${CONTACT_ADMIN_TOKEN:-}" ]]; then
+              printf 'CONTACT_ADMIN_TOKEN=%s\n' "${CONTACT_ADMIN_TOKEN}"
+            fi
+          } > incoming-hub/private/contact.env
+          chmod 600 incoming-hub/private/contact.env
+
+      - name: Verify deploy bundle has no public secrets (after staging)
+        run: node scripts/check-deploy-secrets.js
 
       - name: Write economics FRED API key (server-side proxy only)
         env:
@@ -84,6 +103,8 @@ jobs:
           rsync -avz -e "${RSYNC_SSH}" ./anth-dev-ad/ "${DEST}anth-dev-ad/"
           rsync -avz -e "${RSYNC_SSH}" ./personal/ "${DEST}personal/"
           rsync -avz -e "${RSYNC_SSH}" ./economics/ "${DEST}economics/"
+          rsync -avz -e "${RSYNC_SSH}" ./incoming-hub/contact/ "${DEST}contact/"
+          rsync -avz -e "${RSYNC_SSH}" ./incoming-hub/private/ "${DEST}private/"
           mkdir -p ./incoming-mmd-staging/mmd
           cp ./scripts/valuation_fetch.py ./scripts/valuation_server.py ./incoming-mmd-staging/mmd/
           cp ./scripts/droplet/mmd-valuation.service ./incoming-mmd-staging/mmd/
@@ -149,3 +170,15 @@ jobs:
           ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
             'systemctl is-active --quiet mmd-valuation.service && curl -fsS --max-time 10 http://127.0.0.1:8071/health | grep -q "\"ok\""' \
             || { echo "mmd-valuation.service not healthy on loopback :8071 (check journalctl -u mmd-valuation)"; exit 1; }
+          code_fred_key=$(curl -sS -o /dev/null -w "%{http_code}" --retry 2 "https://anthemic-developments.com/economics/.fred-api-key")
+          [[ "${code_fred_key}" == "404" ]] || { echo "economics/.fred-api-key must not be public (got HTTP ${code_fred_key})"; exit 1; }
+          if curl -sS --retry 2 "https://anthemic-developments.com/bass/papaweb.config.js" | grep -q 'hooks.slack.com'; then
+            echo "bass/papaweb.config.js must not expose Slack webhook URLs"
+            exit 1
+          fi
+          code_contact=$(curl -sS -o /dev/null -w "%{http_code}" --retry 2 -X POST \
+            -H "Content-Type: application/json" \
+            -H "Origin: https://anthemic-developments.com" \
+            -d '{"name":"smoke","email":"smoke@example.com","message":"deploy smoke (ignore)"}' \
+            "https://anthemic-developments.com/bass/api/contact")
+          [[ "${code_contact}" == "200" ]] || { echo "/bass/api/contact returned HTTP ${code_contact} (sync anthemic-ops nginx + papaweb-contact.service)"; exit 1; }
