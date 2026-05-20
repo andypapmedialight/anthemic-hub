@@ -90,18 +90,18 @@
       Third-party form hosts (Formspree, Web3Forms) use their own dashboards instead — see hints below.
     </p>
 
-    <div class="card">
+    <form class="card" id="load-form" method="get" action="#">
       <div class="row">
         <label for="api-base">API base URL</label>
-        <input id="api-base" type="text" placeholder="/bass/api or https://your-contact-api…" autocomplete="off">
+        <input id="api-base" name="api-base" type="text" placeholder="/bass/api or https://your-contact-api…" autocomplete="off">
       </div>
       <div class="row">
         <label for="token">Admin token (Bearer)</label>
-        <input id="token" type="password" placeholder="CONTACT_ADMIN_TOKEN value" autocomplete="current-password">
+        <input id="token" name="token" type="password" placeholder="CONTACT_ADMIN_TOKEN value" autocomplete="current-password">
       </div>
-      <button type="button" id="load-btn">Load submissions</button>
+      <button type="submit" id="load-btn">Load submissions</button>
       <p class="status" id="status" role="status">Enter your admin token, then click <strong>Load submissions</strong>.</p>
-    </div>
+    </form>
 
     <div class="card" id="table-wrap" hidden>
       <table>
@@ -127,107 +127,6 @@
       <strong>Security:</strong> this page is behind HTTP basic auth; the API uses your Bearer token only. API base: <code style="font-family:var(--mono);font-size:0.8em">/bass/api</code>. Token is saved in this browser after you load.
     </p>
   </div>
-  <script>
-    var LS_API = 'papaweb_contact_api_base';
-    var LS_TOK = 'papaweb_contact_bearer';
-
-    function $(id) { return document.getElementById(id); }
-
-    function setStatus(msg, kind) {
-      var el = $('status');
-      el.textContent = msg || '';
-      el.className = 'status' + (kind ? ' ' + kind : '');
-    }
-
-    function normalizeBase(url) {
-      if (!url) return '';
-      var s = String(url).trim().replace(/\/+$/, '');
-      if (s.charAt(0) === '/') {
-        return (window.location.origin || '').replace(/\/+$/, '') + s;
-      }
-      return s;
-    }
-
-    function renderRows(rows) {
-      var tb = $('tbody');
-      var wrap = $('table-wrap');
-      tb.innerHTML = '';
-      if (!rows.length) {
-        wrap.hidden = false;
-        tb.innerHTML = '<tr><td colspan="5" class="mono">No submissions yet.</td></tr>';
-        return;
-      }
-      wrap.hidden = false;
-      rows.forEach(function (r) {
-        var tr = document.createElement('tr');
-        tr.innerHTML =
-          '<td class="mono">' + escapeHtml(r.receivedAt || '—') + '</td>' +
-          '<td>' + escapeHtml(r.name || '') + '</td>' +
-          '<td class="mono">' + escapeHtml(r.email || '') + '</td>' +
-          '<td>' + escapeHtml(r.interest || '') + '</td>' +
-          '<td class="msg">' + escapeHtml(r.message || '') + '</td>';
-        tb.appendChild(tr);
-      });
-    }
-
-    function escapeHtml(s) {
-      return String(s)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
-    }
-
-    async function loadSubmissions() {
-      var base = normalizeBase($('api-base').value);
-      var token = $('token').value.trim();
-      if (!base || !token) {
-        setStatus('Enter both API base URL and admin token.', 'err');
-        return;
-      }
-      localStorage.setItem(LS_API, base);
-      localStorage.setItem(LS_TOK, token);
-      setStatus('Loading…', '');
-      $('load-btn').disabled = true;
-      try {
-        var res = await fetch(base + '/contacts', {
-          headers: { Authorization: 'Bearer ' + token, Accept: 'application/json' },
-        });
-        var data = await res.json().catch(function () { return null; });
-        if (!res.ok) {
-          var err = data && (data.error || data.message);
-          if (res.status === 401) {
-            throw new Error((err || 'Unauthorized') + ' — check CONTACT_ADMIN_TOKEN matches GitHub secret and hub was redeployed.');
-          }
-          if (res.status === 503) {
-            throw new Error((err || 'Service unavailable') + ' — set CONTACT_ADMIN_TOKEN in GitHub Actions secrets and redeploy hub.');
-          }
-          throw new Error(err || 'HTTP ' + res.status);
-        }
-        if (!Array.isArray(data)) {
-          throw new Error('Unexpected response (expected a JSON array).');
-        }
-        renderRows(data);
-        setStatus('Loaded ' + data.length + ' row(s).', 'ok');
-      } catch (e) {
-        setStatus(e.message || String(e), 'err');
-        $('table-wrap').hidden = true;
-      } finally {
-        $('load-btn').disabled = false;
-      }
-    }
-
-    $('load-btn').addEventListener('click', loadSubmissions);
-    $('token').addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') loadSubmissions();
-    });
-
-    (function init() {
-      var b = localStorage.getItem(LS_API);
-      var t = localStorage.getItem(LS_TOK);
-      $('api-base').value = b || '/bass/api';
-      if (t) $('token').value = t;
-    })();
-  </script>
+  <script src="contacts-admin.js" defer></script>
 </body>
 </html>
