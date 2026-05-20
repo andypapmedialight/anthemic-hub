@@ -156,7 +156,10 @@ fi
 
 # Morning Macro: install FRED API key for nginx proxy (Valuation + FRED bonds).
 SNIP="/etc/nginx/snippets/mmd-fred-api-key.conf"
-FRED_KEY_FILE="${INCOMING}/economics/.fred-api-key"
+FRED_KEY_FILE="${INCOMING}/private/fred-api-key"
+if [[ ! -f "${FRED_KEY_FILE}" && -f "${INCOMING}/economics/.fred-api-key" ]]; then
+  FRED_KEY_FILE="${INCOMING}/economics/.fred-api-key"
+fi
 mkdir -p /etc/nginx/snippets
 if [[ -f "${FRED_KEY_FILE}" ]]; then
   KEY="$(tr -d '\r\n' < "${FRED_KEY_FILE}")"
@@ -171,6 +174,13 @@ CONTACT_OPT=/opt/anthemic-contact
 CONTACT_ENV=/etc/anthemic-contact/contact.env
 CONTACT_INCOMING_ENV="${INCOMING}/private/contact.env"
 if [[ -f "${INCOMING}/contact/server.mjs" ]]; then
+  if ! command -v node >/dev/null 2>&1; then
+    if command -v dnf >/dev/null 2>&1; then
+      dnf install -y nodejs
+    elif command -v apt-get >/dev/null 2>&1; then
+      apt-get update -qq && apt-get install -y nodejs
+    fi
+  fi
   if ! command -v node >/dev/null 2>&1; then
     echo "anthemic-hub-deploy-apply: node is required for papaweb-contact.service" >&2
     exit 1

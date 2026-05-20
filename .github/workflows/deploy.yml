@@ -60,19 +60,21 @@ jobs:
       - name: Verify deploy bundle has no public secrets (after staging)
         run: node scripts/check-deploy-secrets.js
 
-      - name: Write economics FRED API key (server-side proxy only)
+      - name: Write FRED API key (private staging only, not under economics/)
         env:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
         run: |
-          node <<'NODE'
-          const fs = require('fs');
-          const key = (process.env.FRED_API_KEY || '').trim();
-          if (key) {
-            fs.writeFileSync('economics/.fred-api-key', key + '\n', { mode: 0o600 });
-          } else {
-            try { fs.unlinkSync('economics/.fred-api-key'); } catch {}
-          }
-          NODE
+          set -euo pipefail
+          mkdir -p incoming-hub/private
+          key="${FRED_API_KEY:-}"
+          key="${key//$'\r'/}"
+          key="${key//$'\n'/}"
+          if [[ -n "${key}" ]]; then
+            printf '%s\n' "${key}" > incoming-hub/private/fred-api-key
+            chmod 600 incoming-hub/private/fred-api-key
+          else
+            rm -f incoming-hub/private/fred-api-key
+          fi
 
       - name: Install SSH key
         uses: webfactory/ssh-agent@v0.10.0
@@ -102,9 +104,12 @@ jobs:
           rsync -avz -e "${RSYNC_SSH}" ./gigs/ "${DEST}gigs/"
           rsync -avz -e "${RSYNC_SSH}" ./anth-dev-ad/ "${DEST}anth-dev-ad/"
           rsync -avz -e "${RSYNC_SSH}" ./personal/ "${DEST}personal/"
-          rsync -avz -e "${RSYNC_SSH}" ./economics/ "${DEST}economics/"
+          rsync -avz --exclude '.fred-api-key' -e "${RSYNC_SSH}" ./economics/ "${DEST}economics/"
           rsync -avz -e "${RSYNC_SSH}" ./incoming-hub/contact/ "${DEST}contact/"
-          rsync -avz -e "${RSYNC_SSH}" ./incoming-hub/private/ "${DEST}private/"
+          # --no-perms: avoid rsync exit 23 when remote cannot set mode 600 on secret files.
+          rsync -rlvz --no-perms -e "${RSYNC_SSH}" ./incoming-hub/private/ "${DEST}private/"
+          ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            'chmod 600 incoming-hub/private/contact.env incoming-hub/private/fred-api-key 2>/dev/null || true'
           mkdir -p ./incoming-mmd-staging/mmd
           cp ./scripts/valuation_fetch.py ./scripts/valuation_server.py ./incoming-mmd-staging/mmd/
           cp ./scripts/droplet/mmd-valuation.service ./incoming-mmd-staging/mmd/
@@ -176,9 +181,10 @@ jobs:
             echo "bass/papaweb.config.js must not expose Slack webhook URLs"
             exit 1
           fi
-          code_contact=$(curl -sS -o /dev/null -w "%{http_code}" --retry 2 -X POST \
-            -H "Content-Type: application/json" \
-            -H "Origin: https://anthemic-developments.com" \
-            -d '{"name":"smoke","email":"smoke@example.com","message":"deploy smoke (ignore)"}' \
-            "https://anthemic-developments.com/bass/api/contact")
-          [[ "${code_contact}" == "200" ]] || { echo "/bass/api/contact returned HTTP ${code_contact} (sync anthemic-ops nginx + papaweb-contact.service)"; exit 1; }
+          ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "curl -fsS --max-time 10 -X POST http://127.0.0.1:8072/contact \
+              -H 'Content-Type: application/json' \
+              -H 'Origin: https://anthemic-developments.com' \
+              -d '{\"name\":\"smoke\",\"email\":\"smoke@example.com\",\"message\":\"deploy smoke (ignore)\"}' \
+            | grep -q '\"success\":true'" \
+            || { echo "papaweb-contact.service loopback POST /contact failed (install node, check journalctl -u papaweb-contact)"; exit 1; }

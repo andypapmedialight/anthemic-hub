@@ -22,12 +22,15 @@ if (/CONTACT_SLACK_WEBHOOK|SLACK_WEBHOOK_URL|CONTACT_FORM_ACCESS_KEY|access_key\
   errors.push('bass/papaweb.config.js must only set public options (e.g. CONTACT_FORM_ENDPOINT)');
 }
 
-const fredKeyPath = path.join(root, 'economics/.fred-api-key');
-if (fs.existsSync(fredKeyPath)) {
-  const st = fs.statSync(fredKeyPath);
+const fredPrivate = path.join(root, 'incoming-hub/private/fred-api-key');
+if (fs.existsSync(fredPrivate)) {
+  const st = fs.statSync(fredPrivate);
   if ((st.mode & 0o077) !== 0) {
-    errors.push('economics/.fred-api-key should be mode 0600 in CI (deploy apply excludes it from the web root)');
+    errors.push('incoming-hub/private/fred-api-key should be mode 0600 in CI');
   }
+}
+if (fs.existsSync(path.join(root, 'economics/.fred-api-key'))) {
+  errors.push('economics/.fred-api-key must not be staged — use incoming-hub/private/fred-api-key');
 }
 
 const apply = read('scripts/droplet/anthemic-hub-deploy-apply.sh');
