@@ -638,6 +638,9 @@ function gigForm(string $action, array $g = [], int $idx = -1, string $csrf = ''
     *{box-sizing:border-box}html,body{margin:0;background:#0e1015;color:#eceef4;font-family:'Figtree',system-ui,sans-serif;font-size:16px;line-height:1.5;min-height:100vh}
     .wrap{max-width:760px;margin:0 auto;padding:32px 24px 64px}
     .top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #2a3140}
+    .top-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:flex-end}
+    .link-contact{font:inherit;font-size:13px;font-weight:600;color:#6b9cff;text-decoration:none;white-space:nowrap}
+    .link-contact:hover{color:#8db0ff;text-decoration:underline}
     h1{margin:0;font-size:1.3rem;font-weight:600;letter-spacing:-0.02em}
     .btn-logout{font-family:inherit;font-size:13px;font-weight:600;padding:7px 14px;background:transparent;border:1px solid #2a3140;border-radius:6px;color:#949db0;cursor:pointer}
     .btn-logout:hover{border-color:#3d4659;color:#eceef4}
@@ -705,11 +708,14 @@ function gigForm(string $action, array $g = [], int $idx = -1, string $csrf = ''
 <div class="wrap">
   <div class="top-bar">
     <h1>Anthemic Admin</h1>
-    <form method="post">
-      <input type="hidden" name="logout" value="1" />
-      <input type="hidden" name="csrf" value="<?= h($csrf) ?>" />
-      <button type="submit" class="btn-logout">Sign out</button>
-    </form>
+    <div class="top-actions">
+      <a href="/bass/admin/contacts.html" class="link-contact">Contact submissions</a>
+      <form method="post">
+        <input type="hidden" name="logout" value="1" />
+        <input type="hidden" name="csrf" value="<?= h($csrf) ?>" />
+        <button type="submit" class="btn-logout">Sign out</button>
+      </form>
+    </div>
   </div>
 
   <nav class="tab-nav">
