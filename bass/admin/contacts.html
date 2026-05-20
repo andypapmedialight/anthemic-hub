@@ -99,8 +99,8 @@
         <label for="token">Admin token (Bearer)</label>
         <input id="token" type="password" placeholder="CONTACT_ADMIN_TOKEN value" autocomplete="current-password">
       </div>
-      <button type="button" id="load-btn">Save in this browser &amp; load</button>
-      <p class="status" id="status" role="status"></p>
+      <button type="button" id="load-btn">Load submissions</button>
+      <p class="status" id="status" role="status">Enter your admin token, then click <strong>Load submissions</strong>.</p>
     </div>
 
     <div class="card" id="table-wrap" hidden>
@@ -124,7 +124,7 @@
       <a href="https://web3forms.com" rel="noopener noreferrer">Web3Forms</a> emails you directly.
       PapaWeb <a href="/">home</a> form sends to whichever provider you configure first in that priority chain.
       <br><br>
-      <strong>Security:</strong> on anthemic-developments.com this page is behind HTTP basic auth; use API base <code style="font-family:var(--mono);font-size:0.8em">/bass/api</code> and list URL <code style="font-family:var(--mono);font-size:0.8em">/bass/api/contacts</code> (nginx + Bearer token). The token is stored in this browser’s localStorage.
+      <strong>Security:</strong> this page is behind HTTP basic auth; the API uses your Bearer token only. API base: <code style="font-family:var(--mono);font-size:0.8em">/bass/api</code>. Token is saved in this browser after you load.
     </p>
   </div>
   <script>
@@ -178,16 +178,17 @@
         .replace(/"/g, '&quot;');
     }
 
-    $('load-btn').addEventListener('click', async function () {
+    async function loadSubmissions() {
       var base = normalizeBase($('api-base').value);
       var token = $('token').value.trim();
       if (!base || !token) {
-        setStatus('Enter both API base URL and token.', 'err');
+        setStatus('Enter both API base URL and admin token.', 'err');
         return;
       }
       localStorage.setItem(LS_API, base);
       localStorage.setItem(LS_TOK, token);
       setStatus('Loading…', '');
+      $('load-btn').disabled = true;
       try {
         var res = await fetch(base + '/contacts', {
           headers: { Authorization: 'Bearer ' + token, Accept: 'application/json' },
@@ -195,6 +196,12 @@
         var data = await res.json().catch(function () { return null; });
         if (!res.ok) {
           var err = data && (data.error || data.message);
+          if (res.status === 401) {
+            throw new Error((err || 'Unauthorized') + ' — check CONTACT_ADMIN_TOKEN matches GitHub secret and hub was redeployed.');
+          }
+          if (res.status === 503) {
+            throw new Error((err || 'Service unavailable') + ' — set CONTACT_ADMIN_TOKEN in GitHub Actions secrets and redeploy hub.');
+          }
           throw new Error(err || 'HTTP ' + res.status);
         }
         if (!Array.isArray(data)) {
@@ -205,7 +212,14 @@
       } catch (e) {
         setStatus(e.message || String(e), 'err');
         $('table-wrap').hidden = true;
+      } finally {
+        $('load-btn').disabled = false;
       }
+    }
+
+    $('load-btn').addEventListener('click', loadSubmissions);
+    $('token').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') loadSubmissions();
     });
 
     (function init() {
