@@ -704,6 +704,13 @@
       letter-spacing: 0.03em;
       color: var(--fg-dim);
       text-transform: none;
+      scroll-margin-top: var(--hub-scroll-margin-top, 32px);
+      scroll-margin-bottom: calc(var(--console-mobile-pad, 0px) + 28px);
+    }
+    .hub-who-heading,
+    .hub-skills-heading {
+      scroll-margin-top: var(--hub-scroll-margin-top, 32px);
+      scroll-margin-bottom: calc(var(--console-mobile-pad, 0px) + 28px);
     }
     .hub-skills-block + .hub-section[data-hub-section="projects"] {
       margin-top: 0;
@@ -1999,7 +2006,7 @@
       }
       .split-console .workshop-console {
         flex: 1 1 0;
-        min-height: 10rem;
+        min-height: 14rem;
         overflow: hidden;
         display: flex;
         flex-direction: column;
@@ -2013,7 +2020,7 @@
       }
       .split-console .console-body {
         flex: 1 1 auto;
-        min-height: 9rem;
+        min-height: 14.5rem;
         max-height: none;
         overflow-y: auto;
       }
@@ -2038,108 +2045,48 @@
     }
     @media (max-width: 1079px) {
       body.layout-alt {
-        --console-mobile-pad: 520px;
+        --console-mobile-pad: 0px;
+        --hub-scroll-margin-top: calc(var(--hub-site-nav-height) + 24px);
       }
       .split-scroll {
-        padding-bottom: calc(var(--console-mobile-pad) + env(safe-area-inset-bottom, 0px));
+        padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px));
       }
       .split-console {
-        position: fixed;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        z-index: 500;
-        margin: 0;
-        padding: 0 12px calc(10px + env(safe-area-inset-bottom, 0px));
-        pointer-events: none;
-        flex-direction: column;
-        justify-content: flex-end;
-        align-items: stretch;
-        gap: 10px;
-        max-height: min(92dvh, calc(100dvh - env(safe-area-inset-top, 0px) - 8px));
-        overflow-x: hidden;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-      }
-      .split-console .workshop-console,
-      .split-console .interest-bar {
+        position: static;
+        z-index: auto;
+        margin: 0 0 12px;
+        padding: 0 12px;
         pointer-events: auto;
-        max-width: 1120px;
-        margin: 0 auto;
-        width: 100%;
-        flex-shrink: 0;
+        flex-direction: column;
+        gap: 0;
+        max-height: none;
+        overflow: visible;
       }
       .split-console .workshop-console {
-        flex: 1 1 auto;
-        min-height: 0;
-      }
-      .split-console .console-chrome {
-        display: flex;
-        flex-direction: column;
-        min-height: 0;
+        display: none !important;
       }
       .split-console .interest-bar {
         margin-top: 0;
         overflow: visible;
         flex: 0 0 auto;
-        min-height: 31rem;
+        min-height: 0;
         max-height: none;
+        max-width: none;
+        width: 100%;
+        box-shadow: none;
       }
       .split-console .interest-bar.is-filter-active {
-        min-height: 33rem;
+        min-height: 0;
+        box-shadow: 0 0 0 1px rgba(107, 156, 255, 0.28), 0 8px 28px rgba(0, 0, 0, 0.12);
       }
-      .split-console .interest-bar.is-filter-active {
-        box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.2);
+      #interest-bar,
+      #interest-bar .interest-bar-head {
+        scroll-margin-top: var(--hub-scroll-margin-top);
       }
-      .split-console .console-chrome {
-        box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.45);
-      }
-      html[data-theme="light"] .split-console .console-chrome {
-        box-shadow: 0 -6px 24px rgba(20, 24, 32, 0.14);
-      }
-      .console-titlebar {
-        padding-right: 8px;
-      }
-      .console-mobile-toggle {
-        margin-left: auto;
-        font-family: var(--font-ui);
-        font-size: 10px;
-        font-weight: 600;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-        padding: 5px 10px;
-        border-radius: 6px;
-        border: 1px solid var(--border);
-        background: var(--bg-card);
-        color: var(--fg-dim);
-        cursor: pointer;
-      }
-      .console-mobile-toggle:hover {
-        border-color: var(--accent-live);
-        color: var(--fg);
-      }
-      .console-body {
-        min-height: 140px;
-        max-height: 38vh;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-      }
-      body.layout-alt.console-mobile-collapsed .console-body,
-      body.layout-alt.console-mobile-collapsed .console-foot {
-        display: none;
-      }
-      .console-foot {
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: thin;
-        padding-bottom: 8px;
-      }
-      .console-scene-btn {
-        flex-shrink: 0;
-      }
-      body.layout-alt {
-        --hub-scroll-margin-top: calc(var(--hub-site-nav-height) + 12px);
+      .hub-who-heading,
+      .hub-skills-heading,
+      .hub-section > .section-heading {
+        scroll-margin-top: var(--hub-scroll-margin-top);
       }
     }
     @media (min-width: 1080px) {
@@ -2157,6 +2104,11 @@
     body.layout-alt [data-console-scene] {
       scroll-margin-top: var(--hub-scroll-margin-top);
       scroll-margin-bottom: calc(var(--console-mobile-pad) + 28px);
+    }
+    @media (max-width: 1079px) {
+      body.layout-alt [data-console-scene] {
+        scroll-margin-bottom: 28px;
+      }
     }
     .workshop-console { width: 100%; }
     .console-chrome {
@@ -2203,7 +2155,7 @@
     }
     .console-body {
       position: relative;
-      min-height: 260px;
+      min-height: 340px;
       padding: 8px 0 12px;
     }
     .console-scene {

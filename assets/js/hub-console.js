@@ -2,13 +2,13 @@
   var MOBILE_MQ = window.matchMedia("(max-width: 1079px)");
   var CAPTIONS = {
     intro: "Skills — stack & links",
-    who: "Who — profile & QA",
-    lens: "Your lens — interest filter",
-    projects: "01 — anthemic projects",
-    music: "02 — music & gigs",
-    bio: "03 — music bio",
-    reading: "04 — reading list",
-    work: "05 — professional work"
+    who: "Who's Andy?",
+    lens: "Hub filter",
+    projects: "01 — Anthemic projects",
+    music: "02 — Music",
+    bio: "03 — Music bio",
+    reading: "04 — Reading list",
+    work: "05 — Work"
   };
   var scenes = document.querySelectorAll(".console-scene");
   var caption = document.getElementById("console-caption");
@@ -134,19 +134,18 @@
     return MOBILE_MQ.matches;
   }
 
-  function scrollMarginTop() {
-    var root = document.documentElement;
-    var v = getComputedStyle(root).getPropertyValue("--hub-scroll-margin-top").trim();
-    var n = parseFloat(v);
-    return Number.isFinite(n) ? n : isMobile() ? 20 : 32;
-  }
-
   function scrollToSceneTarget(el) {
     if (!el) return;
+    if (typeof window.hubResolveScrollAnchor === "function" && typeof window.hubScrollToAnchor === "function") {
+      window.hubScrollToAnchor(window.hubResolveScrollAnchor(el));
+      return;
+    }
     var anchor =
-      el.querySelector(":scope > .section-heading, :scope > h2.section-heading, :scope > .hub-who-heading") ||
+      el.querySelector(":scope > .section-heading, :scope > h2.section-heading, :scope > .hub-who-heading, :scope > .hub-skills-heading") ||
       el;
-    var offset = scrollMarginTop();
+    var offset = typeof window.hubScrollMarginTopPx === "function"
+      ? window.hubScrollMarginTopPx()
+      : 32;
     var top = anchor.getBoundingClientRect().top + window.scrollY - offset;
     window.scrollTo({
       top: Math.max(0, top),
@@ -207,7 +206,7 @@
 
   var io = null;
   function ioRootMargin() {
-    return isMobile() ? "-18% 0px -52% 0px" : "-35% 0px -40% 0px";
+    return isMobile() ? "-22% 0px -30% 0px" : "-35% 0px -40% 0px";
   }
   function bindScrollSync() {
     if (!("IntersectionObserver" in window) || !targets.length) return;

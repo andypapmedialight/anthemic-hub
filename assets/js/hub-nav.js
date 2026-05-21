@@ -18,25 +18,38 @@
     });
   }
 
+  function scrollNavLink(link) {
+    var href = link.getAttribute("href");
+    if (!href || href.charAt(0) !== "#") return;
+    var target = document.querySelector(href);
+    if (!target) return;
+    var anchor = typeof window.hubResolveScrollAnchor === "function"
+      ? window.hubResolveScrollAnchor(target)
+      : target;
+    if (typeof window.hubScrollToAnchor === "function") {
+      window.hubScrollToAnchor(anchor);
+      return;
+    }
+    var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    target.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+  }
+
   list.addEventListener("click", function (e) {
     var link = e.target.closest("a[data-scene-jump]");
     if (!link) return;
     e.preventDefault();
+    if (MOBILE_MQ.matches) closeNav();
     var id = link.getAttribute("data-scene-jump");
     var consoleBtn = document.querySelector('.console-scene-btn[data-scene-jump="' + id + '"]');
     if (consoleBtn) {
-      consoleBtn.click();
+      requestAnimationFrame(function () {
+        consoleBtn.click();
+      });
     } else {
-      var href = link.getAttribute("href");
-      if (href && href.charAt(0) === "#") {
-        var target = document.querySelector(href);
-        if (target) {
-          var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-          target.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
-        }
-      }
+      requestAnimationFrame(function () {
+        scrollNavLink(link);
+      });
     }
-    if (MOBILE_MQ.matches) closeNav();
   });
 
   document.addEventListener("keydown", function (e) {

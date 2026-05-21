@@ -327,15 +327,11 @@
   var consoleDockPadRaf = 0;
 
   function syncConsoleDockPad() {
-    var dock = document.querySelector(".split-console");
-    if (!dock || !mobileConsoleMq.matches) {
+    if (!mobileConsoleMq.matches) {
       document.documentElement.style.removeProperty("--console-mobile-pad");
       return;
     }
-    var h = Math.ceil(dock.getBoundingClientRect().height);
-    if (h > 0) {
-      document.documentElement.style.setProperty("--console-mobile-pad", h + "px");
-    }
+    document.documentElement.style.setProperty("--console-mobile-pad", "0px");
   }
   function scheduleConsoleDockPad() {
     if (consoleDockPadRaf) cancelAnimationFrame(consoleDockPadRaf);
@@ -452,13 +448,23 @@
     });
     for (var i = 0; i < blocks.length; i++) wrap.appendChild(blocks[i]);
   }
+  /** Fixed hub section numbers — must match console scenes and nav 01–05 labels. */
+  var HUB_SECTION_NUMBERS = {
+    projects: "01",
+    music: "02",
+    "music-bio": "03",
+    "reading-list": "04",
+    work: "05"
+  };
   function updateSectionNumbers() {
     var wrap = document.querySelector("main .wrap");
     if (!wrap) return;
     var blocks = wrap.querySelectorAll(":scope > .hub-section");
     for (var i = 0; i < blocks.length; i++) {
       var num = blocks[i].querySelector(".sec-num");
-      if (num) num.textContent = i + 1 < 10 ? "0" + (i + 1) : String(i + 1);
+      if (!num) continue;
+      var id = blocks[i].getAttribute("data-hub-section") || "";
+      num.textContent = HUB_SECTION_NUMBERS[id] || num.textContent;
     }
   }
   var interestCardSel = ".card[data-interests], article[data-interests]";
@@ -513,39 +519,96 @@
     }
     scheduleConsoleDockPad();
   }
-  function scrollInterestTarget(interest) {
-    var main = document.querySelector("main");
-    if (!main) return;
-    var target = null;
-    if (!interest || interest === "all") {
-      var projects = main.querySelector('[data-hub-section="projects"]');
-      target = projects ? projects.querySelector(".section-heading") || projects : null;
-    } else {
-      target = main.querySelector(".card.is-interest-match, article.is-interest-match");
-      if (!target) {
-        var sections = main.querySelectorAll(".hub-section");
-        for (var si = 0; si < sections.length; si++) {
-          var block = sections[si];
-          var sectionTags = (block.getAttribute("data-interests") || "").trim().split(/\s+/);
-          if (sectionTags.indexOf(interest) !== -1) {
-            target = block.querySelector(".section-heading") || block;
-            break;
-          }
-        }
+  function scrollMarginTopPx() {
+    if (mobileConsoleMq.matches) {
+      var nav = document.querySelector(".hub-site-nav-wrap");
+      if (nav) {
+        var navH = Math.ceil(nav.getBoundingClientRect().height);
+        if (navH > 0) return navH + 20;
       }
     }
-    if (!target) return;
+    var v = getComputedStyle(document.documentElement).getPropertyValue("--hub-scroll-margin-top").trim();
+    var n = parseFloat(v);
+    if (Number.isFinite(n)) return n;
+    return mobileConsoleMq.matches ? 72 : 32;
+  }
+
+  function scrollMarginBottomPx() {
+    var v = getComputedStyle(document.documentElement).getPropertyValue("--console-mobile-pad").trim();
+    var n = parseFloat(v);
+    var pad = Number.isFinite(n) ? n : 0;
+    return pad + 28;
+  }
+
+  function interestScrollAnchor(el) {
+    if (!el) return null;
+    if (el.matches(".section-heading, .hub-who-heading, .hub-skills-heading")) return el;
+    if (el.id === "interest-bar" || el.classList.contains("interest-bar")) {
+      return el.querySelector(".interest-bar-head") || el;
+    }
+    var section = el.closest(".hub-section");
+    if (section) {
+      return section.querySelector(":scope > .section-heading") || section;
+    }
+    return el;
+  }
+
+  function findInterestScrollTarget(main, interest) {
+    if (!interest || interest === "all") {
+      var projects = main.querySelector('[data-hub-section="projects"]');
+      return projects ? interestScrollAnchor(projects) : null;
+    }
+    var sections = main.querySelectorAll(".hub-section");
+    var si;
+    for (si = 0; si < sections.length; si++) {
+      if (sectionMatchCount(sections[si], interest) > 0) {
+        return interestScrollAnchor(sections[si]);
+      }
+    }
+    var card = main.querySelector(".card.is-interest-match, article.is-interest-match");
+    return interestScrollAnchor(card);
+  }
+
+  function scrollToHubAnchor(anchor) {
+    if (!anchor) return;
     var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    scheduleConsoleDockPad();
     requestAnimationFrame(function () {
       requestAnimationFrame(function () {
-        target.scrollIntoView({
-          behavior: reduced ? "auto" : "smooth",
-          block: "start",
-          inline: "nearest"
+        syncConsoleDockPad();
+        requestAnimationFrame(function () {
+          var topOffset = scrollMarginTopPx();
+          var bottomPad = scrollMarginBottomPx();
+          var rect = anchor.getBoundingClientRect();
+          var scrollY = window.scrollY;
+          var viewH = window.innerHeight;
+          var elemTop = rect.top + scrollY;
+          var elemBottom = rect.bottom + scrollY;
+          var y = elemTop - topOffset;
+          if (!mobileConsoleMq.matches) {
+            var visibleBottom = scrollY + viewH - bottomPad;
+            if (elemBottom > visibleBottom) {
+              y = Math.min(y, elemBottom + bottomPad - viewH);
+            }
+          }
+          window.scrollTo({
+            top: Math.max(0, y),
+            behavior: reduced ? "auto" : "smooth"
+          });
         });
       });
     });
   }
+
+  function scrollInterestTarget(interest) {
+    var main = document.querySelector("main");
+    if (!main) return;
+    scrollToHubAnchor(findInterestScrollTarget(main, interest));
+  }
+
+  window.hubScrollMarginTopPx = scrollMarginTopPx;
+  window.hubScrollToAnchor = scrollToHubAnchor;
+  window.hubResolveScrollAnchor = interestScrollAnchor;
   function setInterest(interest, opts) {
     opts = opts || {};
     if (interestValues.indexOf(interest) === -1) interest = "all";
