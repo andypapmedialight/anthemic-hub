@@ -29,7 +29,7 @@ function stampHtml(htmlPath, replacements) {
     const fileRel = entry[2];
     const tag = sriTag(src, defer, fileRel);
     const esc = src.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const re = new RegExp(`<script\\s+[^>]*src="${esc}"[^>]*>\\s*<\\/script>`, 'i');
+    const re = new RegExp(`<script\\s+[^>]*src="${esc}(\\?[^"]*)?"[^>]*>\\s*<\\/script>`, 'i');
     if (!re.test(html)) {
       throw new Error(`stamp-static-sri: no script tag for ${src} in ${htmlPath}`);
     }
@@ -41,6 +41,7 @@ function stampHtml(htmlPath, replacements) {
 stampHtml(path.join(ROOT, 'index.html'), [
   ['/assets/js/theme-init.js', false],
   ['/assets/js/hub.js', true],
+  ['/assets/js/hub-nav.js', true],
   ['/assets/js/hub-console.js', true],
 ]);
 

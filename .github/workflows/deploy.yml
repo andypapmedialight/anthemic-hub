@@ -32,10 +32,14 @@ jobs:
       - name: Stamp hub and bass JS SRI for production
         run: node scripts/stamp-static-sri.js
 
-      - name: Cache-bust stylesheets
+      - name: Cache-bust static assets
         run: |
           VER="$(git rev-parse --short=12 HEAD)"
           sed -i "s|/assets/css/hub\\.css[^\"']*|/assets/css/hub.css?v=${VER}|g" index.html
+          sed -i "s|/assets/js/theme-init\\.js[^\"']*|/assets/js/theme-init.js?v=${VER}|g" index.html
+          sed -i "s|/assets/js/hub\\.js[^\"']*|/assets/js/hub.js?v=${VER}|g" index.html
+          sed -i "s|/assets/js/hub-nav\\.js[^\"']*|/assets/js/hub-nav.js?v=${VER}|g" index.html
+          sed -i "s|/assets/js/hub-console\\.js[^\"']*|/assets/js/hub-console.js?v=${VER}|g" index.html
           sed -i "s|/bass/site\\.css[^\"']*|/bass/site.css?v=${VER}|g" bass/index.html
           sed -i "s|macro\\.css[^\"']*|macro.css?v=${VER}|g" economics/index.html
           sed -i "s|/hire/pitch\\.css[^\"']*|/hire/pitch.css?v=${VER}|g" hire/index.html
