@@ -1,0 +1,526 @@
+/* Presentation deck — standalone from hub; content-first, slide-deck layout */
+
+:root {
+  --deck-bg: #ffffff;
+  --deck-ink: #141414;
+  --deck-ink-secondary: #3d3d3d;
+  --deck-ink-muted: #6b6b6b;
+  --deck-ink-faint: #9a9a9a;
+  --deck-accent: #1a4d8c;
+  --deck-rule: #d8d8d8;
+  --deck-font: "Figtree", ui-sans-serif, system-ui, sans-serif;
+  --deck-pad-x: clamp(2rem, 7vw, 5.5rem);
+  --deck-pad-y: clamp(2.5rem, 6vh, 4rem);
+  --deck-max: 56rem;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: light;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body.pitch-deck {
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow: hidden;
+  font-family: var(--deck-font);
+  font-size: 18px;
+  line-height: 1.5;
+  color: var(--deck-ink);
+  background: var(--deck-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Chrome ── */
+.deck-chrome {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 30;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 16px;
+  padding: 14px var(--deck-pad-x);
+  background: var(--deck-bg);
+  border-bottom: 1px solid var(--deck-rule);
+  pointer-events: none;
+}
+
+.deck-chrome > * {
+  pointer-events: auto;
+}
+
+.deck-exit {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--deck-ink-muted);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.deck-exit:hover,
+.deck-exit:focus-visible {
+  color: var(--deck-accent);
+  outline: none;
+}
+
+.deck-exit:focus-visible {
+  outline: 2px solid var(--deck-accent);
+  outline-offset: 2px;
+}
+
+.deck-progress-track {
+  height: 3px;
+  background: var(--deck-rule);
+  border-radius: 2px;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.deck-progress-fill {
+  height: 100%;
+  width: 10%;
+  background: var(--deck-accent);
+  border-radius: 2px;
+  transition: width 0.25s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .deck-progress-fill {
+    transition: none;
+  }
+}
+
+.deck-count {
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  color: var(--deck-ink-faint);
+  white-space: nowrap;
+}
+
+.deck-dots {
+  position: fixed;
+  inset: auto 0 20px;
+  z-index: 30;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 16px;
+  pointer-events: none;
+}
+
+.deck-dot {
+  width: 28px;
+  height: 4px;
+  padding: 0;
+  border: none;
+  border-radius: 2px;
+  background: var(--deck-rule);
+  cursor: pointer;
+  pointer-events: auto;
+  transition: background 0.15s ease, width 0.15s ease;
+}
+
+.deck-dot:hover,
+.deck-dot:focus-visible {
+  background: #b0b0b0;
+  outline: none;
+}
+
+.deck-dot:focus-visible {
+  outline: 2px solid var(--deck-accent);
+  outline-offset: 2px;
+}
+
+.deck-dot.is-active {
+  width: 40px;
+  background: var(--deck-accent);
+}
+
+.deck-hint {
+  position: fixed;
+  bottom: 36px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 25;
+  margin: 0;
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--deck-ink-faint);
+  pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  .deck-hint {
+    display: none;
+  }
+
+  .deck-dots {
+    bottom: 12px;
+  }
+
+  .deck-dot {
+    width: 20px;
+  }
+
+  .deck-dot.is-active {
+    width: 28px;
+  }
+}
+
+/* ── Viewport & slides ── */
+.pitch-viewport {
+  height: 100vh;
+  height: 100dvh;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pitch-viewport {
+    scroll-behavior: auto;
+  }
+}
+
+.pitch-slide {
+  min-height: 100vh;
+  min-height: 100dvh;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  display: flex;
+  align-items: center;
+  padding: 88px var(--deck-pad-x) 72px;
+  background: var(--deck-bg);
+}
+
+.pitch-slide-inner {
+  width: 100%;
+  max-width: var(--deck-max);
+  margin: 0 auto;
+  padding-left: 0;
+  border-left: 4px solid transparent;
+}
+
+.pitch-slide:not([data-slide="cover"]):not([data-slide="cta"]) .pitch-slide-inner {
+  padding-left: 1.5rem;
+  border-left-color: var(--deck-accent);
+}
+
+/* ── Typography ── */
+.pitch-kicker {
+  margin: 0 0 0.75rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--deck-ink-muted);
+}
+
+.pitch-headline {
+  margin: 0 0 1.25rem;
+  font-size: clamp(1.625rem, 4.2vw, 2.5rem);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  color: var(--deck-ink);
+  max-width: 22em;
+}
+
+.pitch-slide[data-slide="cover"] .pitch-headline,
+.pitch-slide[data-slide="pitch"] .pitch-headline,
+.pitch-slide[data-slide="skills"] .pitch-headline,
+.pitch-slide[data-slide="cta"] .pitch-headline {
+  max-width: none;
+}
+
+.pitch-subhead {
+  margin: 0 0 1rem;
+  font-size: clamp(1.125rem, 2.5vw, 1.375rem);
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--deck-ink-secondary);
+  max-width: 28em;
+}
+
+.pitch-note {
+  margin: 2rem 0 0;
+  font-size: 0.875rem;
+  color: var(--deck-ink-faint);
+}
+
+.pitch-body {
+  margin: 0;
+  font-size: clamp(1.0625rem, 2vw, 1.25rem);
+  line-height: 1.55;
+  color: var(--deck-ink-secondary);
+  max-width: 36em;
+}
+
+.pitch-role {
+  margin: 0 0 0.5rem;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--deck-accent);
+}
+
+.pitch-meta {
+  margin: 0 0 1rem;
+  font-size: 0.9375rem;
+  color: var(--deck-ink-muted);
+}
+
+.pitch-stack {
+  margin: 1.25rem 0 0;
+  font-size: 0.9375rem;
+  color: var(--deck-ink-muted);
+}
+
+/* ── Cover & CTA (title slides) ── */
+.pitch-slide[data-slide="cover"],
+.pitch-slide[data-slide="cta"] {
+  text-align: center;
+  justify-content: center;
+}
+
+.pitch-slide[data-slide="cover"] .pitch-slide-inner,
+.pitch-slide[data-slide="cta"] .pitch-slide-inner {
+  border-left: none;
+  padding-left: 0;
+  max-width: 40rem;
+}
+
+.pitch-slide[data-slide="cover"] .pitch-headline {
+  font-size: clamp(2rem, 6vw, 3.25rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.pitch-slide[data-slide="cover"] .pitch-kicker {
+  color: var(--deck-accent);
+}
+
+.pitch-slide[data-slide="cover"] .pitch-subhead {
+  margin-inline: auto;
+}
+
+/* ── Pillars (three-up, type only) ── */
+.pitch-pillars {
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 1.75rem;
+}
+
+@media (min-width: 720px) {
+  .pitch-pillars {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+}
+
+.pitch-pillar-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--deck-ink);
+}
+
+.pitch-pillar-text {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--deck-ink-secondary);
+}
+
+/* ── Bullets ── */
+.pitch-bullets {
+  margin: 0.25rem 0 0;
+  padding: 0 0 0 1.35em;
+  max-width: 40em;
+  font-size: clamp(1rem, 2vw, 1.125rem);
+  line-height: 1.55;
+  color: var(--deck-ink-secondary);
+}
+
+.pitch-bullets li {
+  margin-bottom: 0.85em;
+  padding-left: 0.25em;
+}
+
+.pitch-bullets li::marker {
+  color: var(--deck-accent);
+}
+
+/* ── Skills (numbered list, deck style) ── */
+.pitch-slide[data-slide="skills"] .pitch-slide-inner {
+  max-width: 52rem;
+}
+
+.pitch-skills-list {
+  margin: 0.5rem 0 0;
+  padding: 0 0 0 1.5em;
+  columns: 1;
+  column-gap: 2.5rem;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--deck-ink-secondary);
+}
+
+@media (min-width: 640px) {
+  .pitch-skills-list {
+    columns: 2;
+  }
+}
+
+.pitch-skills-list li {
+  margin-bottom: 0.35em;
+  break-inside: avoid;
+  padding-right: 1rem;
+}
+
+.pitch-skills-list li::marker {
+  font-weight: 600;
+  color: var(--deck-ink-muted);
+}
+
+.pitch-skills-list li:nth-child(-n + 6)::marker {
+  color: var(--deck-accent);
+}
+
+.pitch-skills-list li:nth-child(-n + 6) {
+  font-weight: 500;
+  color: var(--deck-ink);
+}
+
+/* ── Projects (simple list) ── */
+.pitch-projects {
+  margin: 0.75rem 0 0;
+  padding: 0 0 0 1.35em;
+  font-size: 1.0625rem;
+  line-height: 1.5;
+}
+
+.pitch-projects li {
+  margin-bottom: 1rem;
+}
+
+.pitch-project-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.pitch-project-link:hover .pitch-project-title,
+.pitch-project-link:focus-visible .pitch-project-title {
+  color: var(--deck-accent);
+  text-decoration: underline;
+}
+
+.pitch-project-link:focus-visible {
+  outline: 2px solid var(--deck-accent);
+  outline-offset: 2px;
+}
+
+.pitch-project-title {
+  font-weight: 600;
+  color: var(--deck-ink);
+}
+
+.pitch-project-desc {
+  color: var(--deck-ink-muted);
+}
+
+.pitch-project-desc::before {
+  content: " — ";
+}
+
+/* ── Links & CTAs ── */
+.pitch-cta-link {
+  display: inline-block;
+  margin-top: 1.25rem;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--deck-accent);
+  text-decoration: none;
+}
+
+.pitch-cta-link:hover,
+.pitch-cta-link:focus-visible {
+  text-decoration: underline;
+  outline: none;
+}
+
+.pitch-cta-link:focus-visible {
+  outline: 2px solid var(--deck-accent);
+  outline-offset: 3px;
+}
+
+.pitch-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 2rem;
+}
+
+.pitch-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 11px 22px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 4px;
+  border: 1px solid var(--deck-rule);
+  color: var(--deck-ink);
+  background: var(--deck-bg);
+}
+
+.pitch-btn:hover,
+.pitch-btn:focus-visible {
+  border-color: var(--deck-ink-muted);
+  outline: none;
+}
+
+.pitch-btn:focus-visible {
+  outline: 2px solid var(--deck-accent);
+  outline-offset: 2px;
+}
+
+.pitch-btn--primary {
+  background: var(--deck-accent);
+  border-color: var(--deck-accent);
+  color: #fff;
+}
+
+.pitch-btn--primary:hover,
+.pitch-btn--primary:focus-visible {
+  background: #153d6e;
+  border-color: #153d6e;
+  color: #fff;
+}
+
+/* ── Error ── */
+.pitch-error {
+  padding: 4rem var(--deck-pad-x);
+  text-align: center;
+  color: var(--deck-ink-muted);
+}
+
+.pitch-error a {
+  color: var(--deck-accent);
+}

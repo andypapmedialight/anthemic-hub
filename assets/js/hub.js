@@ -221,8 +221,6 @@
         //   skillsQuote.innerHTML = '<q>' + esc(c.skills_quote) + '</q>' + attrib;
         // }
 
-        var gh = document.getElementById('employer-github');
-        if (gh && c.github_url) gh.setAttribute('href', c.github_url);
         var ig = document.getElementById('employer-instagram');
         var profileIg = document.getElementById('profile-instagram');
         if (c.instagram_url) {

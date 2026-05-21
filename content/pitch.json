@@ -1,0 +1,121 @@
+{
+  "meta": {
+    "title": "Why hire Andy Papadopoulos",
+    "description": "A concise pitch deck for employers and agencies — full-stack engineering, infrastructure, and shipped work in Melbourne."
+  },
+  "slides": [
+    {
+      "id": "cover",
+      "kicker": "Anthemic Developments",
+      "headline": "Why hire Andy Papadopoulos",
+      "subhead": "Full-stack engineer · infrastructure architect · Melbourne",
+      "note": "Scroll or use ← → to move through the deck."
+    },
+    {
+      "id": "pitch",
+      "kicker": "The short version",
+      "headline": "You get someone who ships, owns the stack, and leaves code maintainable.",
+      "body": "Senior developer at Mecca Medialight by day; civic tools and creative experiments under Anthemic by night. The through-line is the same: clear systems, honest delivery, and work you can hand to the next engineer."
+    },
+    {
+      "id": "pillars",
+      "kicker": "What you get",
+      "headline": "Three things teams actually need",
+      "bullets": [
+        { "title": "Ship", "text": "Web apps and APIs from design conversation to production — React, TypeScript, Node, Laravel, CI/CD, and cloud deployment." },
+        { "title": "Own", "text": "Infrastructure architecture, observability-minded releases, and the unglamorous glue (auth, data integrity, moderation workflows) that keeps products trustworthy." },
+        { "title": "Maintain", "text": "Code and docs written for the team that inherits the project — not demo-ware that collapses after launch." }
+      ]
+    },
+    {
+      "id": "track",
+      "kicker": "Day job",
+      "headline": "Mecca Medialight",
+      "role": "Senior developer · full-stack engineer · infrastructure architect",
+      "body": "Melbourne studio building custom websites and web applications for organisations and businesses. Lean delivery, Laravel backends, modern front ends, and engineering discipline that survives handover.",
+      "stack": "Laravel · modern front ends · CI/CD · AWS & Azure"
+    },
+    {
+      "id": "skills",
+      "kicker": "Capability map",
+      "headline": "Breadth with depth where it counts",
+      "body": "All skills from the hub profile — most in-demand first.",
+      "skills": [
+        "AI & LLM integration",
+        "Full-stack · React & TypeScript",
+        "Node.js & APIs",
+        "AWS cloud architecture",
+        "CI/CD & DevOps",
+        "SQL & data literacy",
+        "System design",
+        "Laravel / PHP",
+        "Docker & Kubernetes",
+        "Automated testing",
+        "REST & GraphQL",
+        "Security & accessibility",
+        "Git & deployment automation",
+        "Python & data processing",
+        "Microsoft Azure",
+        "Performance & caching",
+        "Technical leadership",
+        "Maps & geospatial data"
+      ]
+    },
+    {
+      "id": "swarm",
+      "kicker": "Case study",
+      "headline": "Safer Murray Road — SWARM Reporter",
+      "meta": "Lead Developer · Volunteer · June 2025 – Present",
+      "stack": "React · Node.js · Docker · DigitalOcean",
+      "bullets": [
+        "Mobile-friendly public incident reporting — live on a shoestring budget in weeks.",
+        "Interactive maps for geolocated incidents — evidence-quality views for residents and Council.",
+        "Moderation, statistics, and email alerting — data integrity for government stakeholders."
+      ],
+      "cta": { "label": "report.safermurrayroad.com", "url": "https://report.safermurrayroad.com" }
+    },
+    {
+      "id": "anthemic",
+      "kicker": "Beyond the day job",
+      "headline": "Anthemic proves initiative",
+      "body": "Side projects are not résumé filler — they are where new stacks get tested and ownership stays sharp.",
+      "projects": [
+        { "title": "Set List Generator", "desc": "Flagship build — React, Vite, Spring Boot API.", "href": "/setlist/" },
+        { "title": "Morning Macro", "desc": "Markets dashboard — live quotes and watchlists.", "href": "/economics/" },
+        { "title": "Brain map", "desc": "3D hub atlas — creative navigation experiment.", "href": "/brain/" }
+      ]
+    },
+    {
+      "id": "how",
+      "kicker": "How I work",
+      "headline": "Principles, not platitudes",
+      "bullets": [
+        "Start from the user and the operator — who files the report, who moderates it, who maintains the deploy.",
+        "Prefer small, verifiable slices over big-bang launches.",
+        "Mentor where I can; document what would otherwise live in one person's head.",
+        "Treat accessibility, security, and performance as defaults, not stretch goals."
+      ]
+    },
+    {
+      "id": "fit",
+      "kicker": "Good fit",
+      "headline": "Strong match when you need…",
+      "bullets": [
+        "A senior full-stack engineer who can also reason about infrastructure and release pipelines.",
+        "Someone comfortable across agency pace — multiple clients, clear handover, no heroics required.",
+        "A builder for civic, mapping, or data-heavy products who has done it in production, not slides.",
+        "A calm collaborator — direct communication, honest status, dog-approved morale (Cinnamon, QA)."
+      ]
+    },
+    {
+      "id": "cta",
+      "kicker": "Next step",
+      "headline": "Let's talk",
+      "body": "LinkedIn is the fastest path for recruiters and hiring managers. The hub links to live work if you want evidence before you reach out.",
+      "links": [
+        { "label": "LinkedIn", "url": "https://www.linkedin.com/in/andy-papadopoulos/", "primary": true },
+        { "label": "Full hub", "url": "/", "primary": false }
+      ]
+    }
+  ]
+}
