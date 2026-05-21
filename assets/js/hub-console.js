@@ -22,6 +22,26 @@
     return MOBILE_MQ.matches;
   }
 
+  function scrollMarginTop() {
+    var root = document.documentElement;
+    var v = getComputedStyle(root).getPropertyValue("--hub-scroll-margin-top").trim();
+    var n = parseFloat(v);
+    return Number.isFinite(n) ? n : isMobile() ? 20 : 32;
+  }
+
+  function scrollToSceneTarget(el) {
+    if (!el) return;
+    var anchor =
+      el.querySelector(":scope > .section-heading, :scope > h2.section-heading, :scope > .hub-who-heading") ||
+      el;
+    var offset = scrollMarginTop();
+    var top = anchor.getBoundingClientRect().top + window.scrollY - offset;
+    window.scrollTo({
+      top: Math.max(0, top),
+      behavior: reduced ? "auto" : "smooth"
+    });
+  }
+
   function syncMobileToggle() {
     if (!mobileToggle) return;
     var collapsed = document.body.classList.contains("console-mobile-collapsed");
@@ -52,14 +72,8 @@
     targets.forEach(function (t) {
       t.classList.toggle("console-target-active", t.getAttribute("data-console-scene") === id);
     });
-    if (!fromScroll && !reduced) {
-      var t = document.querySelector('[data-console-scene="' + id + '"]');
-      if (t) {
-        t.scrollIntoView({
-          behavior: "smooth",
-          block: isMobile() ? "start" : "center"
-        });
-      }
+    if (!fromScroll) {
+      scrollToSceneTarget(document.querySelector('[data-console-scene="' + id + '"]'));
     }
   }
 
