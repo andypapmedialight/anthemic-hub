@@ -209,7 +209,7 @@
   var pastSection = document.getElementById("gigs-past-section");
   var errEl = document.getElementById("load-err");
 
-  fetch("gigs.json", { cache: "no-store" })
+  fetch("gigs.json")
     .then(function (r) {
       if (!r.ok) throw new Error("HTTP " + r.status);
       return r.json();

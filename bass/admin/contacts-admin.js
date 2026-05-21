@@ -1,6 +1,5 @@
 (function () {
   var LS_API = 'papaweb_contact_api_base';
-  var LS_TOK = 'papaweb_contact_bearer';
 
   function $(id) {
     return document.getElementById(id);
@@ -58,8 +57,9 @@
       setStatus('Enter both API base URL and admin token.', 'err');
       return;
     }
-    localStorage.setItem(LS_API, base);
-    localStorage.setItem(LS_TOK, token);
+    try {
+      localStorage.setItem(LS_API, base);
+    } catch (_) {}
     setStatus('Loading…', '');
     $('load-btn').disabled = true;
     try {
@@ -103,8 +103,11 @@
     loadSubmissions();
   });
 
-  var b = localStorage.getItem(LS_API);
-  var t = localStorage.getItem(LS_TOK);
-  $('api-base').value = b || '/bass/api';
-  if (t) $('token').value = t;
+  try {
+    var b = localStorage.getItem(LS_API);
+    if (b) $('api-base').value = b;
+    else $('api-base').value = '/bass/api';
+  } catch (_) {
+    $('api-base').value = '/bass/api';
+  }
 })();

@@ -179,21 +179,22 @@
     }
   }
 
-  fetch('/content/hub.json', { cache: 'no-store' })
-    .then(function (r) { if (!r.ok) throw new Error('no content'); return r.json(); })
-    .then(function (c) {
-      if (readingListValid(c.reading_list)) {
-        return Promise.resolve(c);
+  Promise.all([
+    fetch('/content/hub.json').then(function (r) {
+      if (!r.ok) throw new Error('no content');
+      return r.json();
+    }),
+    fetch('/content/reading-list.seed.json').then(function (r) {
+      return r.ok ? r.json() : null;
+    }).catch(function () { return null; }),
+  ])
+    .then(function (pair) {
+      var c = pair[0];
+      var seed = pair[1];
+      if (!readingListValid(c.reading_list) && seed && readingListValid(seed.reading_list)) {
+        c.reading_list = seed.reading_list;
       }
-      return fetch('/content/reading-list.seed.json', { cache: 'no-store' })
-        .then(function (r) { return r.ok ? r.json() : null; })
-        .then(function (seed) {
-          if (seed && readingListValid(seed.reading_list)) {
-            c.reading_list = seed.reading_list;
-          }
-          return c;
-        })
-        .catch(function () { return c; });
+      return c;
     })
     .then(function (c) {
       try {
@@ -786,7 +787,7 @@
   buildLightbox();
   ul.addEventListener("click", onGalleryClick);
 
-  fetch("/assets/gallery/manifest.json", { cache: "no-store" })
+  fetch("/assets/gallery/manifest.json")
     .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
     .then(function (data) {
       if (!Array.isArray(data.images) || !data.images.length) throw new Error();

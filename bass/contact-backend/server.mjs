@@ -32,6 +32,12 @@ const CORS_ORIGINS = (process.env.CONTACT_CORS_ORIGIN || '')
   .filter(Boolean);
 
 const rateByIp = new Map();
+const adminRateByIp = new Map();
+const ADMIN_RATE_MAX = Math.max(1, Number(process.env.CONTACT_ADMIN_RATE_MAX) || 60);
+const ADMIN_RATE_WINDOW_MS = Math.max(60_000, Number(process.env.CONTACT_ADMIN_RATE_WINDOW_MS) || 3_600_000);
+
+/** Honeypot field names — non-empty means bot; respond OK without storing. */
+const HONEYPOT_KEYS = ['fax', 'website', 'company', 'url'];
 
 function readContacts() {
   try {
@@ -86,6 +92,33 @@ function rateAllow(ip) {
     }
   }
   return true;
+}
+
+function rateAllowAdmin(ip) {
+  const now = Date.now();
+  let bucket = adminRateByIp.get(ip);
+  if (!bucket) {
+    bucket = [];
+    adminRateByIp.set(ip, bucket);
+  }
+  const recent = bucket.filter((t) => now - t < ADMIN_RATE_WINDOW_MS);
+  if (recent.length >= ADMIN_RATE_MAX) return false;
+  recent.push(now);
+  adminRateByIp.set(ip, recent);
+  if (adminRateByIp.size > 5_000) {
+    for (const [k, v] of adminRateByIp) {
+      if (!v.some((t) => now - t < ADMIN_RATE_WINDOW_MS)) adminRateByIp.delete(k);
+    }
+  }
+  return true;
+}
+
+function isHoneypotPayload(j) {
+  if (!j || typeof j !== 'object') return false;
+  for (const key of HONEYPOT_KEYS) {
+    if (String(j[key] ?? '').trim()) return true;
+  }
+  return false;
 }
 
 function corsOriginForRequest(req) {
@@ -200,6 +233,10 @@ const server = http.createServer(async (req, res) => {
     try {
       const raw = await readBody(req);
       const j = JSON.parse(raw || '{}');
+      if (isHoneypotPayload(j)) {
+        sendJson(req, res, 200, { success: true });
+        return;
+      }
       const name = String(j.name || '').trim().slice(0, 200);
       const email = String(j.email || '').trim().slice(0, 320);
       const interest = String(j.interest || '').trim().slice(0, 200);
@@ -230,6 +267,11 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'GET' && url.pathname === '/contacts') {
     if (!ADMIN_TOKEN) {
       sendJson(req, res, 503, { error: 'CONTACT_ADMIN_TOKEN is not configured on the server' });
+      return;
+    }
+    const adminIp = clientIp(req);
+    if (!rateAllowAdmin(adminIp)) {
+      sendJson(req, res, 429, { error: 'too many requests' });
       return;
     }
     const auth = req.headers.authorization || '';

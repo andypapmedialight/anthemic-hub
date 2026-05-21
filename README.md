@@ -155,7 +155,18 @@ sudo -u deploy mkdir -p /home/deploy/incoming-hub
 | `PAPAWEB_SLACK_WEBHOOK` | Slack incoming webhook (installed to `/etc/anthemic-contact/contact.env`, never in static JS) |
 | `CONTACT_ADMIN_TOKEN` | Long random string for `GET /bass/api/contacts` (Bearer); optional until you use the admin contacts page |
 
-After hub deploy, reload **anthemic-ops** nginx so `/bass/api/contact`, dotfile blocking, and `/bass/admin/` auth are active.
+After hub deploy, reload **anthemic-ops** nginx so `/bass/api/contact`, dotfile blocking, `/bass/admin/` auth, and `nginx/conf.d/anthemic-hub-limits.conf` rate zones are active.
+
+### Contact API hardening
+
+- Server-side honeypot (`fax`, `website`, etc.): bots get `{ success: true }` without storage.
+- IP rate limits on `POST /contact` and `GET /contacts` (Node + nginx `limit_req`).
+- Admin Bearer token is **not** persisted in the contacts admin page (`localStorage`).
+
+### Performance (static)
+
+- Hub and bass stylesheets live in `/assets/css/hub.css` and `/bass/site.css` (cache-busted in CI).
+- JSON under `/content/`, `gigs.json`, and gallery manifest use short browser cache + `must-revalidate` (nginx).
 
 ## Interest filter
 

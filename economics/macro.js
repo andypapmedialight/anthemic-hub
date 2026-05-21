@@ -709,6 +709,13 @@ function publicProxyUrls(canonicalUrl) {
   ];
 }
 
+/** Third-party CORS proxies leak upstream URLs; disabled on production hub. */
+function useThirdPartyCorsProxies() {
+  const h = typeof location !== 'undefined' ? location.hostname : '';
+  if (h === 'anthemic-developments.com' || h === 'www.anthemic-developments.com') return false;
+  return true;
+}
+
 async function fetchRemote(canonicalUrl, { asJson = true } = {}) {
   const attempts = [];
   const corsOnly = isCorsProxiedHost(canonicalUrl);
@@ -730,31 +737,33 @@ async function fetchRemote(canonicalUrl, { asJson = true } = {}) {
     });
   }
 
-  for (const url of publicProxyUrls(canonicalUrl)) {
-    attempts.push(async () => {
-      const r = await fetchWithTimeout(url);
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      return asJson ? r.json() : r.text();
-    });
-  }
+  if (useThirdPartyCorsProxies()) {
+    for (const url of publicProxyUrls(canonicalUrl)) {
+      attempts.push(async () => {
+        const r = await fetchWithTimeout(url);
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return asJson ? r.json() : r.text();
+      });
+    }
 
-  attempts.push(async () => {
-    const r = await fetchWithTimeout(`https://api.allorigins.win/get?url=${encodeURIComponent(canonicalUrl)}`);
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    const wrap = await r.json();
-    const body = wrap.contents;
-    return asJson ? JSON.parse(body) : body;
-  });
-
-  if (corsOnly && !LOCAL_PROXY_OK) {
     attempts.push(async () => {
-      const direct = canonicalUrl.includes('query1.finance.yahoo.com')
-        ? yahooChartUrlDirect(canonicalUrl)
-        : canonicalUrl;
-      const r = await fetchWithTimeout(direct);
+      const r = await fetchWithTimeout(`https://api.allorigins.win/get?url=${encodeURIComponent(canonicalUrl)}`);
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      return asJson ? r.json() : r.text();
+      const wrap = await r.json();
+      const body = wrap.contents;
+      return asJson ? JSON.parse(body) : body;
     });
+
+    if (corsOnly && !LOCAL_PROXY_OK) {
+      attempts.push(async () => {
+        const direct = canonicalUrl.includes('query1.finance.yahoo.com')
+          ? yahooChartUrlDirect(canonicalUrl)
+          : canonicalUrl;
+        const r = await fetchWithTimeout(direct);
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return asJson ? r.json() : r.text();
+      });
+    }
   }
 
   for (const fn of attempts) {

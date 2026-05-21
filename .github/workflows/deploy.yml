@@ -24,6 +24,18 @@ jobs:
       - name: Stamp macro.js SRI for production
         run: node scripts/stamp-economics-sri.js
 
+      - name: Stamp hub and bass JS SRI for production
+        run: node scripts/stamp-static-sri.js
+
+      - name: Cache-bust hub and bass stylesheets
+        run: |
+          VER="$(git rev-parse --short=12 HEAD)"
+          for f in index.html bass/index.html; do
+            sed -i "s|\\(/assets/css/hub\\.css\\|/bass/site\\.css\\)?v=[^\"']*|\\1?v=${VER}|g" "$f" 2>/dev/null || true
+            sed -i "s|/assets/css/hub\\.css\"|/assets/css/hub.css?v=${VER}\"|g" "$f"
+            sed -i "s|/bass/site\\.css\"|/bass/site.css?v=${VER}\"|g" "$f"
+          done
+
       - name: Write bass/papaweb.config.js (public contact endpoint only)
         run: |
           node <<'NODE'

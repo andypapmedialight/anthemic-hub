@@ -265,7 +265,7 @@
     });
   }
 
-  fetch(GIGS_JSON, { cache: 'no-store' })
+  fetch(GIGS_JSON)
     .then(jsonFromResponse)
     .then(function (data) {
       var raw = data && Array.isArray(data.gigs) ? data.gigs : [];
@@ -350,7 +350,7 @@
     });
   }
 
-  fetch(HUB_JSON, { cache: 'no-store' })
+  fetch(HUB_JSON)
     .then(jsonFromResponse)
     .then(function (c) {
       var arr = c && Array.isArray(c.projects) ? c.projects : [];
