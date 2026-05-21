@@ -21,20 +21,23 @@ jobs:
       - name: Validate economics static assets
         run: node scripts/check-economics.js
 
+      - name: Generate gallery thumbnails
+        run: |
+          python3 -m pip install --quiet Pillow
+          python3 scripts/generate-gallery-thumbs.py
+
       - name: Stamp macro.js SRI for production
         run: node scripts/stamp-economics-sri.js
 
       - name: Stamp hub and bass JS SRI for production
         run: node scripts/stamp-static-sri.js
 
-      - name: Cache-bust hub and bass stylesheets
+      - name: Cache-bust stylesheets
         run: |
           VER="$(git rev-parse --short=12 HEAD)"
-          for f in index.html bass/index.html; do
-            sed -i "s|\\(/assets/css/hub\\.css\\|/bass/site\\.css\\)?v=[^\"']*|\\1?v=${VER}|g" "$f" 2>/dev/null || true
-            sed -i "s|/assets/css/hub\\.css\"|/assets/css/hub.css?v=${VER}\"|g" "$f"
-            sed -i "s|/bass/site\\.css\"|/bass/site.css?v=${VER}\"|g" "$f"
-          done
+          sed -i "s|/assets/css/hub\\.css[^\"']*|/assets/css/hub.css?v=${VER}|g" index.html
+          sed -i "s|/bass/site\\.css[^\"']*|/bass/site.css?v=${VER}|g" bass/index.html
+          sed -i "s|macro\\.css[^\"']*|macro.css?v=${VER}|g" economics/index.html
 
       - name: Write bass/papaweb.config.js (public contact endpoint only)
         run: |

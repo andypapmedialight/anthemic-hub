@@ -2637,7 +2637,12 @@ async function init() {
   renderInfoBox();
   updateApiUsageDisplay();
   await detectLocalProxy();
-  loadAll(false);
+  const runQuotes = () => { loadAll(false); };
+  if (typeof requestIdleCallback === 'function') {
+    requestIdleCallback(runQuotes, { timeout: 2500 });
+  } else {
+    setTimeout(runQuotes, 0);
+  }
 }
 
 init();

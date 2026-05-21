@@ -7,10 +7,11 @@ const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
 const INDEX = path.join(ROOT, 'economics', 'index.html');
+const MACRO_CSS = path.join(ROOT, 'economics', 'macro.css');
 const MACRO = path.join(ROOT, 'economics', 'macro.js');
 
 let failed = false;
-const fail = msg => {
+const fail = (msg) => {
   console.error(`check-economics: ${msg}`);
   failed = true;
 };
@@ -18,19 +19,33 @@ const fail = msg => {
 const indexHtml = fs.readFileSync(INDEX, 'utf8');
 const macroJs = fs.readFileSync(MACRO, 'utf8');
 
-// CSS brace balance inside <style>
-const styleMatch = indexHtml.match(/<style>([\s\S]*?)<\/style>/);
-if (!styleMatch) {
-  fail('missing <style> block in economics/index.html');
+if (!fs.existsSync(MACRO_CSS)) {
+  fail('missing economics/macro.css (run extract or edit macro.css directly)');
 } else {
-  const css = styleMatch[1];
+  const css = fs.readFileSync(MACRO_CSS, 'utf8');
   let depth = 0;
   for (const ch of css) {
     if (ch === '{') depth++;
     else if (ch === '}') depth--;
-    if (depth < 0) fail('unbalanced CSS: extra closing brace');
+    if (depth < 0) fail('unbalanced CSS in macro.css: extra closing brace');
   }
-  if (depth !== 0) fail(`unbalanced CSS: depth ${depth} at end of <style>`);
+  if (depth !== 0) fail(`unbalanced CSS in macro.css: depth ${depth} at end`);
+  if (!css.includes('.api-banner[hidden]')) {
+    fail('macro.css missing .api-banner[hidden] (display:flex overrides hidden)');
+  }
+  if (!css.includes('prefers-reduced-motion')) {
+    fail('macro.css missing prefers-reduced-motion media queries');
+  }
+  if (!css.includes('@media (hover: none)')) {
+    fail('macro.css missing touch-friendly card action visibility');
+  }
+}
+
+if (!indexHtml.includes('href="macro.css')) {
+  fail('economics/index.html should link macro.css');
+}
+if (indexHtml.match(/<style>/)) {
+  fail('economics/index.html should not contain inline <style> (use macro.css)');
 }
 
 // Required shell IDs for macro.js
@@ -63,24 +78,12 @@ if (!indexHtml.includes('aria-controls="info-body"')) {
   fail('info-header-toggle missing aria-controls="info-body"');
 }
 
-if (!indexHtml.includes('.api-banner[hidden]')) {
-  fail('api-banner missing .api-banner[hidden] CSS (display:flex overrides hidden)');
-}
-
 if (!indexHtml.includes('id="api-banner" hidden')) {
   fail('api-banner should start hidden in HTML');
 }
 
 if (!indexHtml.includes('src="macro.js"')) {
   fail('economics/index.html should load macro.js with a relative script path');
-}
-
-if (!indexHtml.includes('prefers-reduced-motion')) {
-  fail('economics/index.html missing prefers-reduced-motion media queries');
-}
-
-if (!indexHtml.includes('@media (hover: none)')) {
-  fail('economics/index.html missing touch-friendly card action visibility');
 }
 
 if (failed) process.exit(1);

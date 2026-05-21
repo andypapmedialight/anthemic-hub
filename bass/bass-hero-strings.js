@@ -278,7 +278,7 @@
     var audioCtx = getCtx();
     if (!sampleAudio[note]) {
       var a = new Audio(path);
-      a.preload = 'auto';
+      a.preload = 'metadata';
       sampleAudio[note] = a;
     }
     var el = sampleAudio[note];

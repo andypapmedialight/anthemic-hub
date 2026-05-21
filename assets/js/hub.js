@@ -179,6 +179,11 @@
     }
   }
 
+  var galleryManifestPromise = fetch('/assets/gallery/manifest.json')
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .catch(function () { return null; });
+  window.__hubGalleryManifestPromise = galleryManifestPromise;
+
   Promise.all([
     fetch('/content/hub.json').then(function (r) {
       if (!r.ok) throw new Error('no content');
@@ -187,10 +192,12 @@
     fetch('/content/reading-list.seed.json').then(function (r) {
       return r.ok ? r.json() : null;
     }).catch(function () { return null; }),
+    galleryManifestPromise,
   ])
     .then(function (pair) {
       var c = pair[0];
       var seed = pair[1];
+      window.__hubGalleryManifest = pair[2];
       if (!readingListValid(c.reading_list) && seed && readingListValid(seed.reading_list)) {
         c.reading_list = seed.reading_list;
       }
@@ -509,12 +516,24 @@
     }
   }
 
-  function galleryItemHtml(src, alt) {
-    var safeSrc = escAttr(src);
+  function galleryFullSrc(filename) {
+    return "/assets/gallery/" + encodeURIComponent(filename);
+  }
+
+  function galleryThumbSrc(filename) {
+    return "/assets/gallery/thumbs/" + encodeURIComponent(filename);
+  }
+
+  function galleryItemHtml(filename, alt) {
+    var full = galleryFullSrc(filename);
+    var thumb = galleryThumbSrc(filename);
+    var safeFull = escAttr(full);
+    var safeThumb = escAttr(thumb);
     var safeAlt = escAttr(alt);
     return (
-      "<li><a class=\"photo-gallery-link\" href=\"" + safeSrc + "\" data-full=\"" + safeSrc + "\">" +
-      "<img src=\"" + safeSrc + "\" alt=\"" + safeAlt + "\" width=\"88\" height=\"88\" loading=\"lazy\" decoding=\"async\" data-gallery-img /></a></li>"
+      "<li><a class=\"photo-gallery-link\" href=\"" + safeFull + "\" data-full=\"" + safeFull + "\">" +
+      "<img src=\"" + safeThumb + "\" alt=\"" + safeAlt + "\" width=\"88\" height=\"88\" loading=\"lazy\" decoding=\"async\" " +
+      "data-gallery-img data-full=\"" + safeFull + "\" /></a></li>"
     );
   }
 
@@ -539,6 +558,11 @@
       if (!img.dataset.galleryBound) {
         img.dataset.galleryBound = "1";
         img.addEventListener("error", function () {
+          var full = img.getAttribute("data-full");
+          if (full && img.src !== full) {
+            img.src = full;
+            return;
+          }
           dropBrokenImage(img);
         });
       }
@@ -787,17 +811,23 @@
   buildLightbox();
   ul.addEventListener("click", onGalleryClick);
 
-  fetch("/assets/gallery/manifest.json")
-    .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
+  function renderGalleryManifest(data) {
+    if (!data || !Array.isArray(data.images) || !data.images.length) throw new Error();
+    ul.innerHTML = data.images.map(function (f) {
+      var alt = f.replace(/\.[^.]+$/, "").replace(/[_\-]+/g, " ");
+      return galleryItemHtml(f, alt);
+    }).join('');
+    attachErrors();
+  }
+
+  var manifestReady = window.__hubGalleryManifestPromise || Promise.resolve(null);
+  manifestReady
     .then(function (data) {
-      if (!Array.isArray(data.images) || !data.images.length) throw new Error();
-      ul.innerHTML = data.images.map(function (f) {
-        var src = "/assets/gallery/" + encodeURIComponent(f);
-        var alt = f.replace(/\.[^.]+$/, "").replace(/[_\-]+/g, " ");
-        return galleryItemHtml(src, alt);
-      }).join("");
-      attachErrors();
+      if (data) return data;
+      return fetch('/assets/gallery/manifest.json')
+        .then(function (r) { if (!r.ok) throw new Error(); return r.json(); });
     })
+    .then(renderGalleryManifest)
     .catch(function () {
       attachErrors();
     });

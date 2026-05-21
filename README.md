@@ -166,7 +166,10 @@ After hub deploy, reload **anthemic-ops** nginx so `/bass/api/contact`, dotfile 
 ### Performance (static)
 
 - Hub and bass stylesheets live in `/assets/css/hub.css` and `/bass/site.css` (cache-busted in CI).
-- JSON under `/content/`, `gigs.json`, and gallery manifest use short browser cache + `must-revalidate` (nginx).
+- Economics styles in `/economics/macro.css`; Morning Macro defers quote loads via `requestIdleCallback`.
+- Gallery grid uses `/assets/gallery/thumbs/` (generated in CI via `scripts/generate-gallery-thumbs.py`).
+- Hub fonts load from Bunny only; JSON and manifests use short browser cache + `must-revalidate` (nginx).
+- Regenerate thumbs locally: `python3 scripts/generate-gallery-thumbs.py` (requires Pillow).
 
 ## Interest filter
 
