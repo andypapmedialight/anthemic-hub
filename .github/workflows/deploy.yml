@@ -38,6 +38,8 @@ jobs:
           sed -i "s|/assets/css/hub\\.css[^\"']*|/assets/css/hub.css?v=${VER}|g" index.html
           sed -i "s|/bass/site\\.css[^\"']*|/bass/site.css?v=${VER}|g" bass/index.html
           sed -i "s|macro\\.css[^\"']*|macro.css?v=${VER}|g" economics/index.html
+          sed -i "s|/hire/pitch\\.css[^\"']*|/hire/pitch.css?v=${VER}|g" hire/index.html
+          sed -i "s|/hire/pitch\\.js[^\"']*|/hire/pitch.js?v=${VER}|g" hire/index.html
 
       - name: Write bass/papaweb.config.js (public contact endpoint only)
         run: |
@@ -116,9 +118,11 @@ jobs:
           rsync -avz -e "${RSYNC_SSH}" ./index.html "${DEST}"
           rsync -avz -e "${RSYNC_SSH}" ./bass/ "${DEST}bass/"
           rsync -avz -e "${RSYNC_SSH}" ./brain/ "${DEST}brain/"
+          rsync -avz -e "${RSYNC_SSH}" ./hire/ "${DEST}hire/"
           rsync -avz -e "${RSYNC_SSH}" ./gigs/ "${DEST}gigs/"
           rsync -avz -e "${RSYNC_SSH}" ./anth-dev-ad/ "${DEST}anth-dev-ad/"
           rsync -avz -e "${RSYNC_SSH}" ./personal/ "${DEST}personal/"
+          rsync -avz -e "${RSYNC_SSH}" ./design/ "${DEST}design/"
           rsync -avz --exclude '.fred-api-key' -e "${RSYNC_SSH}" ./economics/ "${DEST}economics/"
           rsync -avz -e "${RSYNC_SSH}" ./incoming-hub/contact/ "${DEST}contact/"
           # --no-perms: avoid rsync exit 23 when remote cannot set mode 600 on secret files.
@@ -146,7 +150,7 @@ jobs:
         run: |
           HUB_IN="/home/${DEPLOY_USER}/incoming-hub"
           ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            "test -f ${HUB_IN}/index.html && test -f ${HUB_IN}/bass/index.html && test -f ${HUB_IN}/brain/index.html && test -f ${HUB_IN}/gigs/index.html && test -f ${HUB_IN}/gigs/gigs.json && test -f ${HUB_IN}/content/hub.json && test -f ${HUB_IN}/content/reading-list.seed.json && test -f ${HUB_IN}/personal/index.html && test -f ${HUB_IN}/personal/writing/index.html && test -f ${HUB_IN}/personal/writing/quill-ink.svg && test -f ${HUB_IN}/economics/index.html && test -f ${HUB_IN}/mmd/valuation_server.py && test -f ${HUB_IN}/mmd/valuation_fetch.py" \
+            "test -f ${HUB_IN}/index.html && test -f ${HUB_IN}/bass/index.html && test -f ${HUB_IN}/brain/index.html && test -f ${HUB_IN}/hire/index.html && test -f ${HUB_IN}/hire/pitch.js && test -f ${HUB_IN}/content/pitch.json && test -f ${HUB_IN}/gigs/index.html && test -f ${HUB_IN}/gigs/gigs.json && test -f ${HUB_IN}/content/hub.json && test -f ${HUB_IN}/content/reading-list.seed.json && test -f ${HUB_IN}/personal/index.html && test -f ${HUB_IN}/personal/writing/index.html && test -f ${HUB_IN}/personal/writing/quill-ink.svg && test -f ${HUB_IN}/economics/index.html && test -f ${HUB_IN}/mmd/valuation_server.py && test -f ${HUB_IN}/mmd/valuation_fetch.py" \
             || { echo "incoming-hub missing hub, bass, brain, gigs, content, reading-list.seed, or personal/ files after upload (expected under ${HUB_IN})"; exit 1; }
 
       - name: Apply on Droplet
@@ -187,6 +191,13 @@ jobs:
           curl -sS --retry 3 --retry-delay 2 "https://anthemic-developments.com/personal/writing/" -o /tmp/anthemic-smoke-writing.html
           grep -qF 'Writing — coming soon' /tmp/anthemic-smoke-writing.html \
             || { echo "Writing page missing expected <title> marker"; exit 1; }
+          code_hire=$(curl -sS -o /dev/null -w "%{http_code}" --retry 3 --retry-delay 2 "https://anthemic-developments.com/hire/")
+          [[ "${code_hire}" == "200" ]] || { echo "/hire/ returned HTTP ${code_hire}"; exit 1; }
+          code_pitch=$(curl -sS -o /dev/null -w "%{http_code}" --retry 3 --retry-delay 2 "https://anthemic-developments.com/content/pitch.json")
+          [[ "${code_pitch}" == "200" ]] || { echo "/content/pitch.json returned HTTP ${code_pitch}"; exit 1; }
+          curl -sS --retry 3 --retry-delay 2 "https://anthemic-developments.com/hire/" -o /tmp/anthemic-smoke-hire.html
+          grep -qF 'Why hire Andy Papadopoulos' /tmp/anthemic-smoke-hire.html \
+            || { echo "/hire/ page missing expected title marker"; exit 1; }
           ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
             'systemctl is-active --quiet mmd-valuation.service && curl -fsS --max-time 10 http://127.0.0.1:8071/health | grep -q "\"ok\""' \
             || { echo "mmd-valuation.service not healthy on loopback :8071 (check journalctl -u mmd-valuation)"; exit 1; }

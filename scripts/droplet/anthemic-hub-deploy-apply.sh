@@ -10,6 +10,7 @@
 #   assets/           - optional folder of static assets
 #   bass/             - bass coaching static site (e.g. bass/index.html)
 #   brain/            - 3D brain hub page (e.g. brain/index.html)
+#   hire/             - employer pitch deck (hire/index.html + pitch.js)
 #   gigs/             - gig calendar (gigs/index.html + gigs.json)
 #   content/          - admin-editable site content (content/hub.json)
 #
@@ -53,6 +54,14 @@ if [[ ! -f "${INCOMING}/brain/index.html" ]]; then
   echo "anthemic-hub-deploy-apply: missing ${INCOMING}/brain/index.html (rsync must ship brain/ from repo)" >&2
   exit 1
 fi
+if [[ ! -f "${INCOMING}/hire/index.html" ]] || [[ ! -f "${INCOMING}/hire/pitch.js" ]]; then
+  echo "anthemic-hub-deploy-apply: missing ${INCOMING}/hire/ pitch deck (CI must rsync ./hire/)" >&2
+  exit 1
+fi
+if [[ ! -f "${INCOMING}/content/pitch.json" ]]; then
+  echo "anthemic-hub-deploy-apply: missing ${INCOMING}/content/pitch.json (rsync must ship content/)" >&2
+  exit 1
+fi
 if [[ ! -f "${INCOMING}/gigs/index.html" ]] || [[ ! -f "${INCOMING}/gigs/gigs.json" ]]; then
   echo "anthemic-hub-deploy-apply: missing gigs/index.html or gigs/gigs.json (rsync must ship gigs/ from repo)" >&2
   exit 1
@@ -66,7 +75,7 @@ if [[ ! -f "${INCOMING}/economics/index.html" ]]; then
   exit 1
 fi
 
-mkdir -p "${DEST}/bass" "${DEST}/brain" "${DEST}/gigs" "${DEST}/content" "${DEST}/anth-dev-ad" "${DEST}/personal/writing" "${DEST}/economics"
+mkdir -p "${DEST}/bass" "${DEST}/brain" "${DEST}/hire" "${DEST}/gigs" "${DEST}/content" "${DEST}/anth-dev-ad" "${DEST}/personal/writing" "${DEST}/design/stop-making-sense" "${DEST}/economics"
 
 # Preserve admin-managed files: back up before rsync, restore after.
 # Git copies act as seeds on first deploy only.
@@ -82,9 +91,11 @@ CONTENT_BACKUP="$(preserve_backup "${CONTENT_LIVE}")"
 rsync -a "${INCOMING}/index.html" "${DEST}/"
 rsync -a --delete "${INCOMING}/bass/" "${DEST}/bass/"
 rsync -a --delete "${INCOMING}/brain/" "${DEST}/brain/"
+rsync -a --delete "${INCOMING}/hire/" "${DEST}/hire/"
 rsync -a --delete "${INCOMING}/gigs/" "${DEST}/gigs/"
 rsync -a --delete "${INCOMING}/anth-dev-ad/" "${DEST}/anth-dev-ad/"
 rsync -a --delete "${INCOMING}/personal/" "${DEST}/personal/"
+rsync -a --delete "${INCOMING}/design/" "${DEST}/design/"
 rsync -a --delete --exclude '.fred-api-key' "${INCOMING}/economics/" "${DEST}/economics/"
 rm -f "${DEST}/economics/.fred-api-key"
 rsync -a --delete "${INCOMING}/content/" "${DEST}/content/"

@@ -242,14 +242,16 @@
     }
   });
 
-  fetch("/content/pitch.json")
+  fetch("/content/pitch.json", { credentials: "same-origin" })
     .then(function (r) {
-      if (!r.ok) throw new Error(String(r.status));
+      if (!r.ok) throw new Error("pitch.json HTTP " + r.status);
       return r.json();
     })
     .then(mount)
-    .catch(function () {
+    .catch(function (err) {
       root.innerHTML =
-        '<p class="pitch-error">Could not load the deck. <a href="/">Return to hub</a>.</p>';
+        '<p class="pitch-error">Could not load the deck' +
+        (err && err.message ? " (" + escapeHtml(err.message) + ")" : "") +
+        '. <a href="/">Return to hub</a>.</p>';
     });
 })();
