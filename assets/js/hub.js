@@ -315,8 +315,17 @@
     try { localStorage.setItem(key, theme); } catch (e) {}
     syncThemeButtons();
   }
-  document.getElementById("theme-dark").addEventListener("click", function () { setTheme("dark"); });
-  document.getElementById("theme-light").addEventListener("click", function () { setTheme("light"); });
+  var themeGroup = document.querySelector(".hub-site-nav-wrap .theme-group");
+  if (themeGroup) {
+    themeGroup.addEventListener("click", function (e) {
+      var btn = e.target.closest(".theme-btn");
+      if (!btn) return;
+      e.preventDefault();
+      e.stopPropagation();
+      if (btn.id === "theme-dark") setTheme("dark");
+      else if (btn.id === "theme-light") setTheme("light");
+    });
+  }
   syncThemeButtons();
   var y = document.getElementById("y");
   if (y) y.textContent = new Date().getFullYear();
