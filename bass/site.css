@@ -71,6 +71,13 @@
     display: flex;
     flex-direction: column;
     align-items: stretch;
+    /* Bottom band: caption (behind bass) then CTAs in front */
+    --hero-cta-block: 5.75rem;
+    --hero-caption-block: 3.75rem;
+    --hero-caption-gap: 0.85rem;
+    --hero-foot-pad: calc(
+      var(--hero-cta-block) + var(--hero-caption-block) + var(--hero-caption-gap) + 1.25rem
+    );
   }
   .hero-bass-stage {
     position: absolute;
@@ -79,15 +86,18 @@
     align-items: center;
     justify-content: center;
     z-index: 0;
-    padding: 4.25rem 0 2rem;
+    padding: 4.25rem 0 var(--hero-foot-pad);
+    box-sizing: border-box;
   }
   .hero-bass-stage .bass-wrap {
     position: relative;
+    z-index: 1;
     max-width: min(122vw, 1320px);
     width: 100%;
   }
   .hero-bass-stage .bass-figure-main {
     position: relative;
+    z-index: 2;
     width: 100%;
     transform: rotate(-2.5deg) scale(1.1);
     transform-origin: 50% 55%;
@@ -175,9 +185,14 @@
   .hero-bass-stage .bass-caption {
     position: absolute;
     left: 50%;
-    top: calc(100% - 0.2rem);
-    transform: translateX(-50%);
+    right: auto;
+    top: auto;
+    bottom: calc(
+      var(--hero-cta-block) + var(--hero-caption-gap) + env(safe-area-inset-bottom, 0px)
+    );
+    transform: translateX(-50%) translateY(-22%);
     max-width: min(92vw, 30rem);
+    z-index: 0;
     text-align: center;
     display: flex;
     flex-direction: column;
@@ -254,18 +269,22 @@
     flex: 0 0 auto;
   }
   .hero-head a { pointer-events: auto; }
-  .hero-lower {
+  .hero-foot {
     width: 100%;
     max-width: 34rem;
     margin-top: auto;
     margin-bottom: 0;
-    padding: 0.4rem 1.15rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    padding:
+      calc(var(--hero-caption-block) + var(--hero-caption-gap))
+      1.15rem
+      calc(0.65rem + env(safe-area-inset-bottom, 0px));
     text-align: center;
     pointer-events: none;
     flex: 0 0 auto;
-    transform: translateY(calc(-2.35rem - 4.35vh));
+    position: relative;
+    z-index: 4;
   }
-  .hero-lower .btn { pointer-events: auto; }
+  .hero-foot .btn { pointer-events: auto; }
   .hero-cta-cluster {
     display: flex;
     flex-wrap: wrap;
@@ -350,6 +369,26 @@
   @media (prefers-reduced-motion: reduce) {
     .hero-scroll-more-icon {
       animation: none;
+    }
+  }
+  @media (max-height: 760px) {
+    .hero {
+      --hero-cta-block: 6.25rem;
+      --hero-caption-block: 4rem;
+      --hero-caption-gap: 0.75rem;
+    }
+  }
+  @media (max-height: 640px) {
+    .hero {
+      --hero-cta-block: 6.75rem;
+      --hero-caption-block: 4.25rem;
+      --hero-caption-gap: 0.7rem;
+    }
+    .hero-bass-stage .bass-figure-main {
+      transform: rotate(-2.5deg) scale(1.02);
+    }
+    .hero-stack {
+      padding-top: clamp(4rem, 10vh, 5rem);
     }
   }
   .hero-scroll-more:focus {
@@ -832,14 +871,21 @@
     nav { padding: 1rem 1.5rem; }
     nav ul { display: none; }
     .hero { min-height: 100dvh; min-height: 100vh; }
+    .hero {
+      --hero-cta-block: 6.5rem;
+      --hero-caption-block: 4.25rem;
+      --hero-caption-gap: 0.8rem;
+    }
     .hero-stack {
       padding: 4.75rem 1rem 0;
       max-width: 100%;
     }
     .hero-head h1 { font-size: clamp(1.95rem, 9vw, 2.85rem); }
-    .hero-lower {
-      padding: 0.35rem 0.75rem calc(0.65rem + env(safe-area-inset-bottom, 0px));
-      transform: translateY(calc(-2rem - 3.85vh));
+    .hero-foot {
+      padding:
+        calc(var(--hero-caption-block) + var(--hero-caption-gap))
+        0.75rem
+        calc(0.5rem + env(safe-area-inset-bottom, 0px));
     }
     .hero-cta-cluster {
       row-gap: 0.28rem;
@@ -858,7 +904,7 @@
       letter-spacing: 0.14em;
     }
     .hero-bass-stage {
-      padding: 4rem clamp(0.65rem, 3.5vw, 1.25rem) 0;
+      padding: 4rem clamp(0.65rem, 3.5vw, 1.25rem) var(--hero-foot-pad);
       align-items: center;
       overflow: hidden;
     }
@@ -875,7 +921,10 @@
     }
     .hero-bass-stage .bass-caption {
       max-width: min(92vw, 30rem);
-      transform: translateX(-50%) translateY(0.45rem);
+      bottom: calc(
+        var(--hero-cta-block) + var(--hero-caption-gap) + env(safe-area-inset-bottom, 0px)
+      );
+      transform: translateX(-50%) translateY(-14%);
     }
     .hero-bass-stage .bass-caption-kicker {
       font-size: clamp(0.72rem, 0.48rem + 2.05vw, 0.84rem);

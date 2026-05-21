@@ -14,6 +14,53 @@
   <meta name="twitter:title" content="Andy Papadopoulos - Anthemic Developments" />
   <meta name="twitter:description" content="Full-stack engineer in Melbourne - web apps, APIs, deployment, and creative tools." />
   <meta name="twitter:image" content="https://anthemic-developments.com/assets/cinnamon.jpg" />
+  <link rel="canonical" href="https://anthemic-developments.com/" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://anthemic-developments.com/#website",
+        "url": "https://anthemic-developments.com/",
+        "name": "Anthemic Developments",
+        "description": "Hub for Andy Papadopoulos — full-stack engineering, music, teaching, and creative tools in Melbourne.",
+        "inLanguage": "en-AU",
+        "publisher": { "@id": "https://anthemic-developments.com/#organization" }
+      },
+      {
+        "@type": "Organization",
+        "@id": "https://anthemic-developments.com/#organization",
+        "name": "Anthemic Developments",
+        "url": "https://anthemic-developments.com/",
+        "logo": "https://anthemic-developments.com/assets/cinnamon.jpg",
+        "founder": { "@id": "https://anthemic-developments.com/#person" }
+      },
+      {
+        "@type": "Person",
+        "@id": "https://anthemic-developments.com/#person",
+        "name": "Andy Papadopoulos",
+        "url": "https://anthemic-developments.com/",
+        "image": "https://anthemic-developments.com/assets/cinnamon.jpg",
+        "jobTitle": "Full-stack engineer",
+        "description": "Full-stack engineer, bass player, and teacher based in Melbourne, Australia.",
+        "worksFor": { "@id": "https://anthemic-developments.com/#organization" },
+        "sameAs": ["https://www.linkedin.com/in/andy-papadopoulos/"],
+        "knowsAbout": ["Full-stack engineering", "Web development", "Bass guitar", "Music education"],
+        "homeLocation": {
+          "@type": "Place",
+          "name": "Melbourne",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Melbourne",
+            "addressRegion": "VIC",
+            "addressCountry": "AU"
+          }
+        }
+      }
+    ]
+  }
+  </script>
   <link rel="preconnect" href="https://fonts.bunny.net" crossorigin />
   <link rel="preload" href="/assets/css/hub.css?v=dev" as="style" />
   <link rel="stylesheet" href="https://fonts.bunny.net/css?family=figtree:400,500,600|fraunces:600,700|jetbrains-mono:400,500,600&display=swap" />
@@ -24,8 +71,25 @@
   <script src="/assets/js/theme-init.js"></script>
 </head>
 <body class="layout-alt">
-  <header>
-    <div class="wrap header-top">
+  <header class="hub-header">
+    <div class="wrap hub-site-nav-wrap">
+      <nav class="hub-site-nav" id="hub-site-nav" aria-label="Hub sections">
+        <a class="hub-site-nav-brand" href="/">Anthemic</a>
+        <button type="button" class="hub-nav-toggle" id="hub-nav-toggle" aria-expanded="false" aria-controls="hub-site-nav-list">
+          <span class="hub-nav-toggle-label">Sections</span>
+          <span class="hub-nav-toggle-icon" aria-hidden="true"></span>
+        </button>
+        <ul class="hub-site-nav-list" id="hub-site-nav-list">
+          <li><a href="#hub-section-who" data-scene-jump="who">About</a></li>
+          <li><a href="#hub-section-skills" data-scene-jump="intro">Skills</a></li>
+          <li><a href="#interest-bar" data-scene-jump="lens">Filter</a></li>
+          <li><a href="#hub-section-projects" data-scene-jump="projects"><span class="hub-nav-num">01</span> Projects</a></li>
+          <li><a href="#hub-section-music" data-scene-jump="music"><span class="hub-nav-num">02</span> Music</a></li>
+          <li><a href="#hub-section-bio" data-scene-jump="bio"><span class="hub-nav-num">03</span> Bio</a></li>
+          <li><a href="#hub-section-reading" data-scene-jump="reading"><span class="hub-nav-num">04</span> Reading</a></li>
+          <li><a href="#hub-section-work" data-scene-jump="work"><span class="hub-nav-num">05</span> Work</a></li>
+        </ul>
+      </nav>
       <div class="theme-group" role="group" aria-label="Colour theme">
         <button type="button" class="theme-btn" id="theme-dark" aria-pressed="false">Dark</button>
         <button type="button" class="theme-btn" id="theme-light" aria-pressed="false">Light</button>
@@ -60,7 +124,7 @@
           <div class="console-body" id="console-body">
             <pre class="console-scene is-active" data-scene="intro"><code><span class="c-dim"># welcome</span>
 <span class="c-prompt">$</span> <span class="c-cmd">anthemic hub --status</span>
-<span class="c-out">  setlist      </span><span class="c-ok">live</span>   <span class="c-dim">/setlist/</span>
+<span class="c-out">  setlist      </span><span class="c-ok">live</span>   <span class="c-dim">/setlist/ (login)</span>
 <span class="c-out">  brain-map    </span><span class="c-ok">live</span>   <span class="c-dim">/brain/</span>
 <span class="c-out">  morning-macro</span><span class="c-ok">live</span>   <span class="c-dim">/economics/</span>
 <span class="c-out">  hire-deck    </span><span class="c-ok">live</span>   <span class="c-dim">/hire/</span>
@@ -115,12 +179,41 @@
           </div>
         </div>
       </div>
+      <div class="interest-bar" data-console-scene="lens" id="interest-bar">
+        <div class="interest-bar-head">
+          <span class="interest-filter-mark" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" focusable="false">
+              <path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <div class="interest-bar-head-copy">
+            <p class="interest-bar-kicker">Hub filter</p>
+            <p class="interest-bar-desc">Highlight matching links in the main column. Pick <strong>Everything</strong> to reset.</p>
+          </div>
+        </div>
+        <div class="interest-bar-main">
+          <fieldset class="interest-fieldset" aria-labelledby="interest-filter-label">
+            <legend class="interest-bar-legend" id="interest-filter-label">Filter by interest</legend>
+            <div class="interest-chips" role="group" aria-label="Interest filters">
+              <button type="button" class="interest-chip interest-chip--reset" data-interest="all" aria-pressed="true">Everything</button>
+              <button type="button" class="interest-chip" data-interest="music" aria-pressed="false">Music &amp; live performance</button>
+              <button type="button" class="interest-chip" data-interest="teaching" aria-pressed="false">Teaching &amp; learning</button>
+              <button type="button" class="interest-chip" data-interest="creative" aria-pressed="false">Creative tools &amp; maps</button>
+              <button type="button" class="interest-chip" data-interest="work" aria-pressed="false">Work &amp; professional</button>
+              <button type="button" class="interest-chip" data-interest="community" aria-pressed="false">Community &amp; civic tech</button>
+              <button type="button" class="interest-chip" data-interest="personal" aria-pressed="false">Personal &amp; writing</button>
+            </div>
+          </fieldset>
+          <p class="interest-hint" id="interest-hint">No filter active — all projects and sections are shown at full strength.</p>
+          <p class="interest-status" id="interest-status" aria-live="polite" role="status" hidden></p>
+        </div>
+      </div>
     </aside>
     <div class="split-scroll">
       <main>
     <div class="wrap">
 
-      <div class="hub-who-block" data-console-scene="who" aria-label="About">
+      <div class="hub-who-block" id="hub-section-who" data-console-scene="who" aria-label="About">
         <h2 class="section-heading hub-who-heading"><span class="sec-title">Who's Andy?</span></h2>
         <article class="card card--profile" id="who-am-i-card">
           <div class="card-profile-layout">
@@ -152,7 +245,7 @@
           </div>
         </article>
       </div>
-      <div class="hub-skills-block" data-console-scene="intro" aria-label="Skills and links">
+      <div class="hub-skills-block" id="hub-section-skills" data-console-scene="intro" aria-label="Skills and links">
         <h2 class="section-heading hub-skills-heading"><span class="sec-title">Skills</span></h2>
         <section class="employer-strip">
         <div class="employer-strip-inner">
@@ -202,33 +295,18 @@
         </div>
       </section>
       </div>
-      <div class="interest-bar" data-console-scene="lens">
-        <div class="interest-bar-main">
-          <fieldset class="interest-fieldset">
-            <legend class="interest-bar-legend">What are you interested in about Andy?</legend>
-            <div class="interest-chips">
-              <button type="button" class="interest-chip" data-interest="all" aria-pressed="true">Everything</button>
-              <button type="button" class="interest-chip" data-interest="music" aria-pressed="false">Music &amp; live performance</button>
-              <button type="button" class="interest-chip" data-interest="teaching" aria-pressed="false">Teaching &amp; learning</button>
-              <button type="button" class="interest-chip" data-interest="creative" aria-pressed="false">Creative tools &amp; maps</button>
-              <button type="button" class="interest-chip" data-interest="work" aria-pressed="false">Work &amp; professional</button>
-              <button type="button" class="interest-chip" data-interest="community" aria-pressed="false">Community &amp; civic tech</button>
-              <button type="button" class="interest-chip" data-interest="personal" aria-pressed="false">Personal &amp; writing</button>
-            </div>
-          </fieldset>
-          <p class="interest-status" id="interest-status" aria-live="polite" role="status"></p>
-        </div>
-      </div>
-      <div class="hub-section" data-hub-section="projects" data-console-scene="projects">
+      <div class="hub-section" id="hub-section-projects" data-hub-section="projects" data-console-scene="projects">
       <h2 class="section-heading"><span class="sec-num" aria-hidden="true">01</span> <span class="sec-title">Anthemic projects</span></h2>
       <section class="grid" aria-label="Anthemic projects">
-        <a class="card card--live card--live-wave card--flagship" href="/setlist/" data-interests="music gigs creative">
-          <span class="badge live">Live</span>
+        <a class="card card--live card--live-wave card--flagship card--requires-login" href="/setlist/" data-interests="music gigs creative" aria-label="Set List Generator — login required">
+          <div class="card-badges">
+            <span class="badge live">Live</span>
+            <span class="badge login">Login required</span>
+          </div>
           <div class="title">Set List Generator</div>
-          <p class="card-outcome">Flagship build - set lists from rehearsal to stage.</p>
+          <p class="card-outcome">Sign in to build, organise and share set lists from rehearsal to stage.</p>
           <p class="card-stack">React · Vite · Spring Boot API</p>
-          <div class="desc">Build, organise and share gig set lists for bands and solo performers.</div>
-          <div class="desc">Login required</div>
+          <p class="card-login-note">Opens the app sign-in screen — account needed to save lists.</p>
         </a>
 
         <article class="case-study-card" id="swarm-case-study-root" data-interests="community work" aria-labelledby="swarm-case-study-title">
@@ -252,6 +330,13 @@
           <div class="desc">Essays and notes — open the holding page (quill &amp; ink) while the wider personal site is still on the bench.</div>
         </a>
 
+        <a class="card card--live card--live-wave" href="/design/stop-making-sense/" data-interests="creative music">
+          <span class="badge live">Design lab</span>
+          <div class="title">Stop Making Sense stage</div>
+          <p class="card-outcome">Scroll experiment — the set builds itself.</p>
+          <div class="desc">Empty stage at first; scroll cues amps, drums, keys, and vocals wheeled on until the scene is full. Inspired by the Talking Heads film.</div>
+        </a>
+
         <a class="card card--live card--live-wave" href="/brain/" data-interests="creative music gigs">
           <span class="badge live">Live</span>
           <div class="title">Brain map</div>
@@ -266,7 +351,7 @@
       </section>
       </div>
 
-      <div class="hub-section" data-hub-section="music" data-console-scene="music">
+      <div class="hub-section" id="hub-section-music" data-hub-section="music" data-console-scene="music">
       <h2 class="section-heading"><span class="sec-num" aria-hidden="true">02</span> <span class="sec-title">Music</span></h2>
       <section class="grid" aria-label="Music">
         <a class="card card--live card--live-wave" href="/gigs/" data-interests="music gigs">
@@ -320,7 +405,7 @@
       </div>
       </div>
 
-      <div class="hub-section" data-hub-section="music-bio" data-console-scene="bio" data-interests="music personal">
+      <div class="hub-section" id="hub-section-bio" data-hub-section="music-bio" data-console-scene="bio" data-interests="music personal">
       <h2 class="section-heading"><span class="sec-num" aria-hidden="true">03</span> <span class="sec-title">Music bio</span></h2>
       <article class="bio-card">
         <div>
@@ -375,7 +460,7 @@
       </article>
       </div>
 
-      <div class="hub-section" id="reading-list" data-hub-section="reading-list" data-console-scene="reading" data-interests="personal creative work teaching">
+      <div class="hub-section" id="hub-section-reading" data-hub-section="reading-list" data-console-scene="reading" data-interests="personal creative work teaching">
       <h2 class="section-heading"><span class="sec-num" aria-hidden="true">04</span> <span class="sec-title">Reading list</span></h2>
       <article class="reading-board" aria-label="Books read and in progress">
         <figure class="reading-board-figure">
@@ -393,7 +478,7 @@
       </article>
       </div>
 
-      <div class="hub-section" data-hub-section="work" data-console-scene="work">
+      <div class="hub-section" id="hub-section-work" data-hub-section="work" data-console-scene="work">
       <h2 class="section-heading"><span class="sec-num" aria-hidden="true">05</span> <span class="sec-title">Work</span></h2>
       <section class="grid" aria-label="Professional work">
         <a class="card card--live card--live-wave" href="/hire/" data-interests="work">
@@ -427,5 +512,6 @@
     </div>
   </footer>
   <script src="/assets/js/hub.js" defer></script>
+  <script src="/assets/js/hub-nav.js" defer></script>
   <script src="/assets/js/hub-console.js" defer></script>
 </html>

@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+Disallow: /bass/admin/
+Disallow: /design/
+Disallow: /index-classic.html
+
+Sitemap: https://anthemic-developments.com/sitemap.xml

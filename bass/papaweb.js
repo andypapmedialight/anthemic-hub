@@ -71,7 +71,7 @@ function readSanitizedContact() {
   const email = stripCtrl(emailEl.value).trim().slice(0, 254);
   const interest = interestEl.value;
   const msg = stripCtrl(msgEl.value).trim().slice(0, CONTACT_MAX_MSG);
-  const allowedInterest = { beginner: true, intermediate: true, advanced: true, online: true };
+  const allowedInterest = { general: true, beginner: true, intermediate: true, advanced: true, online: true };
   if (!name || !email || !msg) return { ok: false, error: 'Please fill in all fields.' };
   if (!isValidEmail(email)) return { ok: false, error: 'Enter a valid email address.' };
   if (!allowedInterest[interest]) return { ok: false, error: 'Select a valid topic.' };
@@ -511,6 +511,7 @@ async function handleSubmit(e) {
   const msg = pack.msg;
 
   const interestLabels = {
+    general: 'General enquiry',
     beginner: 'Bass lesson — Beginner (Foundation)',
     intermediate: 'Bass lesson — Intermediate (Groove & theory)',
     advanced: 'Bass lesson — Advanced (Pro development)',

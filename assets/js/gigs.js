@@ -174,34 +174,105 @@
     );
   }
 
-  function injectEventSchemas(gigs) {
-    var schemas = gigs.map(function (g) {
-      var schema = {
-        "@context": "https://schema.org",
-        "@type": "Event",
-        "name": g.title,
-        "startDate": g.date,
-        "eventStatus": "https://schema.org/EventScheduled",
-        "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode"
+  var SITE_ORIGIN = "https://anthemic-developments.com";
+  var GIG_PERFORMER = {
+    "@type": "Person",
+    "@id": SITE_ORIGIN + "/#person",
+    "name": "Andy Papadopoulos",
+    "url": SITE_ORIGIN + "/bass/"
+  };
+
+  function gigStartDateTime(date, timeStr) {
+    if (!timeStr || !String(timeStr).trim()) return date;
+    var chunk = String(timeStr).trim().split(/\s*[–-]\s*/)[0];
+    var m = chunk.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i);
+    if (!m) return date;
+    var h = parseInt(m[1], 10);
+    var min = m[2] ? parseInt(m[2], 10) : 0;
+    if (/pm/i.test(m[3]) && h < 12) h += 12;
+    if (/am/i.test(m[3]) && h === 12) h = 0;
+    return date + "T" + String(h).padStart(2, "0") + ":" + String(min).padStart(2, "0") + ":00+10:00";
+  }
+
+  function buildEventSchema(g) {
+    var schema = {
+      "@type": "Event",
+      "name": g.title,
+      "startDate": gigStartDateTime(g.date, g.time),
+      "eventStatus": "https://schema.org/EventScheduled",
+      "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+      "performer": GIG_PERFORMER
+    };
+    var venue = g.venue && String(g.venue).trim();
+    var city = g.city && String(g.city).trim();
+    if (venue || city) {
+      schema.location = { "@type": "Place", "name": venue || city };
+      if (city) {
+        schema.location.address = {
+          "@type": "PostalAddress",
+          "addressLocality": city,
+          "addressRegion": "VIC",
+          "addressCountry": "AU"
+        };
+        if (venue) schema.location.address.streetAddress = venue;
+      }
+    }
+    var descParts = [];
+    if (g.description && String(g.description).trim()) descParts.push(String(g.description).trim());
+    if (g.time && String(g.time).trim()) descParts.push("Time: " + String(g.time).trim());
+    if (g.role && String(g.role).trim()) descParts.push("Role: " + String(g.role).trim());
+    if (g.support && String(g.support).trim()) descParts.push("Support: " + String(g.support).trim());
+    if (descParts.length) schema.description = descParts.join(". ");
+    if (g.link && String(g.link).trim()) schema.url = g.link;
+    if (g.poster && String(g.poster).trim()) {
+      schema.image = SITE_ORIGIN + "/assets/gig-posters/" + encodeURIComponent(g.poster);
+    }
+    if (g.tickets_link && String(g.tickets_link).trim()) {
+      schema.offers = {
+        "@type": "Offer",
+        "url": g.tickets_link,
+        "availability": "https://schema.org/InStock",
+        "priceCurrency": "AUD"
       };
-      if (g.venue || g.city) {
-        schema.location = { "@type": "Place", "name": g.venue || g.city };
-        if (g.venue && g.city) schema.location.address = g.city;
+      if (g.free) { schema.offers.price = "0"; }
+    } else if (g.free) {
+      schema.offers = {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "AUD",
+        "availability": "https://schema.org/InStock"
+      };
+    }
+    return schema;
+  }
+
+  function injectEventSchemas(upcoming, past) {
+    var events = upcoming.map(buildEventSchema);
+    if (past && past.length) {
+      past.slice(0, 12).forEach(function (g) {
+        events.push(buildEventSchema(g));
+      });
+    }
+    var graph = [
+      {
+        "@type": "WebPage",
+        "@id": SITE_ORIGIN + "/gigs/#webpage",
+        "url": SITE_ORIGIN + "/gigs/",
+        "name": "Gig calendar - Anthemic Developments",
+        "description": "Upcoming and past live bass gigs.",
+        "inLanguage": "en-AU",
+        "isPartOf": { "@id": SITE_ORIGIN + "/#website" }
       }
-      if (g.description && String(g.description).trim()) schema.description = g.description;
-      if (g.link && String(g.link).trim()) schema.url = g.link;
-      if (g.tickets_link && String(g.tickets_link).trim()) {
-        schema.offers = { "@type": "Offer", "url": g.tickets_link, "availability": "https://schema.org/InStock" };
-        if (g.free) { schema.offers.price = "0"; schema.offers.priceCurrency = "AUD"; }
-      } else if (g.free) {
-        schema.offers = { "@type": "Offer", "price": "0", "priceCurrency": "AUD", "availability": "https://schema.org/InStock" };
-      }
-      return schema;
-    });
-    var el = document.createElement("script");
-    el.type = "application/ld+json";
-    el.text = JSON.stringify(schemas);
-    document.head.appendChild(el);
+    ].concat(events);
+    var payload = { "@context": "https://schema.org", "@graph": graph };
+    var el = document.getElementById("ld-gig-events");
+    if (!el) {
+      el = document.createElement("script");
+      el.type = "application/ld+json";
+      el.id = "ld-gig-events";
+      document.head.appendChild(el);
+    }
+    el.textContent = JSON.stringify(payload);
   }
 
   var upcomingEl = document.getElementById("gigs-upcoming");
@@ -234,7 +305,7 @@
 
       upcoming.sort(function (a, b) { return compareYmd(parseYmd(a.date), parseYmd(b.date)); });
       past.sort(function (a, b) { return compareYmd(parseYmd(b.date), parseYmd(a.date)); });
-      if (upcoming.length) injectEventSchemas(upcoming);
+      injectEventSchemas(upcoming, past);
 
       upcomingEl.innerHTML = upcoming.length
         ? upcoming.map(function (g) { return buildCard(g, true); }).join("")

@@ -323,6 +323,30 @@
 
   var interestKey = "anthemic-hub-interest";
   var interestValues = ["all", "music", "teaching", "creative", "work", "community", "personal"];
+  var mobileConsoleMq = window.matchMedia("(max-width: 1079px)");
+  var consoleDockPadRaf = 0;
+
+  function syncConsoleDockPad() {
+    var dock = document.querySelector(".split-console");
+    if (!dock || !mobileConsoleMq.matches) {
+      document.documentElement.style.removeProperty("--console-mobile-pad");
+      return;
+    }
+    var h = Math.ceil(dock.getBoundingClientRect().height);
+    if (h > 0) {
+      document.documentElement.style.setProperty("--console-mobile-pad", h + "px");
+    }
+  }
+  function scheduleConsoleDockPad() {
+    if (consoleDockPadRaf) cancelAnimationFrame(consoleDockPadRaf);
+    consoleDockPadRaf = requestAnimationFrame(function () {
+      syncConsoleDockPad();
+      consoleDockPadRaf = requestAnimationFrame(function () {
+        consoleDockPadRaf = 0;
+        syncConsoleDockPad();
+      });
+    });
+  }
 
   function syncInterestChips(interest) {
     var chips = document.querySelectorAll(".interest-chip[data-interest]");
@@ -437,29 +461,93 @@
       if (num) num.textContent = i + 1 < 10 ? "0" + (i + 1) : String(i + 1);
     }
   }
+  var interestCardSel = ".card[data-interests], article[data-interests]";
+  function countInterestMatches(main, interest) {
+    var cards = main.querySelectorAll(interestCardSel);
+    var n = 0;
+    for (var i = 0; i < cards.length; i++) {
+      if (cardMatchesInterest(cards[i], interest)) n++;
+    }
+    return n;
+  }
   function updateInterestFilterVisuals(interest) {
     var main = document.querySelector("main");
     if (!main) return;
     var all = !interest || interest === "all";
     main.classList.toggle("interest-filtering", !all);
-    var cards = main.querySelectorAll(".card[data-interests], article.card[data-interests]");
+    var bar = document.getElementById("interest-bar");
+    if (bar) bar.classList.toggle("is-filter-active", !all);
+    document.body.classList.toggle("interest-filter-active", !all);
+    var cards = main.querySelectorAll(interestCardSel);
     for (var i = 0; i < cards.length; i++) {
       var el = cards[i];
       var match = cardMatchesInterest(el, interest);
       el.classList.toggle("is-interest-match", all || match);
       el.classList.toggle("is-interest-dim", !all && !match);
     }
+    var hint = document.getElementById("interest-hint");
     var status = document.getElementById("interest-status");
-    if (status) {
-      if (all) {
+    if (all) {
+      if (hint) hint.hidden = false;
+      if (status) {
+        status.hidden = true;
         status.textContent = "";
-      } else {
+      }
+    } else {
+      if (hint) hint.hidden = true;
+      if (status) {
         var chip = main.querySelector('.interest-chip[data-interest="' + interest + '"]');
-        status.textContent = chip ? "Showing: " + chip.textContent.replace(/\s+/g, " ").trim() : "";
+        var label = chip ? chip.textContent.replace(/\s+/g, " ").trim() : interest;
+        var matches = countInterestMatches(main, interest);
+        var matchWord = matches === 1 ? "link" : "links";
+        status.innerHTML =
+          '<span class="interest-status-label">Filter on</span>' +
+          '<span class="interest-status-value">' + label + "</span>" +
+          '<span class="interest-status-meta">' +
+          matches +
+          " " +
+          matchWord +
+          " highlighted · others faded</span>";
+        status.hidden = false;
       }
     }
+    scheduleConsoleDockPad();
   }
-  function setInterest(interest) {
+  function scrollInterestTarget(interest) {
+    var main = document.querySelector("main");
+    if (!main) return;
+    var target = null;
+    if (!interest || interest === "all") {
+      var projects = main.querySelector('[data-hub-section="projects"]');
+      target = projects ? projects.querySelector(".section-heading") || projects : null;
+    } else {
+      target = main.querySelector(".card.is-interest-match, article.is-interest-match");
+      if (!target) {
+        var sections = main.querySelectorAll(".hub-section");
+        for (var si = 0; si < sections.length; si++) {
+          var block = sections[si];
+          var sectionTags = (block.getAttribute("data-interests") || "").trim().split(/\s+/);
+          if (sectionTags.indexOf(interest) !== -1) {
+            target = block.querySelector(".section-heading") || block;
+            break;
+          }
+        }
+      }
+    }
+    if (!target) return;
+    var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        target.scrollIntoView({
+          behavior: reduced ? "auto" : "smooth",
+          block: "start",
+          inline: "nearest"
+        });
+      });
+    });
+  }
+  function setInterest(interest, opts) {
+    opts = opts || {};
     if (interestValues.indexOf(interest) === -1) interest = "all";
     syncInterestChips(interest);
     sortGridsByInterest(interest);
@@ -467,6 +555,7 @@
     updateSectionNumbers();
     updateInterestFilterVisuals(interest);
     try { localStorage.setItem(interestKey, interest); } catch (e) {}
+    if (opts.scroll) scrollInterestTarget(interest);
   }
   assignOriginalOrder();
   assignOriginalSectionOrder();
@@ -479,9 +568,22 @@
     for (var ic = 0; ic < interestChips.length; ic++) {
       interestChips[ic].addEventListener("click", function () {
         var v = this.getAttribute("data-interest");
-        if (v) setInterest(v);
+        if (v) setInterest(v, { scroll: true });
       });
     }
+    window.addEventListener("resize", scheduleConsoleDockPad, { passive: true });
+    window.addEventListener("hub-console-layout-change", scheduleConsoleDockPad);
+    if (typeof mobileConsoleMq.addEventListener === "function") {
+      mobileConsoleMq.addEventListener("change", scheduleConsoleDockPad);
+    }
+    if (typeof ResizeObserver !== "undefined") {
+      var dock = document.querySelector(".split-console");
+      if (dock) {
+        var dockRo = new ResizeObserver(scheduleConsoleDockPad);
+        dockRo.observe(dock);
+      }
+    }
+    scheduleConsoleDockPad();
   }
 })();
 

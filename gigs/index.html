@@ -4,7 +4,84 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Gig calendar - Anthemic Developments</title>
-  <meta name="description" content="Upcoming and past gigs." />
+  <meta name="description" content="Upcoming and past live bass gigs — Andy Papadopoulos in Melbourne and Victoria." />
+  <meta property="og:title" content="Gig calendar - Anthemic Developments" />
+  <meta property="og:description" content="Upcoming and past gigs featuring Andy Pap on bass." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://anthemic-developments.com/gigs/" />
+  <meta property="og:image" content="https://anthemic-developments.com/assets/cinnamon.jpg" />
+  <link rel="canonical" href="https://anthemic-developments.com/gigs/" />
+  <script type="application/ld+json" id="ld-gig-events">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebPage",
+        "@id": "https://anthemic-developments.com/gigs/#webpage",
+        "url": "https://anthemic-developments.com/gigs/",
+        "name": "Gig calendar - Anthemic Developments",
+        "description": "Upcoming and past live bass gigs.",
+        "inLanguage": "en-AU",
+        "isPartOf": { "@id": "https://anthemic-developments.com/#website" }
+      },
+      {
+        "@type": "Event",
+        "name": "Cam Butler - World Forever album launch",
+        "startDate": "2026-05-22T20:00:00+10:00",
+        "eventStatus": "https://schema.org/EventScheduled",
+        "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+        "url": "https://whatson.melbourne.vic.gov.au/things-to-do/cam-butler-world-forever-premiere-album-launch",
+        "location": {
+          "@type": "Place",
+          "name": "Melbourne Town Hall",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Melbourne",
+            "addressRegion": "VIC",
+            "addressCountry": "AU"
+          }
+        },
+        "performer": { "@id": "https://anthemic-developments.com/#person" }
+      },
+      {
+        "@type": "Event",
+        "name": "The Telecaster Diaries",
+        "startDate": "2026-06-13",
+        "eventStatus": "https://schema.org/EventScheduled",
+        "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+        "location": {
+          "@type": "Place",
+          "name": "Union Hotel, Union St",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Brunswick",
+            "addressRegion": "VIC",
+            "addressCountry": "AU"
+          }
+        },
+        "performer": { "@id": "https://anthemic-developments.com/#person" }
+      },
+      {
+        "@type": "Event",
+        "name": "The Telecaster Diaries",
+        "startDate": "2026-08-16",
+        "eventStatus": "https://schema.org/EventScheduled",
+        "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+        "location": {
+          "@type": "Place",
+          "name": "Standard Hotel",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Melbourne",
+            "addressRegion": "VIC",
+            "addressCountry": "AU"
+          }
+        },
+        "performer": { "@id": "https://anthemic-developments.com/#person" }
+      }
+    ]
+  }
+  </script>
   <link rel="preconnect" href="https://fonts.bunny.net" />
   <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -143,6 +220,12 @@
       justify-content: flex-end;
     }
     .nav-row .tools a { color: var(--accent-live); }
+    .tools-login-cue {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: 0.03em;
+    }
     h1 {
       margin: 0 0 10px;
       font-family: var(--font-display);
@@ -402,7 +485,7 @@
     <div class="nav-row">
       <a href="../index.html">← Hub</a>
       <div class="tools">
-        <a href="/setlist/">Set List Generator</a>
+        <a href="/setlist/">Set List Generator</a> <span class="tools-login-cue">(login required)</span>
         <a href="/bass/">Bass coaching</a>
       </div>
     </div>

@@ -923,6 +923,38 @@
       color: var(--badge-ext-fg);
       border-color: var(--badge-ext-border);
     }
+    .badge.login {
+      background: var(--accent-soft);
+      color: var(--accent);
+      border-color: var(--badge-accent-border);
+    }
+    html[data-theme="light"] .badge.login {
+      color: #92400e;
+    }
+    .card-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 8px;
+      align-items: center;
+    }
+    .card-login-note {
+      margin: 0;
+      font-family: var(--font-ui);
+      font-size: 0.8rem;
+      font-weight: 600;
+      line-height: 1.45;
+      color: var(--accent);
+      letter-spacing: 0.02em;
+    }
+    html[data-theme="light"] .card-login-note {
+      color: #92400e;
+    }
+    .card--requires-login .card-outcome {
+      color: var(--accent);
+    }
+    html[data-theme="light"] .card--requires-login .card-outcome {
+      color: var(--card-live-title);
+    }
     .card.card--profile {
       cursor: default;
       grid-column: 1 / -1;
@@ -1603,12 +1635,15 @@
       <div class="hub-section" data-hub-section="projects">
       <h2 class="section-heading"><span class="sec-num" aria-hidden="true">01</span> <span class="sec-title">Anthemic projects</span></h2>
       <section class="grid" aria-label="Anthemic projects">
-        <a class="card card--live card--live-wave card--flagship" href="/setlist/" data-interests="music gigs creative">
-          <span class="badge live">Live</span>
+        <a class="card card--live card--live-wave card--flagship card--requires-login" href="/setlist/" data-interests="music gigs creative" aria-label="Set List Generator — login required">
+          <div class="card-badges">
+            <span class="badge live">Live</span>
+            <span class="badge login">Login required</span>
+          </div>
           <div class="title">Set List Generator</div>
-          <p class="card-outcome">Flagship build - set lists from rehearsal to stage.</p>
+          <p class="card-outcome">Sign in to build, organise and share set lists from rehearsal to stage.</p>
           <p class="card-stack">React · Vite · Spring Boot API</p>
-          <div class="desc">Build, organise and share gig set lists for bands and solo performers.</div>
+          <p class="card-login-note">Opens the app sign-in screen — account needed to save lists.</p>
         </a>
 
         <a class="card card--out" href="https://report.safermurrayroad.com" target="_blank" rel="noopener noreferrer" data-interests="community">

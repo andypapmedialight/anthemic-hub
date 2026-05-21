@@ -4,6 +4,102 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Andy Pap — Bass · Melbourne</title>
+<meta name="description" content="Melbourne bassist and bass teacher — one-on-one lessons, gig calendar, session work. Fender Precision player with decades on stage." />
+<meta property="og:title" content="Andy Pap — Bass · Melbourne" />
+<meta property="og:description" content="Bass lessons, live dates, and session work in Melbourne. Beginner to advanced, in-studio and online." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://anthemic-developments.com/bass/" />
+<meta property="og:image" content="https://anthemic-developments.com/bass/brand_assets/AndyPBass.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Andy Pap — Bass · Melbourne" />
+<meta name="twitter:description" content="Bass lessons and live bass in Melbourne — book a lesson or check upcoming gigs." />
+<meta name="twitter:image" content="https://anthemic-developments.com/bass/brand_assets/AndyPBass.png" />
+<link rel="canonical" href="https://anthemic-developments.com/bass/" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "@id": "https://anthemic-developments.com/bass/#webpage",
+      "url": "https://anthemic-developments.com/bass/",
+      "name": "Andy Pap — Bass · Melbourne",
+      "description": "Melbourne bassist and bass teacher — lessons, gigs, and contact.",
+      "inLanguage": "en-AU",
+      "isPartOf": { "@id": "https://anthemic-developments.com/#website" },
+      "about": { "@id": "https://anthemic-developments.com/bass/#person" }
+    },
+    {
+      "@type": "Person",
+      "@id": "https://anthemic-developments.com/bass/#person",
+      "name": "Andy Papadopoulos",
+      "alternateName": "Andy P",
+      "url": "https://anthemic-developments.com/bass/",
+      "image": "https://anthemic-developments.com/bass/brand_assets/AndyPBass.png",
+      "jobTitle": "Bass guitarist and teacher",
+      "description": "Melbourne bassist and teacher — live performance, session work, and one-on-one bass lessons.",
+      "sameAs": ["https://www.linkedin.com/in/andy-papadopoulos/"],
+      "homeLocation": {
+        "@type": "Place",
+        "name": "Melbourne",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Melbourne",
+          "addressRegion": "VIC",
+          "addressCountry": "AU"
+        }
+      }
+    },
+    {
+      "@type": "Service",
+      "@id": "https://anthemic-developments.com/bass/#bass-lessons",
+      "name": "Bass guitar lessons",
+      "serviceType": "Music lessons",
+      "provider": { "@id": "https://anthemic-developments.com/bass/#person" },
+      "areaServed": {
+        "@type": "City",
+        "name": "Melbourne",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Melbourne",
+          "addressRegion": "VIC",
+          "addressCountry": "AU"
+        }
+      },
+      "offers": [
+        {
+          "@type": "Offer",
+          "name": "Foundation — beginner bass lesson",
+          "price": "80",
+          "priceCurrency": "AUD",
+          "description": "60 minute in-person lesson"
+        },
+        {
+          "@type": "Offer",
+          "name": "Groove & theory — intermediate bass lesson",
+          "price": "80",
+          "priceCurrency": "AUD",
+          "description": "60 minute in-person lesson"
+        },
+        {
+          "@type": "Offer",
+          "name": "Pro development — advanced bass lesson",
+          "price": "90",
+          "priceCurrency": "AUD",
+          "description": "60 minute in-person lesson"
+        },
+        {
+          "@type": "Offer",
+          "name": "Remote bass lesson",
+          "price": "70",
+          "priceCurrency": "AUD",
+          "description": "60 minute online lesson via Zoom or Discord"
+        }
+      ]
+    }
+  ]
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
 <link rel="preload" href="/bass/site.css?v=dev" as="style">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Courier+Prime:wght@400;700&family=Noto+Music&display=swap" rel="stylesheet">
@@ -27,8 +123,11 @@
 <!-- HERO -->
 <section class="hero">
   <div class="hero-bass-stage">
+    <p class="bass-caption" id="bass-caption">
+      <span class="bass-caption-kicker">Andy's bass - Fender Precision 1960's body, with a 70's neck. My main gigging &amp; teaching bass</span>
+    </p>
     <div class="bass-wrap">
-      <figure class="bass-figure">
+      <figure class="bass-figure" aria-describedby="bass-caption">
         <div class="bass-figure-main">
         <img
           src="brand_assets/AndyPBass.png"
@@ -42,10 +141,6 @@
           <button type="button" class="bass-string-hit bass-str-g" data-open-string="G" aria-label="Open G string — hold to play, release to stop"></button>
         </div>
         </div>
-        <figcaption class="bass-caption">
-          <span class="bass-caption-kicker">Andy's bass - Fender Precision 1960's body, with a 70's neck. My main gigging &amp; teaching bass</span>
-
-        </figcaption>
       </figure>
     </div>
   </div>
@@ -56,7 +151,7 @@
       <h1>low end <br><em>lives</em><br>here.</h1>
       <div class="hero-tag">Melbourne, Australia</div>
     </div>
-    <div class="hero-lower">
+    <div class="hero-foot">
       <div class="hero-cta-cluster">
         <div class="hero-actions">
           <a href="#lessons" class="btn btn-primary">Book a lesson</a>
@@ -307,9 +402,10 @@
           </div>
         </div>
         <div class="ff">
-          <label for="interest">Lesson focus</label>
+          <label for="interest">Enquiry type</label>
           <select id="interest" name="interest" required>
-            <option value="">Select a focus</option>
+            <option value="">Select enquiry type</option>
+            <option value="general">General enquiry</option>
             <option value="beginner">Beginner — Foundation</option>
             <option value="intermediate">Intermediate — Groove &amp; theory</option>
             <option value="advanced">Advanced — Pro development</option>
