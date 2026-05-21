@@ -857,10 +857,22 @@
       font-size: 0.52em;
       letter-spacing: 0.14em;
     }
-    .hero-bass-stage { padding: 4rem 0 0; align-items: center; }
-    .hero-bass-stage .bass-wrap { max-width: min(104vw, 620px); }
-    .hero-bass-stage .bass-figure-main { transform: rotate(-2.5deg) scale(1.04); }
-    .hero-bass-stage .bass-wrap:hover .bass-figure-main { transform: rotate(-1.5deg) scale(1.06); }
+    .hero-bass-stage {
+      padding: 4rem clamp(0.65rem, 3.5vw, 1.25rem) 0;
+      align-items: center;
+      overflow: hidden;
+    }
+    .hero-bass-stage .bass-wrap {
+      max-width: min(92vw, 560px);
+      width: 100%;
+    }
+    .hero-bass-stage .bass-figure-main {
+      transform: rotate(-2deg) scale(0.97);
+      transform-origin: 50% 52%;
+    }
+    .hero-bass-stage .bass-wrap:hover .bass-figure-main {
+      transform: rotate(-1.25deg) scale(0.99);
+    }
     .hero-bass-stage .bass-caption {
       max-width: min(92vw, 30rem);
       transform: translateX(-50%) translateY(0.45rem);
