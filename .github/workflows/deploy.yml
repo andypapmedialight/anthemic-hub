@@ -198,7 +198,11 @@ jobs:
           code_pitch=$(curl -sS -o /dev/null -w "%{http_code}" --retry 3 --retry-delay 2 "https://anthemic-developments.com/content/pitch.json")
           [[ "${code_pitch}" == "200" ]] || { echo "/content/pitch.json returned HTTP ${code_pitch}"; exit 1; }
           curl -sS --retry 3 --retry-delay 2 "https://anthemic-developments.com/hire/" -o /tmp/anthemic-smoke-hire.html
-          grep -qF 'Why hire Andy Papadopoulos' /tmp/anthemic-smoke-hire.html \
+          if grep -qF 'id="hero-name"' /tmp/anthemic-smoke-hire.html; then
+            echo "/hire/ is serving the hub index — deploy anthemic-ops nginx (location ^~ /hire/)"
+            exit 1
+          fi
+          grep -qF '<title>Why hire Andy Papadopoulos</title>' /tmp/anthemic-smoke-hire.html \
             || { echo "/hire/ page missing expected title marker"; exit 1; }
           ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
             'systemctl is-active --quiet mmd-valuation.service && curl -fsS --max-time 10 http://127.0.0.1:8071/health | grep -q "\"ok\""' \
