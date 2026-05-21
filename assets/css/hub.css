@@ -600,6 +600,14 @@
       padding-top: 12px;
       border-top: 1px solid var(--border);
     }
+    .favourite-bands-details[open] .favourite-bands-panel {
+      max-height: clamp(9.5rem, 32vh, 13.5rem);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      padding-right: 4px;
+      scrollbar-gutter: stable;
+    }
     .favourite-bands-lede {
       margin: 0 0 14px;
       font-size: 0.8rem;
