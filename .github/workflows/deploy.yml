@@ -122,7 +122,9 @@ jobs:
           rsync -avz -e "${RSYNC_SSH}" ./gigs/ "${DEST}gigs/"
           rsync -avz -e "${RSYNC_SSH}" ./anth-dev-ad/ "${DEST}anth-dev-ad/"
           rsync -avz -e "${RSYNC_SSH}" ./personal/ "${DEST}personal/"
-          rsync -avz -e "${RSYNC_SSH}" ./design/ "${DEST}design/"
+          if [[ -d design ]]; then
+            rsync -avz -e "${RSYNC_SSH}" ./design/ "${DEST}design/"
+          fi
           rsync -avz --exclude '.fred-api-key' -e "${RSYNC_SSH}" ./economics/ "${DEST}economics/"
           rsync -avz -e "${RSYNC_SSH}" ./incoming-hub/contact/ "${DEST}contact/"
           # --no-perms: avoid rsync exit 23 when remote cannot set mode 600 on secret files.

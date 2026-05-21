@@ -75,7 +75,7 @@ if [[ ! -f "${INCOMING}/economics/index.html" ]]; then
   exit 1
 fi
 
-mkdir -p "${DEST}/bass" "${DEST}/brain" "${DEST}/hire" "${DEST}/gigs" "${DEST}/content" "${DEST}/anth-dev-ad" "${DEST}/personal/writing" "${DEST}/design/stop-making-sense" "${DEST}/economics"
+mkdir -p "${DEST}/bass" "${DEST}/brain" "${DEST}/hire" "${DEST}/gigs" "${DEST}/content" "${DEST}/anth-dev-ad" "${DEST}/personal/writing" "${DEST}/economics"
 
 # Preserve admin-managed files: back up before rsync, restore after.
 # Git copies act as seeds on first deploy only.
@@ -95,7 +95,10 @@ rsync -a --delete "${INCOMING}/hire/" "${DEST}/hire/"
 rsync -a --delete "${INCOMING}/gigs/" "${DEST}/gigs/"
 rsync -a --delete "${INCOMING}/anth-dev-ad/" "${DEST}/anth-dev-ad/"
 rsync -a --delete "${INCOMING}/personal/" "${DEST}/personal/"
-rsync -a --delete "${INCOMING}/design/" "${DEST}/design/"
+if [[ -d "${INCOMING}/design" ]] && [[ -n "$(find "${INCOMING}/design" -mindepth 1 -print -quit 2>/dev/null)" ]]; then
+  mkdir -p "${DEST}/design"
+  rsync -a --delete "${INCOMING}/design/" "${DEST}/design/"
+fi
 rsync -a --delete --exclude '.fred-api-key' "${INCOMING}/economics/" "${DEST}/economics/"
 rm -f "${DEST}/economics/.fred-api-key"
 rsync -a --delete "${INCOMING}/content/" "${DEST}/content/"
