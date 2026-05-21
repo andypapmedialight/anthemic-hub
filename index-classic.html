@@ -518,10 +518,66 @@
     }
     .favourite-bands-wrap {
       margin-top: 26px;
-      padding: 18px 18px 16px;
+      padding: 14px 18px;
       border: 1px solid var(--border);
       border-radius: 14px;
       background: var(--bg-wash);
+    }
+    .favourite-bands-details {
+      border: none;
+      margin: 0;
+      padding: 0;
+    }
+    .favourite-bands-summary {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      list-style: none;
+      cursor: pointer;
+      user-select: none;
+    }
+    .favourite-bands-summary::-webkit-details-marker { display: none; }
+    .favourite-bands-summary::marker { content: ""; }
+    .favourite-bands-summary::before {
+      content: "";
+      flex-shrink: 0;
+      width: 0.45em;
+      height: 0.45em;
+      margin-right: 2px;
+      border-right: 2px solid var(--accent-live);
+      border-bottom: 2px solid var(--accent-live);
+      transform: rotate(-45deg);
+      transition: transform 0.2s ease;
+      opacity: 0.85;
+    }
+    .favourite-bands-details[open] > .favourite-bands-summary::before {
+      transform: rotate(45deg);
+      margin-top: 2px;
+    }
+    .favourite-bands-summary-title {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--fg);
+    }
+    .favourite-bands-count {
+      font-family: var(--font-ui);
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--fg-dim);
+    }
+    .favourite-bands-summary:hover .favourite-bands-summary-title { color: var(--accent-live); }
+    .favourite-bands-summary:focus { outline: none; }
+    .favourite-bands-summary:focus-visible {
+      outline: 2px solid var(--accent-live);
+      outline-offset: 3px;
+      border-radius: 4px;
+    }
+    .favourite-bands-panel {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
     }
     .favourite-bands-lede {
       margin: 0 0 14px;
@@ -1595,10 +1651,17 @@
         </a>
       </section>
 
-      <div class="favourite-bands-wrap" aria-labelledby="favourite-bands-heading">
-        <h3 class="subheading" id="favourite-bands-heading">Favourite bands</h3>
-        <p class="favourite-bands-lede">Bands/artists that have had a significant influence on my musical taste.</p>
-        <ul id="favourite-bands-list" class="favourite-bands-list"></ul>
+      <div class="favourite-bands-wrap">
+        <details class="favourite-bands-details" id="favourite-bands-details">
+          <summary class="favourite-bands-summary">
+            <span class="favourite-bands-summary-title" id="favourite-bands-heading">Favourite bands</span>
+            <span class="favourite-bands-count" id="favourite-bands-count"></span>
+          </summary>
+          <div class="favourite-bands-panel">
+            <p class="favourite-bands-lede">Bands/artists that have had a significant influence on my musical taste.</p>
+            <ul id="favourite-bands-list" class="favourite-bands-list" aria-label="Favourite bands"></ul>
+          </div>
+        </details>
       </div>
 
       <div id="photo-gallery-wrap" class="photo-gallery-wrap">

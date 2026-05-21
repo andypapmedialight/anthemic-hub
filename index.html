@@ -288,10 +288,17 @@
         </a>
       </section>
 
-      <div class="favourite-bands-wrap" aria-labelledby="favourite-bands-heading">
-        <h3 class="subheading" id="favourite-bands-heading">Favourite bands</h3>
-        <p class="favourite-bands-lede">Bands/artists that have had a significant influence on my musical taste.</p>
-        <ul id="favourite-bands-list" class="favourite-bands-list"></ul>
+      <div class="favourite-bands-wrap">
+        <details class="favourite-bands-details" id="favourite-bands-details">
+          <summary class="favourite-bands-summary">
+            <span class="favourite-bands-summary-title" id="favourite-bands-heading">Favourite bands</span>
+            <span class="favourite-bands-count" id="favourite-bands-count"></span>
+          </summary>
+          <div class="favourite-bands-panel">
+            <p class="favourite-bands-lede">Bands/artists that have had a significant influence on my musical taste.</p>
+            <ul id="favourite-bands-list" class="favourite-bands-list" aria-label="Favourite bands"></ul>
+          </div>
+        </details>
       </div>
 
       <div id="photo-gallery-wrap" class="photo-gallery-wrap">

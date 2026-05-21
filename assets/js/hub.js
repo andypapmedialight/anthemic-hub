@@ -162,6 +162,10 @@
     var ul = document.getElementById('favourite-bands-list');
     if (!ul) return;
     var bands = favouriteBandsDefaultsFromHub(c);
+    var countEl = document.getElementById('favourite-bands-count');
+    if (countEl) {
+      countEl.textContent = bands.length ? '(' + bands.length + ')' : '';
+    }
     ul.innerHTML = '';
     if (!bands.length) {
       var empty = document.createElement('li');
