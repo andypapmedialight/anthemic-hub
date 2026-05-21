@@ -362,11 +362,10 @@
       color: var(--fg-dim);
     }
     .employer-skills-expanded {
-      display: none;
       margin-top: 12px;
     }
-    .employer-skills-expand-details[open] + .employer-skills-expanded {
-      display: block;
+    .employer-skills-expand-details:not([open]) .employer-skills-expanded {
+      display: none;
     }
     .employer-skill {
       font-family: var(--font-ui);
@@ -421,7 +420,6 @@
       main.interest-filtering .card.is-interest-dim,
       main.interest-filtering article.card.is-interest-dim {
         opacity: 0.2;
-        transform: scale(0.985);
         filter: grayscale(0.45);
       }
       .wrap > .hub-section {
@@ -451,7 +449,12 @@
     .hub-skills-block {
       position: relative;
       overflow: visible;
-      padding: 16px 16px 56px;
+      padding: 16px 16px 28px;
+      margin-bottom: 4px;
+    }
+    .hub-skills-block:has(.employer-skills-expand-details[open]) {
+      padding-bottom: 32px;
+      margin-bottom: 12px;
     }
     .hub-skills-block .employer-strip {
       margin-bottom: 0;
@@ -487,7 +490,19 @@
       color: var(--fg-dim);
       text-transform: none;
     }
-    .interest-bar + .hub-section .section-heading { margin-top: 24px; }
+    .interest-bar + .hub-section .section-heading { margin-top: 28px; }
+    .hub-section[data-hub-section="projects"] > .grid {
+      align-items: start;
+    }
+    .hub-section[data-hub-section="projects"] > .grid > .card,
+    .hub-section[data-hub-section="projects"] > .grid > .case-study-card {
+      position: relative;
+      z-index: 0;
+    }
+    .hub-section[data-hub-section="projects"] > .grid > .card:hover,
+    .hub-section[data-hub-section="projects"] > .grid > .case-study-card:hover {
+      z-index: 2;
+    }
     .subheading {
       font-family: var(--font-ui);
       font-size: 12px;
@@ -1131,8 +1146,8 @@
     }
     @media (prefers-reduced-motion: no-preference) {
       @keyframes card-in {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
+        from { opacity: 0; }
+        to { opacity: 1; }
       }
       .grid .card {
         animation: card-in 0.55s cubic-bezier(0.33, 1, 0.68, 1) backwards;
