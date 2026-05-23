@@ -311,7 +311,7 @@ const VALUATION = [
       ['Risk', 'Margin calls if positions move against you'],
     ],
     source: 'FINRA',
-    href: 'https://www.finra.org/finra-data/browse-catalog/margin-statistics',
+    href: 'https://www.finra.org/rules-guidance/key-topics/margin-accounts/margin-statistics',
   },
   {
     id: 'otc-notional',
@@ -326,7 +326,7 @@ const VALUATION = [
       ['vs GMV', 'Notional ≠ economic exposure'],
     ],
     source: 'BIS / ISDA',
-    href: 'https://www.bis.org/statistics/dt20.htm',
+    href: 'https://data.bis.org/topics/OTC_DER',
   },
   {
     id: 'otc-gmv',
@@ -341,7 +341,7 @@ const VALUATION = [
       ['Context', 'Much smaller than notional'],
     ],
     source: 'BIS',
-    href: 'https://www.bis.org/statistics/dt20.htm',
+    href: 'https://data.bis.org/topics/OTC_DER',
   },
   {
     id: 'au-cgs',
