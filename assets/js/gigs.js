@@ -236,24 +236,27 @@
     return GIG_DEFAULT_IMAGE;
   }
 
+  function gigOfferPrice(g) {
+    if (g.free) return "0";
+    if (g.price && String(g.price).trim()) {
+      var priceMatch = String(g.price).trim().match(/(\d+(?:\.\d{1,2})?)/);
+      if (priceMatch) return priceMatch[1];
+    }
+    return "0";
+  }
+
   function buildEventOffers(g, eventUrl) {
     var offerUrl = (g.tickets_link && String(g.tickets_link).trim())
       || (g.link && String(g.link).trim())
       || eventUrl;
-    var offer = {
+    return {
       "@type": "Offer",
       "url": offerUrl,
+      "price": gigOfferPrice(g),
       "availability": "https://schema.org/InStock",
       "priceCurrency": "AUD",
       "validFrom": g.date + "T00:00:00+10:00"
     };
-    if (g.free) {
-      offer.price = "0";
-    } else if (g.price && String(g.price).trim()) {
-      var priceMatch = String(g.price).trim().match(/(\d+(?:\.\d{1,2})?)/);
-      if (priceMatch) offer.price = priceMatch[1];
-    }
-    return offer;
   }
 
   function buildEventSchema(g) {
