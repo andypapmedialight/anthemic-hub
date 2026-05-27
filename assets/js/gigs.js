@@ -165,7 +165,7 @@
       ? "<p class=\"gig-desc\">" + esc(g.description) + "</p>"
       : "";
     return (
-      "<article class=\"" + cls + "\" data-gig-date=\"" + esc(g.date) + "\">" +
+      "<article class=\"" + cls + "\" id=\"gig-" + esc(g.date) + "\" data-gig-date=\"" + esc(g.date) + "\">" +
         poster +
         "<div class=\"row-top\">" + badge + "<span class=\"gig-date\">" + esc(formatWhen(ymd, g.time)) + "</span>" + entryTag + "</div>" +
         "<h3 class=\"gig-title\">" + esc(g.title) + "</h3>" +
@@ -175,18 +175,24 @@
   }
 
   var SITE_ORIGIN = "https://anthemic-developments.com";
+  var GIG_DEFAULT_IMAGE = SITE_ORIGIN + "/assets/cinnamon.jpg";
   var GIG_PERFORMER = {
     "@type": "Person",
     "@id": SITE_ORIGIN + "/#person",
     "name": "Andy Papadopoulos",
     "url": SITE_ORIGIN + "/bass/"
   };
+  var GIG_ORGANIZER = {
+    "@type": "Organization",
+    "@id": SITE_ORIGIN + "/#organization",
+    "name": "Anthemic Developments",
+    "url": SITE_ORIGIN + "/"
+  };
 
-  function gigStartDateTime(date, timeStr) {
-    if (!timeStr || !String(timeStr).trim()) return date;
-    var chunk = String(timeStr).trim().split(/\s*[–-]\s*/)[0];
-    var m = chunk.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i);
-    if (!m) return date;
+  function parseClockOnDate(date, clockStr) {
+    if (!clockStr || !String(clockStr).trim()) return null;
+    var m = String(clockStr).trim().match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i);
+    if (!m) return null;
     var h = parseInt(m[1], 10);
     var min = m[2] ? parseInt(m[2], 10) : 0;
     if (/pm/i.test(m[3]) && h < 12) h += 12;
@@ -194,14 +200,77 @@
     return date + "T" + String(h).padStart(2, "0") + ":" + String(min).padStart(2, "0") + ":00+10:00";
   }
 
+  function gigStartDateTime(date, timeStr) {
+    if (!timeStr || !String(timeStr).trim()) return date;
+    var chunk = String(timeStr).trim().split(/\s*[–-]\s*/)[0];
+    return parseClockOnDate(date, chunk) || date;
+  }
+
+  function gigEndDateTime(date, timeStr, startIso) {
+    if (timeStr && String(timeStr).trim()) {
+      var parts = String(timeStr).trim().split(/\s*[–-]\s*/);
+      if (parts.length > 1) {
+        var endIso = parseClockOnDate(date, parts[parts.length - 1]);
+        if (endIso) return endIso;
+      }
+    }
+    if (startIso && startIso.indexOf("T") !== -1) {
+      var startMatch = startIso.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2}):\d{2}([+-]\d{2}:\d{2})$/);
+      if (startMatch) {
+        var endHour = parseInt(startMatch[2], 10) + 3;
+        return startMatch[1] + "T" + String(endHour).padStart(2, "0") + ":" + startMatch[3] + ":00" + startMatch[4];
+      }
+    }
+    return date + "T23:59:59+10:00";
+  }
+
+  function gigEventUrl(g) {
+    if (g.link && String(g.link).trim()) return String(g.link).trim();
+    return SITE_ORIGIN + "/gigs/#gig-" + g.date;
+  }
+
+  function gigEventImage(g) {
+    if (g.poster && String(g.poster).trim()) {
+      return SITE_ORIGIN + "/assets/gig-posters/" + encodeURIComponent(g.poster);
+    }
+    return GIG_DEFAULT_IMAGE;
+  }
+
+  function buildEventOffers(g, eventUrl) {
+    var offerUrl = (g.tickets_link && String(g.tickets_link).trim())
+      || (g.link && String(g.link).trim())
+      || eventUrl;
+    var offer = {
+      "@type": "Offer",
+      "url": offerUrl,
+      "availability": "https://schema.org/InStock",
+      "priceCurrency": "AUD",
+      "validFrom": g.date + "T00:00:00+10:00"
+    };
+    if (g.free) {
+      offer.price = "0";
+    } else if (g.price && String(g.price).trim()) {
+      var priceMatch = String(g.price).trim().match(/(\d+(?:\.\d{1,2})?)/);
+      if (priceMatch) offer.price = priceMatch[1];
+    }
+    return offer;
+  }
+
   function buildEventSchema(g) {
+    var startDate = gigStartDateTime(g.date, g.time);
+    var eventUrl = gigEventUrl(g);
     var schema = {
       "@type": "Event",
       "name": g.title,
-      "startDate": gigStartDateTime(g.date, g.time),
+      "startDate": startDate,
+      "endDate": gigEndDateTime(g.date, g.time, startDate),
+      "url": eventUrl,
+      "image": gigEventImage(g),
       "eventStatus": "https://schema.org/EventScheduled",
       "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
-      "performer": GIG_PERFORMER
+      "organizer": GIG_ORGANIZER,
+      "performer": GIG_PERFORMER,
+      "offers": buildEventOffers(g, eventUrl)
     };
     var venue = g.venue && String(g.venue).trim();
     var city = g.city && String(g.city).trim();
@@ -223,26 +292,6 @@
     if (g.role && String(g.role).trim()) descParts.push("Role: " + String(g.role).trim());
     if (g.support && String(g.support).trim()) descParts.push("Support: " + String(g.support).trim());
     if (descParts.length) schema.description = descParts.join(". ");
-    if (g.link && String(g.link).trim()) schema.url = g.link;
-    if (g.poster && String(g.poster).trim()) {
-      schema.image = SITE_ORIGIN + "/assets/gig-posters/" + encodeURIComponent(g.poster);
-    }
-    if (g.tickets_link && String(g.tickets_link).trim()) {
-      schema.offers = {
-        "@type": "Offer",
-        "url": g.tickets_link,
-        "availability": "https://schema.org/InStock",
-        "priceCurrency": "AUD"
-      };
-      if (g.free) { schema.offers.price = "0"; }
-    } else if (g.free) {
-      schema.offers = {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "AUD",
-        "availability": "https://schema.org/InStock"
-      };
-    }
     return schema;
   }
 
