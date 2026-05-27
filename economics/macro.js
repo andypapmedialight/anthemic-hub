@@ -485,6 +485,83 @@ function fmt(n, dp=2) {
 }
 function sign(n) { return n === null ? '' : n >= 0 ? '+' : ''; }
 
+const MONTH_ABBR = {
+  Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
+  Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11,
+};
+
+/** Relative % change from two values (null if previous is zero/missing). */
+function pctChange(current, previous) {
+  if (current == null || previous == null || previous === 0) return null;
+  return ((current - previous) / previous) * 100;
+}
+
+/** Absolute difference in percentage points (yields, ratios, spreads). */
+function pointsChange(current, previous) {
+  if (current == null || previous == null) return null;
+  return current - previous;
+}
+
+function formatUtcAsOf(ms) {
+  if (ms == null || Number.isNaN(Number(ms))) return null;
+  const d = new Date(ms);
+  if (Number.isNaN(d.getTime())) return null;
+  const date = d.toLocaleString('en-GB', {
+    timeZone: 'UTC',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+  return `${date} UTC`;
+}
+
+/** Map FINRA / BIS / ISO reference labels to an approximate UTC instant. */
+function parseReferencePeriodUtc(period) {
+  if (!period || typeof period !== 'string') return null;
+  const s = period.trim();
+  const finra = s.match(/^([A-Za-z]{3})-(\d{2})$/);
+  if (finra) {
+    const y = 2000 + parseInt(finra[2], 10);
+    const mo = MONTH_ABBR[finra[1]];
+    if (mo === undefined) return null;
+    return Date.UTC(y, mo + 1, 0, 0, 0, 0);
+  }
+  const bisSemi = s.match(/^(\d{4})-S([12])$/);
+  if (bisSemi) {
+    const y = parseInt(bisSemi[1], 10);
+    const endMonth = bisSemi[2] === '1' ? 5 : 11;
+    return Date.UTC(y, endMonth + 1, 0, 0, 0, 0);
+  }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+    const t = Date.parse(`${s}T00:00:00Z`);
+    return Number.isNaN(t) ? null : t;
+  }
+  if (/^\d{4}$/.test(s)) return Date.UTC(parseInt(s, 10), 11, 31, 0, 0, 0);
+  return null;
+}
+
+function fredDateToUtc(dateStr) {
+  if (!dateStr) return null;
+  const t = Date.parse(`${dateStr}T00:00:00Z`);
+  return Number.isNaN(t) ? null : t;
+}
+
+/** CBOE yield indices (^TNX etc.) are often quoted as yield × 10. */
+function normalizeCBOEYieldQuote(sym, quote) {
+  if (!quote || quote.price == null) return quote;
+  const bondSyms = new Set(['^TNX', '^FVX', '^TYX', '^IRX', '2YY=F', 'TNX', 'FVX', 'TYX', 'IRX']);
+  if (!bondSyms.has(sym) && !sym.startsWith('^')) return quote;
+  if (quote.price <= 20) return quote;
+  return {
+    ...quote,
+    price: quote.price / 10,
+    change: quote.change != null ? quote.change / 10 : null,
+  };
+}
+
 function quoteDecimals(item, sectionKey) {
   if (sectionKey === 'crypto') return item.dp ?? 2;
   if (sectionKey === 'fx') return item.to === 'JPY' ? 2 : 4;
@@ -503,6 +580,7 @@ function formatQuoteCard(item, d, sectionKey) {
     price: formatQuotePrice(d, item, sectionKey),
     change: d ? d.change : null,
     pct: d ? d.pct : null,
+    asOfUtc: d?.asOfUtc ?? null,
   };
 }
 function cardClass(pct) { return pct === null ? 'neu' : pct >= 0 ? 'up' : 'dn'; }
@@ -524,9 +602,12 @@ function renderCard(meta, delay = 0) {
   const priceStr = meta.price !== null && meta.price !== '' ? meta.price : '–';
   const absStr = meta.isUsd
     ? formatUsdChange(meta.change)
-    : (meta.isYield || meta.isRatio)
-      ? formatYieldChange(meta.change)
-      : (meta.change !== null ? `${sign(meta.change)}${fmt(meta.change)}` : '');
+    : meta.isAud
+      ? formatAudChange(meta.change)
+      : (meta.isYield || meta.isRatio)
+        ? formatPointsChange(meta.change)
+        : (meta.change !== null ? `${sign(meta.change)}${fmt(meta.change)}` : '');
+  const asOfStr = meta.asOfUtc ? formatUtcAsOf(meta.asOfUtc) : null;
   const failed = cardIsFailed(meta);
   const loading = CARD_LOADING.has(meta.itemKey);
   const refreshLabel = `Refresh ${escapeHtml(meta.label)}`;
@@ -556,6 +637,7 @@ function renderCard(meta, delay = 0) {
     : `<span class="pill ${pillClass(meta.pct)}">${pillText(meta.pct)}</span>`}
         ${absStr ? `<span class="card-abs">${absStr}</span>` : ''}
       </div>
+      ${asOfStr && meta.showCardAsOf !== false ? `<div class="card-asof">As of ${escapeHtml(asOfStr)}</div>` : ''}
       ${meta.extra || ''}`;
 
   const stateCls = `${cls}${meta.cardClassExtra ? ` ${meta.cardClassExtra}` : ''}${failed ? ' card--failed' : ''}${loading ? ' card--loading' : ''}`;
@@ -790,9 +872,10 @@ function parseYahooChart(d) {
   if ((prevClose == null || Number.isNaN(prevClose)) && closes.length > 1) {
     prevClose = closes[closes.length - 2];
   }
-  const change = (price != null && prevClose != null) ? price - prevClose : null;
-  const pct = (change != null && prevClose) ? (change / prevClose) * 100 : null;
-  return { price, change, pct };
+  const change = pointsChange(price, prevClose);
+  const pct = pctChange(price, prevClose);
+  const asOfUtc = meta.regularMarketTime ? meta.regularMarketTime * 1000 : null;
+  return { price, change, pct, asOfUtc };
 }
 
 function formatYieldPrice(d) {
@@ -800,10 +883,18 @@ function formatYieldPrice(d) {
   return `${Number(d.price).toFixed(2)}%`;
 }
 
-function formatYieldChange(change) {
+function formatPointsChange(change, dp = 2) {
   if (change == null || Number.isNaN(change)) return '';
   const v = Number(change);
-  return `${sign(v)}${Math.abs(v).toFixed(2)} pp`;
+  return `${sign(v)}${Math.abs(v).toFixed(dp)} pp`;
+}
+
+function formatAudChange(changeBillions) {
+  if (changeBillions == null || Number.isNaN(changeBillions)) return '';
+  const v = Number(changeBillions);
+  const abs = Math.abs(v);
+  const body = abs >= 100 ? `A$${abs.toFixed(0)}B` : `A$${abs.toFixed(1)}B`;
+  return `${sign(v)}${body}`;
 }
 
 // ── Google Finance (unofficial — quote HTML scrape) ────────────────
@@ -912,7 +1003,8 @@ async function googleFinanceQuote(sym) {
   if (!meta) return null;
   try {
     const html = await fetchRemote(googleFinancePageUrl(meta.path), { asJson: false });
-    return html ? parseGoogleFinanceHtml(html, meta.ticker, meta.exchange) : null;
+    const q = html ? parseGoogleFinanceHtml(html, meta.ticker, meta.exchange) : null;
+    return q ? normalizeCBOEYieldQuote(sym, q) : null;
   } catch {
     return null;
   }
@@ -945,7 +1037,12 @@ async function loadFrankfurter(force = false) {
     .then(r => r.json())
     .then(d => {
       const dates = Object.keys(d.rates).sort();
-      const result = { today: d.rates[dates[dates.length - 1]], prev: d.rates[dates[dates.length - 2]] };
+      const latestDate = dates[dates.length - 1];
+      const result = {
+        today: d.rates[latestDate],
+        prev: d.rates[dates[dates.length - 2]],
+        latestDate,
+      };
       cacheSet(key, result);
       _fxPromise = null;
       return result;
@@ -953,15 +1050,15 @@ async function loadFrankfurter(force = false) {
   return _fxPromise;
 }
 
-async function fetchFXFrank(from, to) {
-  const { today, prev } = await loadFrankfurter();
+async function fetchFXFrank(from, toCcy) {
+  const { today, prev, latestDate } = await loadFrankfurter();
   const rate = (rates, base, sym) => base === 'USD' ? rates[sym] : (1 / rates[base]);
-  const price     = rate(today, from, to);
-  const prevPrice = rate(prev,  from, to);
+  const price     = rate(today, from, toCcy);
+  const prevPrice = rate(prev,  from, toCcy);
   if (!price) return null;
-  const change = prevPrice ? price - prevPrice : null;
-  const pct    = (change !== null && prevPrice) ? (change / prevPrice) * 100 : null;
-  return { price, change, pct };
+  const change = pointsChange(price, prevPrice);
+  const pct = pctChange(price, prevPrice);
+  return { price, change, pct, asOfUtc: fredDateToUtc(latestDate) };
 }
 
 // ── CoinGecko crypto (CORS-friendly, no key needed) ────────────────
@@ -974,6 +1071,7 @@ async function loadCoinGecko(force = false) {
   _cgPromise = fetch(
     `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`
   ).then(r => r.json()).then(d => {
+    const asOfUtc = Date.now();
     const result = {};
     for (const [sym, cgId] of Object.entries(CG_IDS)) {
       const item = d[cgId];
@@ -981,7 +1079,7 @@ async function loadCoinGecko(force = false) {
       const price = item.usd;
       const pct   = item.usd_24h_change ?? null;
       const change = pct !== null ? price * pct / (100 + pct) : null;
-      result[sym] = { price, change, pct };
+      result[sym] = { price, change, pct, asOfUtc };
     }
     cacheSet(key, result);
     _cgPromise = null;
@@ -1143,7 +1241,7 @@ function valuationUsdExtra(label, billions) {
     <span class="spread-val spread-val--figure buffett-fair">${usd}</span></div>`;
 }
 
-function valuationReferenceExtra(item, live = null) {
+function valuationReferenceExtra(item, live = null, asOfUtc = null) {
   let html = '';
   const measure = live?.measureLabel || item.sublabel;
   if (measure) {
@@ -1158,9 +1256,12 @@ function valuationReferenceExtra(item, live = null) {
     html += `<div class="yield-extra"><span class="spread-label">${escapeHtml(label)}</span>
       <span class="spread-val">${escapeHtml(val)}</span></div>`;
   }
-  if (live?.asOf) {
+  const refUtc = asOfUtc ?? live?.asOfUtc ?? parseReferencePeriodUtc(live?.asOf);
+  if (live?.asOf || refUtc) {
+    const period = live?.asOf ? `${escapeHtml(live.asOf)} · ` : '';
+    const utc = refUtc ? formatUtcAsOf(refUtc) : '';
     html += `<div class="yield-extra"><span class="spread-label">As of</span>
-      <span class="spread-val">${escapeHtml(live.asOf)}</span></div>`;
+      <span class="spread-val">${period}${utc ? escapeHtml(utc) : ''}</span></div>`;
   }
   if (item.source) {
     const src = item.href
@@ -1187,7 +1288,11 @@ async function fetchValuationLive(metricId, force = false) {
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const data = await r.json();
     if (data?.error) throw new Error(data.error);
-    const result = { ...data, live: true };
+    const result = {
+      ...data,
+      live: true,
+      asOfUtc: data.asOfUtc ?? parseReferencePeriodUtc(data.asOf),
+    };
     cacheSet(key, result);
     return result;
   } catch (err) {
@@ -1198,11 +1303,13 @@ async function fetchValuationLive(metricId, force = false) {
 
 function fredRowsToQuote(rows) {
   if (!rows?.length) return null;
-  const last = rows[rows.length - 1].v;
-  const prev = rows.length > 1 ? rows[rows.length - 2].v : null;
-  const change = prev != null ? last - prev : null;
-  const pct = (change != null && prev) ? (change / prev) * 100 : null;
-  return { price: last, change, pct };
+  const lastRow = rows[rows.length - 1];
+  const prevRow = rows.length > 1 ? rows[rows.length - 2] : null;
+  const last = lastRow.v;
+  const prev = prevRow?.v ?? null;
+  const change = pointsChange(last, prev);
+  const pct = pctChange(last, prev);
+  return { price: last, change, pct, asOfUtc: fredDateToUtc(lastRow.date) };
 }
 
 async function fetchFredSeriesRows(seriesId, start) {
@@ -1319,11 +1426,14 @@ function buildPrivateDebtRatios(totalRows, fedRows, gdpRows) {
 
 function quoteFromRatioSeries(ratios) {
   if (!ratios?.length) return null;
-  const last = ratios[ratios.length - 1].ratio;
-  const prev = ratios.length > 1 ? ratios[ratios.length - 2].ratio : null;
-  const change = prev != null ? last - prev : null;
-  const pct = (change != null && prev) ? (change / prev) * 100 : null;
-  return { price: last, change, pct };
+  const lastRow = ratios[ratios.length - 1];
+  const prevRow = ratios.length > 1 ? ratios[ratios.length - 2] : null;
+  const last = lastRow.ratio;
+  const prev = prevRow?.ratio ?? null;
+  const change = pointsChange(last, prev);
+  const pct = pctChange(last, prev);
+  const asOfUtc = lastRow.t ?? fredDateToUtc(lastRow.date);
+  return { price: last, change, pct, asOfUtc };
 }
 
 async function fetchValuation(metricId, force = false) {
@@ -1367,6 +1477,7 @@ async function fetchBond(series_id, force = false) {
       if (activeProvider === 'yahoo') result = await yahooChart(bondDef.yTicker);
       else if (activeProvider === 'google') result = await googleFinanceQuote(bondDef.yTicker);
       else result = await avQuote(bondDef.yTicker);
+      result = result ? normalizeCBOEYieldQuote(bondDef.yTicker, result) : null;
       if (result) cacheSet(key, result);
       return result;
     } catch { return null; }
@@ -1379,12 +1490,19 @@ async function fetchBond(series_id, force = false) {
   function parseCsvText(txt) {
     const lines = txt.trim().split('\n').filter(l => !l.startsWith('observation_date') && !l.endsWith(','));
     if (lines.length < 2) return null;
-    const last = parseFloat(lines[lines.length - 1].split(',')[1]);
-    const prev = parseFloat(lines[lines.length - 2].split(',')[1]);
+    const lastParts = lines[lines.length - 1].split(',');
+    const prevParts = lines[lines.length - 2].split(',');
+    const last = parseFloat(lastParts[1]);
+    const prev = parseFloat(prevParts[1]);
     if (isNaN(last)) return null;
-    const change = !isNaN(prev) ? last - prev : null;
-    const pct = (change !== null && prev) ? (change / prev) * 100 : null;
-    return { price: last, change, pct };
+    const change = !isNaN(prev) ? pointsChange(last, prev) : null;
+    const pct = !isNaN(prev) ? pctChange(last, prev) : null;
+    return {
+      price: last,
+      change,
+      pct,
+      asOfUtc: fredDateToUtc(lastParts[0]),
+    };
   }
 
   try {
@@ -1416,19 +1534,33 @@ function renderSectionGrid(section) {
       if (item.api) {
         const d = DATA[item.id];
         const display = d?.display || item.fallbackDisplay || '–';
+        let change = d?.change ?? null;
+        let isUsd = false;
+        let isAud = false;
+        if (item.id === 'margin-debt' && change != null) {
+          isUsd = true;
+          change = change / 1000;
+        } else if (item.id === 'au-cgs' && change != null) {
+          isAud = true;
+        }
+        const asOfUtc = d?.asOfUtc ?? parseReferencePeriodUtc(d?.asOf);
         return {
           ticker: item.ticker,
           label: item.label,
           price: display,
-          change: d?.change ?? null,
+          change,
           pct: d?.pct ?? null,
-          extra: valuationReferenceExtra(item, d?.live ? d : null),
+          isUsd,
+          isAud,
+          asOfUtc,
+          extra: valuationReferenceExtra(item, d?.live ? d : null, asOfUtc),
           itemKey: item.id,
           sectionKey: section.key,
           failed: false,
           pillLabel: d?.live ? 'Live' : (d?.fallback ? 'Ref' : null),
           noChart: true,
           cardClassExtra: 'card--reference',
+          showCardAsOf: false,
         };
       }
 
@@ -1462,6 +1594,7 @@ function renderSectionGrid(section) {
         extra,
         isRatio,
         isUsd,
+        asOfUtc: d?.asOfUtc ?? null,
         itemKey: item.id,
         sectionKey: section.key,
         failed: !d || !price,
@@ -1480,12 +1613,13 @@ function renderSectionGrid(section) {
         const spread = (b10 - b2).toFixed(2);
         const cls = spread >= 0 ? 'spread-pos' : 'spread-neg';
         extra = `<div class="yield-extra"><span class="spread-label">2s10s spread</span>
-          <span class="spread-val ${cls}">${spread >= 0 ? '+' : ''}${spread}%</span></div>`;
+          <span class="spread-val ${cls}">${spread >= 0 ? '+' : ''}${spread} pp</span></div>`;
       }
       return withGoogleUrl({ ticker: item.ticker, label: item.label,
         price: formatYieldPrice(d),
         change: d ? d.change : null, pct: d ? d.pct : null, extra,
         isYield: true,
+        asOfUtc: d?.asOfUtc ?? null,
         itemKey: item.id, sectionKey: section.key, failed: !d || !formatYieldPrice(d) }, item, section.key);
     }));
     return;
@@ -2362,8 +2496,8 @@ function buildChartSvg(series, opts = {}) {
   const area = `${line} L${pts[n - 1].x.toFixed(1)},${pad.t + ih} L${pts[0].x.toFixed(1)},${pad.t + ih} Z`;
   const first = series[0];
   const last = series[series.length - 1];
-  const chg = last.v - first.v;
-  const chgPct = first.v ? (chg / first.v) * 100 : 0;
+  const chg = pointsChange(last.v, first.v) ?? 0;
+  const chgPct = pctChange(last.v, first.v) ?? 0;
   const up = chg >= 0;
   const stroke = up ? '#34d399' : '#f87171';
   const pctDp = opts.pctDp ?? dp;
@@ -2371,6 +2505,12 @@ function buildChartSvg(series, opts = {}) {
     if (opts.usdBillions) return formatUsdCompact(v) || '–';
     if (isPercent) return `${v.toFixed(pctDp)}%`;
     return fmt(v, dp);
+  };
+  const fmtChgAbs = v => {
+    if (opts.isYield || opts.isRatio) return `${Math.abs(v).toFixed(pctDp)} pp`;
+    if (opts.usdBillions) return formatUsdCompact(Math.abs(v)) || '–';
+    if (isPercent) return `${Math.abs(v).toFixed(pctDp)}%`;
+    return fmt(Math.abs(v), dp);
   };
 
   const yTicks = [minV, (minV + maxV) / 2, maxV];
@@ -2398,7 +2538,7 @@ function buildChartSvg(series, opts = {}) {
   </svg>`;
 
   const statsHtml = `
-    <div><div class="chart-stat-label">Period change</div><div class="chart-stat-val ${up ? 'up' : 'dn'}">${sign(chg)}${fmtV(Math.abs(chg))} (${sign(chgPct)}${Math.abs(chgPct).toFixed(2)}%)</div></div>
+    <div><div class="chart-stat-label">Period change</div><div class="chart-stat-val ${up ? 'up' : 'dn'}">${sign(chg)}${fmtChgAbs(chg)} (${sign(chgPct)}${Math.abs(chgPct).toFixed(2)}%)</div></div>
     <div><div class="chart-stat-label">High</div><div class="chart-stat-val">${fmtV(maxV)}</div></div>
     <div><div class="chart-stat-label">Low</div><div class="chart-stat-val">${fmtV(minV)}</div></div>
     <div><div class="chart-stat-label">Latest</div><div class="chart-stat-val">${fmtV(last.v)}</div></div>`;
@@ -2415,11 +2555,11 @@ function chartOpts(item, section) {
   }
   if (section.key === 'val') {
     const pctDp = item.id === 'buffett' ? 0 : 1;
-    return { isPercent: true, dp: 2, pctDp, quarterlyNote: true };
+    return { isPercent: true, isRatio: true, dp: 2, pctDp, quarterlyNote: true };
   }
   const isPercent = section.key === 'bond';
   const dp = quoteDecimals(item, section.key);
-  return { isPercent, dp };
+  return { isPercent, isYield: section.key === 'bond', dp };
 }
 
 let chartFocusTrapHandler = null;
