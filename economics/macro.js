@@ -573,6 +573,10 @@ function loadCustomCommodities() {
     const raw = localStorage.getItem('mmd:custom:comm');
     CUSTOM_COMMODITIES = raw ? JSON.parse(raw) : [];
     if (!Array.isArray(CUSTOM_COMMODITIES)) CUSTOM_COMMODITIES = [];
+    for (const item of CUSTOM_COMMODITIES) {
+      if (item?.fredId === 'GOLDAMGBD228NLBM') item.fredId = 'PGOLDUSDM';
+      if (item?.fredId === 'SLVPRUSD') item.fredId = 'PSILVERUSDM';
+    }
   } catch {
     CUSTOM_COMMODITIES = [];
   }
@@ -731,8 +735,8 @@ function isValuationLive(itemOrId) {
 }
 
 const COMMODITIES = [
-  { id: 'spot-gold',    fredId: 'GOLDAMGBD228NLBM', label: 'Gold Spot',      ticker: 'XAU',   unit: 'USD/oz', def: true,  dp: 2 },
-  { id: 'spot-silver',  fredId: 'SLVPRUSD',         label: 'Silver Spot',    ticker: 'XAG',   unit: 'USD/oz', def: true,  dp: 3 },
+  { id: 'spot-gold',    fredId: 'PGOLDUSDM',        label: 'Gold Spot',      ticker: 'XAU',   unit: 'USD/oz', def: true,  dp: 2 },
+  { id: 'spot-silver',  fredId: 'PSILVERUSDM',      label: 'Silver Spot',    ticker: 'XAG',   unit: 'USD/oz', def: true,  dp: 3 },
   { id: 'spot-copper',  fredId: 'PCOPPUSDM',        label: 'Copper Spot',    ticker: 'CU',    unit: 'USD/mt', def: true,  dp: 2 },
   { id: 'spot-wti',     fredId: 'DCOILWTICO',       label: 'WTI Spot',       ticker: 'WTI',   unit: 'USD/bbl', def: true, dp: 2 },
   { id: 'spot-brent',   fredId: 'DCOILBRENTEU',     label: 'Brent Spot',     ticker: 'BRENT', unit: 'USD/bbl', def: true, dp: 2 },
@@ -743,8 +747,8 @@ const COMMODITIES = [
 ];
 
 const COMMODITY_CATALOG = [
-  { id: 'spot-gold', fredId: 'GOLDAMGBD228NLBM', label: 'Gold Spot', ticker: 'XAU', unit: 'USD/oz' },
-  { id: 'spot-silver', fredId: 'SLVPRUSD', label: 'Silver Spot', ticker: 'XAG', unit: 'USD/oz' },
+  { id: 'spot-gold', fredId: 'PGOLDUSDM', label: 'Gold Spot', ticker: 'XAU', unit: 'USD/oz' },
+  { id: 'spot-silver', fredId: 'PSILVERUSDM', label: 'Silver Spot', ticker: 'XAG', unit: 'USD/oz' },
   { id: 'spot-copper', fredId: 'PCOPPUSDM', label: 'Copper Spot', ticker: 'CU', unit: 'USD/mt' },
   { id: 'spot-wti', fredId: 'DCOILWTICO', label: 'WTI Spot', ticker: 'WTI', unit: 'USD/bbl' },
   { id: 'spot-brent', fredId: 'DCOILBRENTEU', label: 'Brent Spot', ticker: 'BRENT', unit: 'USD/bbl' },
