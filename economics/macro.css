@@ -919,6 +919,30 @@
   .sym-pill.off { border-color: var(--border2); color: var(--dim); background: transparent; }
   .sym-pill.on:hover  { background: rgba(59,130,246,0.2); }
   .sym-pill.off:hover { border-color: var(--muted); color: var(--muted); }
+  .sym-pill-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .sym-move-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    line-height: 1;
+    padding: 3px 6px;
+    border-radius: 3px;
+    border: 1px solid var(--border2);
+    color: var(--dim);
+    background: transparent;
+    cursor: pointer;
+  }
+  .sym-move-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .sym-move-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
 
   /* ── Add stock (equities edit) ─────────────────────── */
   .add-stock-wrap {

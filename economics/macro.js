@@ -330,6 +330,17 @@ function syncApiBanner() {
 let VIS = {};
 function loadVIS() { try { VIS = JSON.parse(localStorage.getItem('mmd:vis') || '{}'); } catch { VIS = {}; } }
 function saveVIS() { try { localStorage.setItem('mmd:vis', JSON.stringify(VIS)); } catch {} }
+let SECTION_ORDER = {};
+function loadSectionOrder() {
+  try {
+    const raw = localStorage.getItem('mmd:order');
+    SECTION_ORDER = raw ? JSON.parse(raw) : {};
+    if (!SECTION_ORDER || typeof SECTION_ORDER !== 'object') SECTION_ORDER = {};
+  } catch {
+    SECTION_ORDER = {};
+  }
+}
+function saveSectionOrder() { try { localStorage.setItem('mmd:order', JSON.stringify(SECTION_ORDER)); } catch {} }
 function getItemKey(item) {
   if (item.id)   return item.id;
   if (item.from) return `${item.from}${item.to}`;
@@ -337,6 +348,27 @@ function getItemKey(item) {
 }
 function isOn(item) { const k = getItemKey(item); return k in VIS ? VIS[k] : item.def; }
 function visOf(items) { return items.filter(isOn); }
+function applySectionOrder(section) {
+  const wanted = Array.isArray(SECTION_ORDER[section.key]) ? SECTION_ORDER[section.key] : [];
+  if (!wanted.length) return;
+  const byKey = new Map(section.items.map(item => [getItemKey(item), item]));
+  const ordered = [];
+  for (const key of wanted) {
+    const item = byKey.get(key);
+    if (!item) continue;
+    ordered.push(item);
+    byKey.delete(key);
+  }
+  for (const item of section.items) {
+    const key = getItemKey(item);
+    if (byKey.has(key)) ordered.push(item);
+  }
+  section.items = ordered;
+}
+function saveSectionOrderFor(section) {
+  SECTION_ORDER[section.key] = section.items.map(getItemKey);
+  saveSectionOrder();
+}
 
 // ── At a Glance overview ───────────────────────────
 const OVERVIEW_MAX_ITEMS = 12;
@@ -519,6 +551,7 @@ const STOCK_CATALOG = [
 ];
 
 let CUSTOM_EQUITIES = [];
+let CUSTOM_COMMODITIES = [];
 
 function loadCustomEquities() {
   try {
@@ -534,14 +567,45 @@ function saveCustomEquities() {
   try { localStorage.setItem('mmd:custom:eq', JSON.stringify(CUSTOM_EQUITIES)); } catch {}
 }
 
+function loadCustomCommodities() {
+  try {
+    const raw = localStorage.getItem('mmd:custom:comm');
+    CUSTOM_COMMODITIES = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(CUSTOM_COMMODITIES)) CUSTOM_COMMODITIES = [];
+  } catch {
+    CUSTOM_COMMODITIES = [];
+  }
+}
+
+function saveCustomCommodities() {
+  try { localStorage.setItem('mmd:custom:comm', JSON.stringify(CUSTOM_COMMODITIES)); } catch {}
+}
+
 function syncEquitiesSection() {
   const section = SECTIONS.find(s => s.key === 'eq');
-  if (section) section.items = [...EQUITIES, ...CUSTOM_EQUITIES];
+  if (section) {
+    section.items = [...EQUITIES, ...CUSTOM_EQUITIES];
+    applySectionOrder(section);
+  }
+}
+
+function syncCommoditiesSection() {
+  const section = SECTIONS.find(s => s.key === 'comm');
+  if (section) {
+    section.items = [...COMMODITIES, ...CUSTOM_COMMODITIES];
+    applySectionOrder(section);
+  }
 }
 
 function equitySymbolSet() {
   const s = new Set();
   for (const item of [...EQUITIES, ...CUSTOM_EQUITIES]) s.add(item.sym);
+  return s;
+}
+
+function commoditySymbolSet() {
+  const s = new Set();
+  for (const item of [...COMMODITIES, ...CUSTOM_COMMODITIES]) s.add(item.sym);
   return s;
 }
 
@@ -673,6 +737,30 @@ const COMMODITIES = [
   { sym: 'CPER', label: 'Copper (ETF)', ticker: 'CPER', def: false, dp: 2 },
   { sym: 'WEAT', label: 'Wheat (ETF)',  ticker: 'WEAT', def: false, dp: 2 },
   { sym: 'CORN', label: 'Corn (ETF)',   ticker: 'CORN', def: false, dp: 2 },
+];
+
+const COMMODITY_CATALOG = [
+  { sym: 'GC=F', label: 'Gold', ticker: 'GC' },
+  { sym: 'SI=F', label: 'Silver', ticker: 'SI' },
+  { sym: 'HG=F', label: 'Copper', ticker: 'CU' },
+  { sym: 'PL=F', label: 'Platinum', ticker: 'PL' },
+  { sym: 'PA=F', label: 'Palladium', ticker: 'PA' },
+  { sym: 'CL=F', label: 'Oil (WTI)', ticker: 'WTI' },
+  { sym: 'BZ=F', label: 'Brent Crude', ticker: 'BRENT' },
+  { sym: 'NG=F', label: 'Natural Gas', ticker: 'NG' },
+  { sym: 'RB=F', label: 'Gasoline (RBOB)', ticker: 'RBOB' },
+  { sym: 'HO=F', label: 'Heating Oil', ticker: 'HO' },
+  { sym: 'ZC=F', label: 'Corn Futures', ticker: 'CORN' },
+  { sym: 'ZW=F', label: 'Wheat Futures', ticker: 'WHEAT' },
+  { sym: 'ZS=F', label: 'Soybeans Futures', ticker: 'SOY' },
+  { sym: 'KC=F', label: 'Coffee Futures', ticker: 'COFFEE' },
+  { sym: 'SB=F', label: 'Sugar Futures', ticker: 'SUGAR' },
+  { sym: 'CC=F', label: 'Cocoa Futures', ticker: 'COCOA' },
+  { sym: 'CPER', label: 'Copper (ETF)', ticker: 'CPER' },
+  { sym: 'WEAT', label: 'Wheat (ETF)', ticker: 'WEAT' },
+  { sym: 'CORN', label: 'Corn (ETF)', ticker: 'CORN' },
+  { sym: 'DBA', label: 'Agriculture (ETF)', ticker: 'DBA' },
+  { sym: 'DBB', label: 'Base Metals (ETF)', ticker: 'DBB' },
 ];
 
 const FX_PAIRS = [
@@ -3145,6 +3233,14 @@ const addStockState = {
   loading: false,
   focusIdx: -1,
 };
+const addCommodityState = {
+  query: '',
+  results: [],
+  selected: null,
+  preview: null,
+  loading: false,
+  focusIdx: -1,
+};
 
 function filterStockCatalog(query) {
   const q = query.trim().toLowerCase();
@@ -3228,6 +3324,26 @@ function resetAddStockPanel() {
   addStockState.focusIdx = -1;
 }
 
+function filterCommodityCatalog(query) {
+  const q = query.trim().toLowerCase();
+  if (!q) return COMMODITY_CATALOG.filter(e => !commoditySymbolSet().has(e.sym)).slice(0, 24);
+  return COMMODITY_CATALOG.filter(e => {
+    if (commoditySymbolSet().has(e.sym)) return false;
+    return e.sym.toLowerCase().includes(q)
+      || e.label.toLowerCase().includes(q)
+      || (e.ticker && e.ticker.toLowerCase().includes(q));
+  }).slice(0, 24);
+}
+
+function resetAddCommodityPanel() {
+  addCommodityState.query = '';
+  addCommodityState.results = [];
+  addCommodityState.selected = null;
+  addCommodityState.preview = null;
+  addCommodityState.loading = false;
+  addCommodityState.focusIdx = -1;
+}
+
 async function addSelectedStockToWatchlist() {
   const entry = addStockState.selected;
   if (!entry) return;
@@ -3255,6 +3371,53 @@ async function addSelectedStockToWatchlist() {
   renderCust(section);
   resetAddStockPanel();
   renderAddStockPanel();
+}
+
+async function loadAddCommodityPreview(entry) {
+  addCommodityState.selected = entry;
+  addCommodityState.preview = null;
+  addCommodityState.loading = true;
+  renderAddCommodityPanel();
+  const d = await fetchQuote(entry.sym, false);
+  addCommodityState.preview = d;
+  addCommodityState.loading = false;
+  renderAddCommodityPanel();
+}
+
+async function addSelectedCommodityToWatchlist() {
+  const entry = addCommodityState.selected;
+  if (!entry) return;
+  if (commoditySymbolSet().has(entry.sym)) {
+    VIS[entry.sym] = true;
+    saveVIS();
+    const section = SECTIONS.find(s => s.key === 'comm');
+    if (section && !DATA[entry.sym]) DATA[entry.sym] = await section.fetch({ sym: entry.sym }, false);
+    renderSectionGrid(section);
+    renderCust(section);
+    resetAddCommodityPanel();
+    renderAddCommodityPanel();
+    return;
+  }
+  const item = {
+    sym: entry.sym,
+    label: entry.label,
+    ticker: entry.ticker || entry.sym,
+    def: true,
+    dp: 2,
+    custom: true,
+  };
+  CUSTOM_COMMODITIES.push(item);
+  saveCustomCommodities();
+  syncCommoditiesSection();
+  VIS[item.sym] = true;
+  saveVIS();
+  const section = SECTIONS.find(s => s.key === 'comm');
+  const data = await section.fetch(item, false);
+  if (data) DATA[item.sym] = data;
+  renderSectionGrid(section);
+  renderCust(section);
+  resetAddCommodityPanel();
+  renderAddCommodityPanel();
 }
 
 function renderAddStockPanel() {
@@ -3324,6 +3487,66 @@ function renderAddStockPanel() {
 
   if (hadFocus) {
     const next = document.getElementById('add-stock-input');
+    next?.focus();
+    if (caret != null && next) next.setSelectionRange(caret, caret);
+  }
+}
+
+function renderAddCommodityPanel() {
+  const row = document.getElementById('cust-comm');
+  if (!row || row.style.display === 'none') return;
+  const inputEl = document.getElementById('add-commodity-input');
+  const hadFocus = document.activeElement === inputEl;
+  const caret = inputEl?.selectionStart ?? null;
+  let panel = document.getElementById('add-commodity-panel');
+  if (!panel) {
+    panel = document.createElement('div');
+    panel.id = 'add-commodity-panel';
+    panel.className = 'add-stock-wrap';
+    row.appendChild(panel);
+  }
+  const listOpen = !addCommodityState.selected && addCommodityState.results.length > 0;
+  const results = addCommodityState.results;
+  const sel = addCommodityState.selected;
+  const previewCls = addCommodityState.preview?.pct != null
+    ? cardClass(addCommodityState.preview.pct, addCommodityState.preview.change)
+    : '';
+  panel.innerHTML = `
+    <span class="add-stock-label">Add commodity to watch</span>
+    <p class="add-stock-hint">Pick from supported commodity futures/ETFs and preview before adding.</p>
+    <div class="add-stock-search-row">
+      <input type="search" class="add-stock-input" id="add-commodity-input"
+        placeholder="Search symbol or commodity…" autocomplete="off"
+        value="${escapeHtml(addCommodityState.query)}" aria-expanded="${listOpen}" aria-controls="add-commodity-list">
+      <div class="add-stock-list${listOpen && results.length ? ' open' : ''}" id="add-commodity-list" role="listbox">
+        ${results.map((e, i) => `
+          <button type="button" class="add-stock-option${i === addCommodityState.focusIdx ? ' focused' : ''}"
+            role="option" data-commodity-idx="${i}">
+            <span class="add-stock-option-ticker">${escapeHtml(e.ticker || e.sym)}</span>
+            <span class="add-stock-option-name">${escapeHtml(e.label)}</span>
+          </button>`).join('')}
+        ${listOpen && !results.length && addCommodityState.query.length >= 1 && !addCommodityState.loading
+    ? '<div class="add-stock-hint" style="padding:8px 10px">No matches — try another commodity.</div>' : ''}
+      </div>
+    </div>
+    <div class="add-stock-preview${sel ? ' open' : ''}" id="add-commodity-preview">
+      ${sel ? `
+        <div class="add-stock-preview-meta">
+          <div class="add-stock-preview-ticker">${escapeHtml(sel.ticker || sel.sym)}</div>
+          <div class="add-stock-preview-name">${escapeHtml(sel.label)}</div>
+          <div class="add-stock-preview-quote ${previewCls}">${
+    addCommodityState.loading ? 'Loading quote…' : escapeHtml(formatPreviewQuote(addCommodityState.preview))
+  }</div>
+        </div>
+        <div class="add-stock-actions">
+          <button type="button" class="add-stock-btn" data-add-commodity-cancel>Cancel</button>
+          <button type="button" class="add-stock-btn add-stock-btn-primary" data-add-commodity-confirm
+            ${addCommodityState.loading ? 'disabled' : ''}>Add card</button>
+        </div>
+      ` : ''}
+    </div>`;
+  if (hadFocus) {
+    const next = document.getElementById('add-commodity-input');
     next?.focus();
     if (caret != null && next) next.setSelectionRange(caret, caret);
   }
@@ -3425,17 +3648,108 @@ function wireAddStockPanel() {
   });
 }
 
+let addCommoditySearchTimer = null;
+function scheduleCommoditySearch(query) {
+  clearTimeout(addCommoditySearchTimer);
+  addCommoditySearchTimer = setTimeout(() => {
+    addCommodityState.loading = true;
+    addCommodityState.results = filterCommodityCatalog(query);
+    addCommodityState.loading = false;
+    addCommodityState.focusIdx = addCommodityState.results.length ? 0 : -1;
+    renderAddCommodityPanel();
+  }, 0);
+}
+
+function wireAddCommodityPanel() {
+  document.addEventListener('focusin', e => {
+    if (e.target.id !== 'add-commodity-input') return;
+    if (!addCommodityState.query.trim() && !addCommodityState.results.length) {
+      addCommodityState.results = filterCommodityCatalog('');
+      renderAddCommodityPanel();
+    }
+  });
+  document.addEventListener('input', e => {
+    if (e.target.id !== 'add-commodity-input') return;
+    addCommodityState.query = e.target.value;
+    addCommodityState.selected = null;
+    addCommodityState.preview = null;
+    scheduleCommoditySearch(addCommodityState.query);
+    renderAddCommodityPanel();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.target.id !== 'add-commodity-input') return;
+    const list = document.getElementById('add-commodity-list');
+    if (!list?.classList.contains('open') || !addCommodityState.results.length) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      addCommodityState.focusIdx = Math.min(addCommodityState.focusIdx + 1, addCommodityState.results.length - 1);
+      renderAddCommodityPanel();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      addCommodityState.focusIdx = Math.max(addCommodityState.focusIdx - 1, 0);
+      renderAddCommodityPanel();
+    } else if (e.key === 'Enter' && addCommodityState.focusIdx >= 0) {
+      e.preventDefault();
+      loadAddCommodityPreview(addCommodityState.results[addCommodityState.focusIdx]);
+    } else if (e.key === 'Escape') {
+      if (addCommodityState.selected) {
+        addCommodityState.selected = null;
+        addCommodityState.preview = null;
+      } else {
+        addCommodityState.query = '';
+        addCommodityState.results = [];
+      }
+      renderAddCommodityPanel();
+    }
+  });
+  document.addEventListener('click', e => {
+    const opt = e.target.closest('[data-commodity-idx]');
+    if (opt) {
+      const idx = Number(opt.dataset.commodityIdx);
+      const entry = addCommodityState.results[idx];
+      if (entry) loadAddCommodityPreview(entry);
+      return;
+    }
+    if (e.target.closest('[data-add-commodity-confirm]')) {
+      addSelectedCommodityToWatchlist();
+      return;
+    }
+    if (e.target.closest('[data-add-commodity-cancel]')) {
+      addCommodityState.selected = null;
+      addCommodityState.preview = null;
+      renderAddCommodityPanel();
+      return;
+    }
+    const panel = document.getElementById('add-commodity-panel');
+    if (panel && !panel.contains(e.target) && e.target.id !== 'add-commodity-input') {
+      const list = document.getElementById('add-commodity-list');
+      if (list?.classList.contains('open') && !addCommodityState.selected) {
+        addCommodityState.results = [];
+        renderAddCommodityPanel();
+      }
+    }
+  });
+}
+
 function renderCust(section) {
   const el = document.getElementById(section.custId);
   if (!el) return;
-  el.innerHTML = section.items.map(item => {
+  el.innerHTML = section.items.map((item, idx) => {
     const k = getItemKey(item);
     const on = isOn(item);
     const lbl = item.ticker || `${item.from}/${item.to}`;
-    return `<button type="button" class="sym-pill ${on ? 'on' : 'off'}" data-sym-key="${k}" data-section-key="${section.key}">${lbl}</button>`;
+    return `<div class="sym-pill-row">
+      <button type="button" class="sym-pill ${on ? 'on' : 'off'}" data-sym-key="${k}" data-section-key="${section.key}">${lbl}</button>
+      <button type="button" class="sym-move-btn" title="Move left" aria-label="Move ${escapeHtml(lbl)} left"
+        data-move-key="${k}" data-section-key="${section.key}" data-move-dir="-1"${idx === 0 ? ' disabled' : ''}>←</button>
+      <button type="button" class="sym-move-btn" title="Move right" aria-label="Move ${escapeHtml(lbl)} right"
+        data-move-key="${k}" data-section-key="${section.key}" data-move-dir="1"${idx === section.items.length - 1 ? ' disabled' : ''}>→</button>
+    </div>`;
   }).join('');
   if (section.key === 'eq' && el.style.display !== 'none') renderAddStockPanel();
   else document.getElementById('add-stock-panel')?.remove();
+  if (section.key === 'comm' && el.style.display !== 'none') renderAddCommodityPanel();
+  else document.getElementById('add-commodity-panel')?.remove();
 }
 
 function toggleCustomize(sectionKey) {
@@ -3465,6 +3779,14 @@ function toggleCustomize(sectionKey) {
       renderAddStockPanel();
     }
   }
+  if (sectionKey === 'comm') {
+    if (isOpen) {
+      resetAddCommodityPanel();
+      document.getElementById('add-commodity-panel')?.remove();
+    } else {
+      renderAddCommodityPanel();
+    }
+  }
 }
 
 async function toggleSym(key, sectionKey) {
@@ -3479,6 +3801,21 @@ async function toggleSym(key, sectionKey) {
   renderCust(section);
   if (isOverviewRef({ sectionKey, itemKey: key })) renderGlanceGrid();
   updateMarketStatus();
+}
+
+function moveSym(key, sectionKey, dir) {
+  const section = SECTIONS.find(s => s.key === sectionKey);
+  if (!section || !dir) return;
+  const ix = section.items.findIndex(i => getItemKey(i) === key);
+  if (ix < 0) return;
+  const to = ix + dir;
+  if (to < 0 || to >= section.items.length) return;
+  const [item] = section.items.splice(ix, 1);
+  section.items.splice(to, 0, item);
+  saveSectionOrderFor(section);
+  renderSectionGrid(section);
+  renderCust(section);
+  if (isOverviewRef({ sectionKey, itemKey: key })) renderGlanceGrid();
 }
 
 function buildSectionSourcesHtml(ex) {
@@ -5120,6 +5457,7 @@ function saveKey() {
 
 function wireUi() {
   wireAddStockPanel();
+  wireAddCommodityPanel();
   document.getElementById('api-banner')?.addEventListener('submit', e => {
     e.preventDefault();
     saveKey();
@@ -5243,6 +5581,12 @@ function wireUi() {
       toggleSym(pill.dataset.symKey, pill.dataset.sectionKey);
       return;
     }
+    const moveBtn = e.target.closest('[data-move-key][data-move-dir]');
+    if (moveBtn?.dataset.moveKey) {
+      const dir = Number(moveBtn.dataset.moveDir || 0);
+      moveSym(moveBtn.dataset.moveKey, moveBtn.dataset.sectionKey, dir);
+      return;
+    }
     const providerBtn = e.target.closest('.info-btn[data-provider]');
     if (providerBtn && !providerBtn.disabled) setProvider(providerBtn.dataset.provider);
   });
@@ -5278,8 +5622,12 @@ async function init() {
   wireUi();
   loadComparePrefs();
   loadVIS();
+  loadSectionOrder();
   loadCustomEquities();
+  loadCustomCommodities();
   syncEquitiesSection();
+  syncCommoditiesSection();
+  for (const section of SECTIONS) applySectionOrder(section);
   loadOverviewRefs();
   const saved = localStorage.getItem('av_key');
   if (saved && saved !== 'YOUR_API_KEY_HERE') {
