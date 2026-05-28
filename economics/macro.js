@@ -190,7 +190,8 @@ function cacheSet(key, data) {
 
 function cacheKeyForItem(item, section) {
   const k = getItemKey(item);
-  if (section.key === 'eq' || section.key === 'comm') return `${activeProvider}:q:${item.sym || k}`;
+  if (section.key === 'eq') return `${activeProvider}:q:${item.sym || k}`;
+  if (section.key === 'comm') return item.fredId ? `fred:comm:${item.fredId}` : `${activeProvider}:q:${item.sym || k}`;
   if (section.key === 'bond') return `b:${item.id}`;
   if (section.key === 'fx') return `${activeProvider}:fx:${item.from}:${item.to}`;
   if (section.key === 'crypto') return `cg:${item.sym}`;
@@ -605,7 +606,7 @@ function equitySymbolSet() {
 
 function commoditySymbolSet() {
   const s = new Set();
-  for (const item of [...COMMODITIES, ...CUSTOM_COMMODITIES]) s.add(item.sym);
+  for (const item of [...COMMODITIES, ...CUSTOM_COMMODITIES]) s.add(getItemKey(item));
   return s;
 }
 
@@ -727,40 +728,30 @@ function isValuationLive(itemOrId) {
 }
 
 const COMMODITIES = [
-  { sym: 'GC=F', label: 'Gold',        ticker: 'GC',   def: true,  dp: 2 },
-  { sym: 'SI=F', label: 'Silver',      ticker: 'SI',   def: true,  dp: 2 },
-  { sym: 'HG=F', label: 'LME Copper',  ticker: 'CU',   def: true,  dp: 2 },
-  { sym: 'CL=F', label: 'Oil (WTI)',   ticker: 'WTI',  def: true,  dp: 2 },
-  { sym: 'BZ=F', label: 'Brent Crude', ticker: 'BRENT', def: true,  dp: 2 },
-  { sym: 'TIO=F', label: 'Iron Ore',    ticker: 'IRON', def: false, dp: 2 },
-  { sym: 'NG=F', label: 'Nat. Gas',    ticker: 'NG',   def: true,  dp: 2 },
-  { sym: 'CPER', label: 'Copper (ETF)', ticker: 'CPER', def: false, dp: 2 },
-  { sym: 'WEAT', label: 'Wheat (ETF)',  ticker: 'WEAT', def: false, dp: 2 },
-  { sym: 'CORN', label: 'Corn (ETF)',   ticker: 'CORN', def: false, dp: 2 },
+  { id: 'spot-gold',    fredId: 'GOLDAMGBD228NLBM', label: 'Gold Spot',      ticker: 'XAU',   unit: 'USD/oz', def: true,  dp: 2 },
+  { id: 'spot-silver',  fredId: 'SLVPRUSD',         label: 'Silver Spot',    ticker: 'XAG',   unit: 'USD/oz', def: true,  dp: 3 },
+  { id: 'spot-copper',  fredId: 'PCOPPUSDM',        label: 'Copper Spot',    ticker: 'CU',    unit: 'USD/mt', def: true,  dp: 2 },
+  { id: 'spot-wti',     fredId: 'DCOILWTICO',       label: 'WTI Spot',       ticker: 'WTI',   unit: 'USD/bbl', def: true, dp: 2 },
+  { id: 'spot-brent',   fredId: 'DCOILBRENTEU',     label: 'Brent Spot',     ticker: 'BRENT', unit: 'USD/bbl', def: true, dp: 2 },
+  { id: 'spot-ironore', fredId: 'PIORECRUSDM',      label: 'Iron Ore Spot',  ticker: 'IRON',  unit: 'USD/dmtu', def: false, dp: 2 },
+  { id: 'spot-gas',     fredId: 'PNGASUSDM',        label: 'Natural Gas Spot', ticker: 'NG',  unit: 'USD/mmbtu', def: false, dp: 3 },
+  { id: 'spot-wheat',   fredId: 'PWHEAMTUSDM',      label: 'Wheat Spot',     ticker: 'WHEAT', unit: 'USD/mt', def: false, dp: 2 },
+  { id: 'spot-corn',    fredId: 'PMAIZMTUSDM',      label: 'Corn Spot',      ticker: 'CORN',  unit: 'USD/mt', def: false, dp: 2 },
 ];
 
 const COMMODITY_CATALOG = [
-  { sym: 'GC=F', label: 'Gold', ticker: 'GC' },
-  { sym: 'SI=F', label: 'Silver', ticker: 'SI' },
-  { sym: 'HG=F', label: 'Copper', ticker: 'CU' },
-  { sym: 'PL=F', label: 'Platinum', ticker: 'PL' },
-  { sym: 'PA=F', label: 'Palladium', ticker: 'PA' },
-  { sym: 'CL=F', label: 'Oil (WTI)', ticker: 'WTI' },
-  { sym: 'BZ=F', label: 'Brent Crude', ticker: 'BRENT' },
-  { sym: 'NG=F', label: 'Natural Gas', ticker: 'NG' },
-  { sym: 'RB=F', label: 'Gasoline (RBOB)', ticker: 'RBOB' },
-  { sym: 'HO=F', label: 'Heating Oil', ticker: 'HO' },
-  { sym: 'ZC=F', label: 'Corn Futures', ticker: 'CORN' },
-  { sym: 'ZW=F', label: 'Wheat Futures', ticker: 'WHEAT' },
-  { sym: 'ZS=F', label: 'Soybeans Futures', ticker: 'SOY' },
-  { sym: 'KC=F', label: 'Coffee Futures', ticker: 'COFFEE' },
-  { sym: 'SB=F', label: 'Sugar Futures', ticker: 'SUGAR' },
-  { sym: 'CC=F', label: 'Cocoa Futures', ticker: 'COCOA' },
-  { sym: 'CPER', label: 'Copper (ETF)', ticker: 'CPER' },
-  { sym: 'WEAT', label: 'Wheat (ETF)', ticker: 'WEAT' },
-  { sym: 'CORN', label: 'Corn (ETF)', ticker: 'CORN' },
-  { sym: 'DBA', label: 'Agriculture (ETF)', ticker: 'DBA' },
-  { sym: 'DBB', label: 'Base Metals (ETF)', ticker: 'DBB' },
+  { id: 'spot-gold', fredId: 'GOLDAMGBD228NLBM', label: 'Gold Spot', ticker: 'XAU', unit: 'USD/oz' },
+  { id: 'spot-silver', fredId: 'SLVPRUSD', label: 'Silver Spot', ticker: 'XAG', unit: 'USD/oz' },
+  { id: 'spot-copper', fredId: 'PCOPPUSDM', label: 'Copper Spot', ticker: 'CU', unit: 'USD/mt' },
+  { id: 'spot-wti', fredId: 'DCOILWTICO', label: 'WTI Spot', ticker: 'WTI', unit: 'USD/bbl' },
+  { id: 'spot-brent', fredId: 'DCOILBRENTEU', label: 'Brent Spot', ticker: 'BRENT', unit: 'USD/bbl' },
+  { id: 'spot-ironore', fredId: 'PIORECRUSDM', label: 'Iron Ore Spot', ticker: 'IRON', unit: 'USD/dmtu' },
+  { id: 'spot-gas', fredId: 'PNGASUSDM', label: 'Natural Gas Spot', ticker: 'NG', unit: 'USD/mmbtu' },
+  { id: 'spot-wheat', fredId: 'PWHEAMTUSDM', label: 'Wheat Spot', ticker: 'WHEAT', unit: 'USD/mt' },
+  { id: 'spot-corn', fredId: 'PMAIZMTUSDM', label: 'Corn Spot', ticker: 'CORN', unit: 'USD/mt' },
+  { id: 'spot-coffee', fredId: 'PCOFFOTMUSDM', label: 'Coffee Spot', ticker: 'COFFEE', unit: 'USD/lb' },
+  { id: 'spot-sugar', fredId: 'PSUGAISAUSDM', label: 'Sugar Spot', ticker: 'SUGAR', unit: 'USD/kg' },
+  { id: 'spot-cocoa', fredId: 'PCOCOUSDM', label: 'Cocoa Spot', ticker: 'COCOA', unit: 'USD/mt' },
 ];
 
 const FX_PAIRS = [
@@ -828,10 +819,10 @@ const SECTION_EXPLAINERS = {
   },
   comm: {
     title: 'Market & source',
-    market: 'Commodity futures (COMEX, NYMEX) and US-listed commodity ETF proxies.',
-    venue: 'Symbols like GC=F and CL=F are continuous/front-month futures on US derivatives exchanges; ETF tickers (CPER, WEAT) trade on NYSE Arca.',
-    source: 'Futures and ETF quotes via Yahoo / Google / Alpha Vantage — same provider stack as equities.',
-    detail: 'Futures prices reflect expected delivery months, not necessarily physical spot. Roll and contango can make continuous symbols differ from spot headlines.',
+    market: 'Physical commodity spot/reference market levels (metals, energy, and agricultural benchmarks).',
+    venue: 'Reference series rather than exchange-traded futures contracts. Units vary by commodity (e.g., USD/oz, USD/bbl, USD/mt).',
+    source: 'FRED commodity price series (daily/monthly reference observations).',
+    detail: 'These are spot/reference levels, not front-month futures. Update cadence depends on each source series and may be daily or monthly.',
   },
   bond: {
     title: 'Market & source',
@@ -870,7 +861,7 @@ const SECTIONS = [
   },
   {
     key: 'comm', gridId: 'commodities-grid', custId: 'cust-comm', items: COMMODITIES,
-    fetch: (item, force) => fetchQuote(item.sym, force),
+    fetch: (item, force) => fetchCommodity(item, force),
     card:  (item, d) => formatQuoteCard(item, d, 'comm'),
   },
   {
@@ -1211,13 +1202,13 @@ function equityCardInfo(item) {
 }
 
 function commodityCardInfo(item) {
-  const gf = googleFinanceUrlForItem(item, 'comm');
+  const unit = item.unit ? ` Unit: ${item.unit}.` : '';
   return {
     title: item.label,
-    summary: `${item.label} is a listed futures contract or commodity ETF proxy. Front-month / continuous symbols may differ from spot labels.`,
-    derived: 'Futures and ETF prices from the active quote provider; change vs previous session close.',
-    data: `Symbol: ${item.sym} (${item.ticker} on card).`,
-    sourceHtml: `${quoteProviderBlurb()}${gf ? ` ${infoLink('Google Finance', gf)}.` : ''}`,
+    summary: `${item.label} is a spot/reference commodity benchmark level, not a futures contract.`,
+    derived: 'Latest published FRED spot/reference value and change vs the prior observation.',
+    data: `FRED series: ${item.fredId}. Card ticker: ${item.ticker}.${unit}`,
+    sourceHtml: infoLink('FRED commodity series', `https://fred.stlouisfed.org/series/${item.fredId}`),
     formula: changeFormulaeBlurb('price'),
   };
 }
@@ -2097,6 +2088,30 @@ async function fetchFX(from, to, force = false) {
     if (result) cacheSet(key, result);
     return result;
   } catch { return null; }
+}
+
+async function fetchCommodity(item, force = false) {
+  if (item?.fredId) {
+    const key = `fred:comm:${item.fredId}`;
+    if (!force) {
+      const cached = cacheGet(key);
+      if (cached) return cached;
+    }
+    try {
+      const rows = await fetchFredSeriesRows(item.fredId, fredStartDate(5 * 365));
+      if (!rows?.length) return null;
+      const q = fredDailyQuoteFromRows(rows);
+      if (!q) return null;
+      const note = q.freshnessNote ? `${q.freshnessNote} · ${item.fredId}` : `FRED · ${item.fredId}`;
+      const result = { ...q, freshnessNote: note };
+      cacheSet(key, result);
+      return result;
+    } catch {
+      return null;
+    }
+  }
+  if (!item?.sym) return null;
+  return fetchQuote(item.sym, force);
 }
 
 function parseFredCsvRows(txt) {
@@ -3326,11 +3341,12 @@ function resetAddStockPanel() {
 
 function filterCommodityCatalog(query) {
   const q = query.trim().toLowerCase();
-  if (!q) return COMMODITY_CATALOG.filter(e => !commoditySymbolSet().has(e.sym)).slice(0, 24);
+  if (!q) return COMMODITY_CATALOG.filter(e => !commoditySymbolSet().has(e.id)).slice(0, 24);
   return COMMODITY_CATALOG.filter(e => {
-    if (commoditySymbolSet().has(e.sym)) return false;
-    return e.sym.toLowerCase().includes(q)
+    if (commoditySymbolSet().has(e.id)) return false;
+    return e.id.toLowerCase().includes(q)
       || e.label.toLowerCase().includes(q)
+      || e.fredId.toLowerCase().includes(q)
       || (e.ticker && e.ticker.toLowerCase().includes(q));
   }).slice(0, 24);
 }
@@ -3378,7 +3394,7 @@ async function loadAddCommodityPreview(entry) {
   addCommodityState.preview = null;
   addCommodityState.loading = true;
   renderAddCommodityPanel();
-  const d = await fetchQuote(entry.sym, false);
+  const d = await fetchCommodity(entry, false);
   addCommodityState.preview = d;
   addCommodityState.loading = false;
   renderAddCommodityPanel();
@@ -3387,11 +3403,12 @@ async function loadAddCommodityPreview(entry) {
 async function addSelectedCommodityToWatchlist() {
   const entry = addCommodityState.selected;
   if (!entry) return;
-  if (commoditySymbolSet().has(entry.sym)) {
-    VIS[entry.sym] = true;
+  const key = entry.id;
+  if (commoditySymbolSet().has(key)) {
+    VIS[key] = true;
     saveVIS();
     const section = SECTIONS.find(s => s.key === 'comm');
-    if (section && !DATA[entry.sym]) DATA[entry.sym] = await section.fetch({ sym: entry.sym }, false);
+    if (section && !DATA[key]) DATA[key] = await section.fetch(entry, false);
     renderSectionGrid(section);
     renderCust(section);
     resetAddCommodityPanel();
@@ -3399,9 +3416,11 @@ async function addSelectedCommodityToWatchlist() {
     return;
   }
   const item = {
-    sym: entry.sym,
+    id: entry.id,
+    fredId: entry.fredId,
     label: entry.label,
-    ticker: entry.ticker || entry.sym,
+    ticker: entry.ticker || entry.id,
+    unit: entry.unit || null,
     def: true,
     dp: 2,
     custom: true,
@@ -3409,11 +3428,11 @@ async function addSelectedCommodityToWatchlist() {
   CUSTOM_COMMODITIES.push(item);
   saveCustomCommodities();
   syncCommoditiesSection();
-  VIS[item.sym] = true;
+  VIS[item.id] = true;
   saveVIS();
   const section = SECTIONS.find(s => s.key === 'comm');
   const data = await section.fetch(item, false);
-  if (data) DATA[item.sym] = data;
+  if (data) DATA[item.id] = data;
   renderSectionGrid(section);
   renderCust(section);
   resetAddCommodityPanel();
@@ -3513,7 +3532,7 @@ function renderAddCommodityPanel() {
     : '';
   panel.innerHTML = `
     <span class="add-stock-label">Add commodity to watch</span>
-    <p class="add-stock-hint">Pick from supported commodity futures/ETFs and preview before adding.</p>
+    <p class="add-stock-hint">Pick from supported spot/reference commodity series and preview before adding.</p>
     <div class="add-stock-search-row">
       <input type="search" class="add-stock-input" id="add-commodity-input"
         placeholder="Search symbol or commodity…" autocomplete="off"
@@ -4140,7 +4159,7 @@ const TRADING_CLOCK_CENTRES = [
 const SECTION_MARKET_IDS = {
   eq: ['us_equity', 'asx', 'london', 'tokyo', 'hong_kong'],
   val: [],
-  comm: ['cme'],
+  comm: [],
   bond: ['us_equity'],
   fx: ['fx'],
   crypto: ['crypto'],
@@ -4488,7 +4507,7 @@ function updateMarketStatus() {
   updateSectionMarkets();
   if (sessionChanged) {
     for (const section of SECTIONS) {
-      if (section.key === 'eq' || section.key === 'comm') renderSectionGrid(section);
+      if (section.key === 'eq') renderSectionGrid(section);
     }
     renderGlanceGrid();
   }
@@ -4945,8 +4964,13 @@ async function fetchCryptoHistory(sym, days) {
 }
 
 async function fetchHistory(item, section, days) {
-  if (section.key === 'eq' || section.key === 'comm') {
+  if (section.key === 'eq') {
     return fetchYahooHistory(item.sym, days);
+  }
+  if (section.key === 'comm') {
+    if (item.fredId) return fetchFredHistory(item.fredId, days);
+    if (item.sym) return fetchYahooHistory(item.sym, days);
+    return null;
   }
   if (section.key === 'bond') {
     if (item.yTicker) return fetchYahooHistory(item.yTicker, days);
