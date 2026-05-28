@@ -4283,6 +4283,7 @@ const MARKET_VENUES = {
     tzShort: 'JST',
     open: [9, 0],
     close: [15, 0],
+    lunch: [[11, 30], [12, 30]],
     weekdays: [1, 2, 3, 4, 5],
     kind: 'cash',
   },
@@ -4292,6 +4293,7 @@ const MARKET_VENUES = {
     tzShort: 'HKT',
     open: [9, 30],
     close: [16, 0],
+    lunch: [[12, 0], [13, 0]],
     weekdays: [1, 2, 3, 4, 5],
     kind: 'cash',
   },
@@ -4350,6 +4352,59 @@ function tzParts(date, timeZone) {
 
 function mins(h, m) { return h * 60 + m; }
 
+function hmFromMins(total) {
+  return [Math.floor(total / 60), total % 60];
+}
+
+function venueLocalYmd(date, timeZone) {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date);
+}
+
+function addCalendarDaysYmd(ymd, days) {
+  const [y, m, d] = ymd.split('-').map(Number);
+  const t = new Date(Date.UTC(y, m - 1, d + days));
+  return `${t.getUTCFullYear()}-${String(t.getUTCMonth() + 1).padStart(2, '0')}-${String(t.getUTCDate()).padStart(2, '0')}`;
+}
+
+/** UTC instant for a wall-clock time on a calendar day in `timeZone`. */
+function utcAtVenueLocal(timeZone, ymd, hour, minute) {
+  const targetM = mins(hour, minute);
+  let lo = Date.parse(`${ymd}T00:00:00Z`) - 36 * 3600000;
+  let hi = lo + 72 * 3600000;
+  while (hi - lo > 1000) {
+    const mid = Math.floor((lo + hi) / 2);
+    const midYmd = venueLocalYmd(new Date(mid), timeZone);
+    const p = tzParts(new Date(mid), timeZone);
+    const midM = mins(p.h, p.m);
+    const cmp = midYmd < ymd ? -1 : midYmd > ymd ? 1 : (midM < targetM ? -1 : midM > targetM ? 1 : 0);
+    if (cmp <= 0) lo = mid;
+    else hi = mid;
+  }
+  return new Date(lo);
+}
+
+function weekdayForYmd(ymd, timeZone) {
+  return tzParts(utcAtVenueLocal(timeZone, ymd, 12, 0), timeZone).day;
+}
+
+/** Ordered session edges for one cash day (state after each edge). */
+function venueDayTransitions(venue) {
+  const openM = mins(venue.open[0], venue.open[1]);
+  const closeM = mins(venue.close[0], venue.close[1]);
+  const edges = [{ m: openM, open: true }];
+  if (venue.lunch) {
+    edges.push({ m: mins(venue.lunch[0][0], venue.lunch[0][1]), open: false });
+    edges.push({ m: mins(venue.lunch[1][0], venue.lunch[1][1]), open: true });
+  }
+  edges.push({ m: closeM, open: false });
+  return edges;
+}
+
 function formatCentreTime(date, timeZone) {
   return new Intl.DateTimeFormat('en-GB', {
     timeZone,
@@ -4388,7 +4443,7 @@ function tradingClockHtml(centre, now = new Date()) {
       <span class="trading-clock-day">${escapeHtml(day)}</span>
     </div>
     <div class="trading-clock-status">${escapeHtml(status)}</div>
-    ${countdown ? `<div class="trading-clock-countdown">${escapeHtml(countdown)}</div>` : ''}
+    ${countdown ? `<div class="trading-clock-countdown" aria-live="polite">${escapeHtml(countdown)}</div>` : ''}
   </div>`;
 }
 
@@ -4421,17 +4476,31 @@ function cashSessionOpen(venue, date = new Date()) {
   const t = tzParts(date, venue.tz);
   if (!venue.weekdays.includes(t.day)) return false;
   const nowM = mins(t.h, t.m);
-  return nowM >= mins(venue.open[0], venue.open[1]) && nowM < mins(venue.close[0], venue.close[1]);
+  const openM = mins(venue.open[0], venue.open[1]);
+  const closeM = mins(venue.close[0], venue.close[1]);
+  if (nowM < openM || nowM >= closeM) return false;
+  if (venue.lunch) {
+    const lunchStart = mins(venue.lunch[0][0], venue.lunch[0][1]);
+    const lunchEnd = mins(venue.lunch[1][0], venue.lunch[1][1]);
+    if (nowM >= lunchStart && nowM < lunchEnd) return false;
+  }
+  return true;
 }
 
-function findNextCashTransition(venue, from, toOpen) {
-  for (let i = 0; i <= 10 * 24 * 4; i++) {
-    const d = new Date(from.getTime() + i * 15 * 60_000);
-    const open = cashSessionOpen(venue, d);
-    if (toOpen && open) return d;
-    if (!toOpen && !open) {
-      const prev = new Date(d.getTime() - 15 * 60_000);
-      if (cashSessionOpen(venue, prev)) return d;
+function findNextCashTransition(venue, from, wantOpen) {
+  const startYmd = venueLocalYmd(from, venue.tz);
+  const fromLocal = tzParts(from, venue.tz);
+  const fromLocalM = mins(fromLocal.h, fromLocal.m);
+  const edges = venueDayTransitions(venue);
+  for (let offset = 0; offset < 10; offset++) {
+    const ymd = addCalendarDaysYmd(startYmd, offset);
+    if (!venue.weekdays.includes(weekdayForYmd(ymd, venue.tz))) continue;
+    for (const edge of edges) {
+      if (offset === 0 && edge.m <= fromLocalM) continue;
+      if (edge.open !== wantOpen) continue;
+      const [h, m] = hmFromMins(edge.m);
+      const at = utcAtVenueLocal(venue.tz, ymd, h, m);
+      if (at.getTime() > from.getTime() + 500) return at;
     }
   }
   return null;
@@ -4585,12 +4654,14 @@ function sessionVenueForItem(item, sectionKey) {
 
 function formatCountdown(target, now = new Date()) {
   const ms = target.getTime() - now.getTime();
-  if (ms <= 0) return '0m';
-  const totalSec = Math.floor(ms / 1000);
+  if (ms <= 0) return '0s';
+  const totalSec = Math.max(1, Math.ceil(ms / 1000));
   const h = Math.floor(totalSec / 3600);
   const m = Math.floor((totalSec % 3600) / 60);
-  if (h <= 0) return `${m}m`;
-  return `${h}h ${m}m`;
+  const s = totalSec % 60;
+  if (h > 0) return `${h}h ${m}m`;
+  if (m > 0) return `${m}m ${s}s`;
+  return `${s}s`;
 }
 
 function isSessionOpenForItem(item, sectionKey, now = new Date()) {
