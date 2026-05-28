@@ -414,6 +414,7 @@ function catalogEntryToEquity(entry) {
     sym: entry.sym,
     label: entry.label,
     ticker: entry.ticker || entry.sym.replace(/\.AX$/, '').split('-')[0],
+    exchange: entry.exchange || inferExchangeFromSym(entry.sym),
     def: true,
     dp: 2,
     custom: true,
@@ -421,18 +422,18 @@ function catalogEntryToEquity(entry) {
 }
 
 const EQUITIES = [
-  { sym: '^GSPC', label: 'S&P 500',           ticker: 'SPX',   def: true,  dp: 2 },
-  { sym: '^IXIC', label: 'NASDAQ Composite',  ticker: 'COMP',  def: true,  dp: 2 },
-  { sym: '^NDX',  label: 'NASDAQ 100',        ticker: 'NDX',   def: true,  dp: 2 },
-  { sym: '^DJI',  label: 'Dow Jones',         ticker: 'DJI',   def: true,  dp: 2 },
-  { sym: '^RUT',  label: 'Russell 2000',      ticker: 'RUT',   def: true,  dp: 2 },
-  { sym: '^AXJO', label: 'ASX 200',           ticker: 'AXJO',  def: true,  dp: 2 },
-  { sym: '^AORD', label: 'ASX All Ords',      ticker: 'AORD',  def: true,  dp: 2 },
-  { sym: 'EEM',   label: 'Emerg. Markets', ticker: 'EEM',   def: false, dp: 2 },
-  { sym: 'VGK',   label: 'Europe',         ticker: 'VGK',   def: false, dp: 2 },
-  { sym: 'EWJ',   label: 'Japan',          ticker: 'EWJ',   def: false, dp: 2 },
-  { sym: 'VIXY',  label: 'VIX (Proxy)',    ticker: 'VIXY',  def: false, dp: 2 },
-  { sym: 'ARKK',  label: 'ARK Innov.',     ticker: 'ARKK',  def: false, dp: 2 },
+  { sym: '^GSPC', label: 'S&P 500',           ticker: 'SPX',   exchange: 'US index',   def: true,  dp: 2 },
+  { sym: '^IXIC', label: 'NASDAQ Composite',  ticker: 'COMP',  exchange: 'NASDAQ',     def: true,  dp: 2 },
+  { sym: '^NDX',  label: 'NASDAQ 100',        ticker: 'NDX',   exchange: 'NASDAQ',     def: true,  dp: 2 },
+  { sym: '^DJI',  label: 'Dow Jones',         ticker: 'DJI',   exchange: 'NYSE',       def: true,  dp: 2 },
+  { sym: '^RUT',  label: 'Russell 2000',      ticker: 'RUT',   exchange: 'US index',   def: true,  dp: 2 },
+  { sym: '^AXJO', label: 'ASX 200',           ticker: 'AXJO',  exchange: 'ASX',        def: true,  dp: 2 },
+  { sym: '^AORD', label: 'ASX All Ords',      ticker: 'AORD',  exchange: 'ASX',        def: true,  dp: 2 },
+  { sym: 'EEM',   label: 'Emerg. Markets', ticker: 'EEM',   exchange: 'NYSE Arca',  def: false, dp: 2 },
+  { sym: 'VGK',   label: 'Europe',         ticker: 'VGK',   exchange: 'NYSE Arca',  def: false, dp: 2 },
+  { sym: 'EWJ',   label: 'Japan',          ticker: 'EWJ',   exchange: 'NYSE Arca',  def: false, dp: 2 },
+  { sym: 'VIXY',  label: 'VIX (Proxy)',    ticker: 'VIXY',  exchange: 'NYSE Arca',  def: false, dp: 2 },
+  { sym: 'ARKK',  label: 'ARK Innov.',     ticker: 'ARKK',  exchange: 'NYSE Arca',  def: false, dp: 2 },
 ];
 
 // FRED-based valuation / debt (GDP & debt levels in billions USD from FRED)
@@ -747,11 +748,88 @@ function formatQuotePrice(d, item, sectionKey) {
   return fmt(d.price, quoteDecimals(item, sectionKey));
 }
 
+const YAHOO_EXCHANGE_LABELS = {
+  NMS: 'NASDAQ',
+  NGM: 'NASDAQ',
+  NCM: 'NASDAQ',
+  NG: 'NASDAQ',
+  NasdaqGS: 'NASDAQ',
+  NasdaqGM: 'NASDAQ',
+  NasdaqCM: 'NASDAQ',
+  NYQ: 'NYSE',
+  NYSE: 'NYSE',
+  PCX: 'NYSE Arca',
+  BTS: 'NYSE Arca',
+  ARCX: 'NYSE Arca',
+  PNK: 'OTC',
+  ASE: 'NYSE American',
+  ASX: 'ASX',
+  AX: 'ASX',
+  LSE: 'LSE',
+  LON: 'LSE',
+  TSE: 'TSX',
+  TOR: 'TSX',
+  HKG: 'HKEX',
+  HKSE: 'HKEX',
+  FRA: 'Frankfurt',
+  PAR: 'Euronext Paris',
+  SWX: 'SIX',
+  INDEXSP: 'US index',
+  INDEXNASDAQ: 'NASDAQ',
+  INDEXDJX: 'NYSE',
+  INDEXASX: 'ASX',
+  INDEXCBOE: 'CBOE',
+  INDEXRUSSELL: 'US index',
+  NYSEARCA: 'NYSE Arca',
+  SNP: 'US index',
+};
+
+function inferExchangeFromSym(sym) {
+  if (!sym) return null;
+  const u = String(sym).toUpperCase();
+  if (u.endsWith('.AX')) return 'ASX';
+  if (u.endsWith('.L')) return 'LSE';
+  if (u.endsWith('.TO') || u.endsWith('.V')) return 'TSX';
+  if (u.endsWith('.HK')) return 'HKEX';
+  if (u.endsWith('.SS')) return 'SSE';
+  if (u.endsWith('.SZ')) return 'SZSE';
+  if (u.endsWith('.DE')) return 'XETRA';
+  if (u.endsWith('.PA')) return 'Euronext Paris';
+  if (u.startsWith('^')) return null;
+  if (u.includes('-')) return 'NYSE';
+  return null;
+}
+
+function formatYahooExchange(meta) {
+  if (!meta || typeof meta !== 'object') return null;
+  const full = meta.fullExchangeName;
+  const short = meta.exchangeName;
+  if (full && YAHOO_EXCHANGE_LABELS[full]) return YAHOO_EXCHANGE_LABELS[full];
+  if (short && YAHOO_EXCHANGE_LABELS[short]) return YAHOO_EXCHANGE_LABELS[short];
+  if (full) {
+    const cleaned = String(full)
+      .replace(/^Nasdaq/i, 'NASDAQ')
+      .replace(/Stock Exchange/i, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (cleaned) return cleaned;
+  }
+  return short || null;
+}
+
+function resolveEquityExchange(item, d) {
+  if (item?.exchange) return item.exchange;
+  if (d?.exchangeLabel) return d.exchangeLabel;
+  return inferExchangeFromSym(item?.sym);
+}
+
 function formatQuoteCard(item, d, sectionKey) {
   const quoteDp = quoteDecimals(item, sectionKey);
+  const exchangeLabel = sectionKey === 'eq' ? resolveEquityExchange(item, d) : null;
   return {
     ticker: item.ticker,
     label: item.label,
+    exchangeLabel,
     price: formatQuotePrice(d, item, sectionKey),
     change: d ? d.change : null,
     pct: d ? d.pct : null,
@@ -851,6 +929,7 @@ function changeFormulaeBlurb(kind = 'price') {
 function equityCardInfo(item) {
   const sym = item.sym || item.ticker;
   const gf = googleFinanceUrlForItem(item, 'eq');
+  const venue = resolveEquityExchange(item, DATA[sym]);
   const src = gf
     ? `${quoteProviderBlurb()} Chart: ${infoLink('Google Finance', gf)}.`
     : quoteProviderBlurb();
@@ -858,7 +937,7 @@ function equityCardInfo(item) {
     title: item.label,
     summary: `${item.label} tracks the listed index or ETF. It is a market-price benchmark, not a valuation ratio.`,
     derived: 'Latest price and day-over-day change from your selected quote provider. “As of” uses the provider timestamp in UTC when available.',
-    data: `Yahoo symbol: ${sym}. Card ticker: ${item.ticker}.`,
+    data: `Yahoo symbol: ${sym}. Card ticker: ${item.ticker}.${venue ? ` Exchange: ${venue}.` : ''}`,
     sourceHtml: src,
     formula: changeFormulaeBlurb('price'),
   };
@@ -1130,8 +1209,12 @@ function renderCard(meta, delay = 0) {
         </svg>
       </button>`;
   const actions = `<div class="card-actions">${infoBtn}${chartBtn}${refreshBtn}</div>`;
+  const venueLine = meta.exchangeLabel
+    ? `<div class="card-venue">${escapeHtml(meta.exchangeLabel)}</div>`
+    : '';
   const mainInner = `
       <div class="card-ticker">${escapeHtml(meta.ticker)}</div>
+      ${venueLine}
       <div class="card-name">${escapeHtml(meta.label)}</div>
       <div class="card-price">${priceStr}</div>
       <div class="card-change">
@@ -1437,7 +1520,8 @@ function parseYahooChart(d) {
   const change = pointsChange(price, prevClose);
   const pct = pctChange(price, prevClose);
   const asOfUtc = meta.regularMarketTime ? meta.regularMarketTime * 1000 : Date.now();
-  return attachFreshness({ price, change, pct, asOfUtc }, 'live', {
+  const exchangeLabel = formatYahooExchange(meta);
+  return attachFreshness({ price, change, pct, asOfUtc, exchangeLabel }, 'live', {
     note: meta.regularMarketTime ? null : 'quote time unavailable',
   });
 }
@@ -1573,8 +1657,12 @@ async function googleFinanceQuote(sym) {
     const q = html ? parseGoogleFinanceHtml(html, meta.ticker, meta.exchange) : null;
     if (!q) return null;
     const normalized = normalizeCBOEYieldQuote(sym, q);
+    const gfMeta = resolveGoogleMeta(sym);
+    const exchangeLabel = gfMeta?.exchange
+      ? (YAHOO_EXCHANGE_LABELS[gfMeta.exchange] || gfMeta.exchange)
+      : null;
     return attachFreshness(
-      { ...normalized, asOfUtc: Date.now() },
+      { ...normalized, asOfUtc: Date.now(), exchangeLabel },
       'live',
       { note: 'Google Finance' },
     );
@@ -1680,11 +1768,13 @@ async function avQuote(sym) {
   if (d.Note || d.Information) throw new Error('Rate limit');
   const q = d['Global Quote'];
   if (!q || !q['05. price']) return null;
+  const exchangeLabel = q['04. exchange'] ? String(q['04. exchange']).trim() : null;
   return attachFreshness({
     price: parseFloat(q['05. price']),
     change: parseFloat(q['09. change']),
     pct: parseFloat(q['10. change percent'].replace('%', '')),
     asOfUtc: Date.now(),
+    exchangeLabel,
   }, 'live');
 }
 
@@ -2809,6 +2899,8 @@ async function yahooStockSearch(query) {
         sym: x.symbol,
         label: x.shortname || x.longname || x.symbol,
         ticker: x.symbol.replace(/\.AX$/, '').split('-')[0],
+        exchange: formatYahooExchange({ exchangeName: x.exchange, fullExchangeName: x.exchDisp })
+          || inferExchangeFromSym(x.symbol),
       }))
       .slice(0, 12);
   } catch {
@@ -2926,7 +3018,11 @@ function renderAddStockPanel() {
         ${results.map((e, i) => `
           <button type="button" class="add-stock-option${i === addStockState.focusIdx ? ' focused' : ''}"
             role="option" data-stock-idx="${i}">
-            <span class="add-stock-option-ticker">${escapeHtml(e.ticker || e.sym)}</span>
+            <span class="add-stock-option-ticker">${escapeHtml(e.ticker || e.sym)}${
+              e.exchange || inferExchangeFromSym(e.sym)
+                ? ` <span class="add-stock-option-venue">${escapeHtml(e.exchange || inferExchangeFromSym(e.sym))}</span>`
+                : ''
+            }</span>
             <span class="add-stock-option-name">${escapeHtml(e.label)}</span>
           </button>`).join('')}
         ${listOpen && !results.length && addStockState.query.length >= 2 && !addStockState.loading
@@ -2937,6 +3033,9 @@ function renderAddStockPanel() {
       ${sel ? `
         <div class="add-stock-preview-meta">
           <div class="add-stock-preview-ticker">${escapeHtml(sel.ticker || sel.sym)}</div>
+          ${(sel.exchange || inferExchangeFromSym(sel.sym))
+    ? `<div class="add-stock-preview-venue">${escapeHtml(sel.exchange || inferExchangeFromSym(sel.sym))}</div>`
+    : ''}
           <div class="add-stock-preview-name">${escapeHtml(sel.label)}</div>
           <div class="add-stock-preview-quote ${previewCls}">${
             addStockState.loading ? 'Loading quote…' : escapeHtml(formatPreviewQuote(addStockState.preview))

@@ -252,6 +252,16 @@
     margin-bottom: 2px;
   }
 
+  .card-venue {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.58rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
   .card-name {
     font-size: 0.8rem;
     font-weight: 600;
@@ -779,6 +789,11 @@
     color: var(--accent);
     letter-spacing: 0.06em;
   }
+  .add-stock-option-venue {
+    color: var(--muted);
+    font-weight: 400;
+    letter-spacing: 0.04em;
+  }
   .add-stock-option-name {
     color: var(--muted);
     font-size: 0.68rem;
@@ -802,6 +817,14 @@
   .add-stock-preview.open { display: flex; }
 
   .add-stock-preview-meta { min-width: 0; }
+  .add-stock-preview-venue {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
   .add-stock-preview-ticker {
     font-family: 'DM Mono', monospace;
     font-size: 0.62rem;
