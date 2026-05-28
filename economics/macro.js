@@ -643,6 +643,9 @@ const VALUATION = [
   { id: 'us-gdp',       label: 'US GDP',            ticker: 'GDP', def: true  },
   { id: 'public-debt',  label: 'US Public Debt',    ticker: 'PUB', def: true  },
   { id: 'private-debt', label: 'US Private Debt',   ticker: 'PRV', def: true  },
+  { id: 'au-gdp',       label: 'AU GDP',            ticker: 'A-GDP', def: true  },
+  { id: 'au-public-debt',  label: 'AU Public Debt',  ticker: 'A-PUB', def: true  },
+  { id: 'au-private-debt', label: 'AU Private Debt', ticker: 'A-PRV', def: true  },
   // Futures / leverage (live via hub /economics/proxy/valuation)
   {
     id: 'margin-debt',
@@ -1294,6 +1297,27 @@ function valuationCardInfo(item) {
       sourceHtml: infoLink('FRED Z.1', fred),
       formula: 'Private debt % GDP = ((TCMDO − FGSDODNS) / 1000) / GDP × 100',
     },
+    'au-gdp': {
+      summary: 'Australian nominal gross domestic product — total current-price output of the Australian economy.',
+      derived: 'Latest quarterly nominal GDP from FRED IMF series, displayed in billions of AUD.',
+      data: 'FRED NGDPSAXDCAUQ (millions of domestic currency).',
+      sourceHtml: infoLink('FRED / IMF', fred),
+      formula: 'AU GDP (A$B) = NGDPSAXDCAUQ / 1000',
+    },
+    'au-public-debt': {
+      summary: 'Australian general government gross debt as a percent of GDP.',
+      derived: 'Latest IMF World Economic Outlook reading from FRED (annual % of GDP).',
+      data: 'FRED GGGDTAAUA188N (% of GDP, annual).',
+      sourceHtml: infoLink('FRED / IMF WEO', fred),
+      formula: changeFormulaeBlurb('ratio'),
+    },
+    'au-private-debt': {
+      summary: 'Australian private non-financial sector credit as a percent of GDP.',
+      derived: 'Latest BIS private credit to non-financial sector (% of GDP), adjusted for breaks.',
+      data: 'FRED QAUPAM770A (% of GDP, quarterly).',
+      sourceHtml: infoLink('FRED / BIS', fred),
+      formula: changeFormulaeBlurb('ratio'),
+    },
     'margin-debt': {
       summary: 'FINRA aggregate debit balances in customer securities margin accounts — a proxy for stock-market leverage and speculative demand.',
       derived: 'Latest month vs prior month from FINRA margin statistics (fallback: Fed Z.1 broker-dealer margin receivables).',
@@ -1806,6 +1830,14 @@ function formatAudChange(changeBillions) {
   return `${sign(v)}${body}`;
 }
 
+function formatAudCompact(billions) {
+  if (billions == null || Number.isNaN(billions)) return null;
+  const abs = Math.abs(billions);
+  if (abs >= 1000) return `A$${(billions / 1000).toFixed(2)}T`;
+  if (abs >= 1) return `A$${billions.toFixed(1)}B`;
+  return `A$${(billions * 1000).toFixed(0)}M`;
+}
+
 // ── Google Finance (unofficial — quote HTML scrape) ────────────────
 const GOOGLE_FINANCE_BASE = {
   '^GSPC':  { path: '.INX:INDEXSP',     ticker: '.INX',  exchange: 'INDEXSP' },
@@ -2098,7 +2130,7 @@ async function fetchCommodity(item, force = false) {
       if (cached) return cached;
     }
     try {
-      const rows = await fetchFredSeriesRows(item.fredId, fredStartDate(5 * 365));
+      const rows = await proxyThrottle(() => fetchFredSeriesRows(item.fredId, fredStartDate(5 * 365)));
       if (!rows?.length) return null;
       const q = fredDailyQuoteFromRows(rows);
       if (!q) return null;
@@ -2516,6 +2548,42 @@ function fetchPrivateDebtCurrent(fred) {
   }, 'estimated', { estimated: true });
 }
 
+function fetchAuGdpCurrent(fred) {
+  const rows = sortedFredRows(fred.NGDPSAXDCAUQ);
+  if (!rows.length) return null;
+  const last = rows[rows.length - 1];
+  const prev = rows.length > 1 ? rows[rows.length - 2] : null;
+  const price = last.v / 1000;
+  const prevPrice = prev ? prev.v / 1000 : null;
+  return attachFreshness({
+    price,
+    change: prevPrice != null ? pointsChange(price, prevPrice) : null,
+    pct: prevPrice != null ? pctChange(price, prevPrice) : null,
+    asOfUtc: fredDateToUtc(last.date),
+  }, 'quarterly', { note: quarterLabelFromFredDate(last.date) });
+}
+
+function quoteFromPercentRows(rows, kind = 'quarterly', note = null) {
+  if (!rows?.length) return null;
+  const sorted = sortedFredRows(rows);
+  const last = sorted[sorted.length - 1];
+  const prev = sorted.length > 1 ? sorted[sorted.length - 2] : null;
+  return attachFreshness({
+    price: last.v,
+    change: prev ? pointsChange(last.v, prev.v) : null,
+    pct: prev ? pctChange(last.v, prev.v) : null,
+    asOfUtc: fredDateToUtc(last.date),
+  }, kind, { note: note || (kind === 'quarterly' ? quarterLabelFromFredDate(last.date) : null) });
+}
+
+function fetchAuPublicDebtCurrent(fred) {
+  return quoteFromPercentRows(fred.GGGDTAAUA188N, 'reference', 'Annual');
+}
+
+function fetchAuPrivateDebtCurrent(fred) {
+  return quoteFromPercentRows(fred.QAUPAM770A, 'quarterly');
+}
+
 function federalDebtBillions(fred) {
   const row = latestFredRow(fred.FGSDODNS);
   return row ? row.v / 1000 : null;
@@ -2681,7 +2749,7 @@ async function fetchFredSeriesRows(seriesId, start) {
   return txt ? parseFredCsvRows(txt) : null;
 }
 
-const VAL_FRED_IDS = ['GDP', FRED_GDP_NOWCAST_SERIES, 'NCBEILQ027S', 'GFDEGDQ188S', 'GFDEBTN', 'TCMDO', 'FGSDODNS'];
+const VAL_FRED_IDS = ['GDP', FRED_GDP_NOWCAST_SERIES, 'NCBEILQ027S', 'GFDEGDQ188S', 'GFDEBTN', 'TCMDO', 'FGSDODNS', 'NGDPSAXDCAUQ', 'GGGDTAAUA188N', 'QAUPAM770A'];
 const VAL_FRED_MONTHLY_IDS = [FRED_TREASURY_MV_SERIES];
 /** Minimum FRED series required before caching or showing valuation ratios. */
 const VAL_FRED_REQUIRED_IDS = ['GDP', 'NCBEILQ027S'];
@@ -2862,6 +2930,12 @@ async function fetchValuation(metricId, force = false) {
       result = fetchPublicDebtCurrent(fred);
     } else if (metricId === 'private-debt') {
       result = fetchPrivateDebtCurrent(fred);
+    } else if (metricId === 'au-gdp') {
+      result = fetchAuGdpCurrent(fred);
+    } else if (metricId === 'au-public-debt') {
+      result = fetchAuPublicDebtCurrent(fred);
+    } else if (metricId === 'au-private-debt') {
+      result = fetchAuPrivateDebtCurrent(fred);
     }
     if (result) cacheSet(key, result);
     return result;
@@ -3040,6 +3114,11 @@ function collectCardMetas(section, items) {
         price = formatUsdCompact(d?.price);
         extra = `<div class="yield-extra"><span class="spread-label">Series</span>
           <span class="spread-val buffett-fair">Nominal GDP (FRED)</span></div>`;
+      } else if (item.id === 'au-gdp') {
+        isAud = true;
+        price = formatAudCompact(d?.price);
+        extra = `<div class="yield-extra"><span class="spread-label">Series</span>
+          <span class="spread-val buffett-fair">Nominal GDP (FRED)</span></div>`;
       } else if (item.id === 'buffett') {
         isRatio = true;
         price = formatRatioPrice(d, 0);
@@ -3056,6 +3135,11 @@ function collectCardMetas(section, items) {
         extra += debtRatioExtraHtml(d);
         extra += `<div class="yield-extra"><span class="spread-label">Measure</span>
           <span class="spread-val buffett-fair">% of GDP (est.)</span></div>`;
+      } else if (item.id === 'au-public-debt' || item.id === 'au-private-debt') {
+        isRatio = true;
+        price = formatRatioPrice(d, 1);
+        extra += `<div class="yield-extra"><span class="spread-label">Measure</span>
+          <span class="spread-val buffett-fair">% of GDP</span></div>`;
       } else {
         isRatio = true;
         price = formatRatioPrice(d, 1);
@@ -4208,6 +4292,9 @@ function tradingClockHtml(centre, now = new Date()) {
   const time = formatCentreTime(now, venue.tz);
   const day = formatCentreWeekday(now, venue.tz);
   const status = state.open ? 'Open' : 'Closed';
+  const countdown = state.nextAt
+    ? `${state.open ? 'Closes' : 'Opens'} in ${formatCountdown(state.nextAt, now)}`
+    : '';
   return `<div class="trading-clock ${state.open ? 'open' : 'closed'}" title="${escapeHtml(state.hours)} · ${escapeHtml(state.detail)}">
     <div class="trading-clock-head">
       <span class="dot ${state.open ? 'open' : 'closed'}" aria-hidden="true"></span>
@@ -4219,6 +4306,7 @@ function tradingClockHtml(centre, now = new Date()) {
       <span class="trading-clock-day">${escapeHtml(day)}</span>
     </div>
     <div class="trading-clock-status">${escapeHtml(status)}</div>
+    ${countdown ? `<div class="trading-clock-countdown">${escapeHtml(countdown)}</div>` : ''}
   </div>`;
 }
 
@@ -4275,13 +4363,13 @@ function evaluateCashVenue(venue, now = new Date()) {
     const detail = closeAt
       ? `Open · closes ${formatClock(closeAt, venue.tz)}`
       : `Open · ${hours}`;
-    return { open: true, detail, hours };
+    return { open: true, detail, hours, nextAt: closeAt || null };
   }
   const openAt = findNextCashTransition(venue, now, true);
   const detail = openAt
     ? `Closed · opens ${formatClock(openAt, venue.tz)}`
     : `Closed · ${hours}`;
-  return { open: false, detail, hours };
+  return { open: false, detail, hours, nextAt: openAt || null };
 }
 
 /** CME Globex: Sun 17:00 – Fri 16:00 CT; daily halt 16:00–17:00 CT. */
@@ -4321,6 +4409,7 @@ function evaluateCmeGlobex(now = new Date()) {
         ? `Maintenance · reopens ${formatClock(reopen, 'America/Chicago')}`
         : 'Maintenance · 16:00–17:00 CT',
       hours,
+      nextAt: reopen || null,
     };
   }
   if (cmeGlobexOpen(now)) {
@@ -4329,6 +4418,7 @@ function evaluateCmeGlobex(now = new Date()) {
       open: true,
       detail: closeAt ? `Open · closes ${formatClock(closeAt, 'America/Chicago')}` : `Open · ${hours}`,
       hours,
+      nextAt: closeAt || null,
     };
   }
   const openAt = findNextGlobexTransition(now, true);
@@ -4336,6 +4426,7 @@ function evaluateCmeGlobex(now = new Date()) {
     open: false,
     detail: openAt ? `Closed · opens ${formatClock(openAt, 'America/Chicago')}` : `Closed · ${hours}`,
     hours,
+    nextAt: openAt || null,
   };
 }
 
@@ -4370,6 +4461,7 @@ function evaluateFxSession(now = new Date()) {
       open: true,
       detail: closeAt ? `Open · closes ${formatClock(closeAt, 'America/New_York')}` : `Open · ${hours}`,
       hours,
+      nextAt: closeAt || null,
     };
   }
   const openAt = findNextFxTransition(now, true);
@@ -4377,6 +4469,7 @@ function evaluateFxSession(now = new Date()) {
     open: false,
     detail: openAt ? `Closed · opens ${formatClock(openAt, 'America/New_York')}` : `Closed · ${hours}`,
     hours,
+    nextAt: openAt || null,
   };
 }
 
@@ -4385,6 +4478,7 @@ function evaluateCryptoSession() {
     open: true,
     detail: 'Open · 24/7',
     hours: 'Always trading',
+    nextAt: null,
   };
 }
 
@@ -4399,12 +4493,22 @@ function evaluateVenue(venueId, now = new Date()) {
 
 /** Cash/Globex venue for session-aware quote cards (eq / comm). */
 function sessionVenueForItem(item, sectionKey) {
-  if (sectionKey === 'comm') return 'cme';
+  if (sectionKey === 'comm') return null;
   if (sectionKey !== 'eq') return null;
   const sym = String(item?.sym || '').toUpperCase();
   const ex = item?.exchange || inferExchangeFromSym(item?.sym);
   if (ex === 'ASX' || sym.endsWith('.AX') || sym === '^AXJO' || sym === '^AORD') return 'asx';
   return 'us_equity';
+}
+
+function formatCountdown(target, now = new Date()) {
+  const ms = target.getTime() - now.getTime();
+  if (ms <= 0) return '0m';
+  const totalSec = Math.floor(ms / 1000);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  if (h <= 0) return `${m}m`;
+  return `${h}h ${m}m`;
 }
 
 function isSessionOpenForItem(item, sectionKey, now = new Date()) {
@@ -5009,6 +5113,12 @@ async function fetchValuationHistory(metricId, days) {
   } else if (metricId === 'private-debt') {
     const ratios = buildPrivateDebtRatios(fred.TCMDO, fred.FGSDODNS, fred.GDP);
     series = ratios?.map(r => ({ t: r.t, v: r.ratio })) ?? null;
+  } else if (metricId === 'au-gdp') {
+    series = fred.NGDPSAXDCAUQ?.map(r => ({ t: new Date(r.date).getTime(), v: r.v / 1000 })) ?? null;
+  } else if (metricId === 'au-public-debt') {
+    series = fred.GGGDTAAUA188N?.map(r => ({ t: new Date(r.date).getTime(), v: r.v })) ?? null;
+  } else if (metricId === 'au-private-debt') {
+    series = fred.QAUPAM770A?.map(r => ({ t: new Date(r.date).getTime(), v: r.v })) ?? null;
   }
 
   series = sliceSeriesForChart(series, days);
@@ -5054,12 +5164,14 @@ function buildChartSvg(series, opts = {}) {
   const pctDp = opts.pctDp ?? dp;
   const fmtV = v => {
     if (opts.usdBillions) return formatUsdCompact(v) || '–';
+    if (opts.audBillions) return formatAudCompact(v) || '–';
     if (isPercent) return `${v.toFixed(pctDp)}%`;
     return fmt(v, dp);
   };
   const fmtChgAbs = v => {
     if (opts.isYield || opts.isRatio) return `${Math.abs(v).toFixed(pctDp)} pp`;
     if (opts.usdBillions) return formatUsdCompact(Math.abs(v)) || '–';
+    if (opts.audBillions) return formatAudCompact(Math.abs(v)) || '–';
     if (isPercent) return `${Math.abs(v).toFixed(pctDp)}%`;
     return fmt(Math.abs(v), dp);
   };
@@ -5103,6 +5215,9 @@ function buildChartSvg(series, opts = {}) {
 function chartOpts(item, section) {
   if (section.key === 'val' && item.id === 'us-gdp') {
     return { isPercent: false, usdBillions: true, dp: 2, quarterlyNote: true };
+  }
+  if (section.key === 'val' && item.id === 'au-gdp') {
+    return { isPercent: false, audBillions: true, dp: 2, quarterlyNote: true };
   }
   if (section.key === 'val') {
     const pctDp = item.id === 'buffett' ? 0 : 1;
