@@ -99,6 +99,78 @@
   .status-line.err { color: var(--dn); }
   .status-line.warn { color: var(--gold); }
 
+  /* ── Trading centre clocks ───────────────────────────── */
+  .trading-clocks-bar {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 1.1rem;
+    margin-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border);
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  .trading-clock {
+    flex: 0 0 auto;
+    min-width: 112px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .trading-clock.open { border-bottom: 2px solid var(--up); }
+  .trading-clock.closed { border-bottom: 2px solid var(--border2); opacity: 0.92; }
+  .trading-clock-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+  .trading-clock-city {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .trading-clock.open .trading-clock-city { color: var(--text); }
+  .trading-clock.closed .trading-clock-city { color: var(--muted); }
+  .trading-clock-time {
+    font-family: 'DM Mono', monospace;
+    font-size: 1.05rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--text);
+    line-height: 1.2;
+  }
+  .trading-clock-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+    margin-top: 3px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--dim);
+    letter-spacing: 0.04em;
+  }
+  .trading-clock-status {
+    margin-top: 4px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .trading-clock.open .trading-clock-status { color: var(--up); }
+  .trading-clock.closed .trading-clock-status { color: var(--dim); }
+
+  @media (min-width: 720px) {
+    .trading-clocks-bar {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      overflow: visible;
+    }
+    .trading-clock { min-width: 0; }
+  }
+
   .refresh-btn:disabled {
     opacity: 0.45;
     cursor: not-allowed;

@@ -3466,8 +3466,35 @@ const MARKET_VENUES = {
   asx: {
     label: 'ASX',
     tz: 'Australia/Sydney',
-    tzShort: 'Sydney',
+    tzShort: 'AEDT/AEST',
     open: [10, 0],
+    close: [16, 0],
+    weekdays: [1, 2, 3, 4, 5],
+    kind: 'cash',
+  },
+  london: {
+    label: 'LSE',
+    tz: 'Europe/London',
+    tzShort: 'GMT/BST',
+    open: [8, 0],
+    close: [16, 30],
+    weekdays: [1, 2, 3, 4, 5],
+    kind: 'cash',
+  },
+  tokyo: {
+    label: 'TSE',
+    tz: 'Asia/Tokyo',
+    tzShort: 'JST',
+    open: [9, 0],
+    close: [15, 0],
+    weekdays: [1, 2, 3, 4, 5],
+    kind: 'cash',
+  },
+  hong_kong: {
+    label: 'HKEX',
+    tz: 'Asia/Hong_Kong',
+    tzShort: 'HKT',
+    open: [9, 30],
     close: [16, 0],
     weekdays: [1, 2, 3, 4, 5],
     kind: 'cash',
@@ -3490,8 +3517,17 @@ const MARKET_VENUES = {
   },
 };
 
+/** Header clocks — major cash equity centres (always shown). */
+const TRADING_CLOCK_CENTRES = [
+  { id: 'us_equity', city: 'New York' },
+  { id: 'london', city: 'London' },
+  { id: 'tokyo', city: 'Tokyo' },
+  { id: 'asx', city: 'Sydney' },
+  { id: 'hong_kong', city: 'Hong Kong' },
+];
+
 const SECTION_MARKET_IDS = {
-  eq: ['us_equity', 'asx'],
+  eq: ['us_equity', 'asx', 'london', 'tokyo', 'hong_kong'],
   val: [],
   comm: ['cme'],
   bond: ['us_equity'],
@@ -3517,6 +3553,51 @@ function tzParts(date, timeZone) {
 }
 
 function mins(h, m) { return h * 60 + m; }
+
+function formatCentreTime(date, timeZone) {
+  return new Intl.DateTimeFormat('en-GB', {
+    timeZone,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  }).format(date);
+}
+
+function formatCentreWeekday(date, timeZone) {
+  return new Intl.DateTimeFormat('en-GB', {
+    timeZone,
+    weekday: 'short',
+  }).format(date);
+}
+
+function tradingClockHtml(centre, now = new Date()) {
+  const venue = MARKET_VENUES[centre.id];
+  if (!venue) return '';
+  const state = evaluateVenue(centre.id, now);
+  const time = formatCentreTime(now, venue.tz);
+  const day = formatCentreWeekday(now, venue.tz);
+  const status = state.open ? 'Open' : 'Closed';
+  return `<div class="trading-clock ${state.open ? 'open' : 'closed'}" title="${escapeHtml(state.hours)} · ${escapeHtml(state.detail)}">
+    <div class="trading-clock-head">
+      <span class="dot ${state.open ? 'open' : 'closed'}" aria-hidden="true"></span>
+      <span class="trading-clock-city">${escapeHtml(centre.city)}</span>
+    </div>
+    <div class="trading-clock-time" aria-live="off">${escapeHtml(time)}</div>
+    <div class="trading-clock-meta">
+      <span class="trading-clock-tz">${escapeHtml(venue.tzShort)}</span>
+      <span class="trading-clock-day">${escapeHtml(day)}</span>
+    </div>
+    <div class="trading-clock-status">${escapeHtml(status)}</div>
+  </div>`;
+}
+
+function updateTradingClocks() {
+  const el = document.getElementById('trading-clocks');
+  if (!el) return;
+  const now = new Date();
+  el.innerHTML = TRADING_CLOCK_CENTRES.map(c => tradingClockHtml(c, now)).join('');
+}
 
 function formatClock(date, timeZone, withUtc = true) {
   const local = new Intl.DateTimeFormat('en-GB', {
@@ -3748,10 +3829,21 @@ function updateMarketStatus() {
 }
 
 let marketHoursTimer = null;
+let tradingClockTimer = null;
+let marketHoursTick = 0;
+
 function startMarketHoursClock() {
   if (marketHoursTimer) clearInterval(marketHoursTimer);
+  if (tradingClockTimer) clearInterval(tradingClockTimer);
+  updateTradingClocks();
   updateMarketStatus();
-  marketHoursTimer = setInterval(updateMarketStatus, 60_000);
+  marketHoursTick = 0;
+  tradingClockTimer = setInterval(() => {
+    updateTradingClocks();
+    marketHoursTick += 1;
+    if (marketHoursTick % 60 === 0) updateMarketStatus();
+  }, 1000);
+  marketHoursTimer = tradingClockTimer;
 }
 
 // ── Date line ─────────────────────────────────────
