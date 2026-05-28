@@ -1329,10 +1329,10 @@ function valuationCardInfo(item) {
       formula: 'AU GDP (A$B) = NGDPSAXDCAUQ / 1000',
     },
     'au-public-debt': {
-      summary: 'Australian general government gross debt as a percent of GDP.',
-      derived: 'IMF % of GDP with estimated AUD level from aligned nominal GDP (ratio × GDP).',
-      data: 'FRED GGGDTAAUA188N (% of GDP, annual) · NGDPSAXDCAUQ (GDP, quarterly).',
-      sourceHtml: infoLink('FRED / IMF WEO', fred),
+      summary: 'Australian general government credit as a percent of GDP (BIS, break-adjusted).',
+      derived: 'BIS % of GDP with estimated AUD level from aligned nominal GDP (ratio × GDP).',
+      data: 'FRED QAUGAN770A (% of GDP, quarterly) · NGDPSAXDCAUQ (GDP, quarterly).',
+      sourceHtml: infoLink('FRED / BIS', fred),
       formula: 'Est. AUD = (% of GDP ÷ 100) × AU nominal GDP (A$B)',
     },
     'au-private-debt': {
@@ -2423,6 +2423,8 @@ function prevFredRow(rows) {
 const FRED_TREASURY_MV_SERIES = 'MVMTD027MNFRBDAL';
 const FRED_PUBLIC_DEBT_LEVEL_SERIES = 'GFDEBTN';
 const FRED_GDP_NOWCAST_SERIES = 'GDPNOW';
+/** BIS govt credit % GDP (quarterly). IMF GGGDTAAUA188N is annual and lags ~1y on FRED. */
+const FRED_AU_PUBLIC_DEBT_SERIES = 'QAUGAN770A';
 const BOND_SPREAD_FRED_IDS = ['DGS2', 'DGS10'];
 let BOND_SPREAD_FRED = null;
 let bondSpreadFredPromise = null;
@@ -2609,8 +2611,8 @@ function quoteFromPercentRows(rows, kind = 'quarterly', note = null) {
 }
 
 function fetchAuPublicDebtCurrent(fred) {
-  const rows = fred.GGGDTAAUA188N;
-  const quote = quoteFromPercentRows(rows, 'reference', 'Annual');
+  const rows = fred[FRED_AU_PUBLIC_DEBT_SERIES];
+  const quote = quoteFromPercentRows(rows, 'quarterly');
   const ratioDate = latestFredRow(rows)?.date;
   return attachAuDebtLevel(quote, fred, ratioDate);
 }
@@ -2829,7 +2831,7 @@ async function fetchFredSeriesRows(seriesId, start) {
   return txt ? parseFredCsvRows(txt) : null;
 }
 
-const VAL_FRED_IDS = ['GDP', FRED_GDP_NOWCAST_SERIES, 'NCBEILQ027S', 'GFDEGDQ188S', 'GFDEBTN', 'TCMDO', 'FGSDODNS', 'NGDPSAXDCAUQ', 'GGGDTAAUA188N', 'QAUPAM770A'];
+const VAL_FRED_IDS = ['GDP', FRED_GDP_NOWCAST_SERIES, 'NCBEILQ027S', 'GFDEGDQ188S', 'GFDEBTN', 'TCMDO', 'FGSDODNS', 'NGDPSAXDCAUQ', FRED_AU_PUBLIC_DEBT_SERIES, 'QAUPAM770A'];
 const VAL_FRED_MONTHLY_IDS = [FRED_TREASURY_MV_SERIES];
 /** Minimum FRED series required before caching or showing valuation ratios. */
 const VAL_FRED_REQUIRED_IDS = ['GDP', 'NCBEILQ027S'];
@@ -5269,7 +5271,7 @@ async function fetchValuationHistory(metricId, days) {
   } else if (metricId === 'au-gdp') {
     series = fred.NGDPSAXDCAUQ?.map(r => ({ t: new Date(r.date).getTime(), v: r.v / 1000 })) ?? null;
   } else if (metricId === 'au-public-debt') {
-    series = fred.GGGDTAAUA188N?.map(r => ({ t: new Date(r.date).getTime(), v: r.v })) ?? null;
+    series = fred[FRED_AU_PUBLIC_DEBT_SERIES]?.map(r => ({ t: new Date(r.date).getTime(), v: r.v })) ?? null;
   } else if (metricId === 'au-private-debt') {
     series = fred.QAUPAM770A?.map(r => ({ t: new Date(r.date).getTime(), v: r.v })) ?? null;
   }
