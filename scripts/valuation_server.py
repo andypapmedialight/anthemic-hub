@@ -11,7 +11,12 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 _SCRIPTS = os.path.dirname(os.path.abspath(__file__))
 if _SCRIPTS not in sys.path:
     sys.path.insert(0, _SCRIPTS)
-from valuation_fetch import METRICS, fetch_valuation_metric  # noqa: E402
+from valuation_fetch import (  # noqa: E402
+    METRICS,
+    fetch_freshness_api,
+    fetch_valuation_batch,
+    fetch_valuation_metric,
+)
 
 BIND = os.environ.get("BIND", "127.0.0.1")
 PORT = int(os.environ.get("PORT", "8071"))
@@ -30,6 +35,9 @@ class ValuationHandler(BaseHTTPRequestHandler):
         path = urllib.parse.urlparse(self.path).path
         if path == "/health":
             self._json({"ok": True})
+            return
+        if path == "/freshness":
+            self._json(fetch_freshness_api())
             return
         if path == "/valuation":
             self._valuation()
@@ -50,6 +58,18 @@ class ValuationHandler(BaseHTTPRequestHandler):
 
     def _valuation(self) -> None:
         qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        metrics_raw = qs.get("metrics", [""])[0]
+        if metrics_raw:
+            ids = [m.strip() for m in metrics_raw.split(",") if m.strip()]
+            bad = [m for m in ids if m not in ALLOWED_METRICS]
+            if bad:
+                self.send_error(400, f"Invalid metrics: {', '.join(bad)}")
+                return
+            try:
+                self._json({"metrics": fetch_valuation_batch(ids)})
+            except Exception as exc:
+                self._json({"error": str(exc)}, status=502)
+            return
         metric = qs.get("metric", [""])[0]
         if metric not in ALLOWED_METRICS:
             self.send_error(400, "Invalid metric")

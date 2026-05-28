@@ -93,6 +93,7 @@
     color: var(--dim);
     text-align: right;
   }
+  .status-line.loading { color: var(--accent); }
   .status-line.ok { color: var(--up); }
   .status-line.err { color: var(--dn); }
   .status-line.warn { color: var(--gold); }
@@ -177,6 +178,7 @@
   .card.dn  { border-bottom: 2px solid var(--dn); }
   .card.neu { border-bottom: 2px solid var(--border2); }
   .card--failed { border-color: #4a3030; }
+  .card--loading .card-info,
   .card--loading .card-chart,
   .card--loading .card-refresh { opacity: 1; pointer-events: none; }
   @media (prefers-reduced-motion: no-preference) {
@@ -184,6 +186,7 @@
   }
   .card--loading.card--link-wrap .card-main { pointer-events: none; }
 
+  .card-info,
   .card-chart,
   .card-refresh {
     position: static;
@@ -202,30 +205,37 @@
     transition: opacity 0.15s, border-color 0.15s, color 0.15s;
   }
 
+  .card:hover .card-info,
   .card:hover .card-chart,
   .card:hover .card-refresh,
+  .card--failed .card-info,
   .card--failed .card-chart,
   .card--failed .card-refresh,
+  .card-info:focus-visible,
   .card-chart:focus-visible,
   .card-refresh:focus-visible {
     opacity: 1;
   }
 
   @media (hover: none) {
+    .card-info,
     .card-chart,
     .card-refresh {
       opacity: 0.72;
     }
+    .card--failed .card-info,
     .card--failed .card-chart,
     .card--failed .card-refresh {
       opacity: 1;
     }
   }
+  .card--failed .card-info,
   .card--failed .card-chart,
   .card--failed .card-refresh {
     border-color: #6b4040;
     color: var(--dn);
   }
+  .card-info:hover,
   .card-chart:hover,
   .card-refresh:hover {
     border-color: var(--accent);
@@ -263,6 +273,7 @@
 
   .card-change {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 6px;
     font-family: 'DM Mono', monospace;
@@ -278,11 +289,17 @@
   .pill.up { background: var(--up-dim); color: var(--up); }
   .pill.dn { background: var(--dn-dim); color: var(--dn); }
   .pill.neu { background: var(--surface2); color: var(--muted); }
+  .pill--live { background: var(--up-dim); color: var(--up); }
+  .pill--est { background: rgba(251, 191, 36, 0.12); color: var(--gold); }
+  .pill--ref { background: var(--surface2); color: var(--muted); }
 
   .card-abs {
     color: var(--muted);
     font-size: 0.65rem;
   }
+  .card-abs--flat { color: var(--muted); }
+  .card-abs--up { color: var(--up); }
+  .card-abs--dn { color: var(--dn); }
 
   .card-asof {
     margin-top: 6px;
@@ -291,6 +308,7 @@
     color: var(--dim);
     line-height: 1.35;
   }
+  .card-asof--stale { color: var(--gold); }
 
   .card-loading {
     position: absolute;
@@ -318,6 +336,40 @@
     }
   }
 
+  .section-load-status {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .section--loading .section-load-status {
+      animation: sectionLoadPulse 1.4s ease-in-out infinite;
+    }
+  }
+  @keyframes sectionLoadPulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+  }
+
+  .section--loading .cards {
+    pointer-events: none;
+  }
+
+  .card--skeleton {
+    border-bottom-color: var(--border2);
+    min-height: 118px;
+  }
+  .card--skeleton .skeleton {
+    display: block;
+  }
+  .card--skeleton .sk-ticker { width: 32%; height: 8px; margin-bottom: 6px; }
+  .card--skeleton .sk-name { width: 72%; height: 11px; margin-bottom: 14px; }
+  .card--skeleton .sk-price { width: 58%; height: 20px; margin-bottom: 10px; }
+  .card--skeleton .sk-change { width: 42%; height: 10px; margin-bottom: 0; }
+
   /* ── Yield Curve Bar ──────────────────────────────────── */
   .yield-extra {
     margin-top: 8px;
@@ -334,6 +386,13 @@
     font-family: 'DM Mono', monospace;
     font-size: 0.62rem;
     font-weight: 500;
+  }
+  .spread-val--muted {
+    color: var(--dim);
+    font-weight: 400;
+  }
+  .yield-extra--sub .spread-val {
+    font-size: 0.58rem;
   }
   .yield-extra--usd {
     flex-wrap: wrap;
@@ -377,6 +436,7 @@
 
   /* ── API Key Banner ───────────────────────────────────── */
   .api-banner {
+    margin: 0;
     display: flex;
     align-items: center;
     gap: 12px;
@@ -437,21 +497,51 @@
     color: var(--dim);
   }
 
-  .market-status {
+  .market-hours,
+  .section-markets {
     display: flex;
-    align-items: center;
-    gap: 6px;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.62rem;
-    color: var(--muted);
+    flex-wrap: wrap;
+    gap: 0.35rem 0.65rem;
+    align-items: flex-start;
   }
+
+  .section-markets {
+    margin: -0.35rem 0 0.85rem;
+    padding: 0 0 0.15rem;
+  }
+
+  .market-hours-chip {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.45rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    line-height: 1.35;
+    color: var(--muted);
+    max-width: 100%;
+  }
+
+  .market-hours-chip.open .market-hours-name { color: var(--text); }
+  .market-hours-chip.closed .market-hours-name { color: var(--muted); }
+  .market-hours-detail { color: var(--dim); }
+
   .dot {
     width: 6px; height: 6px;
     border-radius: 50%;
     flex-shrink: 0;
+    align-self: center;
   }
   .dot.open { background: var(--up); box-shadow: 0 0 6px var(--up); }
   .dot.closed { background: var(--dim); }
+
+  @media (max-width: 720px) {
+    .footer .market-hours {
+      flex-direction: column;
+      align-items: flex-start;
+      width: 100%;
+    }
+  }
 
   /* ── Info Box ────────────────────────────────────────── */
   .info-box {
@@ -774,10 +864,6 @@
     outline-offset: 2px;
   }
 
-  .card--link-wrap:focus-within:has(.card-chart:focus-visible, .card-refresh:focus-visible) a.card-main:focus-visible {
-    outline: none;
-  }
-
   /* ── Chart modal ──────────────────────────────────────── */
   .chart-modal {
     position: fixed;
@@ -919,6 +1005,116 @@
 
   @media (max-width: 500px) {
     .chart-modal-stats { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* ── Indicator info modal ─────────────────────────────── */
+  .info-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  .info-modal[hidden] { display: none; }
+
+  .info-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(4px);
+  }
+
+  .info-modal-panel {
+    position: relative;
+    width: min(520px, 100%);
+    max-height: 88vh;
+    overflow: auto;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 12px;
+    padding: 1.1rem 1.2rem 1.25rem;
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .info-modal-panel { animation: fadeUp 0.25s ease both; }
+  }
+
+  .info-modal-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 0.75rem;
+  }
+
+  .info-modal-ticker {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    color: var(--dim);
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+
+  .info-modal-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -0.02em;
+  }
+
+  .info-modal-close {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .info-modal-close:hover { border-color: var(--accent); color: var(--text); }
+
+  .info-modal-block {
+    margin-bottom: 1rem;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .info-modal-block:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+
+  .info-modal-h3 {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin: 0 0 0.45rem;
+  }
+
+  .info-modal-text {
+    font-size: 0.78rem;
+    line-height: 1.55;
+    color: var(--muted);
+  }
+  .info-modal-text a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(59, 130, 246, 0.35);
+  }
+  .info-modal-text a:hover { color: var(--text); }
+
+  .card--link-wrap:focus-within:has(.card-info:focus-visible, .card-chart:focus-visible, .card-refresh:focus-visible) a.card-main:focus-visible {
+    outline: none;
   }
 
   /* ── Responsive ───────────────────────────────────────── */

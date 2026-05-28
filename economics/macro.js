@@ -3,8 +3,33 @@
 // ─────────────────────────────────────────────────
 let AV_KEY = 'YOUR_API_KEY_HERE';
 
-// ── Cache (5-min TTL) ─────────────────────────────
-const CACHE_TTL = 5 * 60 * 1000;
+function hasValidAvKey() {
+  return Boolean(AV_KEY && AV_KEY !== 'YOUR_API_KEY_HERE' && AV_KEY.length >= 8);
+}
+
+// ── Cache (tiered TTL) ────────────────────────────
+const CACHE_TTL_MS = {
+  market: 2 * 60 * 1000,
+  bond: 5 * 60 * 1000,
+  fx: 12 * 60 * 60 * 1000,
+  crypto: 2 * 60 * 1000,
+  valuation: 30 * 60 * 1000,
+  valuationLive: 6 * 60 * 60 * 1000,
+  default: 5 * 60 * 1000,
+};
+
+/** Max age before UI flags “may be stale”. */
+const STALE_AFTER_MS = {
+  live: 30 * 60 * 1000,
+  daily: 3 * 86400000,
+  quarterly: 120 * 86400000,
+  estimated: 45 * 86400000,
+  reference: Infinity,
+};
+
+let macroFreshnessSummary = null;
+/** FRED rows for valuation cards (quarterly change); charts load a longer series on demand. */
+const VAL_FRED_CARD_LOOKBACK_DAYS = 800;
 
 // ── Load throttle (per-browser, limits refresh spam / bots) ──
 const REFRESH_MIN_GAP_MS = 60 * 1000;
@@ -127,16 +152,135 @@ function checkCardRefreshThrottle(itemKey) {
 function recordCardRefreshThrottle(itemKey) {
   cardRefreshAt.set(itemKey, Date.now());
 }
+function cacheTierForKey(key) {
+  if (key.startsWith('val-live:') || key.startsWith('val-live-batch')) return 'valuationLive';
+  if (key.startsWith('val:') || key.startsWith('val:fred')) return 'valuation';
+  if (key.startsWith('b:')) return 'bond';
+  if (key.startsWith('cg:') || key.includes(':q:')) return 'market';
+  if (key.includes(':fx:')) return 'fx';
+  if (key.startsWith('yh:') || key.startsWith('fred:') || key.startsWith('fx:')) return 'valuation';
+  return 'default';
+}
+
+function cacheTtlForKey(key) {
+  return CACHE_TTL_MS[cacheTierForKey(key)] ?? CACHE_TTL_MS.default;
+}
+
 function cacheGet(key) {
   try {
     const raw = localStorage.getItem(`mmd:${key}`);
     if (!raw) return null;
     const { ts, data } = JSON.parse(raw);
-    return (Date.now() - ts < CACHE_TTL) ? data : null;
+    return (Date.now() - ts < cacheTtlForKey(key)) ? data : null;
   } catch { return null; }
 }
+
+/** Returns cached payload even past TTL (for stale-while-revalidate paint). */
+function cacheGetStale(key) {
+  try {
+    const raw = localStorage.getItem(`mmd:${key}`);
+    if (!raw) return null;
+    return JSON.parse(raw).data ?? null;
+  } catch { return null; }
+}
+
 function cacheSet(key, data) {
   try { localStorage.setItem(`mmd:${key}`, JSON.stringify({ ts: Date.now(), data })); } catch {}
+}
+
+function cacheKeyForItem(item, section) {
+  const k = getItemKey(item);
+  if (section.key === 'eq' || section.key === 'comm') return `${activeProvider}:q:${item.sym || k}`;
+  if (section.key === 'bond') return `b:${item.id}`;
+  if (section.key === 'fx') return `${activeProvider}:fx:${item.from}:${item.to}`;
+  if (section.key === 'crypto') return `cg:${item.sym}`;
+  return k;
+}
+
+function attachFreshness(data, kind, extra = {}) {
+  if (!data || typeof data !== 'object') return data;
+  return {
+    ...data,
+    freshnessKind: kind,
+    freshnessNote: extra.note ?? data.freshnessNote ?? null,
+    anchorDate: extra.anchorDate ?? data.anchorDate ?? null,
+    estimated: kind === 'estimated' || extra.estimated === true || data.estimated === true,
+  };
+}
+
+function quarterLabelFromFredDate(dateStr) {
+  if (!dateStr) return '';
+  const m = parseInt(dateStr.slice(5, 7), 10);
+  const y = dateStr.slice(0, 4);
+  const q = m <= 3 ? 1 : m <= 6 ? 2 : m <= 9 ? 3 : 4;
+  return `Q${q} ${y}`;
+}
+
+function isDateOnlyUtc(ms) {
+  const d = new Date(ms);
+  return (
+    !Number.isNaN(d.getTime())
+    && d.getUTCHours() === 0 && d.getUTCMinutes() === 0
+    && d.getUTCSeconds() === 0 && d.getUTCMilliseconds() === 0
+  );
+}
+
+/** Resolve freshness tier (handles legacy cache rows missing freshnessKind). */
+function inferFreshnessKind(meta) {
+  if (meta.freshnessKind) return meta.freshnessKind;
+  if (meta.estimated || meta.buffettMeta || meta.debtEstMeta || meta.anchorDate) return 'estimated';
+  if (meta.fallback || meta.static) return 'reference';
+  if (meta.live) return 'live';
+  const sk = meta.sectionKey;
+  if (sk === 'fx') return 'daily';
+  if (sk === 'eq' || sk === 'comm' || sk === 'crypto') return 'live';
+  if (sk === 'val') return 'quarterly';
+  if (sk === 'bond' && meta.asOfUtc != null && isDateOnlyUtc(meta.asOfUtc)) return 'daily';
+  if (meta.asOfUtc != null && isDateOnlyUtc(meta.asOfUtc)) return 'daily';
+  return 'live';
+}
+
+function staleThresholdMs(meta, kind) {
+  if (kind === 'daily' && meta.freshnessNote?.includes('prior biz day')) {
+    return 7 * 86400000;
+  }
+  return STALE_AFTER_MS[kind] ?? STALE_AFTER_MS.live;
+}
+
+function isMetaStale(meta) {
+  if (!meta?.asOfUtc) return false;
+  const kind = inferFreshnessKind(meta);
+  const max = staleThresholdMs(meta, kind);
+  return Date.now() - Number(meta.asOfUtc) > max;
+}
+
+function resolveFreshnessPill(meta) {
+  if (meta.pillLabel != null) return meta.pillLabel;
+  const kind = inferFreshnessKind(meta);
+  if (meta.fallback || meta.static || kind === 'reference') return 'Ref';
+  if (meta.estimated || kind === 'estimated') return 'Est.';
+  if (kind === 'quarterly') return 'Qtrly';
+  if (kind === 'daily') return 'Daily';
+  if (kind === 'live' || meta.live) return 'Live';
+  return null;
+}
+
+function freshnessPillClass(label) {
+  if (label === 'Live') return 'pill pill--live';
+  if (label === 'Est.') return 'pill pill--est';
+  if (label === 'Ref' || label === 'Qtrly' || label === 'Daily') return 'pill pill--ref';
+  return 'pill neu';
+}
+
+function formatCardAsOf(meta) {
+  if (!meta?.asOfUtc) return null;
+  const utc = formatUtcAsOf(meta.asOfUtc);
+  if (!utc) return null;
+  const parts = [utc];
+  if (meta.freshnessNote) parts.push(meta.freshnessNote);
+  if (meta.anchorDate && meta.estimated) parts.push(`Z.1 ${meta.anchorDate}`);
+  if (isMetaStale(meta)) parts.push('may be stale');
+  return parts.join(' · ');
 }
 
 // ── Provider ──────────────────────────────────────
@@ -465,11 +609,11 @@ const SECTIONS = [
   {
     key: 'fx',     gridId: 'fx-grid',          custId: 'cust-fx',     items: FX_PAIRS,
     fetch: (item, force) => fetchFX(item.from, item.to, force),
-    card:  (item, d) => {
-      const dp = item.to === 'JPY' ? 2 : 4;
-      return { ticker: `${item.from}/${item.to}`, label: item.label,
-        price: d ? fmt(d.price, dp) : null, change: d ? d.change : null, pct: d ? d.pct : null };
-    },
+    card:  (item, d) => formatQuoteCard(
+      { ...item, ticker: `${item.from}/${item.to}` },
+      d,
+      'fx',
+    ),
   },
   {
     key: 'crypto', gridId: 'crypto-grid',      custId: 'cust-crypto', items: CRYPTO,
@@ -568,12 +712,43 @@ function quoteDecimals(item, sectionKey) {
   return item.dp ?? 2;
 }
 
+/** True when a value rounds to zero at the given decimal places. */
+function isDisplayFlat(value, dp = 2) {
+  if (value == null || Number.isNaN(Number(value))) return true;
+  const n = Number(value);
+  if (n === 0) return true;
+  return Math.abs(Number(n.toFixed(dp))) === 0;
+}
+
+/** Bump precision when a move would show as 0.00 at base dp (3 dp for %/pp; 4 for FX). */
+function displayDecimalsForDelta(value, baseDp = 2, extendedDp = 3) {
+  if (value == null || Number.isNaN(Number(value)) || value === 0) return baseDp;
+  if (isDisplayFlat(value, baseDp)) return extendedDp;
+  return baseDp;
+}
+
+/** Extra precision when a small move would display as 0.00 at 2 dp (typical FX). */
+function changeDisplayDecimals(change, quoteDp = 2) {
+  const dp = quoteDp ?? 2;
+  return displayDecimalsForDelta(change, dp, Math.max(dp, 4));
+}
+
+function formatQuoteAbsChange(change, quoteDp = 2) {
+  if (change == null || Number.isNaN(change)) return '';
+  const v = Number(change);
+  const dp = changeDisplayDecimals(change, quoteDp);
+  if (isDisplayFlat(v, dp)) return fmt(0, quoteDp ?? 2);
+  const prefix = v > 0 ? '+' : '-';
+  return `${prefix}${fmt(Math.abs(v), dp)}`;
+}
+
 function formatQuotePrice(d, item, sectionKey) {
   if (!d || d.price == null || Number.isNaN(Number(d.price))) return null;
   return fmt(d.price, quoteDecimals(item, sectionKey));
 }
 
 function formatQuoteCard(item, d, sectionKey) {
+  const quoteDp = quoteDecimals(item, sectionKey);
   return {
     ticker: item.ticker,
     label: item.label,
@@ -581,16 +756,334 @@ function formatQuoteCard(item, d, sectionKey) {
     change: d ? d.change : null,
     pct: d ? d.pct : null,
     asOfUtc: d?.asOfUtc ?? null,
+    freshnessKind: d?.freshnessKind ?? (
+      sectionKey === 'fx' ? 'daily'
+        : (sectionKey === 'eq' || sectionKey === 'comm' || sectionKey === 'crypto') ? 'live'
+          : undefined
+    ),
+    freshnessNote: d?.freshnessNote ?? null,
+    anchorDate: d?.anchorDate ?? null,
+    estimated: d?.estimated ?? false,
+    quoteDp,
   };
 }
-function cardClass(pct) { return pct === null ? 'neu' : pct >= 0 ? 'up' : 'dn'; }
-function pillClass(pct) { return pct === null ? 'neu' : pct >= 0 ? 'up' : 'dn'; }
+/** Direction for card/pill styling: 1 up, -1 down, 0 flat/neutral, null unknown. */
+function resolveMoveDirection(pct, absChange = null) {
+  if (absChange != null && !Number.isNaN(Number(absChange))) {
+    const dp = displayDecimalsForDelta(absChange, 2, 3);
+    if (!isDisplayFlat(absChange, dp)) return absChange > 0 ? 1 : -1;
+  }
+  if (pct != null && !Number.isNaN(Number(pct))) {
+    const dp = displayDecimalsForDelta(pct, 2, 3);
+    if (!isDisplayFlat(pct, dp)) return pct > 0 ? 1 : -1;
+  }
+  if (pct === null && absChange == null) return null;
+  return 0;
+}
+
+function directionClass(dir) {
+  if (dir === null) return 'neu';
+  if (dir === 0) return 'neu';
+  return dir > 0 ? 'up' : 'dn';
+}
+
+function cardClass(pct, absChange = null) {
+  return directionClass(resolveMoveDirection(pct, absChange));
+}
+
+function pillClass(pct, absChange = null) {
+  return cardClass(pct, absChange);
+}
+
 function pillText(pct) {
   if (pct === null) return '–';
-  return `${pct >= 0 ? '▲' : '▼'} ${Math.abs(pct).toFixed(2)}%`;
+  const dp = displayDecimalsForDelta(pct, 2, 3);
+  if (isDisplayFlat(pct, dp)) return '0.00%';
+  return `${pct > 0 ? '▲' : '▼'} ${Math.abs(pct).toFixed(dp)}%`;
+}
+
+function absChangeClass(pct, absChange) {
+  const dir = resolveMoveDirection(pct, absChange);
+  if (dir === 0) return 'card-abs--flat';
+  if (dir === null) return '';
+  return dir > 0 ? 'card-abs--up' : 'card-abs--dn';
 }
 
 const CARD_LOADING = new Set();
+
+// ── Card indicator info (modal copy) ─────────────────────────────
+function escapeAttr(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+}
+
+function infoLink(name, url) {
+  return `<a href="${escapeAttr(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(name)}</a>`;
+}
+
+function infoPara(text) {
+  if (!text) return '';
+  return escapeHtml(text).replace(/\n/g, '<br>');
+}
+
+function quoteProviderBlurb() {
+  if (activeProvider === 'yahoo') {
+    return 'Live quotes via Yahoo Finance (hub proxy). Prior close from chart metadata or last daily close.';
+  }
+  if (activeProvider === 'google') {
+    return 'Live quotes via Google Finance page scrape (hub proxy).';
+  }
+  return 'Live quotes via Alpha Vantage GLOBAL_QUOTE (API key required in Data Sources).';
+}
+
+function changeFormulaeBlurb(kind = 'price') {
+  if (kind === 'yield') {
+    return 'Pill (▲/▼): relative % vs prior observation.\nAbsolute: change in percentage points (pp).\n\n% change = (yield − prior) / prior × 100\npp change = yield − prior';
+  }
+  if (kind === 'ratio') {
+    return 'Pill (▲/▼): relative % vs prior ratio.\nAbsolute: change in percentage points (pp).\n\n% change = (ratio − prior) / prior × 100\npp change = ratio − prior';
+  }
+  if (kind === 'usd') {
+    return 'Pill (▲/▼): relative % vs prior level.\nAbsolute: change in USD (compact $B / $T).\n\n% change = (value − prior) / prior × 100';
+  }
+  return 'Pill (▲/▼): relative % vs prior close.\nAbsolute: price change in index/ETF points.\n\n% change = (price − prev_close) / prev_close × 100\nΔ price = price − prev_close';
+}
+
+function equityCardInfo(item) {
+  const sym = item.sym || item.ticker;
+  const gf = googleFinanceUrlForItem(item, 'eq');
+  const src = gf
+    ? `${quoteProviderBlurb()} Chart: ${infoLink('Google Finance', gf)}.`
+    : quoteProviderBlurb();
+  return {
+    title: item.label,
+    summary: `${item.label} tracks the listed index or ETF. It is a market-price benchmark, not a valuation ratio.`,
+    derived: 'Latest price and day-over-day change from your selected quote provider. “As of” uses the provider timestamp in UTC when available.',
+    data: `Yahoo symbol: ${sym}. Card ticker: ${item.ticker}.`,
+    sourceHtml: src,
+    formula: changeFormulaeBlurb('price'),
+  };
+}
+
+function commodityCardInfo(item) {
+  const gf = googleFinanceUrlForItem(item, 'comm');
+  return {
+    title: item.label,
+    summary: `${item.label} is a listed futures contract or commodity ETF proxy. Front-month / continuous symbols may differ from spot labels.`,
+    derived: 'Futures and ETF prices from the active quote provider; change vs previous session close.',
+    data: `Symbol: ${item.sym} (${item.ticker} on card).`,
+    sourceHtml: `${quoteProviderBlurb()}${gf ? ` ${infoLink('Google Finance', gf)}.` : ''}`,
+    formula: changeFormulaeBlurb('price'),
+  };
+}
+
+function fxCardInfo(item) {
+  return {
+    title: item.label,
+    summary: `Spot FX rate: how many ${item.to} per 1 ${item.from} (or equivalent cross).`,
+    derived: activeProvider === 'alphavantage'
+      ? 'Alpha Vantage realtime exchange rate; change not shown for AV FX.'
+      : 'Frankfurter.dev daily ECB reference rates: latest business day vs prior published day.',
+    data: `Cross: ${item.from} → ${item.to}. Frankfurter base USD with cross-rates when needed.`,
+    sourceHtml: activeProvider === 'alphavantage'
+      ? infoLink('Alpha Vantage FX', 'https://www.alphavantage.co/documentation/#currency-exchange')
+      : `${infoLink('Frankfurter', 'https://www.frankfurter.dev/')} (ECB reference). ${quoteProviderBlurb()}`,
+    formula: activeProvider === 'alphavantage'
+      ? 'Displayed rate = AV “5. Exchange Rate”.'
+      : '% change = (rate − prior_day) / prior_day × 100\nΔ = rate − prior_day',
+  };
+}
+
+function cryptoCardInfo(item) {
+  return {
+    title: item.label,
+    summary: `${item.label} spot price in USD from CoinGecko (24/7 market).`,
+    derived: 'CoinGecko simple price API with rolling 24-hour percentage change.',
+    data: `Yahoo-style symbol: ${item.sym}. CoinGecko id: ${CG_IDS[item.sym] || '—'}.`,
+    sourceHtml: infoLink('CoinGecko API', 'https://www.coingecko.com/en/api'),
+    formula: '24h % from CoinGecko.\nImplied Δ price = price × (% / (100 + %))\n(24h rolling, not exchange session close).',
+  };
+}
+
+function bondCardInfo(item) {
+  const fredUrl = `https://fred.stlouisfed.org/series/${item.id}`;
+  const ySym = item.yTicker;
+  const usesYahoo = Boolean(ySym);
+  return {
+    title: item.label,
+    summary: item.id === 'T10YIE'
+      ? '10-year breakeven inflation rate: market-implied average CPI inflation over the next decade.'
+      : item.id === 'DFF'
+        ? 'Effective federal funds rate (policy rate) from FRED.'
+        : `US Treasury ${item.ticker} yield — annualized yield to maturity implied by market prices.`,
+    derived: usesYahoo
+      ? `Yahoo/CBOE index ${ySym} when available (yield %; ×10 indices normalized). Falls back to FRED ${item.id} daily series.`
+      : `FRED daily series ${item.id} only.`,
+    data: usesYahoo
+      ? `Primary: ${ySym}. Fallback CSV: ${item.id}. 2s10s spread on 10Y card uses FRED DGS2 and DGS10 (same observation date) when available.`
+      : `FRED series ${item.id}.`,
+    sourceHtml: `${infoLink('FRED', fredUrl)}${usesYahoo ? ` · ${quoteProviderBlurb()}` : ''}`,
+    formula: changeFormulaeBlurb('yield'),
+  };
+}
+
+function valuationCardInfo(item) {
+  const fred = 'https://fred.stlouisfed.org';
+  const byId = {
+    buffett: {
+      summary: 'Warren Buffett’s “market cap to GDP” gauge: how large the US equity market is relative to the economy. High readings suggest stretched valuations vs history.',
+      derived: 'Numerator: Z.1 corporate equities (NCBEILQ027S), scaled from the latest Z.1 quarter to today using S&P 500 (^GSPC) moves. Denominator: nominal GDP (FRED), projected with Atlanta Fed GDPNow when the nowcast quarter is ahead of the latest GDP print.',
+      data: 'Cap: FRED NCBEILQ027S. GDP: FRED GDP + GDPNOW. Scale proxy: ^GSPC.',
+      sourceHtml: infoLink('FRED', fred),
+      formula: 'Buffett indicator = (market cap USD / nominal GDP USD) × 100\nEst. cap = Z.1 cap × (S&P now / S&P at Z.1 date)',
+    },
+    'us-gdp': {
+      summary: 'US nominal gross domestic product — total market value of goods and services produced (not inflation-adjusted).',
+      derived: 'Latest quarterly FRED GDP; when GDPNow is ahead of the GDP print, level is projected using the nowcast SAAR reading.',
+      data: 'FRED GDP, FRED GDPNOW (Atlanta Fed). Billions USD, SAAR.',
+      sourceHtml: infoLink('FRED / BEA', fred),
+      formula: changeFormulaeBlurb('usd'),
+    },
+    'public-debt': {
+      summary: 'Federal government debt held by the public as a percent of GDP — sovereign leverage vs economic output.',
+      derived: 'Latest nominal GDP (FRED) with federal debt stock scaled from the newest Z.1 quarter using monthly Treasury market-value data.',
+      data: 'FRED GFDEGDQ188S, GFDEBTN, GDP, MVMTD027MNFRBDAL.',
+      sourceHtml: infoLink('FRED', fred),
+      formula: changeFormulaeBlurb('ratio'),
+    },
+    'private-debt': {
+      summary: 'Non-federal (private) debt as a percent of GDP — household & business leverage outside the federal government.',
+      derived: 'Private debt = total credit (TCMDO) minus federal debt (FGSDODNS), estimated forward to latest GDP using Z.1 growth and Treasury MV scaling.',
+      data: 'FRED TCMDO, FGSDODNS, GDP, MVMTD027MNFRBDAL.',
+      sourceHtml: infoLink('FRED Z.1', fred),
+      formula: 'Private debt % GDP = ((TCMDO − FGSDODNS) / 1000) / GDP × 100',
+    },
+    'margin-debt': {
+      summary: 'FINRA aggregate debit balances in customer securities margin accounts — a proxy for stock-market leverage and speculative demand.',
+      derived: 'Latest month vs prior month from FINRA margin statistics (fallback: Fed Z.1 broker-dealer margin receivables).',
+      data: 'Debit balances ($ millions). Displayed as USD trillions on card.',
+      sourceHtml: `${infoLink('FINRA', item.href || 'https://www.finra.org/rules-guidance/key-topics/margin-accounts/margin-statistics')} · hub /economics/proxy/valuation`,
+      formula: changeFormulaeBlurb('usd'),
+    },
+    'otc-notional': {
+      summary: 'Global OTC derivatives notional outstanding — contractual face value of all open OTC derivatives (much larger than economic exposure).',
+      derived: 'BIS semiannual OTC derivatives statistics; headline total notional for reporting dealers.',
+      data: 'BIS WS_OTC_DERIV2 (USD millions → T on card).',
+      sourceHtml: `${infoLink('BIS Data Portal', item.href || 'https://data.bis.org/topics/OTC_DER')} · hub proxy`,
+      formula: 'Card value = BIS reported notional (USD, consolidated dealers).',
+    },
+    'otc-gmv': {
+      summary: 'OTC derivatives gross market value (mark-to-market) — closer to economic exposure than notional.',
+      derived: 'BIS GMV aggregate (average of reported instrument buckets when needed).',
+      data: 'BIS WS_OTC_DERIV2, GMV measure (USD millions).',
+      sourceHtml: `${infoLink('BIS', item.href || 'https://data.bis.org/topics/OTC_DER')} · hub proxy`,
+      formula: 'Card ≈ sum/avg of BIS GMV buckets (USD).',
+    },
+    'au-cgs': {
+      summary: 'Australian Commonwealth government securities on issue — physical government bond stock (AUD).',
+      derived: 'BIS debt securities statistics, Australia general government bonds (latest vs prior observation).',
+      data: 'BIS WS_NA_SEC_DSS, AUD billions.',
+      sourceHtml: `${infoLink('BIS', 'https://data.bis.org/')} · hub proxy`,
+      formula: changeFormulaeBlurb('usd').replace('USD', 'AUD'),
+    },
+    'asx-bond-fut': {
+      summary: 'Australian OTC derivatives turnover tied to rates/bonds — liquidity proxy for ASX bond futures complex.',
+      derived: 'BIS OTC turnover, reporting country Australia (annual, USD).',
+      data: 'BIS WS_DER_OTC_TOV.',
+      sourceHtml: `${infoLink('ASX bond derivatives', item.href || 'https://www.asx.com.au/markets/trade-our-derivatives-market/bond-derivatives')} · ${infoLink('BIS', 'https://data.bis.org/')}`,
+      formula: 'Displayed = BIS AU turnover (USD, annual).',
+    },
+  };
+  const block = byId[item.id];
+  if (!block) {
+    return {
+      title: item.label,
+      summary: item.sublabel || 'Valuation or macro reference metric.',
+      derived: 'Fetched on refresh via hub valuation proxy or FRED batch.',
+      data: item.source || 'See card source link.',
+      sourceHtml: item.href ? infoLink(item.source || 'Source', item.href) : escapeHtml(item.source || 'FRED / BIS'),
+      formula: changeFormulaeBlurb(),
+    };
+  }
+  return { title: item.label, ...block };
+}
+
+const CARD_INFO_RESOLVERS = {
+  eq: equityCardInfo,
+  comm: commodityCardInfo,
+  fx: fxCardInfo,
+  crypto: cryptoCardInfo,
+  bond: bondCardInfo,
+  val: valuationCardInfo,
+};
+
+function getCardInfo(sectionKey, item) {
+  const resolver = CARD_INFO_RESOLVERS[sectionKey];
+  if (!resolver) {
+    return {
+      title: item.label || 'Indicator',
+      summary: 'Market or macro indicator on the Morning Macro dashboard.',
+      derived: 'See Data Sources panel for provider settings.',
+      data: '—',
+      sourceHtml: quoteProviderBlurb(),
+      formula: changeFormulaeBlurb(),
+    };
+  }
+  return resolver(item);
+}
+
+function renderInfoModalBody(info) {
+  const blocks = [
+    ['What it is', info.summary, false],
+    ['How it is derived', info.derived, false],
+    ['Data used', info.data, false],
+    ['Source', info.sourceHtml, true],
+    ['Formulae', info.formula, false],
+  ];
+  return blocks.filter(([, body]) => body).map(([heading, body, isHtml]) => `
+    <section class="info-modal-block">
+      <h3 class="info-modal-h3">${escapeHtml(heading)}</h3>
+      <div class="info-modal-text">${isHtml ? body : infoPara(body)}</div>
+    </section>`).join('');
+}
+
+const infoState = { returnFocus: null };
+
+function closeInfoModal() {
+  const modal = document.getElementById('info-modal');
+  if (!modal) return;
+  const restore = infoState.returnFocus;
+  infoState.returnFocus = null;
+  modal.hidden = true;
+  modal.inert = true;
+  document.body.style.overflow = document.getElementById('chart-modal')?.hidden === false ? 'hidden' : '';
+  if (restore instanceof HTMLElement && document.contains(restore)) {
+    restore.focus({ preventScroll: true });
+  }
+}
+
+function openInfoModal(itemKey, sectionKey) {
+  const resolved = resolveItem(itemKey, sectionKey);
+  if (!resolved) return;
+  const { item } = resolved;
+  const info = getCardInfo(sectionKey, item);
+  const modal = document.getElementById('info-modal');
+  const body = document.getElementById('info-modal-body');
+  if (!modal || !body) return;
+
+  document.getElementById('info-modal-ticker').textContent = item.ticker || itemKey;
+  document.getElementById('info-modal-title').textContent = info.title || item.label;
+  body.innerHTML = renderInfoModalBody(info);
+
+  infoState.returnFocus = document.activeElement instanceof HTMLElement
+    ? document.activeElement
+    : null;
+  modal.hidden = false;
+  modal.inert = false;
+  if (document.getElementById('chart-modal')?.hidden !== false) {
+    document.body.style.overflow = 'hidden';
+  }
+  document.getElementById('info-modal-close')?.focus();
+}
 
 function cardIsFailed(meta) {
   if (meta.failed != null) return meta.failed;
@@ -598,7 +1091,7 @@ function cardIsFailed(meta) {
 }
 
 function renderCard(meta, delay = 0) {
-  const cls = cardClass(meta.pct);
+  const cls = cardClass(meta.pct, meta.change);
   const priceStr = meta.price !== null && meta.price !== '' ? meta.price : '–';
   const absStr = meta.isUsd
     ? formatUsdChange(meta.change)
@@ -606,12 +1099,22 @@ function renderCard(meta, delay = 0) {
       ? formatAudChange(meta.change)
       : (meta.isYield || meta.isRatio)
         ? formatPointsChange(meta.change)
-        : (meta.change !== null ? `${sign(meta.change)}${fmt(meta.change)}` : '');
-  const asOfStr = meta.asOfUtc ? formatUtcAsOf(meta.asOfUtc) : null;
+        : formatQuoteAbsChange(meta.change, meta.quoteDp);
+  const asOfStr = formatCardAsOf(meta);
+  const freshnessPill = resolveFreshnessPill(meta);
   const failed = cardIsFailed(meta);
   const loading = CARD_LOADING.has(meta.itemKey);
   const refreshLabel = `Refresh ${escapeHtml(meta.label)}`;
   const chartLabel = `View ${escapeHtml(meta.label)} chart`;
+  const infoLabel = `About ${escapeHtml(meta.label)}`;
+  const infoBtn = `
+      <button type="button" class="card-info" data-item-key="${meta.itemKey}" data-section-key="${meta.sectionKey}"
+        aria-label="${infoLabel}" title="${infoLabel}">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M12 10v6M12 7h.01"/>
+        </svg>
+      </button>`;
   const chartBtn = meta.noChart ? '' : `
       <button type="button" class="card-chart" data-item-key="${meta.itemKey}" data-section-key="${meta.sectionKey}"
         aria-label="${chartLabel}" title="${chartLabel}">
@@ -626,18 +1129,21 @@ function renderCard(meta, delay = 0) {
           <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
         </svg>
       </button>`;
-  const actions = `<div class="card-actions">${chartBtn}${refreshBtn}</div>`;
+  const actions = `<div class="card-actions">${infoBtn}${chartBtn}${refreshBtn}</div>`;
   const mainInner = `
       <div class="card-ticker">${escapeHtml(meta.ticker)}</div>
       <div class="card-name">${escapeHtml(meta.label)}</div>
       <div class="card-price">${priceStr}</div>
       <div class="card-change">
-        ${meta.pillLabel != null
-    ? `<span class="pill neu">${escapeHtml(meta.pillLabel)}</span>`
-    : `<span class="pill ${pillClass(meta.pct)}">${pillText(meta.pct)}</span>`}
-        ${absStr ? `<span class="card-abs">${absStr}</span>` : ''}
+        ${freshnessPill
+    ? `<span class="${freshnessPillClass(freshnessPill)}">${escapeHtml(freshnessPill)}</span>
+        <span class="pill ${pillClass(meta.pct, meta.change)}">${pillText(meta.pct)}</span>`
+    : `<span class="pill ${pillClass(meta.pct, meta.change)}">${pillText(meta.pct)}</span>`}
+        ${absStr ? `<span class="card-abs ${absChangeClass(meta.pct, meta.change)}">${absStr}</span>` : ''}
       </div>
-      ${asOfStr && meta.showCardAsOf !== false ? `<div class="card-asof">As of ${escapeHtml(asOfStr)}</div>` : ''}
+      ${asOfStr && meta.showCardAsOf !== false
+    ? `<div class="card-asof${isMetaStale(meta) ? ' card-asof--stale' : ''}">${escapeHtml(asOfStr)}</div>`
+    : ''}
       ${meta.extra || ''}`;
 
   const stateCls = `${cls}${meta.cardClassExtra ? ` ${meta.cardClassExtra}` : ''}${failed ? ' card--failed' : ''}${loading ? ' card--loading' : ''}`;
@@ -677,7 +1183,7 @@ const proxyThrottle = (() => {
   let active = 0; const queue = [];
   return fn => new Promise((res, rej) => {
     const go = () => { active++; fn().then(res, rej).finally(() => { active--; queue.length && queue.shift()(); }); };
-    active < 4 ? go() : queue.push(go);
+    active < 6 ? go() : queue.push(go);
   });
 })();
 
@@ -732,7 +1238,9 @@ function parseRemoteTarget(canonicalUrl) {
 }
 
 function localProxyUrl(target) {
-  if (!LOCAL_PROXY_OK) return null;
+  const hubProxy = shouldOptimisticLocalProxy();
+  if (!LOCAL_PROXY_OK && !(hubProxy && target.type === 'fred' && canUseHubFredProxy())) return null;
+  if (!LOCAL_PROXY_OK && !hubProxy) return null;
   const base = location.origin;
   if (target.type === 'yahoo') {
     const p = new URLSearchParams({ sym: target.sym, range: target.range, interval: target.interval || '1d' });
@@ -749,34 +1257,61 @@ function localProxyUrl(target) {
   return null;
 }
 
+const PROXY_PROBE_TIMEOUT_MS = 5000;
+
+async function probeLocalProxy(url, timeoutMs = PROXY_PROBE_TIMEOUT_MS, validate) {
+  try {
+    const r = await fetchWithTimeout(url, {}, timeoutMs);
+    if (!r.ok) return false;
+    return validate ? validate(r) : true;
+  } catch {
+    return false;
+  }
+}
+
+function isHubHostname() {
+  const host = location.hostname;
+  return host === 'anthemic-developments.com'
+    || host === 'www.anthemic-developments.com'
+    || host === 'localhost'
+    || host === '127.0.0.1';
+}
+
+function isHubEconomicsPage() {
+  const path = location.pathname;
+  return path === '/economics' || path.startsWith('/economics/');
+}
+
+/** Hub pages: use same-origin /economics/proxy/* immediately; probe verifies in background. */
+function shouldOptimisticLocalProxy() {
+  return isHubHostname() && isHubEconomicsPage();
+}
+
+function canUseHubFredProxy() {
+  return LOCAL_FRED_PROXY_OK || shouldOptimisticLocalProxy();
+}
+
+function setOptimisticLocalProxy() {
+  LOCAL_PROXY_OK = true;
+  LOCAL_FRED_PROXY_OK = true;
+  LOCAL_VALUATION_PROXY_OK = true;
+}
+
 async function detectLocalProxy() {
-  LOCAL_PROXY_OK = false;
-  LOCAL_FRED_PROXY_OK = false;
+  const origin = location.origin;
+  const yahooProbe = `${origin}/economics/proxy/yahoo?${new URLSearchParams({ sym: '^GSPC', range: '1d' })}`;
+  const fredHealth = `${origin}/economics/proxy/fred/health`;
+  const valHealth = `${origin}/economics/proxy/valuation/health`;
 
-  const yahooProbe = `${location.origin}/economics/proxy/yahoo?${new URLSearchParams({ sym: '^GSPC', range: '1d' })}`;
-  try {
-    const r = await fetchWithTimeout(yahooProbe, {}, 8000);
-    if (r.ok) LOCAL_PROXY_OK = true;
-  } catch {}
+  const [yahooOk, fredOk, valOk] = await Promise.all([
+    probeLocalProxy(yahooProbe),
+    probeLocalProxy(fredHealth),
+    probeLocalProxy(valHealth),
+  ]);
 
-  const fredProbe = `${location.origin}/economics/proxy/fred?${new URLSearchParams({ id: 'DGS2', start: '2025-01-01' })}`;
-  try {
-    const r = await fetchWithTimeout(fredProbe, {}, 12000);
-    if (r.ok) {
-      const ct = r.headers.get('content-type') || '';
-      const body = await r.text();
-      const rows = parseFredResponseBody(body, ct);
-      if (rows?.length) LOCAL_FRED_PROXY_OK = true;
-    }
-  } catch {}
-
-  const valHealth = `${location.origin}/economics/proxy/valuation/health`;
-  try {
-    const rv = await fetchWithTimeout(valHealth, {}, 8000);
-    if (rv.ok) LOCAL_VALUATION_PROXY_OK = true;
-  } catch {}
-  // Production nginx: Yahoo proxy up implies valuation route exists (BIS pulls are slow).
-  if (!LOCAL_VALUATION_PROXY_OK && LOCAL_PROXY_OK) LOCAL_VALUATION_PROXY_OK = true;
+  LOCAL_PROXY_OK = yahooOk;
+  LOCAL_FRED_PROXY_OK = fredOk || (yahooOk && isHubEconomicsPage());
+  LOCAL_VALUATION_PROXY_OK = valOk || yahooOk;
 }
 
 function localFredProxyUrl(seriesId, start) {
@@ -819,7 +1354,17 @@ async function fetchRemote(canonicalUrl, { asJson = true } = {}) {
     });
   }
 
-  if (useThirdPartyCorsProxies()) {
+  const skipPublicProxy = (() => {
+    if (!useThirdPartyCorsProxies()) return true;
+    if (!isHubEconomicsPage()) return false;
+    try {
+      return new URL(canonicalUrl).hostname === 'fred.stlouisfed.org';
+    } catch {
+      return false;
+    }
+  })();
+
+  if (useThirdPartyCorsProxies() && !skipPublicProxy) {
     for (const url of publicProxyUrls(canonicalUrl)) {
       attempts.push(async () => {
         const r = await fetchWithTimeout(url);
@@ -874,8 +1419,10 @@ function parseYahooChart(d) {
   }
   const change = pointsChange(price, prevClose);
   const pct = pctChange(price, prevClose);
-  const asOfUtc = meta.regularMarketTime ? meta.regularMarketTime * 1000 : null;
-  return { price, change, pct, asOfUtc };
+  const asOfUtc = meta.regularMarketTime ? meta.regularMarketTime * 1000 : Date.now();
+  return attachFreshness({ price, change, pct, asOfUtc }, 'live', {
+    note: meta.regularMarketTime ? null : 'quote time unavailable',
+  });
 }
 
 function formatYieldPrice(d) {
@@ -883,10 +1430,13 @@ function formatYieldPrice(d) {
   return `${Number(d.price).toFixed(2)}%`;
 }
 
-function formatPointsChange(change, dp = 2) {
+function formatPointsChange(change, baseDp = 2) {
   if (change == null || Number.isNaN(change)) return '';
   const v = Number(change);
-  return `${sign(v)}${Math.abs(v).toFixed(dp)} pp`;
+  const dp = displayDecimalsForDelta(v, baseDp, 3);
+  if (isDisplayFlat(v, dp)) return `${v.toFixed(2)} pp`;
+  const prefix = v > 0 ? '+' : '-';
+  return `${prefix}${Math.abs(v).toFixed(dp)} pp`;
 }
 
 function formatAudChange(changeBillions) {
@@ -1004,7 +1554,13 @@ async function googleFinanceQuote(sym) {
   try {
     const html = await fetchRemote(googleFinancePageUrl(meta.path), { asJson: false });
     const q = html ? parseGoogleFinanceHtml(html, meta.ticker, meta.exchange) : null;
-    return q ? normalizeCBOEYieldQuote(sym, q) : null;
+    if (!q) return null;
+    const normalized = normalizeCBOEYieldQuote(sym, q);
+    return attachFreshness(
+      { ...normalized, asOfUtc: Date.now() },
+      'live',
+      { note: 'Google Finance' },
+    );
   } catch {
     return null;
   }
@@ -1058,7 +1614,11 @@ async function fetchFXFrank(from, toCcy) {
   if (!price) return null;
   const change = pointsChange(price, prevPrice);
   const pct = pctChange(price, prevPrice);
-  return { price, change, pct, asOfUtc: fredDateToUtc(latestDate) };
+  return attachFreshness(
+    { price, change, pct, asOfUtc: fredDateToUtc(latestDate) },
+    'daily',
+    { note: 'ECB reference · prior biz day' },
+  );
 }
 
 // ── CoinGecko crypto (CORS-friendly, no key needed) ────────────────
@@ -1079,7 +1639,7 @@ async function loadCoinGecko(force = false) {
       const price = item.usd;
       const pct   = item.usd_24h_change ?? null;
       const change = pct !== null ? price * pct / (100 + pct) : null;
-      result[sym] = { price, change, pct, asOfUtc };
+      result[sym] = attachFreshness({ price, change, pct, asOfUtc }, 'live', { note: '24h rolling' });
     }
     cacheSet(key, result);
     _cgPromise = null;
@@ -1103,11 +1663,12 @@ async function avQuote(sym) {
   if (d.Note || d.Information) throw new Error('Rate limit');
   const q = d['Global Quote'];
   if (!q || !q['05. price']) return null;
-  return {
+  return attachFreshness({
     price: parseFloat(q['05. price']),
     change: parseFloat(q['09. change']),
     pct: parseFloat(q['10. change percent'].replace('%', '')),
-  };
+    asOfUtc: Date.now(),
+  }, 'live');
 }
 
 async function avFX(from, to) {
@@ -1117,7 +1678,18 @@ async function avFX(from, to) {
   if (d.Note || d.Information) throw new Error('Rate limit');
   const info = d['Realtime Currency Exchange Rate'];
   if (!info) return null;
-  return { price: parseFloat(info['5. Exchange Rate']), change: null, pct: null };
+  const refreshed = info['6. Last Refreshed'];
+  const asOfUtc = refreshed ? Date.parse(`${refreshed.replace(' ', 'T')}Z`) : Date.now();
+  return attachFreshness(
+    {
+      price: parseFloat(info['5. Exchange Rate']),
+      change: null,
+      pct: null,
+      asOfUtc: Number.isNaN(asOfUtc) ? Date.now() : asOfUtc,
+    },
+    'live',
+    { note: 'Alpha Vantage FX' },
+  );
 }
 
 // ── Dispatched Fetchers (with cache) ──────────────
@@ -1138,9 +1710,16 @@ async function fetchFX(from, to, force = false) {
   const key = `${activeProvider}:fx:${from}:${to}`;
   if (!force) { const c = cacheGet(key); if (c) return c; }
   try {
-    const result = usesFrankfurterFx()
-      ? await fetchFXFrank(from, to)
-      : await avFX(from, to);
+    let result = null;
+    if (hasValidAvKey()) {
+      try {
+        result = await avFX(from, to);
+      } catch (err) {
+        console.warn('AV FX failed, falling back', from, to, err);
+      }
+    }
+    if (!result && usesFrankfurterFx()) result = await fetchFXFrank(from, to);
+    else if (!result) result = await avFX(from, to);
     if (result) cacheSet(key, result);
     return result;
   } catch { return null; }
@@ -1184,8 +1763,171 @@ function parseFredResponseBody(body, contentType = '') {
   return parseFredCsvRows(trimmed);
 }
 
+/** Z.1 corporate equities (quarterly); scaled to today via broad market index. */
+const BUFFETT_CAP_SERIES = 'NCBEILQ027S';
+const BUFFETT_SCALE_SYM = '^GSPC';
+
 function buffettRatio(capMillions, gdpBillions) {
   return (capMillions / 1000 / gdpBillions) * 100;
+}
+
+function indexAtOrBefore(series, ts) {
+  if (!series?.length || ts == null) return null;
+  let v = null;
+  for (const p of series) {
+    if (p.t <= ts) v = p.v;
+    else break;
+  }
+  return v;
+}
+
+function buffettExtraHtml(d) {
+  if (!d?.buffettMeta) return '';
+  const m = d.buffettMeta;
+  let html = '';
+  const capLabel = m.capScaled
+    ? `Cap est. (Z.1 ${m.capZ1Date} × ${BUFFETT_SCALE_SYM})`
+    : `Cap (Z.1 ${m.capZ1Date})`;
+  html += `<div class="yield-extra"><span class="spread-label">Numerator</span>
+    <span class="spread-val">${escapeHtml(capLabel)}</span></div>`;
+  const gdpLabel = m.gdpNowcast
+    ? `Nominal GDP est. (${escapeHtml(m.gdpDate)} · GDPNow)`
+    : `Nominal GDP (${escapeHtml(m.gdpDate)})`;
+  html += `<div class="yield-extra"><span class="spread-label">Denominator</span>
+    <span class="spread-val">${gdpLabel}</span></div>`;
+  return html;
+}
+
+function spread2s10sExtraHtml(info) {
+  if (!info || info.spread == null || Number.isNaN(info.spread)) return '';
+  const v = Number(info.spread);
+  const cls = v >= 0 ? 'spread-pos' : 'spread-neg';
+  const sign = v >= 0 ? '+' : '';
+  const dateNote = info.sameDay
+    ? `FRED DGS2/DGS10 · ${escapeHtml(info.y2Date)}`
+    : `FRED · 2Y ${escapeHtml(info.y2Date)} / 10Y ${escapeHtml(info.y10Date)}`;
+  return `<div class="yield-extra"><span class="spread-label">2s10s spread</span>
+    <span class="spread-val ${cls}">${sign}${v.toFixed(2)} pp</span></div>
+    <div class="yield-extra yield-extra--sub"><span class="spread-label">Curve</span>
+    <span class="spread-val spread-val--muted">${dateNote}</span></div>`;
+}
+
+function fredDailyQuoteFromRows(rows) {
+  if (!rows?.length) return null;
+  const sorted = sortedFredRows(rows);
+  const last = sorted[sorted.length - 1];
+  const prev = sorted.length > 1 ? sorted[sorted.length - 2] : null;
+  return attachFreshness({
+    price: last.v,
+    change: prev ? pointsChange(last.v, prev.v) : null,
+    pct: prev ? pctChange(last.v, prev.v) : null,
+    asOfUtc: fredDateToUtc(last.date),
+    obsDate: last.date,
+  }, 'daily', { note: 'FRED daily' });
+}
+
+function computeBondSpreadFred(spreadFred) {
+  const y2 = spreadFred?.DGS2;
+  const y10 = spreadFred?.DGS10;
+  if (y2?.price == null || y10?.price == null) return null;
+  const spread = y10.price - y2.price;
+  const sameDay = y2.obsDate === y10.obsDate;
+  return {
+    spread,
+    sameDay,
+    y2Date: y2.obsDate,
+    y10Date: y10.obsDate,
+    asOfUtc: fredDateToUtc(sameDay ? y2.obsDate : (y2.obsDate > y10.obsDate ? y2.obsDate : y10.obsDate)),
+  };
+}
+
+async function loadBondSpreadFred(force = false) {
+  const key = 'bond:spread-fred';
+  if (!force) {
+    const c = cacheGet(key);
+    if (c) return c;
+  }
+  if (!force && bondSpreadFredPromise) return bondSpreadFredPromise;
+  const start = fredStartDate(90);
+  bondSpreadFredPromise = Promise.all(
+    BOND_SPREAD_FRED_IDS.map(async id => [id, await fetchFredSeriesRows(id, start)]),
+  ).then(pairs => {
+    const out = {};
+    for (const [id, rows] of pairs) {
+      const q = fredDailyQuoteFromRows(rows);
+      if (q) out[id] = q;
+    }
+    cacheSet(key, out);
+    bondSpreadFredPromise = null;
+    return out;
+  }).catch(err => {
+    console.warn('bond spread FRED load failed', err);
+    bondSpreadFredPromise = null;
+    return {};
+  });
+  return bondSpreadFredPromise;
+}
+
+/** Latest Buffett ratio: scale stale Z.1 cap with live market; GDP = newest FRED row. */
+async function fetchBuffettCurrent(fred, force = false) {
+  if (!fred) return null;
+  const ratios = buildBuffettRatios(fred[BUFFETT_CAP_SERIES], fred.GDP);
+  const historical = quoteFromRatioSeries(ratios);
+  const capRows = fred[BUFFETT_CAP_SERIES];
+  const gdpPick = pickGdpDenominator(fred);
+  if (!capRows?.length || !gdpPick) return historical;
+
+  const lastCap = capRows[capRows.length - 1];
+  let capMillions = lastCap.v;
+  let asOfUtc = null;
+  let scaled = false;
+
+  try {
+    const capTs = fredDateToUtc(lastCap.date);
+    const histDays = capTs
+      ? Math.min(400, Math.max(60, Math.ceil((Date.now() - capTs) / 86400000) + 14))
+      : 180;
+    const scale = await Promise.race([
+      Promise.all([
+        fetchQuote(BUFFETT_SCALE_SYM, force),
+        fetchYahooHistory(BUFFETT_SCALE_SYM, histDays),
+      ]).then(([live, hist]) => ({ live, hist })),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Buffett scale timeout')), 15000)),
+    ]);
+    const benchAtCap = capTs != null ? indexAtOrBefore(scale.hist, capTs) : null;
+    if (scale.live?.price && benchAtCap && benchAtCap > 0) {
+      capMillions = lastCap.v * (scale.live.price / benchAtCap);
+      scaled = true;
+      asOfUtc = scale.live.asOfUtc ?? Date.now();
+    }
+  } catch (err) {
+    console.warn('Buffett cap scale failed', err);
+  }
+
+  if (!asOfUtc) asOfUtc = fredDateToUtc(lastCap.date);
+
+  const ratio = buffettRatio(capMillions, gdpPick.billions);
+  const change = historical ? pointsChange(ratio, historical.price) : null;
+  const pct = historical ? pctChange(ratio, historical.price) : null;
+  const gdpNowcast = gdpPick.source === 'nowcast';
+
+  return attachFreshness({
+    price: ratio,
+    change,
+    pct,
+    asOfUtc,
+    buffettMeta: {
+      gdpDate: gdpPick.date,
+      gdpNowcast,
+      capZ1Date: lastCap.date,
+      capScaled: scaled,
+    },
+    anchorDate: lastCap.date,
+    freshnessNote: [
+      scaled ? 'Cap scaled via ^GSPC' : `Z.1 cap ${lastCap.date}`,
+      gdpPick.freshnessNote,
+    ].filter(Boolean).join(' · '),
+  }, 'estimated', { estimated: true });
 }
 
 function buffettZone(ratio) {
@@ -1217,8 +1959,172 @@ function formatUsdChange(changeBillions) {
   return `${sign(v)}${formatUsdCompact(Math.abs(v))}`;
 }
 
+function sortedFredRows(rows) {
+  if (!rows?.length) return [];
+  return [...rows].sort((a, b) => a.date.localeCompare(b.date));
+}
+
 function latestFredRow(rows) {
-  return rows?.length ? rows[rows.length - 1] : null;
+  const sorted = sortedFredRows(rows);
+  return sorted.length ? sorted[sorted.length - 1] : null;
+}
+
+function prevFredRow(rows) {
+  const sorted = sortedFredRows(rows);
+  return sorted.length > 1 ? sorted[sorted.length - 2] : null;
+}
+
+/** Scale quarterly federal debt stocks using monthly marketable Treasury debt (FRED). */
+const FRED_TREASURY_MV_SERIES = 'MVMTD027MNFRBDAL';
+const FRED_PUBLIC_DEBT_LEVEL_SERIES = 'GFDEBTN';
+const FRED_GDP_NOWCAST_SERIES = 'GDPNOW';
+const BOND_SPREAD_FRED_IDS = ['DGS2', 'DGS10'];
+let BOND_SPREAD_FRED = null;
+let bondSpreadFredPromise = null;
+
+/**
+ * Pick GDP denominator: quarterly FRED GDP, or project forward with Atlanta Fed GDPNow when newer.
+ * @returns {{ billions: number, date: string, source: 'quarterly'|'nowcast', freshnessNote?: string, anchorDate?: string } | null}
+ */
+function pickGdpDenominator(fred) {
+  const quarterly = latestFredRow(fred.GDP);
+  if (!quarterly?.v) return null;
+  const nowcast = latestFredRow(fred[FRED_GDP_NOWCAST_SERIES]);
+  if (!nowcast?.v || nowcast.date <= quarterly.date) {
+    return { billions: quarterly.v, date: quarterly.date, source: 'quarterly' };
+  }
+  const months = monthsBetweenFredDates(quarterly.date, nowcast.date);
+  const quarters = Math.max(1, Math.round(months / 3));
+  const qGrowth = (nowcast.v / 100) / 4;
+  let billions = quarterly.v;
+  for (let i = 0; i < quarters; i++) billions *= (1 + qGrowth);
+  return {
+    billions,
+    date: nowcast.date,
+    source: 'nowcast',
+    anchorDate: quarterly.date,
+    freshnessNote: `GDP proj. · GDPNow ${nowcast.v.toFixed(1)}% SAAR`,
+  };
+}
+
+function treasuryMvScaleFactor(monthlyRows, anchorDate) {
+  if (!monthlyRows?.length || !anchorDate) return { scale: 1, asOfDate: null };
+  const sorted = sortedFredRows(monthlyRows);
+  let anchor = null;
+  for (const row of sorted) {
+    if (row.date <= anchorDate) anchor = row;
+    else break;
+  }
+  const latest = sorted[sorted.length - 1];
+  if (!anchor?.v || !latest?.v) return { scale: 1, asOfDate: latest?.date ?? null };
+  return { scale: latest.v / anchor.v, asOfDate: latest.date };
+}
+
+function monthsBetweenFredDates(fromDate, toDate) {
+  if (!fromDate || !toDate) return 0;
+  const a = new Date(fromDate);
+  const b = new Date(toDate);
+  return (b.getFullYear() - a.getFullYear()) * 12 + (b.getMonth() - a.getMonth());
+}
+
+function debtRatioExtraHtml(d) {
+  if (!d?.debtEstMeta) return '';
+  const m = d.debtEstMeta;
+  let html = '';
+  if (m.scaled) {
+    html += `<div class="yield-extra"><span class="spread-label">Estimate</span>
+      <span class="spread-val">Debt scaled via Treasury MV (${escapeHtml(m.treasuryMvDate || '—')})</span></div>`;
+  }
+  html += `<div class="yield-extra"><span class="spread-label">Z.1 debt</span>
+    <span class="spread-val">${escapeHtml(m.debtAnchorDate || '—')}</span></div>`;
+  html += `<div class="yield-extra"><span class="spread-label">GDP</span>
+    <span class="spread-val">${escapeHtml(m.gdpDate || '—')}</span></div>`;
+  return html;
+}
+
+function fetchPublicDebtCurrent(fred) {
+  const official = fredRowsToQuote(fred.GFDEGDQ188S);
+  const anchorRatio = latestFredRow(fred.GFDEGDQ188S);
+  const gdpPick = pickGdpDenominator(fred);
+  const debtLevel = latestFredRow(fred[FRED_PUBLIC_DEBT_LEVEL_SERIES]);
+  const treasuryMv = fred[FRED_TREASURY_MV_SERIES];
+  if (!anchorRatio || !gdpPick || !debtLevel) return official;
+
+  const { scale, asOfDate: treasuryMvDate } = treasuryMv?.length
+    ? treasuryMvScaleFactor(treasuryMv, anchorRatio.date)
+    : { scale: 1, asOfDate: null };
+
+  const debtBillions = (debtLevel.v / 1000) * scale;
+  const ratio = (debtBillions / gdpPick.billions) * 100;
+  const asOfUtc = fredDateToUtc(treasuryMvDate || gdpPick.date);
+
+  return attachFreshness({
+    price: ratio,
+    change: official ? pointsChange(ratio, official.price) : null,
+    pct: official ? pctChange(ratio, official.price) : null,
+    asOfUtc,
+    usdBillions: debtBillions,
+    debtEstMeta: {
+      scaled: scale !== 1,
+      debtAnchorDate: anchorRatio.date,
+      gdpDate: gdpPick.date,
+      gdpNowcast: gdpPick.source === 'nowcast',
+      treasuryMvDate,
+    },
+    anchorDate: anchorRatio.date,
+    freshnessNote: [
+      scale !== 1 ? 'Debt scaled via Treasury MV' : null,
+      gdpPick.freshnessNote,
+    ].filter(Boolean).join(' · ') || null,
+  }, 'estimated', { estimated: true });
+}
+
+function fetchPrivateDebtCurrent(fred) {
+  const official = quoteFromRatioSeries(buildPrivateDebtRatios(fred.TCMDO, fred.FGSDODNS, fred.GDP));
+  const tcmdoRow = latestFredRow(fred.TCMDO);
+  const fedRow = latestFredRow(fred.FGSDODNS);
+  const prevTcmdo = prevFredRow(fred.TCMDO);
+  const gdpPick = pickGdpDenominator(fred);
+  const treasuryMv = fred[FRED_TREASURY_MV_SERIES];
+  if (!tcmdoRow || !fedRow || !gdpPick) return official;
+
+  const { scale: fedScale, asOfDate: treasuryMvDate } = treasuryMv?.length
+    ? treasuryMvScaleFactor(treasuryMv, fedRow.date)
+    : { scale: 1, asOfDate: null };
+
+  let scaledTcmdo = tcmdoRow.v;
+  if (prevTcmdo?.v > 0 && tcmdoRow.v > 0 && tcmdoRow.date !== gdpPick.date) {
+    const qGrowth = tcmdoRow.v / prevTcmdo.v;
+    const months = Math.max(0, monthsBetweenFredDates(tcmdoRow.date, gdpPick.date));
+    scaledTcmdo = tcmdoRow.v * (qGrowth ** (months / 3));
+  }
+
+  const scaledFed = fedRow.v * fedScale;
+  const privateMillions = scaledTcmdo - scaledFed;
+  if (privateMillions <= 0) return official;
+
+  const ratio = (privateMillions / 1000 / gdpPick.billions) * 100;
+  const asOfUtc = fredDateToUtc(treasuryMvDate || gdpPick.date);
+
+  return attachFreshness({
+    price: ratio,
+    change: official ? pointsChange(ratio, official.price) : null,
+    pct: official ? pctChange(ratio, official.price) : null,
+    asOfUtc,
+    usdBillions: privateMillions / 1000,
+    debtEstMeta: {
+      scaled: fedScale !== 1 || scaledTcmdo !== tcmdoRow.v,
+      debtAnchorDate: tcmdoRow.date,
+      gdpDate: gdpPick.date,
+      gdpNowcast: gdpPick.source === 'nowcast',
+      treasuryMvDate,
+    },
+    anchorDate: tcmdoRow.date,
+    freshnessNote: [
+      'Private debt est. to latest GDP',
+      gdpPick.freshnessNote,
+    ].filter(Boolean).join(' · '),
+  }, 'estimated', { estimated: true });
 }
 
 function federalDebtBillions(fred) {
@@ -1277,6 +2183,15 @@ function valuationReferenceExtra(item, live = null, asOfUtc = null) {
   return html;
 }
 
+function normalizeValuationLiveRow(data) {
+  if (!data || data.error) return null;
+  return attachFreshness({
+    ...data,
+    live: true,
+    asOfUtc: data.asOfUtc ?? parseReferencePeriodUtc(data.asOf),
+  }, 'live', { note: data.source ? String(data.source) : 'Hub valuation' });
+}
+
 async function fetchValuationLive(metricId, force = false) {
   const item = VALUATION.find(v => v.id === metricId && v.api);
   if (!item) return null;
@@ -1288,12 +2203,8 @@ async function fetchValuationLive(metricId, force = false) {
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const data = await r.json();
     if (data?.error) throw new Error(data.error);
-    const result = {
-      ...data,
-      live: true,
-      asOfUtc: data.asOfUtc ?? parseReferencePeriodUtc(data.asOf),
-    };
-    cacheSet(key, result);
+    const result = normalizeValuationLiveRow(data);
+    if (result) cacheSet(key, result);
     return result;
   } catch (err) {
     console.warn('valuation live fetch failed', metricId, err);
@@ -1301,21 +2212,72 @@ async function fetchValuationLive(metricId, force = false) {
   }
 }
 
+/** One hub round-trip for all visible live valuation cards (BIS fetched once server-side). */
+async function fetchValuationLiveBatch(metricIds, force = false) {
+  const ids = [...new Set(metricIds.filter(id => isValuationLive(id)))];
+  if (!ids.length) return;
+  const pending = ids.filter(id => force || !cacheGet(`val-live:${id}`));
+  if (!pending.length) return;
+  try {
+    const url = `${location.origin}/economics/proxy/valuation?${new URLSearchParams({ metrics: pending.join(',') })}`;
+    const r = await fetchWithTimeout(url, {}, 120000);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const body = await r.json();
+    if (body?.error && !body.metrics) throw new Error(body.error);
+    const metrics = body.metrics || body;
+    for (const id of pending) {
+      const row = normalizeValuationLiveRow(metrics[id]);
+      if (row) cacheSet(`val-live:${id}`, row);
+    }
+  } catch (err) {
+    console.warn('valuation live batch failed, falling back per metric', err);
+    await Promise.allSettled(pending.map(id => fetchValuationLive(id, force)));
+  }
+}
+
+function startValuationPrefetch(force = false) {
+  const visible = visOf(VALUATION);
+  if (!visible.length) return;
+  if (force) valuationFredPromise = null;
+  void getValuationFredRows(force);
+  const liveIds = visible.filter(item => item.api).map(item => item.id);
+  if (liveIds.length) void fetchValuationLiveBatch(liveIds, force);
+}
+
 function fredRowsToQuote(rows) {
   if (!rows?.length) return null;
-  const lastRow = rows[rows.length - 1];
-  const prevRow = rows.length > 1 ? rows[rows.length - 2] : null;
+  const sorted = sortedFredRows(rows);
+  const lastRow = sorted[sorted.length - 1];
+  const prevRow = sorted.length > 1 ? sorted[sorted.length - 2] : null;
   const last = lastRow.v;
   const prev = prevRow?.v ?? null;
   const change = pointsChange(last, prev);
   const pct = pctChange(last, prev);
-  return { price: last, change, pct, asOfUtc: fredDateToUtc(lastRow.date) };
+  return attachFreshness(
+    { price: last, change, pct, asOfUtc: fredDateToUtc(lastRow.date) },
+    'quarterly',
+    { note: quarterLabelFromFredDate(lastRow.date) },
+  );
+}
+
+function fetchGdpCurrent(fred) {
+  const denom = pickGdpDenominator(fred);
+  const official = fredRowsToQuote(fred.GDP);
+  if (!denom || denom.source === 'quarterly') return official;
+  return attachFreshness({
+    price: denom.billions,
+    change: official ? pointsChange(denom.billions, official.price) : null,
+    pct: official ? pctChange(denom.billions, official.price) : null,
+    asOfUtc: fredDateToUtc(denom.date),
+    anchorDate: denom.anchorDate,
+    freshnessNote: denom.freshnessNote,
+  }, 'estimated', { estimated: true });
 }
 
 async function fetchFredSeriesRows(seriesId, start) {
-  if (LOCAL_FRED_PROXY_OK) {
+  if (canUseHubFredProxy()) {
     try {
-      const r = await fetchWithTimeout(localFredProxyUrl(seriesId, start), {}, 20000);
+      const r = await fetchWithTimeout(localFredProxyUrl(seriesId, start), {}, 60000);
       if (r.ok) {
         const ct = r.headers.get('content-type') || '';
         const body = await r.text();
@@ -1324,12 +2286,14 @@ async function fetchFredSeriesRows(seriesId, start) {
       }
     } catch {}
   }
+  if (isHubEconomicsPage() && isHubHostname()) return null;
   const url = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=${seriesId}&observation_start=${start}`;
   const txt = await fetchRemote(url, { asJson: false });
   return txt ? parseFredCsvRows(txt) : null;
 }
 
-const VAL_FRED_IDS = ['GDP', 'NCBEILQ027S', 'GFDEGDQ188S', 'TCMDO', 'FGSDODNS'];
+const VAL_FRED_IDS = ['GDP', FRED_GDP_NOWCAST_SERIES, 'NCBEILQ027S', 'GFDEGDQ188S', 'GFDEBTN', 'TCMDO', 'FGSDODNS'];
+const VAL_FRED_MONTHLY_IDS = [FRED_TREASURY_MV_SERIES];
 let valuationFredPromise = null;
 
 function fredStartDate(lookbackDays) {
@@ -1366,15 +2330,27 @@ function sliceSeriesForChart(series, days) {
   return series.slice(-Math.min(series.length, Math.max(2, keep)));
 }
 
-async function loadValuationFredRows(force = false, lookbackDays = 5 * 365) {
+async function loadValuationFredRows(force = false, lookbackDays = VAL_FRED_CARD_LOOKBACK_DAYS) {
   const batchKey = lookbackDays === 5 * 365 ? 'val:fred-batch' : `val:fred-batch:${lookbackDays}`;
   if (!force) {
     const cached = cacheGet(batchKey);
     if (cached) return cached;
   }
   const start = fredStartDate(lookbackDays);
+  const allIds = [...VAL_FRED_IDS, ...VAL_FRED_MONTHLY_IDS];
   const pairs = await Promise.all(
-    VAL_FRED_IDS.map(async seriesId => [seriesId, await fetchFredSeriesRows(seriesId, start)])
+    allIds.map(async seriesId => {
+      try {
+        const lookback = VAL_FRED_MONTHLY_IDS.includes(seriesId) || seriesId === FRED_GDP_NOWCAST_SERIES
+          ? Math.min(lookbackDays, 500)
+          : lookbackDays;
+        const seriesStart = fredStartDate(lookback);
+        return [seriesId, await fetchFredSeriesRows(seriesId, seriesStart)];
+      } catch (err) {
+        console.warn('FRED series fetch failed', seriesId, err);
+        return [seriesId, null];
+      }
+    })
   );
   const data = Object.fromEntries(pairs);
   cacheSet(batchKey, data);
@@ -1382,8 +2358,13 @@ async function loadValuationFredRows(force = false, lookbackDays = 5 * 365) {
 }
 
 function getValuationFredRows(force = false) {
-  if (!valuationFredPromise || force) {
-    valuationFredPromise = loadValuationFredRows(force);
+  if (force) valuationFredPromise = null;
+  if (!valuationFredPromise) {
+    valuationFredPromise = loadValuationFredRows(force).catch(err => {
+      console.warn('valuation FRED batch failed', err);
+      valuationFredPromise = null;
+      return null;
+    });
   }
   return valuationFredPromise;
 }
@@ -1433,7 +2414,11 @@ function quoteFromRatioSeries(ratios) {
   const change = pointsChange(last, prev);
   const pct = pctChange(last, prev);
   const asOfUtc = lastRow.t ?? fredDateToUtc(lastRow.date);
-  return { price: last, change, pct, asOfUtc };
+  return attachFreshness(
+    { price: last, change, pct, asOfUtc },
+    'quarterly',
+    { note: quarterLabelFromFredDate(lastRow.date) },
+  );
 }
 
 async function fetchValuation(metricId, force = false) {
@@ -1441,24 +2426,29 @@ async function fetchValuation(metricId, force = false) {
     const live = await fetchValuationLive(metricId, force);
     if (live) return live;
     const item = VALUATION.find(v => v.id === metricId);
-    return item ? { display: item.fallbackDisplay, static: true, fallback: true } : null;
+    return item
+      ? attachFreshness(
+        { display: item.fallbackDisplay, static: true, fallback: true },
+        'reference',
+        { note: 'Benchmark — live fetch unavailable' },
+      )
+      : null;
   }
 
   const key = `val:${metricId}`;
   if (!force) { const c = cacheGet(key); if (c) return c; }
   try {
     const fred = await getValuationFredRows(force);
+    if (!fred) return null;
     let result = null;
     if (metricId === 'buffett') {
-      result = quoteFromRatioSeries(buildBuffettRatios(fred.NCBEILQ027S, fred.GDP));
+      result = await fetchBuffettCurrent(fred, force);
     } else if (metricId === 'us-gdp') {
-      result = fredRowsToQuote(fred.GDP);
+      result = fetchGdpCurrent(fred);
     } else if (metricId === 'public-debt') {
-      result = fredRowsToQuote(fred.GFDEGDQ188S);
-      if (result) result.usdBillions = federalDebtBillions(fred);
+      result = fetchPublicDebtCurrent(fred);
     } else if (metricId === 'private-debt') {
-      result = quoteFromRatioSeries(buildPrivateDebtRatios(fred.TCMDO, fred.FGSDODNS, fred.GDP));
-      if (result) result.usdBillions = privateDebtBillions(fred);
+      result = fetchPrivateDebtCurrent(fred);
     }
     if (result) cacheSet(key, result);
     return result;
@@ -1497,12 +2487,10 @@ async function fetchBond(series_id, force = false) {
     if (isNaN(last)) return null;
     const change = !isNaN(prev) ? pointsChange(last, prev) : null;
     const pct = !isNaN(prev) ? pctChange(last, prev) : null;
-    return {
-      price: last,
-      change,
-      pct,
-      asOfUtc: fredDateToUtc(lastParts[0]),
-    };
+    return attachFreshness(
+      { price: last, change, pct, asOfUtc: fredDateToUtc(lastParts[0]) },
+      'daily',
+    );
   }
 
   try {
@@ -1516,6 +2504,73 @@ async function fetchBond(series_id, force = false) {
 }
 
 // ── Render Grids ──────────────────────────────────
+const SECTION_LOAD_LABELS = {
+  eq: 'Loading quotes…',
+  val: 'Loading FRED & live metrics…',
+  comm: 'Loading commodities…',
+  bond: 'Loading yields…',
+  fx: 'Loading FX rates…',
+  crypto: 'Loading crypto…',
+};
+
+function skeletonCardsMarkup(count) {
+  return Array.from({ length: count }, (_, i) => `
+      <div class="card card--skeleton neu" style="animation-delay:${i * 0.05}s" aria-hidden="true">
+        <div class="skeleton sk-ticker"></div>
+        <div class="skeleton sk-name"></div>
+        <div class="skeleton sk-price"></div>
+        <div class="skeleton sk-change"></div>
+      </div>`).join('');
+}
+
+function isPageLoading() {
+  return Boolean(document.querySelector('.section--loading'));
+}
+
+function beginPageLoad(message = 'Retrieving data…') {
+  document.getElementById('refresh-btn')?.classList.add('spinning');
+  const status = document.getElementById('status-line');
+  if (status) {
+    status.className = 'status-line loading';
+    status.textContent = message;
+  }
+  if (isPageLoading()) return;
+  for (const section of SECTIONS) {
+    if (visOf(section.items).length) setSectionLoading(section, true);
+  }
+}
+
+function setSectionLoading(section, loading) {
+  const grid = document.getElementById(section.gridId);
+  const el = grid?.closest('.section');
+  if (!grid || !el) return;
+
+  const header = el.querySelector('.section-header');
+  let status = el.querySelector('.section-load-status');
+  if (!status && header) {
+    status = document.createElement('span');
+    status.className = 'section-load-status';
+    const editBtn = header.querySelector('.section-edit-btn');
+    header.insertBefore(status, editBtn || null);
+  }
+
+  if (loading) {
+    const visible = visOf(section.items);
+    if (!visible.length) return;
+    el.classList.add('section--loading');
+    if (status) {
+      status.textContent = SECTION_LOAD_LABELS[section.key] || 'Loading…';
+      status.hidden = false;
+    }
+    grid.setAttribute('aria-busy', 'true');
+    grid.innerHTML = skeletonCardsMarkup(visible.length);
+  } else {
+    el.classList.remove('section--loading');
+    if (status) status.hidden = true;
+    grid.removeAttribute('aria-busy');
+  }
+}
+
 function renderGrid(id, items) {
   document.getElementById(id).innerHTML = items.map((d, i) => renderCard(d, i * 0.06)).join('');
 }
@@ -1553,14 +2608,17 @@ function renderSectionGrid(section) {
           isUsd,
           isAud,
           asOfUtc,
+          freshnessKind: d?.freshnessKind ?? (d?.live ? 'live' : d?.fallback ? 'reference' : 'daily'),
+          freshnessNote: d?.freshnessNote ?? null,
+          live: d?.live,
+          fallback: d?.fallback,
           extra: valuationReferenceExtra(item, d?.live ? d : null, asOfUtc),
           itemKey: item.id,
           sectionKey: section.key,
           failed: false,
-          pillLabel: d?.live ? 'Live' : (d?.fallback ? 'Ref' : null),
           noChart: true,
           cardClassExtra: 'card--reference',
-          showCardAsOf: false,
+          showCardAsOf: Boolean(asOfUtc),
         };
       }
 
@@ -1577,6 +2635,14 @@ function renderSectionGrid(section) {
           extra = `<div class="yield-extra"><span class="spread-label">Zone</span>
             <span class="spread-val ${zone.cls}">${zone.label}</span></div>`;
         }
+        extra += buffettExtraHtml(d);
+      } else if (item.id === 'public-debt' || item.id === 'private-debt') {
+        isRatio = true;
+        price = formatRatioPrice(d, 1);
+        extra = valuationUsdExtra('Est. (USD)', d?.usdBillions);
+        extra += debtRatioExtraHtml(d);
+        extra += `<div class="yield-extra"><span class="spread-label">Measure</span>
+          <span class="spread-val buffett-fair">% of GDP (est.)</span></div>`;
       } else {
         isRatio = true;
         price = formatRatioPrice(d, 1);
@@ -1595,6 +2661,14 @@ function renderSectionGrid(section) {
         isRatio,
         isUsd,
         asOfUtc: d?.asOfUtc ?? null,
+        freshnessKind: d?.freshnessKind,
+        freshnessNote: d?.freshnessNote,
+        anchorDate: d?.anchorDate,
+        estimated: d?.estimated,
+        buffettMeta: d?.buffettMeta,
+        debtEstMeta: d?.debtEstMeta,
+        live: d?.live,
+        fallback: d?.fallback,
         itemKey: item.id,
         sectionKey: section.key,
         failed: !d || !price,
@@ -1604,22 +2678,29 @@ function renderSectionGrid(section) {
   }
 
   if (section.key === 'bond') {
-    const b2  = DATA['DGS2']  ? DATA['DGS2'].price  : null;
-    const b10 = DATA['^TNX']  ? DATA['^TNX'].price  : null;
+    const spreadFred = computeBondSpreadFred(BOND_SPREAD_FRED);
+    const b2  = spreadFred?.spread != null ? null : (DATA['DGS2'] ? DATA['DGS2'].price : null);
+    const b10 = spreadFred?.spread != null ? null : (DATA['^TNX'] ? DATA['^TNX'].price : null);
     renderGrid(section.gridId, visible.map(item => {
       const d = DATA[item.id];
       let extra = '';
-      if (item.id === '^TNX' && b2 !== null && b10 !== null) {
-        const spread = (b10 - b2).toFixed(2);
-        const cls = spread >= 0 ? 'spread-pos' : 'spread-neg';
-        extra = `<div class="yield-extra"><span class="spread-label">2s10s spread</span>
-          <span class="spread-val ${cls}">${spread >= 0 ? '+' : ''}${spread} pp</span></div>`;
+      if (item.id === '^TNX') {
+        if (spreadFred) extra = spread2s10sExtraHtml(spreadFred);
+        else if (b2 !== null && b10 !== null) {
+          const spread = (b10 - b2).toFixed(2);
+          const cls = spread >= 0 ? 'spread-pos' : 'spread-neg';
+          extra = `<div class="yield-extra"><span class="spread-label">2s10s spread</span>
+            <span class="spread-val ${cls}">${spread >= 0 ? '+' : ''}${spread} pp</span>
+            <span class="spread-val spread-val--muted">mixed sources</span></div>`;
+        }
       }
       return withGoogleUrl({ ticker: item.ticker, label: item.label,
         price: formatYieldPrice(d),
         change: d ? d.change : null, pct: d ? d.pct : null, extra,
         isYield: true,
         asOfUtc: d?.asOfUtc ?? null,
+        freshnessKind: d?.freshnessKind,
+        freshnessNote: d?.freshnessNote,
         itemKey: item.id, sectionKey: section.key, failed: !d || !formatYieldPrice(d) }, item, section.key);
     }));
     return;
@@ -1629,7 +2710,21 @@ function renderSectionGrid(section) {
     const k = getItemKey(item);
     const d = DATA[k];
     const card = section.card(item, d);
-    return withGoogleUrl({ ...card, itemKey: k, sectionKey: section.key, failed: !d }, item, section.key);
+    return withGoogleUrl({
+      ...card,
+      itemKey: k,
+      sectionKey: section.key,
+      failed: !d,
+      asOfUtc: d?.asOfUtc ?? card.asOfUtc,
+      freshnessKind: d?.freshnessKind ?? card.freshnessKind
+        ?? (section.key === 'fx' ? 'daily' : undefined),
+      freshnessNote: d?.freshnessNote ?? card.freshnessNote,
+      anchorDate: d?.anchorDate ?? card.anchorDate,
+      estimated: d?.estimated ?? card.estimated,
+      buffettMeta: d?.buffettMeta,
+      debtEstMeta: d?.debtEstMeta,
+      live: d?.live,
+    }, item, section.key);
   }));
 }
 
@@ -1721,7 +2816,13 @@ async function searchAccessibleStocks(query) {
 function formatPreviewQuote(d) {
   if (!d || d.price == null) return 'Quote unavailable';
   const price = fmt(d.price, 2);
-  const pct = d.pct != null ? `${sign(d.pct)}${Math.abs(d.pct).toFixed(2)}%` : '';
+  let pct = '';
+  if (d.pct != null) {
+    const dp = displayDecimalsForDelta(d.pct, 2, 3);
+    pct = isDisplayFlat(d.pct, dp)
+      ? '0.00%'
+      : `${d.pct > 0 ? '+' : '-'}${Math.abs(d.pct).toFixed(dp)}%`;
+  }
   return `${price}${pct ? ` · ${pct}` : ''}`;
 }
 
@@ -1794,7 +2895,7 @@ function renderAddStockPanel() {
   const results = addStockState.results;
   const sel = addStockState.selected;
   const previewCls = addStockState.preview?.pct != null
-    ? (addStockState.preview.pct >= 0 ? 'up' : 'dn')
+    ? cardClass(addStockState.preview.pct, addStockState.preview.change)
     : '';
 
   panel.innerHTML = `
@@ -1977,6 +3078,7 @@ async function toggleSym(key, sectionKey) {
   if (isOn(item) && !DATA[key]) DATA[key] = await section.fetch(item, false);
   renderSectionGrid(section);
   renderCust(section);
+  updateMarketStatus();
 }
 
 // ── Info Box ──────────────────────────────────────
@@ -2152,28 +3254,308 @@ function updateApiUsageDisplay() {
   el.style.color = usage.remaining <= 5 ? 'var(--dn)' : usage.remaining <= 10 ? 'var(--gold)' : 'var(--dim)';
 }
 
-// ── Market Hours ──────────────────────────────────
-function updateMarketStatus() {
-  const now = new Date();
-  // Use Intl to get true Eastern Time (handles DST automatically)
-  const parts = Object.fromEntries(
+// ── Market hours ───────────────────────────────────
+const DAY_INDEX = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+
+const MARKET_VENUES = {
+  us_equity: {
+    label: 'US equities',
+    tz: 'America/New_York',
+    tzShort: 'ET',
+    open: [9, 30],
+    close: [16, 0],
+    weekdays: [1, 2, 3, 4, 5],
+    kind: 'cash',
+  },
+  asx: {
+    label: 'ASX',
+    tz: 'Australia/Sydney',
+    tzShort: 'Sydney',
+    open: [10, 0],
+    close: [16, 0],
+    weekdays: [1, 2, 3, 4, 5],
+    kind: 'cash',
+  },
+  cme: {
+    label: 'CME Globex',
+    tz: 'America/Chicago',
+    tzShort: 'CT',
+    kind: 'globex',
+  },
+  fx: {
+    label: 'FX (spot)',
+    tz: 'America/New_York',
+    tzShort: 'ET',
+    kind: 'fx',
+  },
+  crypto: {
+    label: 'Crypto',
+    kind: 'always',
+  },
+};
+
+const SECTION_MARKET_IDS = {
+  eq: ['us_equity', 'asx'],
+  val: [],
+  comm: ['cme'],
+  bond: ['us_equity'],
+  fx: ['fx'],
+  crypto: ['crypto'],
+};
+
+function tzParts(date, timeZone) {
+  const raw = Object.fromEntries(
     new Intl.DateTimeFormat('en-US', {
-      timeZone: 'America/New_York',
-      weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false,
-    }).formatToParts(now).map(p => [p.type, p.value])
+      timeZone,
+      weekday: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).formatToParts(date).map(p => [p.type, p.value])
   );
-  const h = parseInt(parts.hour), m = parseInt(parts.minute);
-  const day = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }[parts.weekday] ?? -1;
+  return {
+    day: DAY_INDEX[raw.weekday] ?? -1,
+    h: parseInt(raw.hour, 10),
+    m: parseInt(raw.minute, 10),
+  };
+}
 
-  const isWeekday = day > 0 && day < 6;
-  const afterOpen = h > 9 || (h === 9 && m >= 30);
-  const beforeClose = h < 16;
-  const open = isWeekday && afterOpen && beforeClose;
+function mins(h, m) { return h * 60 + m; }
 
-  document.getElementById('mkt-dot').className = `dot ${open ? 'open' : 'closed'}`;
-  document.getElementById('mkt-label').textContent = open
-    ? 'NYSE / NASDAQ: Open'
-    : `NYSE / NASDAQ: Closed · Opens ${(day === 5 || day === 6 || day === 0) ? 'Monday' : 'Today'} 09:30 ET`;
+function formatClock(date, timeZone, withUtc = true) {
+  const local = new Intl.DateTimeFormat('en-GB', {
+    timeZone,
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZoneName: 'short',
+  }).format(date);
+  if (!withUtc) return local;
+  const utc = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'UTC',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(date);
+  return `${local} (${utc} UTC)`;
+}
+
+function cashSessionOpen(venue, date = new Date()) {
+  const t = tzParts(date, venue.tz);
+  if (!venue.weekdays.includes(t.day)) return false;
+  const nowM = mins(t.h, t.m);
+  return nowM >= mins(venue.open[0], venue.open[1]) && nowM < mins(venue.close[0], venue.close[1]);
+}
+
+function findNextCashTransition(venue, from, toOpen) {
+  for (let i = 0; i <= 10 * 24 * 4; i++) {
+    const d = new Date(from.getTime() + i * 15 * 60_000);
+    const open = cashSessionOpen(venue, d);
+    if (toOpen && open) return d;
+    if (!toOpen && !open) {
+      const prev = new Date(d.getTime() - 15 * 60_000);
+      if (cashSessionOpen(venue, prev)) return d;
+    }
+  }
+  return null;
+}
+
+function evaluateCashVenue(venue, now = new Date()) {
+  const open = cashSessionOpen(venue, now);
+  const hours = `${String(venue.open[0]).padStart(2, '0')}:${String(venue.open[1]).padStart(2, '0')}–${String(venue.close[0]).padStart(2, '0')}:${String(venue.close[1]).padStart(2, '0')} ${venue.tzShort}`;
+  if (open) {
+    const closeAt = findNextCashTransition(venue, now, false);
+    const detail = closeAt
+      ? `Open · closes ${formatClock(closeAt, venue.tz)}`
+      : `Open · ${hours}`;
+    return { open: true, detail, hours };
+  }
+  const openAt = findNextCashTransition(venue, now, true);
+  const detail = openAt
+    ? `Closed · opens ${formatClock(openAt, venue.tz)}`
+    : `Closed · ${hours}`;
+  return { open: false, detail, hours };
+}
+
+/** CME Globex: Sun 17:00 – Fri 16:00 CT; daily halt 16:00–17:00 CT. */
+function cmeGlobexOpen(date = new Date()) {
+  const t = tzParts(date, 'America/Chicago');
+  const nowM = mins(t.h, t.m);
+  if (nowM >= mins(16, 0) && nowM < mins(17, 0)) return false;
+  if (t.day === 6) return false;
+  if (t.day === 0) return nowM >= mins(17, 0);
+  if (t.day === 5 && nowM >= mins(16, 0)) return false;
+  return t.day >= 1 && t.day <= 5;
+}
+
+function findNextGlobexTransition(from, toOpen) {
+  for (let i = 0; i <= 10 * 24 * 4; i++) {
+    const d = new Date(from.getTime() + i * 15 * 60_000);
+    const open = cmeGlobexOpen(d);
+    if (toOpen && open) return d;
+    if (!toOpen && !open) {
+      const prev = new Date(d.getTime() - 15 * 60_000);
+      if (cmeGlobexOpen(prev)) return d;
+    }
+  }
+  return null;
+}
+
+function evaluateCmeGlobex(now = new Date()) {
+  const hours = 'Sun 17:00 – Fri 16:00 CT · daily halt 16:00–17:00';
+  const t = tzParts(now, 'America/Chicago');
+  const nowM = mins(t.h, t.m);
+  const halt = t.day >= 1 && t.day <= 5 && nowM >= mins(16, 0) && nowM < mins(17, 0);
+  if (halt) {
+    const reopen = findNextGlobexTransition(now, true);
+    return {
+      open: false,
+      detail: reopen
+        ? `Maintenance · reopens ${formatClock(reopen, 'America/Chicago')}`
+        : 'Maintenance · 16:00–17:00 CT',
+      hours,
+    };
+  }
+  if (cmeGlobexOpen(now)) {
+    const closeAt = findNextGlobexTransition(now, false);
+    return {
+      open: true,
+      detail: closeAt ? `Open · closes ${formatClock(closeAt, 'America/Chicago')}` : `Open · ${hours}`,
+      hours,
+    };
+  }
+  const openAt = findNextGlobexTransition(now, true);
+  return {
+    open: false,
+    detail: openAt ? `Closed · opens ${formatClock(openAt, 'America/Chicago')}` : `Closed · ${hours}`,
+    hours,
+  };
+}
+
+/** FX spot: Sun 17:00 ET – Fri 17:00 ET (NY week). */
+function fxSpotOpen(date = new Date()) {
+  const t = tzParts(date, 'America/New_York');
+  const nowM = mins(t.h, t.m);
+  if (t.day === 6) return false;
+  if (t.day === 0) return nowM >= mins(17, 0);
+  if (t.day === 5) return nowM < mins(17, 0);
+  return true;
+}
+
+function findNextFxTransition(from, toOpen) {
+  for (let i = 0; i <= 10 * 24 * 4; i++) {
+    const d = new Date(from.getTime() + i * 15 * 60_000);
+    const open = fxSpotOpen(d);
+    if (toOpen && open) return d;
+    if (!toOpen && !open) {
+      const prev = new Date(d.getTime() - 15 * 60_000);
+      if (fxSpotOpen(prev)) return d;
+    }
+  }
+  return null;
+}
+
+function evaluateFxSession(now = new Date()) {
+  const hours = 'Sun 17:00 – Fri 17:00 ET';
+  if (fxSpotOpen(now)) {
+    const closeAt = findNextFxTransition(now, false);
+    return {
+      open: true,
+      detail: closeAt ? `Open · closes ${formatClock(closeAt, 'America/New_York')}` : `Open · ${hours}`,
+      hours,
+    };
+  }
+  const openAt = findNextFxTransition(now, true);
+  return {
+    open: false,
+    detail: openAt ? `Closed · opens ${formatClock(openAt, 'America/New_York')}` : `Closed · ${hours}`,
+    hours,
+  };
+}
+
+function evaluateCryptoSession() {
+  return {
+    open: true,
+    detail: 'Open · 24/7',
+    hours: 'Always trading',
+  };
+}
+
+function evaluateVenue(venueId, now = new Date()) {
+  const venue = MARKET_VENUES[venueId];
+  if (!venue) return { open: false, detail: '—', hours: '' };
+  if (venue.kind === 'always') return evaluateCryptoSession();
+  if (venue.kind === 'fx') return evaluateFxSession(now);
+  if (venue.kind === 'globex') return evaluateCmeGlobex(now);
+  return evaluateCashVenue(venue, now);
+}
+
+function marketChipHtml(venueId, state) {
+  const venue = MARKET_VENUES[venueId];
+  return `<div class="market-hours-chip ${state.open ? 'open' : 'closed'}" title="${escapeHtml(state.hours)}">
+    <span class="dot ${state.open ? 'open' : 'closed'}" aria-hidden="true"></span>
+    <span class="market-hours-name">${escapeHtml(venue?.label || venueId)}</span>
+    <span class="market-hours-detail">${escapeHtml(state.detail)}</span>
+  </div>`;
+}
+
+function activeMarketVenueIds() {
+  const ids = new Set();
+  for (const section of SECTIONS) {
+    if (!visOf(section.items).length) continue;
+    for (const id of SECTION_MARKET_IDS[section.key] || []) ids.add(id);
+  }
+  return [...ids];
+}
+
+function renderMarketHoursBar(container, venueIds) {
+  if (!container) return;
+  const now = new Date();
+  container.innerHTML = venueIds.map(id => marketChipHtml(id, evaluateVenue(id, now))).join('');
+}
+
+function ensureSectionMarketsBar(section) {
+  const grid = document.getElementById(section.gridId);
+  const el = grid?.closest('.section');
+  if (!el) return null;
+  let bar = el.querySelector('.section-markets');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.className = 'section-markets';
+    bar.dataset.section = section.key;
+    const header = el.querySelector('.section-header');
+    header?.insertAdjacentElement('afterend', bar);
+  }
+  return bar;
+}
+
+function updateSectionMarkets() {
+  for (const section of SECTIONS) {
+    const ids = SECTION_MARKET_IDS[section.key];
+    if (!ids?.length || !visOf(section.items).length) {
+      const bar = document.querySelector(`.section-markets[data-section="${section.key}"]`);
+      if (bar) bar.hidden = true;
+      continue;
+    }
+    const bar = ensureSectionMarketsBar(section);
+    if (!bar) continue;
+    bar.hidden = false;
+    renderMarketHoursBar(bar, ids);
+  }
+}
+
+function updateMarketStatus() {
+  const footer = document.getElementById('market-hours');
+  const venueIds = activeMarketVenueIds();
+  if (footer) renderMarketHoursBar(footer, venueIds.length ? venueIds : ['us_equity', 'fx', 'crypto']);
+  updateSectionMarkets();
+}
+
+let marketHoursTimer = null;
+function startMarketHoursClock() {
+  if (marketHoursTimer) clearInterval(marketHoursTimer);
+  updateMarketStatus();
+  marketHoursTimer = setInterval(updateMarketStatus, 60_000);
 }
 
 // ── Date line ─────────────────────────────────────
@@ -2214,11 +3596,11 @@ async function loadAll(force = false) {
     }
   }
 
-  btn.classList.add('spinning');
-  status.className = 'status-line';
-  status.textContent = throttleNote ? 'Loading cached data…' : 'Loading…';
+  beginPageLoad(throttleNote ? 'Loading cached data…' : 'Retrieving data…');
   updateDateLine();
   updateMarketStatus();
+  startValuationPrefetch(effectiveForce);
+  void loadBondSpreadFred(effectiveForce).then(data => { BOND_SPREAD_FRED = data || {}; });
 
   if (effectiveForce && activeProvider === 'alphavantage') {
     const eqItems = SECTIONS.find(s => s.key === 'eq')?.items || EQUITIES;
@@ -2226,21 +3608,106 @@ async function loadAll(force = false) {
     updateApiUsageDisplay();
   }
 
-  // Valuation: one batched FRED load, then fill all cards (avoids duplicate parallel FRED calls).
-  const valSection = SECTIONS.find(s => s.key === 'val');
-  if (valSection && visOf(valSection.items).length) {
-    if (effectiveForce) valuationFredPromise = null;
-    await getValuationFredRows(effectiveForce);
-  }
-
-  await Promise.all(SECTIONS.map(async section => {
+  async function loadSection(section) {
     const visible = visOf(section.items);
     if (!visible.length) return;
-    const results = await Promise.all(visible.map(item => section.fetch(item, effectiveForce)));
-    visible.forEach((item, i) => { if (results[i]) DATA[getItemKey(item)] = results[i]; });
-    renderSectionGrid(section);
-    renderCust(section);
-  }));
+
+    if (section.key === 'val') {
+      if (!effectiveForce) {
+        let painted = false;
+        for (const item of visible) {
+          const key = getItemKey(item);
+          const ck = item.api ? `val-live:${key}` : `val:${key}`;
+          const cached = cacheGet(ck) || cacheGetStale(ck);
+          if (cached) {
+            DATA[key] = cached;
+            painted = true;
+          }
+        }
+        if (painted) {
+          renderSectionGrid(section);
+          setSectionLoading(section, false);
+        }
+      }
+
+      let renderQueued = false;
+      const scheduleRender = () => {
+        if (renderQueued) return;
+        renderQueued = true;
+        requestAnimationFrame(() => {
+          renderQueued = false;
+          renderSectionGrid(section);
+        });
+      };
+      try {
+        await Promise.allSettled(visible.map(async item => {
+          const key = getItemKey(item);
+          try {
+            const data = await section.fetch(item, effectiveForce);
+            if (data) DATA[key] = data;
+            else delete DATA[key];
+          } catch (err) {
+            console.warn('card fetch failed', section.key, key, err);
+            delete DATA[key];
+          }
+          scheduleRender();
+        }));
+      } catch (err) {
+        console.warn('section load failed', section.key, err);
+      } finally {
+        renderSectionGrid(section);
+        renderCust(section);
+        setSectionLoading(section, false);
+      }
+      return;
+    }
+
+    if (section.key === 'bond') {
+      try {
+        BOND_SPREAD_FRED = await loadBondSpreadFred(effectiveForce);
+      } catch {
+        BOND_SPREAD_FRED = {};
+      }
+    }
+
+    if (!effectiveForce) {
+      let painted = false;
+      for (const item of visible) {
+        const key = getItemKey(item);
+        const ck = cacheKeyForItem(item, section);
+        const cached = cacheGet(ck) || cacheGetStale(ck);
+        if (cached) {
+          DATA[key] = cached;
+          painted = true;
+        }
+      }
+      if (painted) {
+        renderSectionGrid(section);
+        setSectionLoading(section, false);
+      }
+    }
+
+    try {
+      const outcomes = await Promise.allSettled(
+        visible.map(item => section.fetch(item, effectiveForce))
+      );
+      outcomes.forEach((out, i) => {
+        if (out.status === 'fulfilled' && out.value) {
+          DATA[getItemKey(visible[i])] = out.value;
+        } else if (out.status === 'rejected') {
+          console.warn('card fetch failed', section.key, getItemKey(visible[i]), out.reason);
+        }
+      });
+    } catch (err) {
+      console.warn('section load failed', section.key, err);
+    } finally {
+      renderSectionGrid(section);
+      renderCust(section);
+      setSectionLoading(section, false);
+    }
+  }
+
+  await Promise.all(SECTIONS.map(s => loadSection(s)));
 
   btn.classList.remove('spinning');
   if (force) setRefreshButtonBlocked(true, REFRESH_MIN_GAP_MS);
@@ -2261,6 +3728,82 @@ async function loadAll(force = false) {
     status.textContent = `✓ Updated ${now}`;
   }
   updateApiUsageDisplay();
+  updateMarketStatus();
+  buildFreshnessSummaryFromData();
+  updateFreshnessFooter();
+  void fetchHubFreshness().then(() => {
+    buildFreshnessSummaryFromData();
+    updateFreshnessFooter();
+  });
+}
+
+async function fetchHubFreshness() {
+  if (!isHubEconomicsPage() || !isHubHostname()) return null;
+  try {
+    const r = await fetchWithTimeout(`${location.origin}/economics/api/freshness`, {}, 8000);
+    if (!r.ok) return null;
+    macroFreshnessSummary = await r.json();
+    return macroFreshnessSummary;
+  } catch {
+    return null;
+  }
+}
+
+function buildFreshnessSummaryFromData() {
+  const series = { ...(macroFreshnessSummary?.series || {}) };
+  for (const section of SECTIONS) {
+    for (const item of section.items) {
+      const key = getItemKey(item);
+      const d = DATA[key];
+      if (!d?.asOfUtc) continue;
+      const sid = item.id || item.sym;
+      const existing = series[sid];
+      const asOf = fredDateToUtcLabel(d.asOfUtc);
+      if (!existing || (asOf && asOf > (existing.lastObservation || ''))) {
+        series[sid] = {
+          lastObservation: asOf,
+          kind: inferFreshnessKind({ ...d, sectionKey: section.key, itemKey: key }),
+        };
+      }
+    }
+  }
+  macroFreshnessSummary = {
+    ...(macroFreshnessSummary || {}),
+    series,
+    clientBuiltAt: new Date().toISOString(),
+  };
+}
+
+function fredDateToUtcLabel(ms) {
+  if (ms == null) return '';
+  const d = new Date(ms);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toISOString().slice(0, 10);
+}
+
+function updateFreshnessFooter() {
+  const el = document.getElementById('freshness-line');
+  if (!el) return;
+  const s = macroFreshnessSummary;
+  if (!s) {
+    el.textContent = '';
+    el.hidden = true;
+    return;
+  }
+  const parts = [];
+  if (s.fredApi) parts.push('FRED API');
+  const gdp = s.series?.GDP?.lastObservation;
+  const debt = s.series?.GFDEGDQ188S?.lastObservation;
+  const mv = s.series?.MVMTD027MNFRBDAL?.lastObservation;
+  if (gdp) parts.push(`GDP ${gdp}`);
+  if (debt) parts.push(`debt ${debt}`);
+  if (mv) parts.push(`Treasury MV ${mv}`);
+  if (!parts.length) {
+    el.hidden = true;
+    return;
+  }
+  el.hidden = false;
+  el.textContent = `Data vintage: ${parts.join(' · ')}`;
 }
 
 // ── Chart modal ───────────────────────────────────
@@ -2449,7 +3992,7 @@ async function fetchValuationHistory(metricId, days) {
   let series = null;
 
   if (metricId === 'buffett') {
-    const ratios = buildBuffettRatios(fred.NCBEILQ027S, fred.GDP);
+    const ratios = buildBuffettRatios(fred[BUFFETT_CAP_SERIES], fred.GDP);
     series = ratios?.map(r => ({ t: r.t, v: r.ratio })) ?? null;
   } else if (metricId === 'us-gdp') {
     series = fred.GDP?.map(r => ({ t: new Date(r.date).getTime(), v: r.v })) ?? null;
@@ -2610,7 +4153,7 @@ function closeChart() {
   chartState.sectionKey = null;
   modal.hidden = true;
   modal.inert = true;
-  document.body.style.overflow = '';
+  document.body.style.overflow = document.getElementById('info-modal')?.hidden === false ? 'hidden' : '';
   removeChartFocusTrap();
   if (restore instanceof HTMLElement && document.contains(restore)) {
     restore.focus({ preventScroll: true });
@@ -2687,7 +4230,14 @@ function saveKey() {
 
 function wireUi() {
   wireAddStockPanel();
-  document.getElementById('save-key-btn')?.addEventListener('click', saveKey);
+  document.getElementById('api-banner')?.addEventListener('submit', e => {
+    e.preventDefault();
+    saveKey();
+  });
+  document.getElementById('save-key-btn')?.addEventListener('click', e => {
+    e.preventDefault();
+    saveKey();
+  });
   document.getElementById('refresh-btn')?.addEventListener('click', () => loadAll(true));
   const infoToggle = document.getElementById('info-header-toggle');
   infoToggle?.addEventListener('click', toggleInfo);
@@ -2699,6 +4249,14 @@ function wireUi() {
   });
   document.getElementById('api-key-input')?.addEventListener('keydown', e => {
     if (e.key === 'Enter') saveKey();
+  });
+
+  document.getElementById('info-modal-close')?.addEventListener('click', closeInfoModal);
+  document.querySelectorAll('[data-info-close]').forEach(el => {
+    el.addEventListener('click', closeInfoModal);
+    if (el.classList.contains('info-modal-backdrop')) {
+      el.addEventListener('mousedown', e => e.preventDefault());
+    }
   });
 
   document.getElementById('chart-modal-close')?.addEventListener('click', closeChart);
@@ -2727,6 +4285,15 @@ function wireUi() {
       }
       return;
     }
+    const infoBtn = e.target.closest('.card-info');
+    if (infoBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (infoBtn.dataset.itemKey && infoBtn.dataset.sectionKey) {
+        openInfoModal(infoBtn.dataset.itemKey, infoBtn.dataset.sectionKey);
+      }
+      return;
+    }
     const chartBtn = e.target.closest('.card-chart');
     if (chartBtn) {
       e.preventDefault();
@@ -2746,9 +4313,15 @@ function wireUi() {
   });
 
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && !document.getElementById('chart-modal')?.hidden) {
-      closeChart();
-      return;
+    if (e.key === 'Escape') {
+      if (!document.getElementById('info-modal')?.hidden) {
+        closeInfoModal();
+        return;
+      }
+      if (!document.getElementById('chart-modal')?.hidden) {
+        closeChart();
+        return;
+      }
     }
     if (!(e.target instanceof Element)) return;
     const chartBtn = e.target.closest('.card-chart');
@@ -2773,16 +4346,18 @@ async function init() {
   }
   syncApiBanner();
   updateDateLine();
-  updateMarketStatus();
+  startMarketHoursClock();
   renderInfoBox();
   updateApiUsageDisplay();
-  await detectLocalProxy();
-  const runQuotes = () => { loadAll(false); };
-  if (typeof requestIdleCallback === 'function') {
-    requestIdleCallback(runQuotes, { timeout: 2500 });
+  beginPageLoad();
+  if (shouldOptimisticLocalProxy()) {
+    setOptimisticLocalProxy();
+    void detectLocalProxy();
   } else {
-    setTimeout(runQuotes, 0);
+    await detectLocalProxy();
   }
+  startValuationPrefetch(false);
+  await loadAll(false);
 }
 
 init();

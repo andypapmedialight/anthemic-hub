@@ -19,8 +19,10 @@ if [[ -f "$ROOT/.env" ]]; then
   set +a
 fi
 
-if [[ -z "${FRED_API_KEY:-}" ]]; then
-  echo "Tip: export FRED_API_KEY=… (or add to $ROOT/.env) for faster /economics/ valuation loads."
+if [[ -n "${FRED_API_KEY:-}" ]]; then
+  echo "FRED_API_KEY:  loaded from .env (${#FRED_API_KEY} chars) → FRED JSON API"
+else
+  echo "Tip: add FRED_API_KEY=… to $ROOT/.env for faster /economics/ valuation loads."
 fi
 
 if command -v python3 >/dev/null 2>&1; then

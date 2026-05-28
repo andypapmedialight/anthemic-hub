@@ -120,6 +120,7 @@ Config lives in **anthemic-ops** repo (`nginx/sites-available/anthemic-hub.conf`
 | `/setlist/` | Proxy to Set List SPA |
 | `/api/` | Proxy to Set List API on `127.0.0.1:8081` |
 | `/bass/` | Static files from `/var/www/anthemic-hub/bass/` |
+| `/economics/` | Morning Macro static UI + nginx proxies (see **anthemic-ops** README) |
 | `/` | Static files from `/var/www/anthemic-hub/` |
 
 ## One-time Droplet setup

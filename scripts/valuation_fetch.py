@@ -7,12 +7,17 @@ import json
 import os
 import re
 import subprocess
+import time
 import urllib.error
+import urllib.parse
 import urllib.request
 import zipfile
 import xml.etree.ElementTree as ET
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 UPSTREAM_TIMEOUT = 25
+BIS_OTC_CACHE_TTL = 3600
+_bis_otc_cache: tuple[float, list[dict[str, str]]] | None = None
 
 FINRA_MARGIN_HTML = (
     "https://www.finra.org/rules-guidance/key-topics/margin-accounts/margin-statistics"
@@ -264,8 +269,14 @@ def fetch_margin_debt() -> dict:
 
 
 def _bis_otc_rows() -> list[dict[str, str]]:
+    global _bis_otc_cache
+    now = time.time()
+    if _bis_otc_cache and now - _bis_otc_cache[0] < BIS_OTC_CACHE_TTL:
+        return _bis_otc_cache[1]
     text = _fetch(BIS_OTC_OUT, timeout=60).decode("utf-8", "replace")
-    return _parse_csv(text)
+    rows = _parse_csv(text)
+    _bis_otc_cache = (now, rows)
+    return rows
 
 
 def _bis_match(rows: list[dict[str, str]], **want: str) -> dict[str, str] | None:
@@ -390,6 +401,60 @@ def fetch_au_cgs() -> dict:
     }
 
 
+FRESHNESS_FRED_SERIES = (
+    "GDP",
+    "GDPNOW",
+    "GFDEGDQ188S",
+    "GFDEBTN",
+    "TCMDO",
+    "FGSDODNS",
+    "MVMTD027MNFRBDAL",
+    "NCBEILQ027S",
+    "DGS2",
+    "DGS10",
+)
+
+
+def fred_last_observation(series_id: str, api_key: str | None = None) -> str | None:
+    """Latest non-missing FRED observation date (YYYY-MM-DD)."""
+    key = (api_key or os.environ.get("FRED_API_KEY", "")).strip()
+    if not key:
+        return None
+    url = (
+        "https://api.stlouisfed.org/fred/series/observations"
+        f"?series_id={urllib.parse.quote(series_id)}"
+        f"&file_type=json&sort_order=desc&limit=1"
+        f"&api_key={urllib.parse.quote(key)}"
+    )
+    try:
+        body = _fetch(url, timeout=12).decode("utf-8", "replace")
+        payload = json.loads(body)
+        obs = payload.get("observations") or []
+        if obs and obs[0].get("date"):
+            val = obs[0].get("value")
+            if val not in (None, ".", ""):
+                return obs[0]["date"]
+    except Exception:
+        return None
+    return None
+
+
+def fetch_freshness_api(api_key: str | None = None) -> dict:
+    """Server-side FRED vintage summary for Morning Macro footer."""
+    key = (api_key or os.environ.get("FRED_API_KEY", "")).strip()
+    series: dict[str, dict] = {}
+    if key:
+        for sid in FRESHNESS_FRED_SERIES:
+            last = fred_last_observation(sid, key)
+            if last:
+                series[sid] = {"lastObservation": last}
+    return {
+        "fredApi": bool(key),
+        "series": series,
+        "generatedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+    }
+
+
 METRICS = {
     "margin-debt": fetch_margin_debt,
     "otc-notional": fetch_bis_otc_notional,
@@ -404,3 +469,31 @@ def fetch_valuation_metric(metric: str) -> dict:
     if not fn:
         raise ValueError(f"Unknown metric: {metric}")
     return fn()
+
+
+def fetch_valuation_batch(metric_ids: list[str]) -> dict[str, dict]:
+    """Fetch several live metrics in one request (shared BIS cache, parallel upstream)."""
+    unique: list[str] = []
+    for mid in metric_ids:
+        if mid in METRICS and mid not in unique:
+            unique.append(mid)
+    if not unique:
+        return {}
+
+    if "otc-notional" in unique or "otc-gmv" in unique:
+        try:
+            _bis_otc_rows()
+        except Exception:
+            pass
+
+    out: dict[str, dict] = {}
+    workers = min(4, len(unique))
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        futures = {pool.submit(fetch_valuation_metric, mid): mid for mid in unique}
+        for fut in as_completed(futures):
+            mid = futures[fut]
+            try:
+                out[mid] = fut.result()
+            except Exception as exc:
+                out[mid] = {"error": str(exc)}
+    return out

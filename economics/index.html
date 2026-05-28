@@ -13,11 +13,11 @@
 <body>
 
 <!-- ── API Key Banner ── -->
-<div class="api-banner" id="api-banner" hidden>
+<form class="api-banner" id="api-banner" hidden autocomplete="off" aria-label="Alpha Vantage API key">
   <span>⚡ Alpha Vantage API Key:</span>
-  <input type="password" id="api-key-input" placeholder="Paste your key here…" spellcheck="false" autocomplete="off">
-  <button type="button" id="save-key-btn">Save &amp; Load</button>
-</div>
+  <input type="password" id="api-key-input" name="api-key" placeholder="Paste your key here…" spellcheck="false" autocomplete="off">
+  <button type="submit" id="save-key-btn">Save &amp; Load</button>
+</form>
 
 <!-- ── Info Box ── -->
 <div class="info-box">
@@ -43,7 +43,7 @@
       </svg>
       Refresh
     </button>
-    <div class="status-line" id="status-line">Not loaded</div>
+    <div class="status-line loading" id="status-line" aria-live="polite">Retrieving data…</div>
   </div>
 </div>
 
@@ -114,6 +114,21 @@
   <div class="cards" id="crypto-grid"></div>
 </div>
 
+<!-- ── Indicator info modal ── -->
+<div id="info-modal" class="info-modal" hidden inert>
+  <div class="info-modal-backdrop" data-info-close aria-hidden="true"></div>
+  <div class="info-modal-panel" role="dialog" aria-modal="true" aria-labelledby="info-modal-title">
+    <div class="info-modal-head">
+      <div>
+        <div class="info-modal-ticker" id="info-modal-ticker"></div>
+        <h2 class="info-modal-title" id="info-modal-title">–</h2>
+      </div>
+      <button type="button" class="info-modal-close" id="info-modal-close" aria-label="Close indicator info">&times;</button>
+    </div>
+    <div class="info-modal-body" id="info-modal-body"></div>
+  </div>
+</div>
+
 <!-- ── Chart modal ── -->
 <div id="chart-modal" class="chart-modal" hidden inert>
   <div class="chart-modal-backdrop" data-chart-close aria-hidden="true"></div>
@@ -135,10 +150,8 @@
 <div class="footer">
   <span class="footer-note"><a href="/" style="color:var(--muted);text-decoration:none">← Anthemic hub</a> · Multi-source quotes (see Data Sources) · FRED valuation · Prices may be delayed</span>
   <span class="footer-note" id="api-usage" style="font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--dim)"></span>
-  <div class="market-status" id="market-status">
-    <div class="dot closed" id="mkt-dot"></div>
-    <span id="mkt-label">–</span>
-  </div>
+  <span class="footer-note" id="freshness-line" hidden></span>
+  <div class="market-hours" id="market-hours" aria-label="Market session hours"></div>
 </div>
 
 <script src="macro.js" defer></script>
