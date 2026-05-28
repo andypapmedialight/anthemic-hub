@@ -224,6 +224,61 @@
     gap: 10px;
   }
 
+  .section--at-a-glance {
+    margin-bottom: 2.25rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .section--at-a-glance .section-label {
+    color: var(--gold);
+  }
+  .cards--glance {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+  .glance-empty {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--dim);
+    padding: 1rem 0.25rem;
+  }
+  .glance-cust-group {
+    width: 100%;
+    flex-basis: 100%;
+    margin-bottom: 6px;
+  }
+  .glance-cust-label {
+    display: block;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-bottom: 5px;
+  }
+  .glance-cust-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  @media (max-width: 600px) {
+    .cards--glance {
+      display: flex;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      overflow-y: hidden;
+      overscroll-behavior-x: contain;
+      touch-action: pan-x;
+      -webkit-overflow-scrolling: touch;
+      scroll-snap-type: x proximity;
+      padding-bottom: 4px;
+    }
+    .cards--glance .card {
+      flex: 0 0 auto;
+      min-width: 148px;
+      scroll-snap-align: start;
+    }
+  }
+
   .card {
     background: var(--surface);
     border: 1px solid var(--border);

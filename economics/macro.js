@@ -18,7 +18,7 @@ const CACHE_TTL_MS = {
   default: 5 * 60 * 1000,
 };
 
-/** Max age before UI appends an “as at last close” (or section-specific) lag note. */
+/** Max age before UI appends a “market close” (or section-specific) lag note. */
 const STALE_AFTER_MS = {
   live: 30 * 60 * 1000,
   daily: 3 * 86400000,
@@ -257,10 +257,10 @@ function isMetaStale(meta) {
 /** Wording when as-of is older than the freshness threshold (replaces “may be stale”). */
 function staleAsOfWording(meta) {
   const kind = inferFreshnessKind(meta);
-  if (kind === 'quarterly' || kind === 'reference') return 'as at last observation';
-  if (kind === 'estimated') return 'as at last estimate';
-  if (kind === 'daily' && meta.freshnessNote?.includes('prior biz day')) return 'as at last business day';
-  return 'as at last close';
+  if (kind === 'quarterly' || kind === 'reference') return 'last observation';
+  if (kind === 'estimated') return 'last estimate';
+  if (kind === 'daily' && meta.freshnessNote?.includes('prior biz day')) return 'prior business day';
+  return 'market close';
 }
 
 function resolveFreshnessPill(meta) {
@@ -292,7 +292,11 @@ function formatCardAsOf(meta) {
   if (meta.anchorDate && meta.estimated) parts.push(`Z.1 ${meta.anchorDate}`);
   if (meta.sessionOpen === false) {
     const lag = staleAsOfWording(meta);
-    if (!parts.some(p => p.toLowerCase().includes('as at last'))) parts.push(lag);
+    if (!parts.some(p => {
+      const lower = p.toLowerCase();
+      return lower.includes('market close') || lower.includes('last observation')
+        || lower.includes('last estimate') || lower.includes('prior business day');
+    })) parts.push(lag);
   } else if (isMetaStale(meta)) {
     parts.push(staleAsOfWording(meta));
   }
@@ -333,6 +337,122 @@ function getItemKey(item) {
 }
 function isOn(item) { const k = getItemKey(item); return k in VIS ? VIS[k] : item.def; }
 function visOf(items) { return items.filter(isOn); }
+
+// ── At a Glance overview ───────────────────────────
+const OVERVIEW_MAX_ITEMS = 12;
+const OVERVIEW_PICKABLE_SECTIONS = ['eq', 'comm', 'bond', 'fx', 'crypto', 'val'];
+const OVERVIEW_DEFAULTS = [
+  { sectionKey: 'eq', itemKey: '^AORD' },
+  { sectionKey: 'eq', itemKey: '^GSPC' },
+  { sectionKey: 'eq', itemKey: '^IXIC' },
+  { sectionKey: 'comm', itemKey: 'GC=F' },
+  { sectionKey: 'comm', itemKey: 'BZ=F' },
+  { sectionKey: 'comm', itemKey: 'TIO=F' },
+];
+let OVERVIEW_REFS = [];
+
+function overviewRefId(ref) {
+  return `${ref.sectionKey}:${ref.itemKey}`;
+}
+
+function loadOverviewRefs() {
+  try {
+    const raw = localStorage.getItem('mmd:overview');
+    if (!raw) {
+      OVERVIEW_REFS = OVERVIEW_DEFAULTS.map(r => ({ ...r }));
+      return;
+    }
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) {
+      OVERVIEW_REFS = OVERVIEW_DEFAULTS.map(r => ({ ...r }));
+      return;
+    }
+    OVERVIEW_REFS = parsed
+      .filter(r => r?.sectionKey && r?.itemKey)
+      .slice(0, OVERVIEW_MAX_ITEMS)
+      .map(r => ({ sectionKey: r.sectionKey, itemKey: r.itemKey }));
+    if (!OVERVIEW_REFS.length) OVERVIEW_REFS = OVERVIEW_DEFAULTS.map(r => ({ ...r }));
+  } catch {
+    OVERVIEW_REFS = OVERVIEW_DEFAULTS.map(r => ({ ...r }));
+  }
+}
+
+function saveOverviewRefs() {
+  try { localStorage.setItem('mmd:overview', JSON.stringify(OVERVIEW_REFS)); } catch {}
+}
+
+function getOverviewRefs() {
+  return OVERVIEW_REFS;
+}
+
+function isOverviewRef(ref) {
+  return OVERVIEW_REFS.some(r => overviewRefId(r) === overviewRefId(ref));
+}
+
+function resolveOverviewRef(ref) {
+  const section = SECTIONS.find(s => s.key === ref.sectionKey);
+  if (!section) return null;
+  const item = section.items.find(i => getItemKey(i) === ref.itemKey);
+  if (!item) return null;
+  return { section, item };
+}
+
+function buildOverviewCatalog() {
+  const out = [];
+  for (const section of SECTIONS) {
+    if (!OVERVIEW_PICKABLE_SECTIONS.includes(section.key)) continue;
+    for (const item of section.items) {
+      out.push({
+        sectionKey: section.key,
+        itemKey: getItemKey(item),
+        label: item.label,
+        ticker: item.ticker || getItemKey(item),
+        sectionName: getSectionName(section.key),
+      });
+    }
+  }
+  return out;
+}
+
+function toggleOverviewRef(ref) {
+  const id = overviewRefId(ref);
+  const ix = OVERVIEW_REFS.findIndex(r => overviewRefId(r) === id);
+  if (ix >= 0) {
+    OVERVIEW_REFS.splice(ix, 1);
+  } else if (OVERVIEW_REFS.length < OVERVIEW_MAX_ITEMS) {
+    OVERVIEW_REFS.push({ sectionKey: ref.sectionKey, itemKey: ref.itemKey });
+  }
+  saveOverviewRefs();
+  renderCustGlance();
+  renderGlanceGrid();
+  void loadOverviewItems(false);
+}
+
+function renderCustGlance() {
+  const el = document.getElementById('cust-glance');
+  if (!el) return;
+  const bySection = new Map();
+  for (const entry of buildOverviewCatalog()) {
+    if (!bySection.has(entry.sectionKey)) bySection.set(entry.sectionKey, []);
+    bySection.get(entry.sectionKey).push(entry);
+  }
+  const parts = [];
+  for (const sectionKey of OVERVIEW_PICKABLE_SECTIONS) {
+    const entries = bySection.get(sectionKey);
+    if (!entries?.length) continue;
+    parts.push(`<div class="glance-cust-group">
+      <span class="glance-cust-label">${escapeHtml(getSectionName(sectionKey))}</span>
+      <div class="glance-cust-pills">${entries.map(entry => {
+    const ref = { sectionKey: entry.sectionKey, itemKey: entry.itemKey };
+    const on = isOverviewRef(ref);
+    const atMax = !on && OVERVIEW_REFS.length >= OVERVIEW_MAX_ITEMS;
+    return `<button type="button" class="sym-pill ${on ? 'on' : 'off'}"${atMax ? ' disabled title="Overview full (max 12)"' : ''}
+      data-overview-section="${escapeHtml(entry.sectionKey)}" data-overview-key="${escapeHtml(entry.itemKey)}"
+      title="${escapeHtml(entry.label)}">${escapeHtml(entry.ticker)}</button>`;
+  }).join('')}</div></div>`);
+  }
+  el.innerHTML = parts.join('');
+}
 
 // ── Data Store ────────────────────────────────────
 const DATA = {};  // itemKey → { price, change, pct }
@@ -548,6 +668,7 @@ const COMMODITIES = [
   { sym: 'HG=F', label: 'LME Copper',  ticker: 'CU',   def: true,  dp: 2 },
   { sym: 'CL=F', label: 'Oil (WTI)',   ticker: 'WTI',  def: true,  dp: 2 },
   { sym: 'BZ=F', label: 'Brent Crude', ticker: 'BRENT', def: true,  dp: 2 },
+  { sym: 'TIO=F', label: 'Iron Ore',    ticker: 'IRON', def: false, dp: 2 },
   { sym: 'NG=F', label: 'Nat. Gas',    ticker: 'NG',   def: true,  dp: 2 },
   { sym: 'CPER', label: 'Copper (ETF)', ticker: 'CPER', def: false, dp: 2 },
   { sym: 'WEAT', label: 'Wheat (ETF)',  ticker: 'WEAT', def: false, dp: 2 },
@@ -2744,11 +2865,11 @@ function renderGrid(id, items) {
   document.getElementById(id).innerHTML = items.map((d, i) => renderCard(d, i * 0.06)).join('');
 }
 
-function renderSectionGrid(section) {
-  const visible = visOf(section.items);
+function collectCardMetas(section, items) {
+  if (!items.length) return [];
 
   if (section.key === 'val') {
-    renderGrid(section.gridId, visible.map(item => {
+    return items.map(item => {
       const d = DATA[item.id];
       let price = null;
       let extra = '';
@@ -2842,15 +2963,14 @@ function renderSectionGrid(section) {
         sectionKey: section.key,
         failed: !d || !price,
       }, item, section.key);
-    }));
-    return;
+    });
   }
 
   if (section.key === 'bond') {
     const spreadFred = computeBondSpreadFred(BOND_SPREAD_FRED);
     const b2  = spreadFred?.spread != null ? null : (DATA['DGS2'] ? DATA['DGS2'].price : null);
     const b10 = spreadFred?.spread != null ? null : (DATA['^TNX'] ? DATA['^TNX'].price : null);
-    renderGrid(section.gridId, visible.map(item => {
+    return items.map(item => {
       const d = DATA[item.id];
       let extra = '';
       if (item.id === '^TNX') {
@@ -2871,11 +2991,10 @@ function renderSectionGrid(section) {
         freshnessKind: d?.freshnessKind,
         freshnessNote: d?.freshnessNote,
         itemKey: item.id, sectionKey: section.key, failed: !d || !formatYieldPrice(d) }, item, section.key);
-    }));
-    return;
+    });
   }
 
-  renderGrid(section.gridId, visible.map(item => {
+  return items.map(item => {
     const k = getItemKey(item);
     const d = DATA[k];
     const card = section.card(item, d);
@@ -2907,7 +3026,65 @@ function renderSectionGrid(section) {
       sessionOpen: sessionAware.sessionOpen,
       pillLabel: sessionAware.pillLabel,
     }, item, section.key);
+  });
+}
+
+function renderSectionGrid(section) {
+  const visible = visOf(section.items);
+  renderGrid(section.gridId, collectCardMetas(section, visible));
+}
+
+function renderGlanceGrid() {
+  const grid = document.getElementById('glance-grid');
+  if (!grid) return;
+  const metas = [];
+  for (const ref of getOverviewRefs()) {
+    const resolved = resolveOverviewRef(ref);
+    if (!resolved) continue;
+    metas.push(...collectCardMetas(resolved.section, [resolved.item]));
+  }
+  if (!metas.length) {
+    grid.innerHTML = '<p class="glance-empty">Tap Edit to choose instruments for At a Glance (up to 12).</p>';
+    return;
+  }
+  renderGrid('glance-grid', metas);
+}
+
+async function loadOverviewItems(force = false) {
+  const refs = getOverviewRefs();
+  if (!refs.length) {
+    renderGlanceGrid();
+    return;
+  }
+  for (const ref of refs) {
+    const resolved = resolveOverviewRef(ref);
+    if (!resolved) continue;
+    const { item, section } = resolved;
+    const key = getItemKey(item);
+    if (!force) {
+      const ck = cacheKeyForItem(item, section);
+      const cached = cacheGet(ck) || cacheGetStale(ck);
+      if (cached) {
+        DATA[key] = cached;
+        continue;
+      }
+    }
+  }
+  await Promise.allSettled(refs.map(async ref => {
+    const resolved = resolveOverviewRef(ref);
+    if (!resolved) return;
+    const { item, section } = resolved;
+    const key = getItemKey(item);
+    try {
+      const data = await section.fetch(item, force);
+      if (data) DATA[key] = data;
+      else delete DATA[key];
+    } catch (err) {
+      console.warn('overview fetch failed', ref.sectionKey, ref.itemKey, err);
+      delete DATA[key];
+    }
   }));
+  renderGlanceGrid();
 }
 
 async function refreshCard(itemKey, sectionKey) {
@@ -2936,6 +3113,7 @@ async function refreshCard(itemKey, sectionKey) {
 
   CARD_LOADING.delete(itemKey);
   renderSectionGrid(section);
+  if (isOverviewRef({ sectionKey, itemKey })) renderGlanceGrid();
 }
 
 // ── Customize Rows ────────────────────────────────
@@ -3241,6 +3419,16 @@ function renderCust(section) {
 }
 
 function toggleCustomize(sectionKey) {
+  if (sectionKey === 'glance') {
+    const row = document.getElementById('cust-glance');
+    const btn = document.getElementById('edit-glance');
+    if (!row) return;
+    const isOpen = row.style.display !== 'none';
+    row.style.display = isOpen ? 'none' : 'flex';
+    btn?.classList.toggle('open', !isOpen);
+    if (!isOpen) renderCustGlance();
+    return;
+  }
   const section = SECTIONS.find(s => s.key === sectionKey);
   if (!section) return;
   const row = document.getElementById(section.custId);
@@ -3269,6 +3457,7 @@ async function toggleSym(key, sectionKey) {
   if (isOn(item) && !DATA[key]) DATA[key] = await section.fetch(item, false);
   renderSectionGrid(section);
   renderCust(section);
+  if (isOverviewRef({ sectionKey, itemKey: key })) renderGlanceGrid();
   updateMarketStatus();
 }
 
@@ -3944,6 +4133,7 @@ function updateMarketStatus() {
     for (const section of SECTIONS) {
       if (section.key === 'eq' || section.key === 'comm') renderSectionGrid(section);
     }
+    renderGlanceGrid();
   }
 }
 
@@ -4116,6 +4306,7 @@ async function loadAll(force = false) {
   }
 
   await Promise.all(SECTIONS.map(s => loadSection(s)));
+  await loadOverviewItems(effectiveForce);
 
   btn.classList.remove('spinning');
   if (force) setRefreshButtonBlocked(true, REFRESH_MIN_GAP_MS);
@@ -5009,6 +5200,14 @@ function wireUi() {
       toggleSectionSources(sourcesBtn.dataset.section);
       return;
     }
+    const overviewBtn = e.target.closest('[data-overview-section][data-overview-key]');
+    if (overviewBtn) {
+      toggleOverviewRef({
+        sectionKey: overviewBtn.dataset.overviewSection,
+        itemKey: overviewBtn.dataset.overviewKey,
+      });
+      return;
+    }
     const pill = e.target.closest('.sym-pill');
     if (pill?.dataset.symKey) {
       toggleSym(pill.dataset.symKey, pill.dataset.sectionKey);
@@ -5051,6 +5250,7 @@ async function init() {
   loadVIS();
   loadCustomEquities();
   syncEquitiesSection();
+  loadOverviewRefs();
   const saved = localStorage.getItem('av_key');
   if (saved && saved !== 'YOUR_API_KEY_HERE') {
     AV_KEY = saved;
