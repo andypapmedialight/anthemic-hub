@@ -526,52 +526,26 @@
     text-transform: none;
   }
 
-  .section-explainer {
+  .section-sources-panel {
     margin: -0.35rem 0 0.75rem;
-    border: 1px solid var(--border);
+    padding: 10px 12px;
+    border: 1px solid var(--border2);
     border-radius: 6px;
     background: var(--surface2);
-    overflow: hidden;
   }
-  .section-explainer-summary {
-    cursor: pointer;
-    list-style: none;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.6rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--muted);
-    padding: 7px 10px;
-    user-select: none;
-  }
-  .section-explainer-summary::-webkit-details-marker { display: none; }
-  .section-explainer-summary::after {
-    content: '▾';
-    float: right;
-    color: var(--dim);
-    transition: transform 0.15s;
-  }
-  .section-explainer[open] .section-explainer-summary::after {
-    transform: rotate(180deg);
-  }
-  .section-explainer-summary:hover { color: var(--text); }
-  .section-explainer-body {
-    padding: 0 10px 10px;
-    border-top: 1px solid var(--border);
-  }
-  .section-explainer-dl {
+  .section-sources-panel[hidden] { display: none !important; }
+  .section-sources-dl {
     margin: 0;
-    padding-top: 8px;
     display: grid;
     gap: 8px;
   }
-  .section-explainer-row {
+  .section-sources-row {
     display: grid;
     grid-template-columns: minmax(88px, 34%) 1fr;
     gap: 8px 10px;
     align-items: start;
   }
-  .section-explainer-row dt {
+  .section-sources-row dt {
     font-family: 'DM Mono', monospace;
     font-size: 0.58rem;
     letter-spacing: 0.06em;
@@ -579,13 +553,13 @@
     color: var(--dim);
     margin: 0;
   }
-  .section-explainer-row dd {
+  .section-sources-row dd {
     margin: 0;
     font-size: 0.72rem;
     line-height: 1.45;
     color: var(--muted);
   }
-  .section-explainer-detail {
+  .section-sources-detail {
     margin: 8px 0 0;
     padding-top: 8px;
     border-top: 1px dashed var(--border);
@@ -594,7 +568,7 @@
     color: var(--dim);
   }
   @media (max-width: 520px) {
-    .section-explainer-row {
+    .section-sources-row {
       grid-template-columns: 1fr;
       gap: 2px;
     }
@@ -828,7 +802,8 @@
   .info-btn:hover { border-color: var(--accent); color: var(--text); }
   .info-btn-active { background: var(--accent); border-color: var(--accent); color: #fff; cursor: default; }
 
-  /* ── Section Edit Button ──────────────────────────── */
+  /* ── Section header actions (Sources / Edit) ─────── */
+  .section-sources-btn,
   .section-edit-btn {
     background: none;
     border: 1px solid var(--border);
@@ -843,6 +818,22 @@
     transition: all 0.15s;
     flex-shrink: 0;
   }
+  .section-sources-btn::after {
+    content: ' ▾';
+    color: var(--dim);
+    transition: transform 0.15s;
+  }
+  .section-sources-btn.open {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(59, 130, 246, 0.1);
+  }
+  .section-sources-btn.open::after {
+    display: inline-block;
+    transform: rotate(180deg);
+    color: var(--accent);
+  }
+  .section-sources-btn:hover,
   .section-edit-btn:hover { border-color: var(--accent); color: var(--accent); }
   .section-edit-btn.open  { border-color: var(--accent); color: var(--accent); }
 

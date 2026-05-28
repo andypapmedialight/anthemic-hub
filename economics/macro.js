@@ -270,11 +270,13 @@ function resolveFreshnessPill(meta) {
   if (meta.estimated || kind === 'estimated') return 'Est.';
   if (kind === 'quarterly') return 'Qtrly';
   if (kind === 'daily') return 'Daily';
+  if (meta.sessionOpen === false) return 'Closed';
   if (kind === 'live' || meta.live) return 'Live';
   return null;
 }
 
 function freshnessPillClass(label) {
+  if (label === 'Closed') return 'pill pill--ref';
   if (label === 'Live') return 'pill pill--live';
   if (label === 'Est.') return 'pill pill--est';
   if (label === 'Ref' || label === 'Qtrly' || label === 'Daily') return 'pill pill--ref';
@@ -288,7 +290,12 @@ function formatCardAsOf(meta) {
   const parts = [utc];
   if (meta.freshnessNote) parts.push(meta.freshnessNote);
   if (meta.anchorDate && meta.estimated) parts.push(`Z.1 ${meta.anchorDate}`);
-  if (isMetaStale(meta)) parts.push(staleAsOfWording(meta));
+  if (meta.sessionOpen === false) {
+    const lag = staleAsOfWording(meta);
+    if (!parts.some(p => p.toLowerCase().includes('as at last'))) parts.push(lag);
+  } else if (isMetaStale(meta)) {
+    parts.push(staleAsOfWording(meta));
+  }
   return parts.join(' · ');
 }
 
@@ -1280,7 +1287,7 @@ function renderCard(meta, delay = 0) {
         ${absStr ? `<span class="card-abs ${absChangeClass(meta.pct, meta.change)}">${absStr}</span>` : ''}
       </div>
       ${asOfStr && meta.showCardAsOf !== false
-    ? `<div class="card-asof${isMetaStale(meta) ? ' card-asof--stale' : ''}">${escapeHtml(asOfStr)}</div>`
+    ? `<div class="card-asof${isMetaStale(meta) || meta.sessionOpen === false ? ' card-asof--stale' : ''}">${escapeHtml(asOfStr)}</div>`
     : ''}
       ${meta.extra || ''}`;
 
@@ -2872,20 +2879,33 @@ function renderSectionGrid(section) {
     const k = getItemKey(item);
     const d = DATA[k];
     const card = section.card(item, d);
+    const sessionAware = (section.key === 'eq' || section.key === 'comm')
+      ? applySessionAwareQuoteMeta(item, section.key, {
+        ...card,
+        itemKey: k,
+        sectionKey: section.key,
+        asOfUtc: d?.asOfUtc ?? card.asOfUtc,
+        freshnessKind: d?.freshnessKind ?? card.freshnessKind
+          ?? (section.key === 'fx' ? 'daily' : undefined),
+        freshnessNote: d?.freshnessNote ?? card.freshnessNote,
+      })
+      : card;
     return withGoogleUrl({
-      ...card,
+      ...sessionAware,
       itemKey: k,
       sectionKey: section.key,
       failed: !d,
       asOfUtc: d?.asOfUtc ?? card.asOfUtc,
-      freshnessKind: d?.freshnessKind ?? card.freshnessKind
+      freshnessKind: sessionAware.freshnessKind ?? d?.freshnessKind ?? card.freshnessKind
         ?? (section.key === 'fx' ? 'daily' : undefined),
-      freshnessNote: d?.freshnessNote ?? card.freshnessNote,
+      freshnessNote: sessionAware.freshnessNote ?? d?.freshnessNote ?? card.freshnessNote,
       anchorDate: d?.anchorDate ?? card.anchorDate,
       estimated: d?.estimated ?? card.estimated,
       buffettMeta: d?.buffettMeta,
       debtEstMeta: d?.debtEstMeta,
       live: d?.live,
+      sessionOpen: sessionAware.sessionOpen,
+      pillLabel: sessionAware.pillLabel,
     }, item, section.key);
   }));
 }
@@ -3252,37 +3272,73 @@ async function toggleSym(key, sectionKey) {
   updateMarketStatus();
 }
 
+function buildSectionSourcesHtml(ex) {
+  return `
+    <dl class="section-sources-dl">
+      <div class="section-sources-row">
+        <dt>Market</dt>
+        <dd>${infoPara(ex.market)}</dd>
+      </div>
+      <div class="section-sources-row">
+        <dt>Venue / exchange</dt>
+        <dd>${infoPara(ex.venue)}</dd>
+      </div>
+      <div class="section-sources-row">
+        <dt>Data source</dt>
+        <dd>${infoPara(ex.source)}</dd>
+      </div>
+    </dl>
+    ${ex.detail ? `<p class="section-sources-detail">${infoPara(ex.detail)}</p>` : ''}`;
+}
+
+function toggleSectionSources(sectionKey) {
+  const btn = document.querySelector(`.section-sources-btn[data-section="${sectionKey}"]`);
+  const panel = document.querySelector(`.section-sources-panel[data-section="${sectionKey}"]`);
+  if (!btn || !panel) return;
+  const open = panel.hidden;
+  panel.hidden = !open;
+  btn.classList.toggle('open', open);
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+
 function renderSectionExplainers() {
   for (const section of SECTIONS) {
     const ex = SECTION_EXPLAINERS[section.key];
     if (!ex) continue;
     const editBtn = document.querySelector(`.section-edit-btn[data-section="${section.key}"]`);
     const sectionEl = editBtn?.closest('.section');
-    if (!sectionEl || sectionEl.querySelector('.section-explainer')) continue;
+    const header = editBtn?.closest('.section-header');
+    if (!sectionEl || !header || !editBtn) continue;
 
-    const details = document.createElement('details');
-    details.className = 'section-explainer';
-    details.innerHTML = `
-      <summary class="section-explainer-summary">${escapeHtml(ex.title)}</summary>
-      <div class="section-explainer-body">
-        <dl class="section-explainer-dl">
-          <div class="section-explainer-row">
-            <dt>Market</dt>
-            <dd>${infoPara(ex.market)}</dd>
-          </div>
-          <div class="section-explainer-row">
-            <dt>Venue / exchange</dt>
-            <dd>${infoPara(ex.venue)}</dd>
-          </div>
-          <div class="section-explainer-row">
-            <dt>Data source</dt>
-            <dd>${infoPara(ex.source)}</dd>
-          </div>
-        </dl>
-        ${ex.detail ? `<p class="section-explainer-detail">${infoPara(ex.detail)}</p>` : ''}
-      </div>`;
-    const header = sectionEl.querySelector('.section-header');
-    header?.insertAdjacentElement('afterend', details);
+    sectionEl.querySelector('.section-explainer')?.remove();
+
+    let sourcesBtn = header.querySelector(`.section-sources-btn[data-section="${section.key}"]`);
+    if (!sourcesBtn) {
+      sourcesBtn = document.createElement('button');
+      sourcesBtn.type = 'button';
+      sourcesBtn.className = 'section-sources-btn';
+      sourcesBtn.dataset.section = section.key;
+      sourcesBtn.id = `sources-btn-${section.key}`;
+      sourcesBtn.textContent = 'Sources';
+      sourcesBtn.title = 'Market, exchange, and data source for this section';
+      sourcesBtn.setAttribute('aria-expanded', 'false');
+      header.insertBefore(sourcesBtn, editBtn);
+    }
+
+    let panel = sectionEl.querySelector(`.section-sources-panel[data-section="${section.key}"]`);
+    if (!panel) {
+      panel = document.createElement('div');
+      panel.className = 'section-sources-panel';
+      panel.dataset.section = section.key;
+      panel.id = `section-sources-${section.key}`;
+      panel.hidden = true;
+      panel.setAttribute('role', 'region');
+      panel.setAttribute('aria-label', `${section.key} market and data source`);
+      header.insertAdjacentElement('afterend', panel);
+    }
+    sourcesBtn.setAttribute('aria-controls', panel.id);
+    panel.setAttribute('aria-labelledby', sourcesBtn.id);
+    panel.innerHTML = buildSectionSourcesHtml(ex);
   }
 }
 
@@ -3776,6 +3832,53 @@ function evaluateVenue(venueId, now = new Date()) {
   return evaluateCashVenue(venue, now);
 }
 
+/** Cash/Globex venue for session-aware quote cards (eq / comm). */
+function sessionVenueForItem(item, sectionKey) {
+  if (sectionKey === 'comm') return 'cme';
+  if (sectionKey !== 'eq') return null;
+  const sym = String(item?.sym || '').toUpperCase();
+  const ex = item?.exchange || inferExchangeFromSym(item?.sym);
+  if (ex === 'ASX' || sym.endsWith('.AX') || sym === '^AXJO' || sym === '^AORD') return 'asx';
+  return 'us_equity';
+}
+
+function isSessionOpenForItem(item, sectionKey, now = new Date()) {
+  const venueId = sessionVenueForItem(item, sectionKey);
+  if (!venueId) return null;
+  return evaluateVenue(venueId, now).open;
+}
+
+/** Align Live/Closed pill with trading-centre session (e.g. S&P 500 when NY is closed). */
+function applySessionAwareQuoteMeta(item, sectionKey, meta) {
+  const open = isSessionOpenForItem(item, sectionKey);
+  if (open === null) return meta;
+  if (open) {
+    return { ...meta, sessionOpen: true, pillLabel: null };
+  }
+  return {
+    ...meta,
+    sessionOpen: false,
+    pillLabel: 'Closed',
+    freshnessKind: 'daily',
+    freshnessNote: meta.freshnessNote || null,
+  };
+}
+
+const SESSION_TRACKED_VENUES = ['us_equity', 'asx', 'cme'];
+let lastSessionOpenByVenue = {};
+
+function sessionStateChanged(now = new Date()) {
+  let changed = false;
+  for (const id of SESSION_TRACKED_VENUES) {
+    const open = evaluateVenue(id, now).open;
+    if (lastSessionOpenByVenue[id] !== undefined && lastSessionOpenByVenue[id] !== open) {
+      changed = true;
+    }
+    lastSessionOpenByVenue[id] = open;
+  }
+  return changed;
+}
+
 function marketChipHtml(venueId, state) {
   const venue = MARKET_VENUES[venueId];
   return `<div class="market-hours-chip ${state.open ? 'open' : 'closed'}" title="${escapeHtml(state.hours)}">
@@ -3831,10 +3934,17 @@ function updateSectionMarkets() {
 }
 
 function updateMarketStatus() {
+  const now = new Date();
+  const sessionChanged = sessionStateChanged(now);
   const footer = document.getElementById('market-hours');
   const venueIds = activeMarketVenueIds();
   if (footer) renderMarketHoursBar(footer, venueIds.length ? venueIds : ['us_equity', 'fx', 'crypto']);
   updateSectionMarkets();
+  if (sessionChanged) {
+    for (const section of SECTIONS) {
+      if (section.key === 'eq' || section.key === 'comm') renderSectionGrid(section);
+    }
+  }
 }
 
 let marketHoursTimer = null;
@@ -4894,6 +5004,11 @@ function wireUi() {
       }
       return;
     }
+    const sourcesBtn = e.target.closest('.section-sources-btn[data-section]');
+    if (sourcesBtn) {
+      toggleSectionSources(sourcesBtn.dataset.section);
+      return;
+    }
     const pill = e.target.closest('.sym-pill');
     if (pill?.dataset.symKey) {
       toggleSym(pill.dataset.symKey, pill.dataset.sectionKey);
@@ -4930,8 +5045,8 @@ function wireUi() {
 }
 
 async function init() {
-  wireUi();
   renderSectionExplainers();
+  wireUi();
   loadComparePrefs();
   loadVIS();
   loadCustomEquities();
