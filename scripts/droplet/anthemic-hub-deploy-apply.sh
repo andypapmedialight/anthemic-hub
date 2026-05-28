@@ -249,9 +249,12 @@ if [[ -f "${INCOMING}/mmd/valuation_server.py" && -f "${INCOMING}/mmd/valuation_
   mkdir -p /etc/anthemic-mmd
   if [[ -f "${FRED_KEY_FILE}" ]]; then
     KEY="$(tr -d '\r\n' < "${FRED_KEY_FILE}")"
-    printf 'FRED_API_KEY=%s\n' "${KEY}" > "${MMD_ENV}"
+    {
+      printf 'FRED_API_KEY=%s\n' "${KEY}"
+      printf '# MMD_FRED_FRESHNESS_CACHE_TTL=300\n'
+    } > "${MMD_ENV}"
   else
-    printf '# FRED_API_KEY not set — margin-debt uses public FRED CSV fallback\n' > "${MMD_ENV}"
+    printf '# FRED_API_KEY not set — margin-debt uses public FRED CSV fallback\n# MMD_FRED_FRESHNESS_CACHE_TTL=300\n' > "${MMD_ENV}"
   fi
   chmod 640 "${MMD_ENV}"
   chown root:www-data "${MMD_ENV}"

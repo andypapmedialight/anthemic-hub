@@ -19,6 +19,10 @@ UPSTREAM_TIMEOUT = 25
 BIS_OTC_CACHE_TTL = 3600
 _bis_otc_cache: tuple[float, list[dict[str, str]]] | None = None
 
+FRED_FRESHNESS_CACHE_TTL = int(os.environ.get("MMD_FRED_FRESHNESS_CACHE_TTL", "300"))
+_fred_obs_cache: dict[str, tuple[float, str]] = {}
+_fred_freshness_cache: tuple[float, dict] | None = None
+
 FINRA_MARGIN_HTML = (
     "https://www.finra.org/rules-guidance/key-topics/margin-accounts/margin-statistics"
 )
@@ -415,11 +419,21 @@ FRESHNESS_FRED_SERIES = (
 )
 
 
-def fred_last_observation(series_id: str, api_key: str | None = None) -> str | None:
+def fred_last_observation(
+    series_id: str,
+    api_key: str | None = None,
+    *,
+    force: bool = False,
+) -> str | None:
     """Latest non-missing FRED observation date (YYYY-MM-DD)."""
     key = (api_key or os.environ.get("FRED_API_KEY", "")).strip()
     if not key:
         return None
+    now = time.time()
+    if not force:
+        cached = _fred_obs_cache.get(series_id)
+        if cached and now < cached[0]:
+            return cached[1]
     url = (
         "https://api.stlouisfed.org/fred/series/observations"
         f"?series_id={urllib.parse.quote(series_id)}"
@@ -433,26 +447,38 @@ def fred_last_observation(series_id: str, api_key: str | None = None) -> str | N
         if obs and obs[0].get("date"):
             val = obs[0].get("value")
             if val not in (None, ".", ""):
-                return obs[0]["date"]
+                date = obs[0]["date"]
+                _fred_obs_cache[series_id] = (now + FRED_FRESHNESS_CACHE_TTL, date)
+                return date
     except Exception:
         return None
     return None
 
 
-def fetch_freshness_api(api_key: str | None = None) -> dict:
+def fetch_freshness_api(api_key: str | None = None, *, force: bool = False) -> dict:
     """Server-side FRED vintage summary for Morning Macro footer."""
+    global _fred_freshness_cache
     key = (api_key or os.environ.get("FRED_API_KEY", "")).strip()
+    now = time.time()
+    if not force and _fred_freshness_cache:
+        expires, payload = _fred_freshness_cache
+        if now < expires:
+            return payload
     series: dict[str, dict] = {}
     if key:
         for sid in FRESHNESS_FRED_SERIES:
-            last = fred_last_observation(sid, key)
+            last = fred_last_observation(sid, key, force=force)
             if last:
                 series[sid] = {"lastObservation": last}
-    return {
+    payload = {
         "fredApi": bool(key),
         "series": series,
         "generatedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "cached": False,
     }
+    if key:
+        _fred_freshness_cache = (now + FRED_FRESHNESS_CACHE_TTL, {**payload, "cached": True})
+    return payload
 
 
 VAL_WARM_LIVE_METRICS = (
