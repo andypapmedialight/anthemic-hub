@@ -1168,6 +1168,25 @@ function renderCard(meta, delay = 0) {
 }
 const FETCH_TIMEOUT_MS = 12000;
 
+/** Set when hub/nginx returns HTTP 429 (limit_req on /economics/proxy/*). */
+let hubProxyRateLimited = false;
+
+function resetHubProxyRateLimit() {
+  hubProxyRateLimited = false;
+}
+
+function noteHubHttpStatus(status) {
+  if (status === 429) hubProxyRateLimited = true;
+}
+
+async function readFetchResponse(r, { asJson = true } = {}) {
+  if (!r.ok) {
+    noteHubHttpStatus(r.status);
+    throw new Error(`HTTP ${r.status}`);
+  }
+  return asJson ? r.json() : r.text();
+}
+
 async function fetchWithTimeout(resource, options = {}, ms = FETCH_TIMEOUT_MS) {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), ms);
@@ -1262,7 +1281,10 @@ const PROXY_PROBE_TIMEOUT_MS = 5000;
 async function probeLocalProxy(url, timeoutMs = PROXY_PROBE_TIMEOUT_MS, validate) {
   try {
     const r = await fetchWithTimeout(url, {}, timeoutMs);
-    if (!r.ok) return false;
+    if (!r.ok) {
+      noteHubHttpStatus(r.status);
+      return false;
+    }
     return validate ? validate(r) : true;
   } catch {
     return false;
@@ -1341,16 +1363,14 @@ async function fetchRemote(canonicalUrl, { asJson = true } = {}) {
   if (localUrl) {
     attempts.push(async () => {
       const r = await fetchWithTimeout(localUrl);
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      return asJson ? r.json() : r.text();
+      return readFetchResponse(r, { asJson });
     });
   }
 
   if (!corsOnly) {
     attempts.push(async () => {
       const r = await fetchWithTimeout(canonicalUrl);
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      return asJson ? r.json() : r.text();
+      return readFetchResponse(r, { asJson });
     });
   }
 
@@ -1368,15 +1388,13 @@ async function fetchRemote(canonicalUrl, { asJson = true } = {}) {
     for (const url of publicProxyUrls(canonicalUrl)) {
       attempts.push(async () => {
         const r = await fetchWithTimeout(url);
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return asJson ? r.json() : r.text();
+        return readFetchResponse(r, { asJson });
       });
     }
 
     attempts.push(async () => {
       const r = await fetchWithTimeout(`https://api.allorigins.win/get?url=${encodeURIComponent(canonicalUrl)}`);
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      const wrap = await r.json();
+      const wrap = await readFetchResponse(r, { asJson: true });
       const body = wrap.contents;
       return asJson ? JSON.parse(body) : body;
     });
@@ -1387,8 +1405,7 @@ async function fetchRemote(canonicalUrl, { asJson = true } = {}) {
           ? yahooChartUrlDirect(canonicalUrl)
           : canonicalUrl;
         const r = await fetchWithTimeout(direct);
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return asJson ? r.json() : r.text();
+        return readFetchResponse(r, { asJson });
       });
     }
   }
@@ -2200,8 +2217,7 @@ async function fetchValuationLive(metricId, force = false) {
   try {
     const url = `${location.origin}/economics/proxy/valuation?${new URLSearchParams({ metric: metricId })}`;
     const r = await fetchWithTimeout(url, {}, 90000);
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    const data = await r.json();
+    const data = await readFetchResponse(r, { asJson: true });
     if (data?.error) throw new Error(data.error);
     const result = normalizeValuationLiveRow(data);
     if (result) cacheSet(key, result);
@@ -2221,8 +2237,7 @@ async function fetchValuationLiveBatch(metricIds, force = false) {
   try {
     const url = `${location.origin}/economics/proxy/valuation?${new URLSearchParams({ metrics: pending.join(',') })}`;
     const r = await fetchWithTimeout(url, {}, 120000);
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    const body = await r.json();
+    const body = await readFetchResponse(r, { asJson: true });
     if (body?.error && !body.metrics) throw new Error(body.error);
     const metrics = body.metrics || body;
     for (const id of pending) {
@@ -2283,6 +2298,8 @@ async function fetchFredSeriesRows(seriesId, start) {
         const body = await r.text();
         const rows = parseFredResponseBody(body, ct);
         if (rows?.length) return rows;
+      } else {
+        noteHubHttpStatus(r.status);
       }
     } catch {}
   }
@@ -3596,6 +3613,7 @@ async function loadAll(force = false) {
     }
   }
 
+  resetHubProxyRateLimit();
   beginPageLoad(throttleNote ? 'Loading cached data…' : 'Retrieving data…');
   updateDateLine();
   updateMarketStatus();
@@ -3715,7 +3733,10 @@ async function loadAll(force = false) {
   const eqItems = SECTIONS.find(s => s.key === 'eq')?.items || EQUITIES;
   const eqVisible = visOf(eqItems);
   const allEqFailed = eqVisible.length > 0 && eqVisible.every(e => !DATA[getItemKey(e)]);
-  if (allEqFailed) {
+  if (hubProxyRateLimited) {
+    status.className = 'status-line warn';
+    status.textContent = '⚠ Too many data requests — wait about a minute, then refresh';
+  } else if (allEqFailed) {
     status.className = 'status-line err';
     status.textContent = activeProvider === 'alphavantage'
       ? '⚠ AV key error or rate limit — check your key'
@@ -3741,8 +3762,7 @@ async function fetchHubFreshness() {
   if (!isHubEconomicsPage() || !isHubHostname()) return null;
   try {
     const r = await fetchWithTimeout(`${location.origin}/economics/api/freshness`, {}, 8000);
-    if (!r.ok) return null;
-    macroFreshnessSummary = await r.json();
+    macroFreshnessSummary = await readFetchResponse(r, { asJson: true });
     return macroFreshnessSummary;
   } catch {
     return null;
