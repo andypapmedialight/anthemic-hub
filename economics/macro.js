@@ -2584,7 +2584,19 @@ async function fetchFredSeriesRows(seriesId, start) {
 
 const VAL_FRED_IDS = ['GDP', FRED_GDP_NOWCAST_SERIES, 'NCBEILQ027S', 'GFDEGDQ188S', 'GFDEBTN', 'TCMDO', 'FGSDODNS'];
 const VAL_FRED_MONTHLY_IDS = [FRED_TREASURY_MV_SERIES];
+/** Minimum FRED series required before caching or showing valuation ratios. */
+const VAL_FRED_REQUIRED_IDS = ['GDP', 'NCBEILQ027S'];
 let valuationFredPromise = null;
+
+function fredBatchUsable(data) {
+  if (!data || typeof data !== 'object') return false;
+  return VAL_FRED_REQUIRED_IDS.every(id => Array.isArray(data[id]) && data[id].length > 0);
+}
+
+function clearValuationFredCache(lookbackDays = VAL_FRED_CARD_LOOKBACK_DAYS) {
+  const batchKey = lookbackDays === 5 * 365 ? 'val:fred-batch' : `val:fred-batch:${lookbackDays}`;
+  try { localStorage.removeItem(`mmd:${batchKey}`); } catch {}
+}
 
 function fredStartDate(lookbackDays) {
   return new Date(Date.now() - lookbackDays * 86400000).toISOString().slice(0, 10);
@@ -2620,37 +2632,49 @@ function sliceSeriesForChart(series, days) {
   return series.slice(-Math.min(series.length, Math.max(2, keep)));
 }
 
+async function fetchValuationFredSeriesStaggered(lookbackDays) {
+  const allIds = [...VAL_FRED_IDS, ...VAL_FRED_MONTHLY_IDS];
+  const data = {};
+  for (const seriesId of allIds) {
+    const lookback = VAL_FRED_MONTHLY_IDS.includes(seriesId) || seriesId === FRED_GDP_NOWCAST_SERIES
+      ? Math.min(lookbackDays, 500)
+      : lookbackDays;
+    const seriesStart = fredStartDate(lookback);
+    try {
+      data[seriesId] = await proxyThrottle(() => fetchFredSeriesRows(seriesId, seriesStart));
+    } catch (err) {
+      console.warn('FRED series fetch failed', seriesId, err);
+      data[seriesId] = null;
+    }
+    if (canUseHubFredProxy()) await new Promise(r => setTimeout(r, 350));
+  }
+  return data;
+}
+
 async function loadValuationFredRows(force = false, lookbackDays = VAL_FRED_CARD_LOOKBACK_DAYS) {
   const batchKey = lookbackDays === 5 * 365 ? 'val:fred-batch' : `val:fred-batch:${lookbackDays}`;
   if (!force) {
     const cached = cacheGet(batchKey);
-    if (cached) return cached;
+    if (fredBatchUsable(cached)) return cached;
+    if (cached) clearValuationFredCache(lookbackDays);
   }
-  const start = fredStartDate(lookbackDays);
-  const allIds = [...VAL_FRED_IDS, ...VAL_FRED_MONTHLY_IDS];
-  const pairs = await Promise.all(
-    allIds.map(async seriesId => {
-      try {
-        const lookback = VAL_FRED_MONTHLY_IDS.includes(seriesId) || seriesId === FRED_GDP_NOWCAST_SERIES
-          ? Math.min(lookbackDays, 500)
-          : lookbackDays;
-        const seriesStart = fredStartDate(lookback);
-        return [seriesId, await fetchFredSeriesRows(seriesId, seriesStart)];
-      } catch (err) {
-        console.warn('FRED series fetch failed', seriesId, err);
-        return [seriesId, null];
-      }
-    })
-  );
-  const data = Object.fromEntries(pairs);
-  cacheSet(batchKey, data);
+  const data = await fetchValuationFredSeriesStaggered(lookbackDays);
+  if (fredBatchUsable(data)) cacheSet(batchKey, data);
+  else clearValuationFredCache(lookbackDays);
   return data;
 }
 
 function getValuationFredRows(force = false) {
   if (force) valuationFredPromise = null;
   if (!valuationFredPromise) {
-    valuationFredPromise = loadValuationFredRows(force).catch(err => {
+    valuationFredPromise = (async () => {
+      let data = await loadValuationFredRows(force);
+      if (!fredBatchUsable(data)) {
+        clearValuationFredCache();
+        data = await loadValuationFredRows(true);
+      }
+      return fredBatchUsable(data) ? data : null;
+    })().catch(err => {
       console.warn('valuation FRED batch failed', err);
       valuationFredPromise = null;
       return null;
@@ -4314,9 +4338,19 @@ async function loadAll(force = false) {
   const eqItems = SECTIONS.find(s => s.key === 'eq')?.items || EQUITIES;
   const eqVisible = visOf(eqItems);
   const allEqFailed = eqVisible.length > 0 && eqVisible.every(e => !DATA[getItemKey(e)]);
+  const valVisible = visOf(VALUATION);
+  const valLoaded = valVisible.some(item => {
+    const d = DATA[item.id];
+    if (item.api) return Boolean(d?.display || d?.live);
+    return d?.price != null || d?.display;
+  });
+  const valAllFailed = valVisible.length > 0 && !valLoaded;
   if (hubProxyRateLimited) {
     status.className = 'status-line warn';
     status.textContent = '⚠ Too many data requests — wait about a minute, then refresh';
+  } else if (valAllFailed) {
+    status.className = 'status-line warn';
+    status.textContent = '⚠ Valuation unavailable — FRED data did not load. Wait ~1 min and refresh, or check Valuation ⊞ Edit (cards enabled).';
   } else if (allEqFailed) {
     status.className = 'status-line err';
     status.textContent = activeProvider === 'alphavantage'
