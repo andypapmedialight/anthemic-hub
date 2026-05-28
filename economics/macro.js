@@ -1019,6 +1019,12 @@ function formatQuotePrice(d, item, sectionKey) {
   return fmt(d.price, quoteDecimals(item, sectionKey));
 }
 
+function formatCommodityPrice(d, item) {
+  const base = formatQuotePrice(d, item, 'comm');
+  if (!base) return null;
+  return item?.unit ? `${base} ${item.unit}` : base;
+}
+
 const YAHOO_EXCHANGE_LABELS = {
   NMS: 'NASDAQ',
   NGM: 'NASDAQ',
@@ -1097,11 +1103,14 @@ function resolveEquityExchange(item, d) {
 function formatQuoteCard(item, d, sectionKey) {
   const quoteDp = quoteDecimals(item, sectionKey);
   const exchangeLabel = sectionKey === 'eq' ? resolveEquityExchange(item, d) : null;
+  const price = sectionKey === 'comm'
+    ? formatCommodityPrice(d, item)
+    : formatQuotePrice(d, item, sectionKey);
   return {
     ticker: item.ticker,
     label: item.label,
     exchangeLabel,
-    price: formatQuotePrice(d, item, sectionKey),
+    price,
     change: d ? d.change : null,
     pct: d ? d.pct : null,
     asOfUtc: d?.asOfUtc ?? null,
@@ -1216,12 +1225,17 @@ function equityCardInfo(item) {
 
 function commodityCardInfo(item) {
   const unit = item.unit ? ` Unit: ${item.unit}.` : '';
+  const source = item.fredId
+    ? { label: 'FRED commodity series', href: `https://fred.stlouisfed.org/series/${item.fredId}`, data: `FRED ${item.fredId}` }
+    : { label: 'Yahoo Finance', href: `https://finance.yahoo.com/quote/${encodeURIComponent(item.sym || '')}`, data: `Yahoo ${item.sym || item.ticker}` };
   return {
     title: item.label,
-    summary: `${item.label} is a spot/reference commodity benchmark level, not a futures contract.`,
-    derived: 'Latest published FRED spot/reference value and change vs the prior observation.',
-    data: `FRED series: ${item.fredId}. Card ticker: ${item.ticker}.${unit}`,
-    sourceHtml: infoLink('FRED commodity series', `https://fred.stlouisfed.org/series/${item.fredId}`),
+    summary: `${item.label} is a spot/reference commodity benchmark level.${item.sym ? ' Live quote via Yahoo.' : ''}`,
+    derived: item.fredId
+      ? 'Latest published FRED spot/reference value and change vs the prior observation.'
+      : 'Latest market quote and change vs the prior session.',
+    data: `${source.data}. Card ticker: ${item.ticker}.${unit}`,
+    sourceHtml: infoLink(source.label, source.href),
     formula: changeFormulaeBlurb('price'),
   };
 }
@@ -1316,17 +1330,17 @@ function valuationCardInfo(item) {
     },
     'au-public-debt': {
       summary: 'Australian general government gross debt as a percent of GDP.',
-      derived: 'Latest IMF World Economic Outlook reading from FRED (annual % of GDP).',
-      data: 'FRED GGGDTAAUA188N (% of GDP, annual).',
+      derived: 'IMF % of GDP with estimated AUD level from aligned nominal GDP (ratio × GDP).',
+      data: 'FRED GGGDTAAUA188N (% of GDP, annual) · NGDPSAXDCAUQ (GDP, quarterly).',
       sourceHtml: infoLink('FRED / IMF WEO', fred),
-      formula: changeFormulaeBlurb('ratio'),
+      formula: 'Est. AUD = (% of GDP ÷ 100) × AU nominal GDP (A$B)',
     },
     'au-private-debt': {
       summary: 'Australian private non-financial sector credit as a percent of GDP.',
-      derived: 'Latest BIS private credit to non-financial sector (% of GDP), adjusted for breaks.',
-      data: 'FRED QAUPAM770A (% of GDP, quarterly).',
+      derived: 'BIS % of GDP with estimated AUD level from aligned nominal GDP (ratio × GDP).',
+      data: 'FRED QAUPAM770A (% of GDP, quarterly) · NGDPSAXDCAUQ (GDP, quarterly).',
       sourceHtml: infoLink('FRED / BIS', fred),
-      formula: changeFormulaeBlurb('ratio'),
+      formula: 'Est. AUD = (% of GDP ÷ 100) × AU nominal GDP (A$B)',
     },
     'margin-debt': {
       summary: 'FINRA aggregate debit balances in customer securities margin accounts — a proxy for stock-market leverage and speculative demand.',
@@ -2466,10 +2480,18 @@ function debtRatioExtraHtml(d) {
     html += `<div class="yield-extra"><span class="spread-label">Estimate</span>
       <span class="spread-val">Debt scaled via Treasury MV (${escapeHtml(m.treasuryMvDate || '—')})</span></div>`;
   }
-  html += `<div class="yield-extra"><span class="spread-label">Z.1 debt</span>
-    <span class="spread-val">${escapeHtml(m.debtAnchorDate || '—')}</span></div>`;
-  html += `<div class="yield-extra"><span class="spread-label">GDP</span>
-    <span class="spread-val">${escapeHtml(m.gdpDate || '—')}</span></div>`;
+  if (m.debtAnchorDate) {
+    html += `<div class="yield-extra"><span class="spread-label">Z.1 debt</span>
+      <span class="spread-val">${escapeHtml(m.debtAnchorDate)}</span></div>`;
+  }
+  if (m.ratioDate) {
+    html += `<div class="yield-extra"><span class="spread-label">Ratio</span>
+      <span class="spread-val">${escapeHtml(m.ratioDate)}</span></div>`;
+  }
+  if (m.gdpDate) {
+    html += `<div class="yield-extra"><span class="spread-label">GDP</span>
+      <span class="spread-val">${escapeHtml(m.gdpDate)}</span></div>`;
+  }
   return html;
 }
 
@@ -2587,11 +2609,17 @@ function quoteFromPercentRows(rows, kind = 'quarterly', note = null) {
 }
 
 function fetchAuPublicDebtCurrent(fred) {
-  return quoteFromPercentRows(fred.GGGDTAAUA188N, 'reference', 'Annual');
+  const rows = fred.GGGDTAAUA188N;
+  const quote = quoteFromPercentRows(rows, 'reference', 'Annual');
+  const ratioDate = latestFredRow(rows)?.date;
+  return attachAuDebtLevel(quote, fred, ratioDate);
 }
 
 function fetchAuPrivateDebtCurrent(fred) {
-  return quoteFromPercentRows(fred.QAUPAM770A, 'quarterly');
+  const rows = fred.QAUPAM770A;
+  const quote = quoteFromPercentRows(rows, 'quarterly');
+  const ratioDate = latestFredRow(rows)?.date;
+  return attachAuDebtLevel(quote, fred, ratioDate);
 }
 
 function federalDebtBillions(fred) {
@@ -2612,6 +2640,47 @@ function valuationUsdExtra(label, billions) {
   if (!usd) return '';
   return `<div class="yield-extra yield-extra--usd"><span class="spread-label">${label}</span>
     <span class="spread-val spread-val--figure buffett-fair">${usd}</span></div>`;
+}
+
+function valuationAudExtra(label, billions) {
+  const aud = formatAudCompact(billions);
+  if (!aud) return '';
+  return `<div class="yield-extra yield-extra--usd"><span class="spread-label">${label}</span>
+    <span class="spread-val spread-val--figure buffett-fair">${aud}</span></div>`;
+}
+
+function latestFredRowOnOrBefore(rows, date) {
+  if (!rows?.length) return null;
+  const sorted = sortedFredRows(rows);
+  if (!date) return sorted[sorted.length - 1];
+  let pick = null;
+  for (const r of sorted) {
+    if (r.date <= date) pick = r;
+    else break;
+  }
+  return pick || sorted[0];
+}
+
+function pickAuGdpBillionsForDebt(fred, ratioDate) {
+  const rows = fred.NGDPSAXDCAUQ;
+  if (!rows?.length) return null;
+  const row = latestFredRowOnOrBefore(rows, ratioDate);
+  return row ? row.v / 1000 : null;
+}
+
+function attachAuDebtLevel(quote, fred, ratioDate) {
+  if (!quote || quote.price == null) return quote;
+  const gdpBillions = pickAuGdpBillionsForDebt(fred, ratioDate);
+  const audBillions = gdpBillions != null ? (quote.price / 100) * gdpBillions : null;
+  const gdpRow = latestFredRowOnOrBefore(fred.NGDPSAXDCAUQ, ratioDate);
+  return {
+    ...quote,
+    audBillions,
+    debtEstMeta: {
+      gdpDate: gdpRow?.date || ratioDate || null,
+      ratioDate: ratioDate || null,
+    },
+  };
 }
 
 function valuationReferenceExtra(item, live = null, asOfUtc = null) {
@@ -3149,8 +3218,10 @@ function collectCardMetas(section, items) {
       } else if (item.id === 'au-public-debt' || item.id === 'au-private-debt') {
         isRatio = true;
         price = formatRatioPrice(d, 1);
+        extra = valuationAudExtra('Est. (AUD)', d?.audBillions);
+        extra += debtRatioExtraHtml(d);
         extra += `<div class="yield-extra"><span class="spread-label">Measure</span>
-          <span class="spread-val buffett-fair">% of GDP</span></div>`;
+          <span class="spread-val buffett-fair">% of GDP (est.)</span></div>`;
       } else {
         isRatio = true;
         price = formatRatioPrice(d, 1);
