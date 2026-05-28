@@ -378,9 +378,9 @@ const OVERVIEW_DEFAULTS = [
   { sectionKey: 'eq', itemKey: '^AORD' },
   { sectionKey: 'eq', itemKey: '^GSPC' },
   { sectionKey: 'eq', itemKey: '^IXIC' },
-  { sectionKey: 'comm', itemKey: 'GC=F' },
-  { sectionKey: 'comm', itemKey: 'BZ=F' },
-  { sectionKey: 'comm', itemKey: 'TIO=F' },
+  { sectionKey: 'comm', itemKey: 'spot-gold' },
+  { sectionKey: 'comm', itemKey: 'spot-brent' },
+  { sectionKey: 'comm', itemKey: 'spot-wti' },
 ];
 let OVERVIEW_REFS = [];
 
@@ -574,8 +574,14 @@ function loadCustomCommodities() {
     CUSTOM_COMMODITIES = raw ? JSON.parse(raw) : [];
     if (!Array.isArray(CUSTOM_COMMODITIES)) CUSTOM_COMMODITIES = [];
     for (const item of CUSTOM_COMMODITIES) {
-      if (item?.fredId === 'GOLDAMGBD228NLBM') item.fredId = 'PGOLDUSDM';
-      if (item?.fredId === 'SLVPRUSD') item.fredId = 'PSILVERUSDM';
+      if (item?.fredId === 'GOLDAMGBD228NLBM' || item?.fredId === 'PGOLDUSDM') {
+        delete item.fredId;
+        item.sym = item.sym || 'GC=F';
+      }
+      if (item?.fredId === 'SLVPRUSD' || item?.fredId === 'PSILVERUSDM') {
+        delete item.fredId;
+        item.sym = item.sym || 'SI=F';
+      }
     }
   } catch {
     CUSTOM_COMMODITIES = [];
@@ -735,8 +741,8 @@ function isValuationLive(itemOrId) {
 }
 
 const COMMODITIES = [
-  { id: 'spot-gold',    fredId: 'PGOLDUSDM',        label: 'Gold Spot',      ticker: 'XAU',   unit: 'USD/oz', def: true,  dp: 2 },
-  { id: 'spot-silver',  fredId: 'PSILVERUSDM',      label: 'Silver Spot',    ticker: 'XAG',   unit: 'USD/oz', def: true,  dp: 3 },
+  { id: 'spot-gold',    sym: 'GC=F',               label: 'Gold Spot',      ticker: 'XAU',   unit: 'USD/oz', def: true,  dp: 2 },
+  { id: 'spot-silver',  sym: 'SI=F',               label: 'Silver Spot',    ticker: 'XAG',   unit: 'USD/oz', def: true,  dp: 3 },
   { id: 'spot-copper',  fredId: 'PCOPPUSDM',        label: 'Copper Spot',    ticker: 'CU',    unit: 'USD/mt', def: true,  dp: 2 },
   { id: 'spot-wti',     fredId: 'DCOILWTICO',       label: 'WTI Spot',       ticker: 'WTI',   unit: 'USD/bbl', def: true, dp: 2 },
   { id: 'spot-brent',   fredId: 'DCOILBRENTEU',     label: 'Brent Spot',     ticker: 'BRENT', unit: 'USD/bbl', def: true, dp: 2 },
@@ -747,8 +753,8 @@ const COMMODITIES = [
 ];
 
 const COMMODITY_CATALOG = [
-  { id: 'spot-gold', fredId: 'PGOLDUSDM', label: 'Gold Spot', ticker: 'XAU', unit: 'USD/oz' },
-  { id: 'spot-silver', fredId: 'PSILVERUSDM', label: 'Silver Spot', ticker: 'XAG', unit: 'USD/oz' },
+  { id: 'spot-gold', sym: 'GC=F', label: 'Gold Spot', ticker: 'XAU', unit: 'USD/oz' },
+  { id: 'spot-silver', sym: 'SI=F', label: 'Silver Spot', ticker: 'XAG', unit: 'USD/oz' },
   { id: 'spot-copper', fredId: 'PCOPPUSDM', label: 'Copper Spot', ticker: 'CU', unit: 'USD/mt' },
   { id: 'spot-wti', fredId: 'DCOILWTICO', label: 'WTI Spot', ticker: 'WTI', unit: 'USD/bbl' },
   { id: 'spot-brent', fredId: 'DCOILBRENTEU', label: 'Brent Spot', ticker: 'BRENT', unit: 'USD/bbl' },
@@ -2679,7 +2685,8 @@ async function fetchValuationLiveBatch(metricIds, force = false) {
   const pending = ids.filter(id => force || !cacheGet(`val-live:${id}`));
   if (!pending.length) return;
   try {
-    const url = `${location.origin}/economics/proxy/valuation?${new URLSearchParams({ metrics: pending.join(',') })}`;
+    // Literal commas — URLSearchParams encodes them as %2C and nginx rejects the batch.
+    const url = `${location.origin}/economics/proxy/valuation?metrics=${pending.map(encodeURIComponent).join(',')}`;
     const r = await fetchWithTimeout(url, {}, 120000);
     const body = await readFetchResponse(r, { asJson: true });
     if (body?.error && !body.metrics) throw new Error(body.error);
