@@ -32,11 +32,11 @@ let macroFreshnessSummary = null;
 const VAL_FRED_CARD_LOOKBACK_DAYS = 800;
 
 // ── Load throttle (per-browser, limits refresh spam / bots) ──
-const REFRESH_MIN_GAP_MS = 60 * 1000;
-const REFRESH_MAX_PER_HOUR = 15;
-const PAGE_LOAD_MIN_GAP_MS = 20 * 1000;
-const PAGE_LOAD_MAX_PER_HOUR = 30;
-const CARD_REFRESH_MIN_GAP_MS = 15 * 1000;
+const REFRESH_MIN_GAP_MS = 45 * 1000;
+const REFRESH_MAX_PER_HOUR = 24;
+const PAGE_LOAD_MIN_GAP_MS = 12 * 1000;
+const PAGE_LOAD_MAX_PER_HOUR = 48;
+const CARD_REFRESH_MIN_GAP_MS = 10 * 1000;
 const THROTTLE_WINDOW_MS = 60 * 60 * 1000;
 let refreshBtnTimer = null;
 const cardRefreshAt = new Map(); // itemKey → last forced fetch ts
@@ -1577,7 +1577,7 @@ const proxyThrottle = (() => {
   let active = 0; const queue = [];
   return fn => new Promise((res, rej) => {
     const go = () => { active++; fn().then(res, rej).finally(() => { active--; queue.length && queue.shift()(); }); };
-    active < 6 ? go() : queue.push(go);
+    active < 8 ? go() : queue.push(go);
   });
 })();
 
@@ -2824,7 +2824,7 @@ async function fetchValuationFredSeriesStaggered(lookbackDays) {
       console.warn('FRED series fetch failed', seriesId, err);
       data[seriesId] = null;
     }
-    if (canUseHubFredProxy()) await new Promise(r => setTimeout(r, 350));
+    if (canUseHubFredProxy()) await new Promise(r => setTimeout(r, 220));
   }
   return data;
 }
