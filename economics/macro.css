@@ -461,7 +461,7 @@
     color: var(--dim);
     line-height: 1.35;
   }
-  .card-asof--stale { color: var(--gold); }
+  .card-asof--stale { color: var(--muted); }
 
   .card-loading {
     position: absolute;

@@ -834,16 +834,12 @@ function formatUtcAsOf(ms) {
   if (ms == null || Number.isNaN(Number(ms))) return null;
   const d = new Date(ms);
   if (Number.isNaN(d.getTime())) return null;
-  const date = d.toLocaleString('en-GB', {
+  return d.toLocaleDateString('en-GB', {
     timeZone: 'UTC',
     day: 'numeric',
     month: 'short',
     year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
   });
-  return `${date} UTC`;
 }
 
 /** Map FINRA / BIS / ISO reference labels to an approximate UTC instant. */
