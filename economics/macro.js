@@ -18,7 +18,7 @@ const CACHE_TTL_MS = {
   default: 5 * 60 * 1000,
 };
 
-/** Max age before UI flags “may be stale”. */
+/** Max age before UI appends an “as at last close” (or section-specific) lag note. */
 const STALE_AFTER_MS = {
   live: 30 * 60 * 1000,
   daily: 3 * 86400000,
@@ -254,6 +254,15 @@ function isMetaStale(meta) {
   return Date.now() - Number(meta.asOfUtc) > max;
 }
 
+/** Wording when as-of is older than the freshness threshold (replaces “may be stale”). */
+function staleAsOfWording(meta) {
+  const kind = inferFreshnessKind(meta);
+  if (kind === 'quarterly' || kind === 'reference') return 'as at last observation';
+  if (kind === 'estimated') return 'as at last estimate';
+  if (kind === 'daily' && meta.freshnessNote?.includes('prior biz day')) return 'as at last business day';
+  return 'as at last close';
+}
+
 function resolveFreshnessPill(meta) {
   if (meta.pillLabel != null) return meta.pillLabel;
   const kind = inferFreshnessKind(meta);
@@ -279,7 +288,7 @@ function formatCardAsOf(meta) {
   const parts = [utc];
   if (meta.freshnessNote) parts.push(meta.freshnessNote);
   if (meta.anchorDate && meta.estimated) parts.push(`Z.1 ${meta.anchorDate}`);
-  if (isMetaStale(meta)) parts.push('may be stale');
+  if (isMetaStale(meta)) parts.push(staleAsOfWording(meta));
   return parts.join(' · ');
 }
 
