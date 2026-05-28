@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+import threading
 import urllib.parse
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
@@ -16,6 +17,7 @@ from valuation_fetch import (  # noqa: E402
     fetch_freshness_api,
     fetch_valuation_batch,
     fetch_valuation_metric,
+    warm_mmd_cache,
 )
 
 BIND = os.environ.get("BIND", "127.0.0.1")
@@ -80,7 +82,24 @@ class ValuationHandler(BaseHTTPRequestHandler):
             self._json({"error": str(exc)}, status=502)
 
 
+def _start_warm_cache() -> None:
+    if os.environ.get("MMD_SKIP_WARM", "").strip().lower() in ("1", "true", "yes"):
+        print("mmd-valuation: warm cache disabled (MMD_SKIP_WARM)")
+        return
+
+    def run() -> None:
+        try:
+            warm_mmd_cache()
+            print("mmd-valuation: warm cache ready", flush=True)
+        except Exception as exc:
+            print(f"mmd-valuation: warm cache failed: {exc}", flush=True)
+
+    threading.Thread(target=run, daemon=True, name="mmd-warm").start()
+    print("mmd-valuation: warm cache started (background)")
+
+
 def main() -> None:
+    _start_warm_cache()
     httpd = HTTPServer((BIND, PORT), ValuationHandler)
     print(f"mmd-valuation listening on http://{BIND}:{PORT}/")
     httpd.serve_forever()

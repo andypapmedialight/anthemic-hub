@@ -34,6 +34,7 @@ from valuation_fetch import (  # noqa: E402
     fetch_valuation_batch,
     fetch_valuation_metric,
     fred_last_observation,
+    warm_mmd_cache,
 )
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -109,9 +110,6 @@ VAL_WARM_FRED_SERIES = (
     "DGS10",
 )
 
-VAL_WARM_LIVE_METRICS = tuple(METRICS.keys())
-
-
 def _prime_fred_proxy_cache(series_id: str, start: str = "2020-01-01") -> None:
     """Populate FRED proxy cache (same payloads clients request)."""
     cache_key = (series_id, start)
@@ -157,13 +155,10 @@ def _warm_hub_cache() -> None:
 
     def run() -> None:
         try:
-            for sid in FRESHNESS_FRED_SERIES:
-                fred_last_observation(sid, FRED_API_KEY)
+            warm_mmd_cache()
             card_start = time.strftime("%Y-%m-%d", time.gmtime(time.time() - 800 * 86400))
             for sid in VAL_WARM_FRED_SERIES:
                 _prime_fred_proxy_cache(sid, card_start)
-            if VAL_WARM_LIVE_METRICS:
-                fetch_valuation_batch(list(VAL_WARM_LIVE_METRICS))
         except Exception:
             pass
 

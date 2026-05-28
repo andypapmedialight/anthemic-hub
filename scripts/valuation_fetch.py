@@ -455,6 +455,21 @@ def fetch_freshness_api(api_key: str | None = None) -> dict:
     }
 
 
+VAL_WARM_LIVE_METRICS = (
+    "margin-debt",
+    "otc-notional",
+    "otc-gmv",
+    "au-cgs",
+    "asx-bond-fut",
+)
+
+
+def warm_mmd_cache() -> None:
+    """Prefetch FRED vintage + live valuation metrics (BIS cache). Idempotent."""
+    fetch_freshness_api()
+    fetch_valuation_batch(list(VAL_WARM_LIVE_METRICS))
+
+
 METRICS = {
     "margin-debt": fetch_margin_debt,
     "otc-notional": fetch_bis_otc_notional,
