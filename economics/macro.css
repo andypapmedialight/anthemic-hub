@@ -102,8 +102,12 @@
   /* ── Trading centre clocks ───────────────────────────── */
   .trading-clocks-bar {
     display: flex;
+    flex-wrap: nowrap;
     gap: 8px;
     overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    touch-action: pan-x;
     padding-bottom: 1.1rem;
     margin-bottom: 1.25rem;
     border-bottom: 1px solid var(--border);
@@ -167,8 +171,19 @@
       display: grid;
       grid-template-columns: repeat(5, minmax(0, 1fr));
       overflow: visible;
+      touch-action: auto;
     }
     .trading-clock { min-width: 0; }
+  }
+
+  @media (max-width: 719px) {
+    .trading-clocks-bar {
+      scroll-snap-type: x proximity;
+    }
+    .trading-clock {
+      min-width: 124px;
+      scroll-snap-align: start;
+    }
   }
 
   .refresh-btn:disabled {
