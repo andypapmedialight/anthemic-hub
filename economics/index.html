@@ -36,6 +36,9 @@
     <div class="date-line" id="date-line">–</div>
   </div>
   <div class="header-right">
+    <button type="button" class="refresh-btn compare-btn" id="compare-btn">
+      Compare
+    </button>
     <button type="button" class="refresh-btn" id="refresh-btn">
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <path d="M23 4v6h-6M1 20v-6h6"/>
@@ -112,6 +115,29 @@
   </div>
   <div class="customize-row" id="cust-crypto"></div>
   <div class="cards" id="crypto-grid"></div>
+</div>
+
+<!-- ── Compare modal ── -->
+<div id="compare-modal" class="compare-modal" hidden inert>
+  <div class="compare-modal-backdrop" data-compare-close aria-hidden="true"></div>
+  <div class="compare-modal-panel" role="dialog" aria-modal="true" aria-labelledby="compare-modal-title">
+    <div class="compare-modal-head">
+      <h2 class="compare-modal-title" id="compare-modal-title">Compare instruments</h2>
+      <button type="button" class="compare-modal-close" id="compare-modal-close" aria-label="Close compare chart">&times;</button>
+    </div>
+    <div class="compare-controls">
+      <input id="compare-search" class="compare-search" type="text" placeholder="Search all dashboard items..." autocomplete="off">
+      <select id="compare-mode" class="compare-select" aria-label="Compare mode">
+        <option value="pct">Percent change</option>
+        <option value="indexed">Indexed (100 base)</option>
+        <option value="raw">Raw values</option>
+      </select>
+    </div>
+    <div class="compare-selected" id="compare-selected"></div>
+    <div class="compare-period-tabs" id="compare-period-tabs"></div>
+    <div class="compare-modal-body" id="compare-modal-body">Select up to 6 items to compare.</div>
+    <div class="compare-list" id="compare-list"></div>
+  </div>
 </div>
 
 <!-- ── Indicator info modal ── -->

@@ -585,6 +585,52 @@ const CG_IDS = {
   'LINK-USD': 'chainlink',
 };
 
+/** Per-section market / venue / source copy (rendered under section headers). */
+const SECTION_EXPLAINERS = {
+  eq: {
+    title: 'Market & source',
+    market: 'Cash equity sessions on listed exchanges (NYSE, NASDAQ, NYSE Arca, ASX, etc.) and major index benchmarks.',
+    venue: 'The exchange on each card is the listing venue. Index symbols (^GSPC, ^AXJO) are calculated levels, not a single tradable ticker.',
+    source: 'Quotes from your selected provider (Yahoo, Google Finance, or Alpha Vantage). Prices may be delayed.',
+    detail: 'US and ASX cash markets have separate session hours (see footer). ETFs trade like stocks; indices track underlying baskets.',
+  },
+  val: {
+    title: 'Market & source',
+    market: 'Macroeconomic ratios and reference statistics — not live exchange prices.',
+    venue: 'No exchange. Buffett, GDP, and debt series are national accounts; margin/OTC cards are regulatory or survey aggregates.',
+    source: 'FRED (St. Louis Fed) for GDP, debt, and Buffett inputs; hub valuation API for FINRA margin, BIS/ISDA OTC, and AU Treasury/ASX references.',
+    detail: 'Quarterly FRED series drive most cards. Live-reference cards (margin debt, OTC) show published levels with “as of” dates when available.',
+  },
+  comm: {
+    title: 'Market & source',
+    market: 'Commodity futures (COMEX, NYMEX) and US-listed commodity ETF proxies.',
+    venue: 'Symbols like GC=F and CL=F are continuous/front-month futures on US derivatives exchanges; ETF tickers (CPER, WEAT) trade on NYSE Arca.',
+    source: 'Futures and ETF quotes via Yahoo / Google / Alpha Vantage — same provider stack as equities.',
+    detail: 'Futures prices reflect expected delivery months, not necessarily physical spot. Roll and contango can make continuous symbols differ from spot headlines.',
+  },
+  bond: {
+    title: 'Market & source',
+    market: 'US Treasury secondary market — yields implied from bond prices (constant-maturity benchmarks).',
+    venue: 'CBOE Treasury yield indices (^TNX, ^FVX) when available; otherwise FRED daily series (DGS2, DGS10, DFF, T10YIE).',
+    source: 'Yahoo/CBOE for live yield indices where mapped; FRED CSV fallback. 2s10s spread uses aligned FRED DGS2 and DGS10.',
+    detail: 'Quoted in percent per year (yield to maturity style). Moves are shown in percentage points (pp), not price dollars.',
+  },
+  fx: {
+    title: 'Market & source',
+    market: 'Spot foreign exchange — the rate to exchange one currency for another for near-term settlement.',
+    venue: 'Wholesale spot FX typically settles T+2; this dashboard shows reference spot-style rates, not a live interbank order book.',
+    source: 'Default: Frankfurter.dev (European Central Bank reference rates, one fix per business day). With Alpha Vantage: intraday GLOBAL_QUOTE FX.',
+    detail: 'Spot FX is not the same as futures or forwards (dated delivery). ECB reference rates are official benchmarks for the euro area and crosses — useful for macro comparison, but they update once per business day and can lag active trading.',
+  },
+  crypto: {
+    title: 'Market & source',
+    market: 'Global crypto spot markets — 24/7 trading across many venues, aggregated here as a single USD price.',
+    venue: 'No single exchange on cards; CoinGecko blends volume-weighted prices from major centralized and decentralized markets.',
+    source: 'CoinGecko simple price API (always on, no API key). Change is a rolling 24-hour percentage, not an exchange session close.',
+    detail: 'Unlike equities, there is no official closing auction; weekend and holiday gaps do not apply.',
+  },
+};
+
 // ── Section Registry ──────────────────────────────
 const SECTIONS = [
   {
@@ -958,10 +1004,10 @@ function commodityCardInfo(item) {
 function fxCardInfo(item) {
   return {
     title: item.label,
-    summary: `Spot FX rate: how many ${item.to} per 1 ${item.from} (or equivalent cross).`,
+    summary: `Spot FX: how many ${item.to} you get per 1 ${item.from} for immediate-style conversion. Not a futures or forward contract.`,
     derived: activeProvider === 'alphavantage'
       ? 'Alpha Vantage realtime exchange rate; change not shown for AV FX.'
-      : 'Frankfurter.dev daily ECB reference rates: latest business day vs prior published day.',
+      : 'Frankfurter.dev daily ECB reference rates: latest business day vs prior published day (spot reference, not live dealing room).',
     data: `Cross: ${item.from} → ${item.to}. Frankfurter base USD with cross-rates when needed.`,
     sourceHtml: activeProvider === 'alphavantage'
       ? infoLink('Alpha Vantage FX', 'https://www.alphavantage.co/documentation/#currency-exchange')
@@ -3197,6 +3243,40 @@ async function toggleSym(key, sectionKey) {
   updateMarketStatus();
 }
 
+function renderSectionExplainers() {
+  for (const section of SECTIONS) {
+    const ex = SECTION_EXPLAINERS[section.key];
+    if (!ex) continue;
+    const editBtn = document.querySelector(`.section-edit-btn[data-section="${section.key}"]`);
+    const sectionEl = editBtn?.closest('.section');
+    if (!sectionEl || sectionEl.querySelector('.section-explainer')) continue;
+
+    const details = document.createElement('details');
+    details.className = 'section-explainer';
+    details.innerHTML = `
+      <summary class="section-explainer-summary">${escapeHtml(ex.title)}</summary>
+      <div class="section-explainer-body">
+        <dl class="section-explainer-dl">
+          <div class="section-explainer-row">
+            <dt>Market</dt>
+            <dd>${infoPara(ex.market)}</dd>
+          </div>
+          <div class="section-explainer-row">
+            <dt>Venue / exchange</dt>
+            <dd>${infoPara(ex.venue)}</dd>
+          </div>
+          <div class="section-explainer-row">
+            <dt>Data source</dt>
+            <dd>${infoPara(ex.source)}</dd>
+          </div>
+        </dl>
+        ${ex.detail ? `<p class="section-explainer-detail">${infoPara(ex.detail)}</p>` : ''}
+      </div>`;
+    const header = sectionEl.querySelector('.section-header');
+    header?.insertAdjacentElement('afterend', details);
+  }
+}
+
 // ── Info Box ──────────────────────────────────────
 function renderInfoBox() {
   const box = document.getElementById('info-body');
@@ -3935,6 +4015,22 @@ const CHART_PERIODS = [
   { days: 365, label: '1Y' },
 ];
 const chartState = { itemKey: null, sectionKey: null, days: 7, returnFocus: null };
+const COMPARE_PERIODS = [
+  { days: 30, label: '1M' },
+  { days: 90, label: '3M' },
+  { days: 180, label: '6M' },
+  { days: 365, label: '1Y' },
+  { days: 1825, label: '5Y' },
+];
+const compareState = {
+  open: false,
+  selected: [],
+  days: 180,
+  mode: 'pct',
+  query: '',
+  returnFocus: null,
+};
+const COMPARE_MAX_ITEMS = 6;
 
 function chartPeriodsFor(item, section) {
   if (section.key === 'val') return CHART_PERIODS.filter(p => p.days >= 30);
@@ -4336,6 +4432,249 @@ async function openChart(itemKey, sectionKey) {
   await loadChartModal();
 }
 
+function compareKey(itemKey, sectionKey) {
+  return `${sectionKey}:${itemKey}`;
+}
+
+function parseCompareKey(key) {
+  const idx = key.indexOf(':');
+  if (idx < 1) return null;
+  return { sectionKey: key.slice(0, idx), itemKey: key.slice(idx + 1) };
+}
+
+function getSectionName(sectionKey) {
+  const names = {
+    eq: 'Equities',
+    val: 'Valuation',
+    comm: 'Commodities',
+    bond: 'Treasuries',
+    fx: 'Currencies',
+    crypto: 'Crypto',
+  };
+  return names[sectionKey] || sectionKey.toUpperCase();
+}
+
+function getCompareCatalog() {
+  const out = [];
+  for (const section of SECTIONS) {
+    for (const item of section.items) {
+      const itemKey = getItemKey(item);
+      out.push({
+        key: compareKey(itemKey, section.key),
+        itemKey,
+        sectionKey: section.key,
+        sectionName: getSectionName(section.key),
+        label: item.label,
+        ticker: item.ticker || item.sym || item.id || `${item.from}/${item.to}`,
+      });
+    }
+  }
+  return out;
+}
+
+function saveComparePrefs() {
+  try {
+    localStorage.setItem('mmd:compare:v1', JSON.stringify({
+      selected: compareState.selected,
+      days: compareState.days,
+      mode: compareState.mode,
+    }));
+  } catch {}
+}
+
+function loadComparePrefs() {
+  try {
+    const raw = localStorage.getItem('mmd:compare:v1');
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed.selected)) compareState.selected = parsed.selected.slice(0, COMPARE_MAX_ITEMS);
+    if (Number.isFinite(parsed.days)) compareState.days = parsed.days;
+    if (['pct', 'indexed', 'raw'].includes(parsed.mode)) compareState.mode = parsed.mode;
+  } catch {}
+}
+
+function filteredCompareCatalog() {
+  const q = compareState.query.trim().toLowerCase();
+  const all = getCompareCatalog();
+  if (!q) return all;
+  return all.filter(item =>
+    item.label.toLowerCase().includes(q)
+    || item.ticker.toLowerCase().includes(q)
+    || item.sectionName.toLowerCase().includes(q)
+  );
+}
+
+function toggleCompareItem(key) {
+  const ix = compareState.selected.indexOf(key);
+  if (ix >= 0) {
+    compareState.selected.splice(ix, 1);
+  } else if (compareState.selected.length < COMPARE_MAX_ITEMS) {
+    compareState.selected.push(key);
+  }
+  saveComparePrefs();
+  renderCompareModal();
+  void renderCompareChart();
+}
+
+function compareSeriesColor(i) {
+  const colors = ['#60a5fa', '#34d399', '#f87171', '#fbbf24', '#a78bfa', '#22d3ee'];
+  return colors[i % colors.length];
+}
+
+function normalizeSeries(series, mode) {
+  if (!series?.length) return series;
+  const base = series[0]?.v;
+  if (base == null || base === 0) return series;
+  if (mode === 'raw') return series;
+  return series.map(p => {
+    if (mode === 'pct') return { t: p.t, v: ((p.v - base) / base) * 100 };
+    if (mode === 'indexed') return { t: p.t, v: (p.v / base) * 100 };
+    return p;
+  });
+}
+
+function buildCompareSvg(lines, mode) {
+  const allPoints = lines.flatMap(line => line.series.map(p => ({ ...p, color: line.color, label: line.label })));
+  if (!allPoints.length) return '<p class="chart-empty">No comparable history for selected items.</p>';
+  const w = 680;
+  const h = 260;
+  const pad = { t: 14, r: 18, b: 28, l: 52 };
+  const iw = w - pad.l - pad.r;
+  const ih = h - pad.t - pad.b;
+  const minT = Math.min(...allPoints.map(p => p.t));
+  const maxT = Math.max(...allPoints.map(p => p.t));
+  let minV = Math.min(...allPoints.map(p => p.v));
+  let maxV = Math.max(...allPoints.map(p => p.v));
+  if (minV === maxV) { minV -= 1; maxV += 1; }
+  const spanT = Math.max(maxT - minT, 1);
+  const spanV = maxV - minV;
+  const x = t => pad.l + ((t - minT) / spanT) * iw;
+  const y = v => pad.t + ih - ((v - minV) / spanV) * ih;
+
+  const paths = lines.map(line => {
+    const path = line.series.map((p, i) => `${i ? 'L' : 'M'}${x(p.t).toFixed(1)},${y(p.v).toFixed(1)}`).join(' ');
+    return `<path d="${path}" fill="none" stroke="${line.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+  }).join('');
+
+  const yTicks = [minV, (minV + maxV) / 2, maxV];
+  const yLabels = yTicks.map(v => {
+    const yy = y(v);
+    let label = fmt(v, 2);
+    if (mode === 'pct') label = `${v.toFixed(2)}%`;
+    return `<text x="${pad.l - 8}" y="${yy + 3}" text-anchor="end" fill="#4a5568" font-size="9" font-family="DM Mono, monospace">${label}</text>`;
+  }).join('');
+
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+    ${yTicks.map(v => `<line x1="${pad.l}" y1="${y(v).toFixed(1)}" x2="${pad.l + iw}" y2="${y(v).toFixed(1)}" stroke="#252b33" stroke-width="1"/>`).join('')}
+    ${paths}
+    ${yLabels}
+    <text x="${pad.l}" y="${h - 8}" fill="#4a5568" font-size="9" font-family="DM Mono, monospace">${formatChartDate(minT)}</text>
+    <text x="${pad.l + iw}" y="${h - 8}" text-anchor="end" fill="#4a5568" font-size="9" font-family="DM Mono, monospace">${formatChartDate(maxT)}</text>
+  </svg>`;
+}
+
+async function renderCompareChart() {
+  const body = document.getElementById('compare-modal-body');
+  if (!body) return;
+  if (compareState.selected.length < 2) {
+    body.textContent = 'Select at least 2 items to compare.';
+    return;
+  }
+  body.textContent = 'Loading compare chart…';
+  const lines = [];
+  for (let i = 0; i < compareState.selected.length; i++) {
+    const parsed = parseCompareKey(compareState.selected[i]);
+    if (!parsed) continue;
+    const resolved = resolveItem(parsed.itemKey, parsed.sectionKey);
+    if (!resolved) continue;
+    const rawSeries = await fetchHistory(resolved.item, resolved.section, compareState.days);
+    const series = normalizeSeries(rawSeries, compareState.mode);
+    if (!series?.length) continue;
+    lines.push({
+      label: resolved.item.ticker || resolved.item.label,
+      color: compareSeriesColor(i),
+      series,
+    });
+  }
+  if (lines.length < 2) {
+    body.innerHTML = '<p class="chart-empty">Not enough series with history in this range.</p>';
+    return;
+  }
+  const legend = `<div class="compare-legend">${lines.map(l =>
+    `<span class="compare-legend-item"><span class="compare-dot" style="background:${l.color}"></span>${escapeHtml(l.label)}</span>`
+  ).join('')}</div>`;
+  body.innerHTML = buildCompareSvg(lines, compareState.mode) + legend;
+}
+
+function renderComparePeriodTabs() {
+  const tabs = document.getElementById('compare-period-tabs');
+  if (!tabs) return;
+  tabs.innerHTML = COMPARE_PERIODS.map(p => `
+    <button type="button" data-days="${p.days}" class="${p.days === compareState.days ? 'active' : ''}">${p.label}</button>
+  `).join('');
+}
+
+function renderCompareModal() {
+  const list = document.getElementById('compare-list');
+  const selected = document.getElementById('compare-selected');
+  const mode = document.getElementById('compare-mode');
+  const search = document.getElementById('compare-search');
+  if (!list || !selected) return;
+  if (mode) mode.value = compareState.mode;
+  if (search && search.value !== compareState.query) search.value = compareState.query;
+
+  renderComparePeriodTabs();
+  selected.innerHTML = compareState.selected.map(key => {
+    const parsed = parseCompareKey(key);
+    const resolved = parsed ? resolveItem(parsed.itemKey, parsed.sectionKey) : null;
+    if (!resolved) return '';
+    const label = `${resolved.item.ticker || resolved.item.label} · ${getSectionName(parsed.sectionKey)}`;
+    return `<span class="compare-chip">${escapeHtml(label)} <button type="button" data-compare-remove="${escapeHtml(key)}" aria-label="Remove ${escapeHtml(label)}">×</button></span>`;
+  }).join('');
+  if (!selected.innerHTML) {
+    selected.innerHTML = '<span class="footer-note">No instruments selected yet.</span>';
+  }
+
+  const rows = filteredCompareCatalog().slice(0, 200);
+  list.innerHTML = rows.map(row => {
+    const checked = compareState.selected.includes(row.key);
+    const disabled = !checked && compareState.selected.length >= COMPARE_MAX_ITEMS;
+    return `<label class="compare-row">
+      <input type="checkbox" data-compare-key="${escapeHtml(row.key)}" ${checked ? 'checked' : ''} ${disabled ? 'disabled' : ''}>
+      <span class="compare-row-name">${escapeHtml(row.label)}</span>
+      <span class="compare-row-meta">${escapeHtml(row.ticker)} · ${escapeHtml(row.sectionName)}</span>
+    </label>`;
+  }).join('');
+}
+
+function openCompare() {
+  const modal = document.getElementById('compare-modal');
+  if (!modal) return;
+  compareState.open = true;
+  compareState.returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  modal.hidden = false;
+  modal.inert = false;
+  document.body.style.overflow = 'hidden';
+  renderCompareModal();
+  void renderCompareChart();
+  document.getElementById('compare-search')?.focus();
+}
+
+function closeCompare() {
+  const modal = document.getElementById('compare-modal');
+  if (!modal) return;
+  compareState.open = false;
+  modal.hidden = true;
+  modal.inert = true;
+  document.body.style.overflow =
+    (document.getElementById('chart-modal')?.hidden === false || document.getElementById('info-modal')?.hidden === false)
+      ? 'hidden'
+      : '';
+  const restore = compareState.returnFocus;
+  compareState.returnFocus = null;
+  if (restore instanceof HTMLElement && document.contains(restore)) restore.focus({ preventScroll: true });
+}
+
 // ── API Key Management ─────────────────────────────
 function saveKey() {
   const input = document.getElementById('api-key-input');
@@ -4392,6 +4731,38 @@ function wireUi() {
     syncChartPeriodTabs(chartState.days);
     await loadChartModal();
   });
+  document.getElementById('compare-btn')?.addEventListener('click', openCompare);
+  document.getElementById('compare-modal-close')?.addEventListener('click', closeCompare);
+  document.querySelectorAll('[data-compare-close]').forEach(el => {
+    el.addEventListener('click', closeCompare);
+  });
+  document.getElementById('compare-search')?.addEventListener('input', e => {
+    compareState.query = e.target.value || '';
+    renderCompareModal();
+  });
+  document.getElementById('compare-mode')?.addEventListener('change', e => {
+    compareState.mode = e.target.value;
+    saveComparePrefs();
+    void renderCompareChart();
+  });
+  document.getElementById('compare-period-tabs')?.addEventListener('click', e => {
+    const btn = e.target.closest('button[data-days]');
+    if (!btn) return;
+    compareState.days = Number(btn.dataset.days) || compareState.days;
+    saveComparePrefs();
+    renderCompareModal();
+    void renderCompareChart();
+  });
+  document.getElementById('compare-selected')?.addEventListener('click', e => {
+    const btn = e.target.closest('button[data-compare-remove]');
+    if (!btn) return;
+    toggleCompareItem(btn.dataset.compareRemove);
+  });
+  document.getElementById('compare-list')?.addEventListener('change', e => {
+    const input = e.target.closest('input[data-compare-key]');
+    if (!input) return;
+    toggleCompareItem(input.dataset.compareKey);
+  });
 
   document.addEventListener('click', e => {
     const refreshBtn = e.target.closest('.card-refresh');
@@ -4441,6 +4812,10 @@ function wireUi() {
         closeChart();
         return;
       }
+      if (!document.getElementById('compare-modal')?.hidden) {
+        closeCompare();
+        return;
+      }
     }
     if (!(e.target instanceof Element)) return;
     const chartBtn = e.target.closest('.card-chart');
@@ -4455,6 +4830,8 @@ function wireUi() {
 
 async function init() {
   wireUi();
+  renderSectionExplainers();
+  loadComparePrefs();
   loadVIS();
   loadCustomEquities();
   syncEquitiesSection();

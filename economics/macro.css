@@ -82,6 +82,7 @@
   }
   .refresh-btn:hover { border-color: var(--accent); color: var(--text); }
   .refresh-btn:active { transform: scale(0.97); }
+  .compare-btn { margin-bottom: 2px; }
   @media (prefers-reduced-motion: no-preference) {
     .refresh-btn.spinning svg { animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -436,6 +437,80 @@
     letter-spacing: 0.04em;
     font-weight: 400;
     text-transform: none;
+  }
+
+  .section-explainer {
+    margin: -0.35rem 0 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface2);
+    overflow: hidden;
+  }
+  .section-explainer-summary {
+    cursor: pointer;
+    list-style: none;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 7px 10px;
+    user-select: none;
+  }
+  .section-explainer-summary::-webkit-details-marker { display: none; }
+  .section-explainer-summary::after {
+    content: '▾';
+    float: right;
+    color: var(--dim);
+    transition: transform 0.15s;
+  }
+  .section-explainer[open] .section-explainer-summary::after {
+    transform: rotate(180deg);
+  }
+  .section-explainer-summary:hover { color: var(--text); }
+  .section-explainer-body {
+    padding: 0 10px 10px;
+    border-top: 1px solid var(--border);
+  }
+  .section-explainer-dl {
+    margin: 0;
+    padding-top: 8px;
+    display: grid;
+    gap: 8px;
+  }
+  .section-explainer-row {
+    display: grid;
+    grid-template-columns: minmax(88px, 34%) 1fr;
+    gap: 8px 10px;
+    align-items: start;
+  }
+  .section-explainer-row dt {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin: 0;
+  }
+  .section-explainer-row dd {
+    margin: 0;
+    font-size: 0.72rem;
+    line-height: 1.45;
+    color: var(--muted);
+  }
+  .section-explainer-detail {
+    margin: 8px 0 0;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border);
+    font-size: 0.7rem;
+    line-height: 1.45;
+    color: var(--dim);
+  }
+  @media (max-width: 520px) {
+    .section-explainer-row {
+      grid-template-columns: 1fr;
+      gap: 2px;
+    }
   }
   .spread-pos { color: var(--up); }
   .spread-neg { color: var(--dn); }
@@ -1030,6 +1105,178 @@
     .chart-modal-stats { grid-template-columns: repeat(2, 1fr); }
   }
 
+  /* ── Compare modal ────────────────────────────────────── */
+  .compare-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1002;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  .compare-modal[hidden] { display: none; }
+  .compare-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(4px);
+  }
+  .compare-modal-panel {
+    position: relative;
+    width: min(760px, 100%);
+    max-height: 92vh;
+    overflow: auto;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
+  }
+  .compare-modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 0.7rem;
+  }
+  .compare-modal-title {
+    font-size: 1rem;
+    font-weight: 700;
+  }
+  .compare-modal-close {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .compare-controls {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+    margin-bottom: 0.6rem;
+  }
+  .compare-search,
+  .compare-select {
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    padding: 8px 10px;
+  }
+  .compare-selected {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 0.6rem;
+    min-height: 28px;
+  }
+  .compare-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--border2);
+    background: var(--surface2);
+    border-radius: 999px;
+    padding: 3px 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+  }
+  .compare-chip button {
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .compare-period-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 0.65rem;
+  }
+  .compare-period-tabs button {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: transparent;
+    color: var(--dim);
+    padding: 5px 10px;
+    cursor: pointer;
+  }
+  .compare-period-tabs button.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(59, 130, 246, 0.12);
+  }
+  .compare-modal-body {
+    min-height: 220px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px;
+    margin-bottom: 0.65rem;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+  }
+  .compare-list {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    max-height: 190px;
+    overflow: auto;
+  }
+  .compare-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 9px;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.74rem;
+  }
+  .compare-row:last-child { border-bottom: 0; }
+  .compare-row-name {
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .compare-row-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--dim);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .compare-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    margin-top: 6px;
+  }
+  .compare-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--muted);
+  }
+  .compare-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
   /* ── Indicator info modal ─────────────────────────────── */
   .info-modal {
     position: fixed;
@@ -1145,4 +1392,8 @@
     body { padding: 1rem; }
     .header { flex-direction: column; align-items: flex-start; gap: 12px; }
     .header-right { align-items: flex-start; }
+    .compare-controls { grid-template-columns: 1fr; }
+    .compare-modal { padding: 0.55rem; }
+    .compare-modal-panel { padding: 0.75rem; }
+    .compare-row { align-items: flex-start; }
   }
