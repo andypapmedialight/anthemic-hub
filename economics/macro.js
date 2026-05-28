@@ -558,13 +558,13 @@ function catalogEntryToEquity(entry) {
 }
 
 const EQUITIES = [
+  { sym: '^AORD', label: 'ASX All Ords',      ticker: 'AORD',  exchange: 'ASX',        def: true,  dp: 2 },
+  { sym: '^AXJO', label: 'ASX 200',           ticker: 'AXJO',  exchange: 'ASX',        def: true,  dp: 2 },
   { sym: '^GSPC', label: 'S&P 500',           ticker: 'SPX',   exchange: 'US index',   def: true,  dp: 2 },
   { sym: '^IXIC', label: 'NASDAQ Composite',  ticker: 'COMP',  exchange: 'NASDAQ',     def: true,  dp: 2 },
   { sym: '^NDX',  label: 'NASDAQ 100',        ticker: 'NDX',   exchange: 'NASDAQ',     def: true,  dp: 2 },
   { sym: '^DJI',  label: 'Dow Jones',         ticker: 'DJI',   exchange: 'NYSE',       def: true,  dp: 2 },
   { sym: '^RUT',  label: 'Russell 2000',      ticker: 'RUT',   exchange: 'US index',   def: true,  dp: 2 },
-  { sym: '^AXJO', label: 'ASX 200',           ticker: 'AXJO',  exchange: 'ASX',        def: true,  dp: 2 },
-  { sym: '^AORD', label: 'ASX All Ords',      ticker: 'AORD',  exchange: 'ASX',        def: true,  dp: 2 },
   { sym: 'EEM',   label: 'Emerg. Markets', ticker: 'EEM',   exchange: 'NYSE Arca',  def: false, dp: 2 },
   { sym: 'VGK',   label: 'Europe',         ticker: 'VGK',   exchange: 'NYSE Arca',  def: false, dp: 2 },
   { sym: 'EWJ',   label: 'Japan',          ticker: 'EWJ',   exchange: 'NYSE Arca',  def: false, dp: 2 },
