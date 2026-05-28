@@ -3773,11 +3773,11 @@ const MARKET_VENUES = {
 
 /** Header clocks — major cash equity centres (always shown). */
 const TRADING_CLOCK_CENTRES = [
-  { id: 'us_equity', city: 'New York' },
-  { id: 'london', city: 'London' },
-  { id: 'tokyo', city: 'Tokyo' },
   { id: 'asx', city: 'Sydney' },
+  { id: 'tokyo', city: 'Tokyo' },
   { id: 'hong_kong', city: 'Hong Kong' },
+  { id: 'london', city: 'London' },
+  { id: 'us_equity', city: 'New York' },
 ];
 
 const SECTION_MARKET_IDS = {
