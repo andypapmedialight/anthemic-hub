@@ -123,6 +123,20 @@ Config lives in **anthemic-ops** repo (`nginx/sites-available/anthemic-hub.conf`
 | `/economics/` | Morning Macro static UI + nginx proxies (see **anthemic-ops** README) |
 | `/` | Static files from `/var/www/anthemic-hub/` |
 
+## Morning Macro feature summary
+
+`/economics/` is a multi-source macro dashboard with resilient quote/freshness behavior and market context tooling.
+
+- Section coverage: Equities, Valuation, Commodities, US Treasuries, Currencies, and Crypto.
+- Provider stack: Yahoo / Google / Alpha Vantage for quotes, Frankfurter (ECB) for FX references, CoinGecko for crypto, FRED for macro/valuation series.
+- Freshness UX: per-card as-of timestamps, freshness pills (`Live`, `Daily`, `Est.`, `Qtrly`, `Ref`), and page-level data-vintage footer.
+- Equity venue visibility: cards and add-stock picker show exchange/venue labels (static mappings + provider metadata fallbacks).
+- Compare chart modal: user-selectable multi-series chart (up to 6 instruments, all sections), range tabs, normalization modes, and mobile-compatible controls.
+- Section explainers: collapsible “Market & source” notes under each section (market type, venue/exchange behavior, source details), including FX spot-vs-reference context.
+- Trading-centre clocks: top-of-page clocks for New York, London, Tokyo, Sydney, and Hong Kong with live local time and open/closed state.
+- Session visibility: section-level and footer market-hour chips (cash, Globex, FX week, crypto 24/7).
+- Operational hardening: startup warm-cache for valuation/FRED paths, in-memory freshness caching, nginx rate limits, uptime checks, and Slack alert integration.
+
 ## One-time Droplet setup
 
 ```bash
