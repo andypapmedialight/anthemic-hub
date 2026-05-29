@@ -11,7 +11,8 @@ brain/                              3D brain map (/brain/)
 personal/
   index.html                      Short index at /personal/ (links to writing)
   writing/
-    index.html                      Writing placeholder (/personal/writing/) — quill & ink animation
+    index.html                      Writing placeholder (/personal/writing/) — desk illustration
+    writing-desk.png                Hero art for writing holding page
 gigs/
   index.html                        Gig calendar (/gigs/) - reads gigs.json at runtime
   gigs.json                         Gig data - seed only; live copy managed by admin panel
