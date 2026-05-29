@@ -239,8 +239,9 @@ fi
 MMD_OPT=/opt/anthemic-mmd
 MMD_ENV=/etc/anthemic-mmd/valuation.env
 mkdir -p "${MMD_OPT}"
-if [[ -f "${INCOMING}/mmd/valuation_server.py" && -f "${INCOMING}/mmd/valuation_fetch.py" ]]; then
+if [[ -f "${INCOMING}/mmd/valuation_server.py" && -f "${INCOMING}/mmd/valuation_fetch.py" && -f "${INCOMING}/mmd/multilateral_fetch.py" ]]; then
   install -o root -g root -m 644 "${INCOMING}/mmd/valuation_fetch.py" "${MMD_OPT}/valuation_fetch.py"
+  install -o root -g root -m 644 "${INCOMING}/mmd/multilateral_fetch.py" "${MMD_OPT}/multilateral_fetch.py"
   install -o root -g root -m 755 "${INCOMING}/mmd/valuation_server.py" "${MMD_OPT}/valuation_server.py"
   if [[ -f "${INCOMING}/mmd/mmd-valuation.service" ]]; then
     install -o root -g root -m 644 "${INCOMING}/mmd/mmd-valuation.service" \
