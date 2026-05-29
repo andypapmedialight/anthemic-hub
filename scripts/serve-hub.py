@@ -331,11 +331,16 @@ class HubHandler(SimpleHTTPRequestHandler):
         qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
         series_id = qs.get("id", [""])[0]
         start = qs.get("start", [""])[0] or "2020-01-01"
+        limit_raw = qs.get("limit", [""])[0]
+        try:
+            limit = max(2, min(5000, int(limit_raw))) if limit_raw else 5000
+        except ValueError:
+            limit = 5000
         if not series_id or not _FRED_ID_RE.match(series_id):
             self.send_error(400, "Invalid id")
             return
 
-        cache_key = (series_id, start)
+        cache_key = (series_id, start, str(limit))
         cached = _fred_proxy_cache.get(cache_key)
         if cached and time.time() - cached[0] < FRED_PROXY_CACHE_TTL:
             self._send_cached_body(cached[1], cached[2])
@@ -346,6 +351,7 @@ class HubHandler(SimpleHTTPRequestHandler):
                 "https://api.stlouisfed.org/fred/series/observations"
                 f"?series_id={urllib.parse.quote(series_id)}"
                 f"&file_type=json&sort_order=asc"
+                f"&limit={limit}"
                 f"&observation_start={urllib.parse.quote(start)}"
                 f"&api_key={urllib.parse.quote(FRED_API_KEY)}"
             )

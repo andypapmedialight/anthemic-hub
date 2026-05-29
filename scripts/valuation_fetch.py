@@ -24,6 +24,7 @@ FRED_FRESHNESS_CACHE_TTL = int(os.environ.get("MMD_FRED_FRESHNESS_CACHE_TTL", "3
 _fred_obs_cache: dict[str, tuple[float, str]] = {}
 _fred_freshness_cache: tuple[float, dict] | None = None
 _freshness_refresh_lock = threading.Lock()
+_freshness_collect_lock = threading.Lock()
 _freshness_bg_refresh = False
 
 FINRA_MARGIN_HTML = (
@@ -543,19 +544,20 @@ def _freshness_payload(series: dict[str, dict], *, cached: bool, degraded: bool)
 
 
 def _freshness_refresh_worker(key: str) -> None:
-    global _fred_freshness_bg_refresh, _fred_freshness_cache
+    global _freshness_bg_refresh, _fred_freshness_cache
     try:
         base: dict[str, dict] = {}
         if _fred_freshness_cache:
             _, prev = _fred_freshness_cache
             base = dict(prev.get("series") or {})
-        fresh = _collect_freshness_series(
-            key,
-            FRESHNESS_FRED_SERIES,
-            force=True,
-            per_timeout=6,
-            wall_timeout=45,
-        )
+        with _freshness_collect_lock:
+            fresh = _collect_freshness_series(
+                key,
+                FRESHNESS_FRED_SERIES,
+                force=True,
+                per_timeout=6,
+                wall_timeout=45,
+            )
         base.update(fresh)
         if base:
             now = time.time()
@@ -563,7 +565,7 @@ def _freshness_refresh_worker(key: str) -> None:
             _fred_freshness_cache = (now + FRED_FRESHNESS_CACHE_TTL, payload)
     finally:
         with _freshness_refresh_lock:
-            _fred_freshness_bg_refresh = False
+            _freshness_bg_refresh = False
 
 
 def _schedule_freshness_refresh(key: str) -> None:
@@ -580,16 +582,31 @@ def _schedule_freshness_refresh(key: str) -> None:
     ).start()
 
 
-def fetch_freshness_api(api_key: str | None = None, *, force: bool = False) -> dict:
+def fetch_freshness_api(
+    api_key: str | None = None,
+    *,
+    force: bool = False,
+    core_only: bool = False,
+) -> dict:
     """Server-side FRED vintage summary for Morning Macro footer."""
     global _fred_freshness_cache
     key = (api_key or os.environ.get("FRED_API_KEY", "")).strip()
     now = time.time()
 
     if not key:
-        return _freshness_payload({}, cached=False, degraded=False) | {"fredApi": False}
+        with _freshness_collect_lock:
+            series = _collect_freshness_series(
+                "",
+                FRESHNESS_CORE_SERIES,
+                force=force,
+                per_timeout=8,
+                wall_timeout=25,
+            )
+        return _freshness_payload(series, cached=False, degraded=not series) | {
+            "fredApi": False,
+        }
 
-    if not force and _fred_freshness_cache:
+    if not force and not core_only and _fred_freshness_cache:
         expires, payload = _fred_freshness_cache
         if now < expires and payload.get("series"):
             return payload
@@ -602,7 +619,10 @@ def fetch_freshness_api(api_key: str | None = None, *, force: bool = False) -> d
         _, stale_payload = _fred_freshness_cache
         stale_series = dict(stale_payload.get("series") or {})
 
-    if force:
+    if core_only:
+        ids = FRESHNESS_CORE_SERIES
+        wall = 25
+    elif force:
         ids = FRESHNESS_FRED_SERIES
         wall = 50
     else:
@@ -610,10 +630,17 @@ def fetch_freshness_api(api_key: str | None = None, *, force: bool = False) -> d
         wall = 22 if not stale_series else 45
 
     series = dict(stale_series)
-    fresh = _collect_freshness_series(key, ids, force=force, wall_timeout=wall)
+    with _freshness_collect_lock:
+        fresh = _collect_freshness_series(
+            key,
+            ids,
+            force=force or core_only,
+            per_timeout=8 if core_only else 6,
+            wall_timeout=wall,
+        )
     series.update(fresh)
 
-    if not force and series and len(series) < len(FRESHNESS_FRED_SERIES):
+    if not force and not core_only and series and len(series) < len(FRESHNESS_FRED_SERIES):
         _schedule_freshness_refresh(key)
 
     payload = _freshness_payload(series, cached=False, degraded=bool(stale_series and not force))

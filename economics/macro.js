@@ -30,6 +30,11 @@ const STALE_AFTER_MS = {
 let macroFreshnessSummary = null;
 /** FRED rows for valuation cards (quarterly change); charts load a longer series on demand. */
 const VAL_FRED_CARD_LOOKBACK_DAYS = 800;
+/** Spot commodity cards only need the latest observation + prior period. */
+const COMM_FRED_LOOKBACK_DAYS = 120;
+const BOND_SPREAD_FRED_LOOKBACK_DAYS = 45;
+const FRED_PROXY_LIMIT_CARD = 150;
+const FRED_PROXY_LIMIT_SPREAD = 60;
 
 // ── Load throttle (per-browser, limits refresh spam / bots) ──
 const REFRESH_MIN_GAP_MS = 45 * 1000;
@@ -1765,9 +1770,13 @@ async function detectLocalProxy() {
   LOCAL_VALUATION_PROXY_OK = valOk || yahooOk;
 }
 
-function localFredProxyUrl(seriesId, start) {
+function localFredProxyUrl(seriesId, start, limit) {
   const startQ = encodeURIComponent(start || '2020-01-01');
-  return `${location.origin}/economics/proxy/fred?id=${encodeURIComponent(seriesId)}&start=${startQ}`;
+  let url = `${location.origin}/economics/proxy/fred?id=${encodeURIComponent(seriesId)}&start=${startQ}`;
+  if (limit != null && Number.isFinite(limit)) {
+    url += `&limit=${encodeURIComponent(String(Math.max(2, Math.min(5000, Math.floor(limit)))))}`;
+  }
+  return url;
 }
 
 function publicProxyUrls(canonicalUrl) {
@@ -2194,7 +2203,12 @@ async function fetchCommodity(item, force = false) {
       if (cached) return cached;
     }
     try {
-      const rows = await fredProxyThrottle(() => fetchFredSeriesRows(item.fredId, fredStartDate(VAL_FRED_CARD_LOOKBACK_DAYS)));
+      const rows = await fredProxyThrottle(() => fetchFredSeriesRows(
+        item.fredId,
+        fredStartDate(COMM_FRED_LOOKBACK_DAYS),
+        0,
+        FRED_PROXY_LIMIT_CARD,
+      ));
       if (!rows?.length) return null;
       const q = fredDailyQuoteFromRows(rows);
       if (!q) return null;
@@ -2333,9 +2347,12 @@ async function loadBondSpreadFred(force = false) {
     if (c) return c;
   }
   if (!force && bondSpreadFredPromise) return bondSpreadFredPromise;
-  const start = fredStartDate(90);
+  const start = fredStartDate(BOND_SPREAD_FRED_LOOKBACK_DAYS);
   bondSpreadFredPromise = Promise.all(
-    BOND_SPREAD_FRED_IDS.map(id => fredProxyThrottle(async () => [id, await fetchFredSeriesRows(id, start)])),
+    BOND_SPREAD_FRED_IDS.map(id => fredProxyThrottle(async () => [
+      id,
+      await fetchFredSeriesRows(id, start, 0, FRED_PROXY_LIMIT_SPREAD),
+    ])),
   ).then(pairs => {
     const out = {};
     for (const [id, rows] of pairs) {
@@ -2855,10 +2872,14 @@ function fredProxyRetryableStatus(status) {
   return status === 502 || status === 503 || status === 504;
 }
 
-async function fetchFredSeriesRows(seriesId, start, attempt = 0) {
+async function fetchFredSeriesRows(seriesId, start, attempt = 0, limit = null) {
   if (canUseHubFredProxy()) {
     try {
-      const r = await fetchWithTimeout(localFredProxyUrl(seriesId, start), {}, FRED_FETCH_TIMEOUT_MS);
+      const r = await fetchWithTimeout(
+        localFredProxyUrl(seriesId, start, limit),
+        {},
+        limit != null ? 35000 : FRED_FETCH_TIMEOUT_MS,
+      );
       if (r.ok) {
         const ct = r.headers.get('content-type') || '';
         const body = await r.text();
@@ -2866,15 +2887,15 @@ async function fetchFredSeriesRows(seriesId, start, attempt = 0) {
         if (rows?.length) return rows;
       } else {
         noteHubHttpStatus(r.status);
-        if (attempt < 2 && fredProxyRetryableStatus(r.status)) {
-          await new Promise(res => setTimeout(res, 1200 * (attempt + 1)));
-          return fetchFredSeriesRows(seriesId, start, attempt + 1);
+        if (attempt < 1 && fredProxyRetryableStatus(r.status)) {
+          await new Promise(res => setTimeout(res, 1500));
+          return fetchFredSeriesRows(seriesId, start, attempt + 1, limit);
         }
       }
     } catch (err) {
-      if (attempt < 2) {
-        await new Promise(res => setTimeout(res, 1200 * (attempt + 1)));
-        return fetchFredSeriesRows(seriesId, start, attempt + 1);
+      if (attempt < 1) {
+        await new Promise(res => setTimeout(res, 1500));
+        return fetchFredSeriesRows(seriesId, start, attempt + 1, limit);
       }
       console.warn('FRED proxy fetch failed', seriesId, err);
     }
@@ -3395,6 +3416,18 @@ function renderGlanceGrid() {
   renderGrid('glance-grid', metas);
 }
 
+function paintOverviewFromCache() {
+  for (const ref of getOverviewRefs()) {
+    const resolved = resolveOverviewRef(ref);
+    if (!resolved) continue;
+    const { item, section } = resolved;
+    const ck = cacheKeyForItem(item, section);
+    const cached = cacheGet(ck) || cacheGetStale(ck);
+    if (cached) DATA[getItemKey(item)] = cached;
+  }
+  renderGlanceGrid();
+}
+
 async function loadOverviewItems(force = false) {
   const refs = getOverviewRefs();
   if (!refs.length) {
@@ -3415,6 +3448,7 @@ async function loadOverviewItems(force = false) {
       }
     }
   }
+  renderGlanceGrid();
   await Promise.allSettled(refs.map(async ref => {
     const resolved = resolveOverviewRef(ref);
     if (!resolved) return;
@@ -4949,13 +4983,12 @@ async function loadAll(force = false) {
       return;
     }
 
-    if (section.key === 'bond') {
-      try {
-        BOND_SPREAD_FRED = await loadBondSpreadFred(effectiveForce);
-      } catch {
-        BOND_SPREAD_FRED = {};
-      }
-    }
+    const bondSpreadTask = section.key === 'bond'
+      ? loadBondSpreadFred(effectiveForce).then(data => {
+        BOND_SPREAD_FRED = data || {};
+        renderSectionGrid(section);
+      }).catch(() => { BOND_SPREAD_FRED = {}; })
+      : null;
 
     if (!effectiveForce) {
       let painted = false;
@@ -4988,14 +5021,15 @@ async function loadAll(force = false) {
     } catch (err) {
       console.warn('section load failed', section.key, err);
     } finally {
+      if (bondSpreadTask) await bondSpreadTask;
       renderSectionGrid(section);
       renderCust(section);
       setSectionLoading(section, false);
     }
   }
 
-  await Promise.all(SECTIONS.map(s => loadSection(s)));
-  await loadOverviewItems(effectiveForce);
+  const overviewTask = loadOverviewItems(effectiveForce);
+  await Promise.all([...SECTIONS.map(s => loadSection(s)), overviewTask]);
 
   btn.classList.remove('spinning');
   if (force) setRefreshButtonBlocked(true, REFRESH_MIN_GAP_MS);
@@ -5986,6 +6020,7 @@ async function init() {
   syncCommoditiesSection();
   for (const section of SECTIONS) applySectionOrder(section);
   loadOverviewRefs();
+  paintOverviewFromCache();
   const saved = localStorage.getItem('av_key');
   if (saved && saved !== 'YOUR_API_KEY_HERE') {
     AV_KEY = saved;

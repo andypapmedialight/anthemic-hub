@@ -41,7 +41,8 @@ class ValuationHandler(BaseHTTPRequestHandler):
         if path == "/freshness":
             qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
             force = qs.get("force", [""])[0].strip().lower() in ("1", "true", "yes")
-            self._json(fetch_freshness_api(force=force))
+            core_only = qs.get("core", [""])[0].strip().lower() in ("1", "true", "yes")
+            self._json(fetch_freshness_api(force=force, core_only=core_only))
             return
         if path == "/valuation":
             self._valuation()
