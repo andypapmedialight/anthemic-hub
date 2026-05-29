@@ -7,6 +7,7 @@ import json
 import os
 import re
 import subprocess
+import threading
 import time
 import urllib.error
 import urllib.parse
@@ -22,6 +23,8 @@ _bis_otc_cache: tuple[float, list[dict[str, str]]] | None = None
 FRED_FRESHNESS_CACHE_TTL = int(os.environ.get("MMD_FRED_FRESHNESS_CACHE_TTL", "300"))
 _fred_obs_cache: dict[str, tuple[float, str]] = {}
 _fred_freshness_cache: tuple[float, dict] | None = None
+_freshness_refresh_lock = threading.Lock()
+_freshness_bg_refresh = False
 
 FINRA_MARGIN_HTML = (
     "https://www.finra.org/rules-guidance/key-topics/margin-accounts/margin-statistics"
@@ -417,6 +420,8 @@ FRESHNESS_FRED_SERIES = (
     "DGS2",
     "DGS10",
 )
+# Minimum set for cold-start / deploy probes (must finish within ~20s).
+FRESHNESS_CORE_SERIES = ("GDP", "GFDEGDQ188S", "NCBEILQ027S")
 
 
 def _last_obs_date_from_fred_json(body: str) -> str | None:
@@ -452,7 +457,7 @@ def fred_last_observation(
     api_key: str | None = None,
     *,
     force: bool = False,
-    timeout: int = 12,
+    timeout: int = 6,
 ) -> str | None:
     """Latest non-missing FRED observation date (YYYY-MM-DD)."""
     key = (api_key or os.environ.get("FRED_API_KEY", "")).strip()
@@ -467,6 +472,7 @@ def fred_last_observation(
             _fred_obs_cache[series_id] = (now + FRED_FRESHNESS_CACHE_TTL, date)
         return date
 
+    # FRED API limit=1 is fast. Do not use hub /proxy/fred here — nginx fetches up to 5000 rows.
     if key:
         url = (
             "https://api.stlouisfed.org/fred/series/observations"
@@ -482,25 +488,16 @@ def fred_last_observation(
         except Exception:
             pass
 
-        hub = os.environ.get("HUB_ORIGIN", "https://anthemic-developments.com").rstrip("/")
-        try:
-            proxy_url = (
-                f"{hub}/economics/proxy/fred?"
-                f"id={urllib.parse.quote(series_id)}&start=2015-01-01"
-            )
-            body = _fetch(proxy_url, timeout=timeout).decode("utf-8", "replace")
-            date = _last_obs_date_from_fred_json(body)
-            if date:
-                return remember(date)
-        except Exception:
-            pass
-
     try:
+        recent_start = time.strftime(
+            "%Y-%m-%d",
+            time.gmtime(time.time() - 400 * 86400),
+        )
         csv_url = (
             f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={urllib.parse.quote(series_id)}"
-            "&observation_start=2015-01-01"
+            f"&observation_start={recent_start}"
         )
-        text = _fetch_curl(csv_url, timeout=min(timeout, 20)).decode("utf-8", "replace")
+        text = _fetch_curl(csv_url, timeout=min(timeout + 4, 12)).decode("utf-8", "replace")
         date = _last_obs_date_from_fred_csv(text)
         if date:
             return remember(date)
@@ -509,52 +506,121 @@ def fred_last_observation(
     return None
 
 
+def _collect_freshness_series(
+    key: str,
+    series_ids: tuple[str, ...],
+    *,
+    force: bool = False,
+    per_timeout: int = 6,
+    wall_timeout: int = 20,
+) -> dict[str, dict]:
+    series: dict[str, dict] = {}
+
+    def _fetch_one(sid: str) -> tuple[str, str | None]:
+        last = fred_last_observation(sid, key, force=force, timeout=per_timeout)
+        return sid, last
+
+    with ThreadPoolExecutor(max_workers=6) as pool:
+        futures = [pool.submit(_fetch_one, sid) for sid in series_ids]
+        try:
+            for fut in as_completed(futures, timeout=wall_timeout):
+                sid, last = fut.result()
+                if last:
+                    series[sid] = {"lastObservation": last}
+        except TimeoutError:
+            pass
+    return series
+
+
+def _freshness_payload(series: dict[str, dict], *, cached: bool, degraded: bool) -> dict:
+    return {
+        "fredApi": True,
+        "series": series,
+        "generatedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "cached": cached,
+        "degraded": degraded,
+    }
+
+
+def _freshness_refresh_worker(key: str) -> None:
+    global _fred_freshness_bg_refresh, _fred_freshness_cache
+    try:
+        base: dict[str, dict] = {}
+        if _fred_freshness_cache:
+            _, prev = _fred_freshness_cache
+            base = dict(prev.get("series") or {})
+        fresh = _collect_freshness_series(
+            key,
+            FRESHNESS_FRED_SERIES,
+            force=True,
+            per_timeout=6,
+            wall_timeout=45,
+        )
+        base.update(fresh)
+        if base:
+            now = time.time()
+            payload = _freshness_payload(base, cached=True, degraded=False)
+            _fred_freshness_cache = (now + FRED_FRESHNESS_CACHE_TTL, payload)
+    finally:
+        with _freshness_refresh_lock:
+            _fred_freshness_bg_refresh = False
+
+
+def _schedule_freshness_refresh(key: str) -> None:
+    global _freshness_bg_refresh
+    with _freshness_refresh_lock:
+        if _freshness_bg_refresh:
+            return
+        _freshness_bg_refresh = True
+    threading.Thread(
+        target=_freshness_refresh_worker,
+        args=(key,),
+        daemon=True,
+        name="mmd-freshness-refresh",
+    ).start()
+
+
 def fetch_freshness_api(api_key: str | None = None, *, force: bool = False) -> dict:
     """Server-side FRED vintage summary for Morning Macro footer."""
     global _fred_freshness_cache
     key = (api_key or os.environ.get("FRED_API_KEY", "")).strip()
     now = time.time()
+
+    if not key:
+        return _freshness_payload({}, cached=False, degraded=False) | {"fredApi": False}
+
     if not force and _fred_freshness_cache:
         expires, payload = _fred_freshness_cache
         if now < expires and payload.get("series"):
             return payload
-        if not payload.get("series"):
-            _fred_freshness_cache = None
+        if payload.get("series"):
+            _schedule_freshness_refresh(key)
+            return {**payload, "cached": True, "degraded": True}
 
     stale_series: dict[str, dict] = {}
     if _fred_freshness_cache:
         _, stale_payload = _fred_freshness_cache
         stale_series = dict(stale_payload.get("series") or {})
 
-    series: dict[str, dict] = dict(stale_series)
-    if key:
-        def _fetch_one(sid: str) -> tuple[str, str | None]:
-            last = fred_last_observation(sid, key, force=force, timeout=12)
-            return sid, last
+    if force:
+        ids = FRESHNESS_FRED_SERIES
+        wall = 50
+    else:
+        ids = FRESHNESS_CORE_SERIES if not stale_series else FRESHNESS_FRED_SERIES
+        wall = 22 if not stale_series else 45
 
-        with ThreadPoolExecutor(max_workers=6) as pool:
-            futures = [pool.submit(_fetch_one, sid) for sid in FRESHNESS_FRED_SERIES]
-            try:
-                for fut in as_completed(futures, timeout=35):
-                    sid, last = fut.result()
-                    if last:
-                        series[sid] = {"lastObservation": last}
-            except TimeoutError:
-                pass
+    series = dict(stale_series)
+    fresh = _collect_freshness_series(key, ids, force=force, wall_timeout=wall)
+    series.update(fresh)
 
-    payload = {
-        "fredApi": bool(key),
-        "series": series,
-        "generatedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "cached": False,
-        "degraded": False,
-    }
-    if key and series:
+    if not force and series and len(series) < len(FRESHNESS_FRED_SERIES):
+        _schedule_freshness_refresh(key)
+
+    payload = _freshness_payload(series, cached=False, degraded=bool(stale_series and not force))
+    if series:
         _fred_freshness_cache = (now + FRED_FRESHNESS_CACHE_TTL, {**payload, "cached": True})
     elif stale_series:
-        payload["series"] = stale_series
-        payload["cached"] = True
-        payload["degraded"] = True
+        return _freshness_payload(stale_series, cached=True, degraded=True)
     return payload
 
 

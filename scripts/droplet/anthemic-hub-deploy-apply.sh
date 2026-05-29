@@ -278,7 +278,7 @@ if [[ -f "${INCOMING}/mmd/valuation_server.py" && -f "${INCOMING}/mmd/valuation_
       fi
       fresh_ok=0
       for _ in 1 2 3 4 5 6; do
-        if curl -fsS --max-time 50 "http://127.0.0.1:8071/freshness?force=1" | python3 -c \
+        if curl -fsS --max-time 55 "http://127.0.0.1:8071/freshness?force=1" | python3 -c \
           'import json,sys; d=json.load(sys.stdin); assert len(d.get("series") or {})>=1'; then
           fresh_ok=1
           break
