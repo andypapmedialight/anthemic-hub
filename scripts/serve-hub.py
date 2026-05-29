@@ -30,6 +30,7 @@ if _SCRIPTS not in sys.path:
 from valuation_fetch import (  # noqa: E402
     FRESHNESS_FRED_SERIES,
     METRICS,
+    fetch_fred_observations_proxy,
     fetch_freshness_api,
     fetch_valuation_batch,
     fetch_valuation_metric,
@@ -332,6 +333,7 @@ class HubHandler(SimpleHTTPRequestHandler):
         series_id = qs.get("id", [""])[0]
         start = qs.get("start", [""])[0] or "2020-01-01"
         limit_raw = qs.get("limit", [""])[0]
+        order = qs.get("order", ["asc"])[0] or "asc"
         try:
             limit = max(2, min(5000, int(limit_raw))) if limit_raw else 5000
         except ValueError:
@@ -340,63 +342,18 @@ class HubHandler(SimpleHTTPRequestHandler):
             self.send_error(400, "Invalid id")
             return
 
-        cache_key = (series_id, start, str(limit))
-        cached = _fred_proxy_cache.get(cache_key)
-        if cached and time.time() - cached[0] < FRED_PROXY_CACHE_TTL:
-            self._send_cached_body(cached[1], cached[2])
-            return
-
-        if FRED_API_KEY:
-            url = (
-                "https://api.stlouisfed.org/fred/series/observations"
-                f"?series_id={urllib.parse.quote(series_id)}"
-                f"&file_type=json&sort_order=asc"
-                f"&limit={limit}"
-                f"&observation_start={urllib.parse.quote(start)}"
-                f"&api_key={urllib.parse.quote(FRED_API_KEY)}"
-            )
-        else:
-            url = (
-                "https://fred.stlouisfed.org/graph/fredgraph.csv"
-                f"?id={urllib.parse.quote(series_id)}&observation_start={urllib.parse.quote(start)}"
-            )
-
-        parsed = urllib.parse.urlparse(url)
-        if parsed.hostname not in ALLOWED_HOSTS:
-            self.send_error(403, "Host not allowed")
-            return
-        try:
-            req = urllib.request.Request(
-                url,
-                headers={
-                    "User-Agent": (
-                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                        "AppleWebKit/537.36 Chrome/124.0 Safari/537.36"
-                    ),
-                    "Accept": "application/json, text/csv, text/plain, */*",
-                    "Accept-Language": "en-US,en;q=0.9",
-                    "Cache-Control": "no-cache",
-                },
-            )
-            with urllib.request.urlopen(req, timeout=UPSTREAM_TIMEOUT) as resp:
-                body = resp.read()
-                ct = resp.headers.get("Content-Type", "application/octet-stream")
-            _fred_proxy_cache[cache_key] = (time.time(), body, ct)
-            self._send_cached_body(body, ct)
-        except urllib.error.HTTPError as e:
-            body = e.read()
-            self.send_response(e.code)
-            self.send_header("Access-Control-Allow-Origin", "*")
-            self.send_header("Content-Length", str(len(body)))
-            self.end_headers()
-            self._safe_write(body)
-        except Exception as e:
-            msg = str(e).encode()
-            self.send_response(502)
-            self.send_header("Access-Control-Allow-Origin", "*")
-            self.send_header("Content-Length", str(len(msg)))
-            self.end_headers()
-            self._safe_write(msg)
+        status, body, ct = fetch_fred_observations_proxy(
+            series_id,
+            start,
+            limit=limit,
+            sort_order=order,
+        )
+        self.send_response(status)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Content-Type", ct)
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self._safe_write(body)
 
     def log_message(self, fmt, *args):
         if args and isinstance(args[0], str) and "/economics/proxy/" in args[0]:

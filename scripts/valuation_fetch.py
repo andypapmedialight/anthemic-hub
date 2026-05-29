@@ -52,6 +52,10 @@ UA = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
     "AppleWebKit/537.36 Chrome/124.0 Safari/537.36"
 )
+_FRED_ID_RE = re.compile(r"^[A-Z0-9]+$")
+FRED_OBS_PROXY_CACHE_TTL = int(os.environ.get("MMD_FRED_OBS_CACHE_TTL", "300"))
+_fred_obs_proxy_cache: dict[tuple[str, str, str, str], tuple[float, bytes, str]] = {}
+_fred_obs_proxy_lock = threading.Lock()
 
 
 def _fetch(url: str, timeout: int = UPSTREAM_TIMEOUT) -> bytes:
@@ -70,6 +74,59 @@ def _fetch(url: str, timeout: int = UPSTREAM_TIMEOUT) -> bytes:
             return resp.read()
     except (urllib.error.HTTPError, TimeoutError, OSError):
         return _fetch_curl(url, min(timeout, 30))
+
+
+def fetch_fred_observations_proxy(
+    series_id: str,
+    start: str = "2020-01-01",
+    *,
+    limit: int = 5000,
+    sort_order: str = "asc",
+) -> tuple[int, bytes, str]:
+    """Cached FRED observations for /fred (browser proxy via nginx)."""
+    if not _FRED_ID_RE.match(series_id):
+        return 400, b'{"error":"invalid id"}', "application/json"
+
+    lim = max(2, min(5000, int(limit)))
+    order = "desc" if str(sort_order).lower() == "desc" else "asc"
+    cache_key = (series_id, start, str(lim), order)
+    now = time.time()
+
+    with _fred_obs_proxy_lock:
+        cached = _fred_obs_proxy_cache.get(cache_key)
+        if cached and now - cached[0] < FRED_OBS_PROXY_CACHE_TTL:
+            return 200, cached[1], cached[2]
+
+    api_key = os.environ.get("FRED_API_KEY", "").strip()
+    timeout = 18 if lim <= 200 else UPSTREAM_TIMEOUT
+
+    if api_key:
+        url = (
+            "https://api.stlouisfed.org/fred/series/observations"
+            f"?series_id={urllib.parse.quote(series_id)}"
+            f"&file_type=json&sort_order={order}&limit={lim}"
+            f"&observation_start={urllib.parse.quote(start)}"
+            f"&api_key={urllib.parse.quote(api_key)}"
+        )
+    else:
+        url = (
+            "https://fred.stlouisfed.org/graph/fredgraph.csv"
+            f"?id={urllib.parse.quote(series_id)}"
+            f"&observation_start={urllib.parse.quote(start)}"
+        )
+
+    try:
+        body = _fetch(url, timeout=timeout)
+        ct = "application/json" if body[:1] == b"{" else "text/csv; charset=utf-8"
+        with _fred_obs_proxy_lock:
+            _fred_obs_proxy_cache[cache_key] = (now, body, ct)
+        return 200, body, ct
+    except urllib.error.HTTPError as exc:
+        err = exc.read()
+        return exc.code, err, exc.headers.get("Content-Type", "application/json")
+    except Exception as exc:
+        msg = json.dumps({"error": str(exc)}).encode("utf-8")
+        return 502, msg, "application/json"
 
 
 def _fetch_curl(url: str, timeout: int) -> bytes:

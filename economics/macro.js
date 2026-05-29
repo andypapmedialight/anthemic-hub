@@ -1591,8 +1591,8 @@ function renderCard(meta, delay = 0) {
 }
 const FETCH_TIMEOUT_MS = 12000;
 const FRED_FETCH_TIMEOUT_MS = 50000;
-const FRED_PROXY_MAX_CONCURRENT = 3;
-const FRED_PROXY_STAGGER_MS = 400;
+const FRED_PROXY_MAX_CONCURRENT = 2;
+const FRED_PROXY_STAGGER_MS = 550;
 
 /** Set when hub/nginx returns HTTP 429 (limit_req on /economics/proxy/*). */
 let hubProxyRateLimited = false;
@@ -1774,7 +1774,10 @@ function localFredProxyUrl(seriesId, start, limit) {
   const startQ = encodeURIComponent(start || '2020-01-01');
   let url = `${location.origin}/economics/proxy/fred?id=${encodeURIComponent(seriesId)}&start=${startQ}`;
   if (limit != null && Number.isFinite(limit)) {
-    url += `&limit=${encodeURIComponent(String(Math.max(2, Math.min(5000, Math.floor(limit)))))}`;
+    const lim = Math.max(2, Math.min(5000, Math.floor(limit)));
+    url += `&limit=${encodeURIComponent(String(lim))}`;
+    // Recent-window card fetches: newest observations first (fast + small).
+    url += lim <= 200 ? '&order=desc' : '&order=asc';
   }
   return url;
 }
@@ -2833,9 +2836,17 @@ function startValuationPrefetch(force = false) {
   const visible = visOf(VALUATION);
   if (!visible.length) return;
   if (force) valuationFredPromise = null;
-  void getValuationFredRows(force);
-  const liveIds = visible.filter(item => item.api).map(item => item.id);
-  if (liveIds.length) void fetchValuationLiveBatch(liveIds, force);
+  const run = () => {
+    void getValuationFredRows(force);
+    const liveIds = visible.filter(item => item.api).map(item => item.id);
+    if (liveIds.length) void fetchValuationLiveBatch(liveIds, force);
+  };
+  // Let At a Glance / commodity FRED use the proxy first after reload.
+  if (typeof requestIdleCallback === 'function') {
+    requestIdleCallback(run, { timeout: 5000 });
+  } else {
+    setTimeout(run, 3000);
+  }
 }
 
 function fredRowsToQuote(rows) {
@@ -2908,6 +2919,10 @@ async function fetchFredSeriesRows(seriesId, start, attempt = 0, limit = null) {
 
 const VAL_FRED_IDS = ['GDP', FRED_GDP_NOWCAST_SERIES, 'NCBEILQ027S', 'GFDEGDQ188S', 'GFDEBTN', 'TCMDO', 'FGSDODNS', 'NGDPSAXDCAUQ', FRED_AU_PUBLIC_DEBT_SERIES, 'QAUPAM770A'];
 const VAL_FRED_MONTHLY_IDS = [FRED_TREASURY_MV_SERIES];
+const VAL_FRED_QUARTERLY_IDS = new Set([
+  'GDP', 'NCBEILQ027S', 'GFDEGDQ188S', 'GFDEBTN', 'TCMDO', 'FGSDODNS',
+  'NGDPSAXDCAUQ', FRED_AU_PUBLIC_DEBT_SERIES, 'QAUPAM770A',
+]);
 /** Minimum FRED series required before caching or showing valuation ratios. */
 const VAL_FRED_REQUIRED_IDS = ['GDP', 'NCBEILQ027S'];
 let valuationFredPromise = null;
@@ -2924,6 +2939,17 @@ function clearValuationFredCache(lookbackDays = VAL_FRED_CARD_LOOKBACK_DAYS) {
 
 function fredStartDate(lookbackDays) {
   return new Date(Date.now() - lookbackDays * 86400000).toISOString().slice(0, 10);
+}
+
+function fredProxyLimitForSeries(seriesId, lookbackDays) {
+  if (VAL_FRED_MONTHLY_IDS.includes(seriesId)) {
+    return Math.min(96, Math.ceil(lookbackDays / 28) + 6);
+  }
+  if (seriesId === FRED_GDP_NOWCAST_SERIES) return 28;
+  if (VAL_FRED_QUARTERLY_IDS.has(seriesId)) {
+    return Math.min(80, Math.ceil(lookbackDays / 88) + 8);
+  }
+  return Math.min(FRED_PROXY_LIMIT_CARD, lookbackDays + 20);
 }
 
 function valuationStartDate() {
@@ -2964,8 +2990,10 @@ async function fetchValuationFredSeriesStaggered(lookbackDays) {
       ? Math.min(lookbackDays, 500)
       : lookbackDays;
     const seriesStart = fredStartDate(lookback);
+    const seriesLimit = fredProxyLimitForSeries(seriesId, lookback);
     try {
-      data[seriesId] = await fredProxyThrottle(() => fetchFredSeriesRows(seriesId, seriesStart));
+      data[seriesId] = await fredProxyThrottle(() =>
+        fetchFredSeriesRows(seriesId, seriesStart, 0, seriesLimit));
     } catch (err) {
       console.warn('FRED series fetch failed', seriesId, err);
       data[seriesId] = null;
@@ -5254,7 +5282,8 @@ async function fetchFredHistory(seriesId, days) {
   if (cached) return cached;
   const lookback = Math.max(days, 400);
   const start = new Date(Date.now() - lookback * 86400000).toISOString().slice(0, 10);
-  const rows = await fetchFredSeriesRows(seriesId, start);
+  const chartLimit = Math.min(2000, Math.max(120, Math.ceil(lookback * 1.1)));
+  const rows = await fetchFredSeriesRows(seriesId, start, 0, chartLimit);
   if (!rows?.length) return null;
   let series = rows.map(r => ({ t: new Date(r.date).getTime(), v: r.v }));
   series = sliceSeriesForChart(series, days);

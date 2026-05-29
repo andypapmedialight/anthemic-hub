@@ -14,6 +14,7 @@ if _SCRIPTS not in sys.path:
     sys.path.insert(0, _SCRIPTS)
 from valuation_fetch import (  # noqa: E402
     METRICS,
+    fetch_fred_observations_proxy,
     fetch_freshness_api,
     fetch_freshness_deploy_probe,
     fetch_valuation_batch,
@@ -49,10 +50,39 @@ class ValuationHandler(BaseHTTPRequestHandler):
             core_only = qs.get("core", [""])[0].strip().lower() in ("1", "true", "yes")
             self._json(fetch_freshness_api(force=force, core_only=core_only))
             return
+        if path == "/fred":
+            self._fred_observations()
+            return
         if path == "/valuation":
             self._valuation()
             return
         self.send_error(404)
+
+    def _fred_observations(self) -> None:
+        qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        series_id = qs.get("id", [""])[0].strip()
+        start = qs.get("start", ["2020-01-01"])[0].strip() or "2020-01-01"
+        limit_raw = qs.get("limit", ["5000"])[0].strip()
+        order = qs.get("order", ["asc"])[0].strip() or "asc"
+        try:
+            limit = int(limit_raw) if limit_raw else 5000
+        except ValueError:
+            limit = 5000
+        status, body, ct = fetch_fred_observations_proxy(
+            series_id,
+            start,
+            limit=limit,
+            sort_order=order,
+        )
+        self.send_response(status)
+        self.send_header("Content-Type", ct)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        try:
+            self.wfile.write(body)
+        except (BrokenPipeError, ConnectionResetError):
+            pass
 
     def _json(self, payload: dict, status: int = 200) -> None:
         body = json.dumps(payload).encode("utf-8")
