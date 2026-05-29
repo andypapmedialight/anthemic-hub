@@ -23,7 +23,9 @@ const CACHE_TTL_MS = {
 const STALE_AFTER_MS = {
   live: 30 * 60 * 1000,
   daily: 3 * 86400000,
+  monthly: 75 * 86400000,
   quarterly: 120 * 86400000,
+  annual: Infinity,
   estimated: 45 * 86400000,
   reference: Infinity,
 };
@@ -244,6 +246,7 @@ function inferFreshnessKind(meta) {
   if (sk === 'fx') return 'daily';
   if (sk === 'eq' || sk === 'comm' || sk === 'crypto') return 'live';
   if (sk === 'val') return 'quarterly';
+  if (sk === 'global') return meta.freshnessKind || 'annual';
   if (sk === 'bond' && meta.asOfUtc != null && isDateOnlyUtc(meta.asOfUtc)) return 'daily';
   if (meta.asOfUtc != null && isDateOnlyUtc(meta.asOfUtc)) return 'daily';
   return 'live';
@@ -268,6 +271,8 @@ function staleAsOfWording(meta) {
   const kind = inferFreshnessKind(meta);
   if (kind === 'quarterly' || kind === 'reference') return 'last observation';
   if (kind === 'estimated') return 'last estimate';
+  if (kind === 'annual') return 'last release';
+  if (kind === 'monthly') return 'last month';
   if (kind === 'daily' && meta.freshnessNote?.includes('prior biz day')) return 'prior business day';
   return 'market close';
 }
@@ -278,6 +283,8 @@ function resolveFreshnessPill(meta) {
   if (meta.fallback || meta.static || kind === 'reference') return 'Ref';
   if (meta.estimated || kind === 'estimated') return 'Est.';
   if (kind === 'quarterly') return 'Qtrly';
+  if (kind === 'annual') return 'Annual';
+  if (kind === 'monthly') return 'Monthly';
   if (kind === 'daily') return 'Daily';
   if (meta.sessionOpen === false) return 'Closed';
   if (kind === 'live' || meta.live) return 'Live';
@@ -288,13 +295,39 @@ function freshnessPillClass(label) {
   if (label === 'Closed') return 'pill pill--ref';
   if (label === 'Live') return 'pill pill--live';
   if (label === 'Est.') return 'pill pill--est';
-  if (label === 'Ref' || label === 'Qtrly' || label === 'Daily') return 'pill pill--ref';
+  if (label === 'Ref' || label === 'Qtrly' || label === 'Daily' || label === 'Annual' || label === 'Monthly') {
+    return 'pill pill--ref';
+  }
   return 'pill neu';
 }
 
+/** As-of label for macro releases (year / month), not exchange timestamps. */
+function formatObservationPeriod(meta) {
+  const period = meta?.asOf;
+  if (period && typeof period === 'string') {
+    const s = period.trim();
+    if (/^\d{4}$/.test(s)) return s;
+    const ym = s.match(/^(\d{4})-(\d{2})$/);
+    if (ym) {
+      const d = new Date(Date.UTC(parseInt(ym[1], 10), parseInt(ym[2], 10) - 1, 1));
+      return d.toLocaleDateString('en-GB', {
+        timeZone: 'UTC',
+        month: 'short',
+        year: 'numeric',
+      });
+    }
+  }
+  if (meta?.asOfUtc == null) return null;
+  const kind = inferFreshnessKind(meta);
+  if (kind === 'annual') {
+    const y = new Date(meta.asOfUtc).getUTCFullYear();
+    return Number.isNaN(y) ? null : String(y);
+  }
+  return formatUtcAsOf(meta.asOfUtc);
+}
+
 function formatCardAsOf(meta) {
-  if (!meta?.asOfUtc) return null;
-  const utc = formatUtcAsOf(meta.asOfUtc);
+  const utc = formatObservationPeriod(meta);
   if (!utc) return null;
   const parts = [utc];
   if (meta.freshnessNote) parts.push(meta.freshnessNote);
@@ -304,7 +337,8 @@ function formatCardAsOf(meta) {
     if (!parts.some(p => {
       const lower = p.toLowerCase();
       return lower.includes('market close') || lower.includes('last observation')
-        || lower.includes('last estimate') || lower.includes('prior business day');
+        || lower.includes('last estimate') || lower.includes('prior business day')
+        || lower.includes('last release') || lower.includes('last month');
     })) parts.push(lag);
   } else if (isMetaStale(meta)) {
     parts.push(staleAsOfWording(meta));
@@ -3546,6 +3580,7 @@ function collectCardMetas(section, items) {
         pct: d?.pct ?? null,
         extra,
         isRatio: Boolean(item.isPercent),
+        asOf: d?.asOf ?? null,
         asOfUtc: d?.asOfUtc ?? null,
         freshnessKind: d?.freshnessKind,
         freshnessNote: d?.freshnessNote,
