@@ -14,21 +14,19 @@ from socketserver import ThreadingMixIn
 _SCRIPTS = os.path.dirname(os.path.abspath(__file__))
 if _SCRIPTS not in sys.path:
     sys.path.insert(0, _SCRIPTS)
-from multilateral_fetch import (  # noqa: E402
-    METRICS as MULTILATERAL_METRICS,
-    fetch_multilateral_batch,
-    fetch_multilateral_history,
-    fetch_multilateral_metric,
-    warm_multilateral_cache,
-)
 from valuation_fetch import (  # noqa: E402
     METRICS,
+    MULTILATERAL_METRICS,
     fetch_fred_observations_proxy,
     fetch_freshness_api,
     fetch_freshness_deploy_probe,
+    fetch_multilateral_batch,
+    fetch_multilateral_history,
+    fetch_multilateral_metric,
     fetch_valuation_batch,
     fetch_valuation_metric,
     warm_mmd_cache,
+    warm_multilateral_cache,
 )
 
 BIND = os.environ.get("BIND", "127.0.0.1")
