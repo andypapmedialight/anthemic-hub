@@ -15,9 +15,10 @@ EnvironmentFile=-/etc/anthemic-mmd/valuation.env
 ExecStart=/usr/bin/python3 -u /opt/anthemic-mmd/valuation_server.py
 Restart=on-failure
 RestartSec=5
-TimeoutStartSec=30
-# BIS semi-annual pulls can take ~60s
-TimeoutStopSec=15
+TimeoutStartSec=15
+# BIS warm runs in a background thread; stop should not wait on upstream.
+TimeoutStopSec=10
+KillMode=mixed
 
 [Install]
 WantedBy=multi-user.target

@@ -208,9 +208,21 @@ jobs:
           fi
           grep -qF '<title>Why hire Andy Papadopoulos</title>' /tmp/anthemic-smoke-hire.html \
             || { echo "/hire/ page missing expected title marker"; exit 1; }
-          ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            'systemctl is-active --quiet mmd-valuation.service && curl -fsS --max-time 10 http://127.0.0.1:8071/health | grep -q "\"ok\""' \
-            || { echo "mmd-valuation.service not healthy on loopback :8071 (check journalctl -u mmd-valuation)"; exit 1; }
+          mmd_health_ok=0
+          for attempt in 1 2 3 4 5 6 7 8; do
+            if ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+              'systemctl is-active --quiet mmd-valuation.service && curl -fsS --max-time 5 http://127.0.0.1:8071/health | grep -q "\"ok\""'; then
+              mmd_health_ok=1
+              break
+            fi
+            sleep 2
+          done
+          [[ "${mmd_health_ok}" == 1 ]] || {
+            echo "mmd-valuation.service not healthy on loopback :8071 (check journalctl -u mmd-valuation)"
+            ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+              'systemctl status mmd-valuation.service --no-pager; journalctl -u mmd-valuation.service -n 40 --no-pager' || true
+            exit 1
+          }
           code_fred_key=$(curl -sS -o /dev/null -w "%{http_code}" --retry 2 "https://anthemic-developments.com/economics/.fred-api-key")
           [[ "${code_fred_key}" == "404" ]] || { echo "economics/.fred-api-key must not be public (got HTTP ${code_fred_key})"; exit 1; }
           if curl -sS --retry 2 "https://anthemic-developments.com/bass/papaweb.config.js" | grep -q 'hooks.slack.com'; then

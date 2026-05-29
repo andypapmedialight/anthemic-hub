@@ -263,7 +263,6 @@ if [[ -f "${INCOMING}/mmd/valuation_server.py" && -f "${INCOMING}/mmd/valuation_
     systemctl daemon-reload
     systemctl enable mmd-valuation.service
     systemctl restart mmd-valuation.service
-    sleep 2
     if ! systemctl is-active --quiet mmd-valuation.service; then
       echo "anthemic-hub-deploy-apply: mmd-valuation.service is not active" >&2
       systemctl status mmd-valuation.service --no-pager >&2 || true
@@ -271,7 +270,15 @@ if [[ -f "${INCOMING}/mmd/valuation_server.py" && -f "${INCOMING}/mmd/valuation_
       exit 1
     fi
     if command -v curl >/dev/null 2>&1; then
-      if ! curl -fsS --max-time 10 http://127.0.0.1:8071/health >/dev/null; then
+      health_ok=0
+      for _ in 1 2 3 4 5 6 7 8; do
+        if curl -fsS --max-time 5 http://127.0.0.1:8071/health | grep -q '"ok"'; then
+          health_ok=1
+          break
+        fi
+        sleep 2
+      done
+      if [[ "${health_ok}" -ne 1 ]]; then
         echo "anthemic-hub-deploy-apply: mmd-valuation /health check failed" >&2
         journalctl -u mmd-valuation.service -n 40 --no-pager >&2 || true
         exit 1

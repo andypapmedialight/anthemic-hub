@@ -6,8 +6,10 @@ import json
 import os
 import sys
 import threading
+import time
 import urllib.parse
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from socketserver import ThreadingMixIn
 
 _SCRIPTS = os.path.dirname(os.path.abspath(__file__))
 if _SCRIPTS not in sys.path:
@@ -25,6 +27,10 @@ from valuation_fetch import (  # noqa: E402
 BIND = os.environ.get("BIND", "127.0.0.1")
 PORT = int(os.environ.get("PORT", "8071"))
 ALLOWED_METRICS = frozenset(METRICS)
+
+
+class ThreadingHTTPServer(ThreadingMixIn, HTTPServer):
+    daemon_threads = True
 
 
 class ValuationHandler(BaseHTTPRequestHandler):
@@ -126,6 +132,8 @@ def _start_warm_cache() -> None:
         return
 
     def run() -> None:
+        # Let /health respond before BIS batch warm competes for upstream/network.
+        time.sleep(10)
         try:
             warm_mmd_cache()
             print("mmd-valuation: warm cache ready", flush=True)
@@ -138,7 +146,7 @@ def _start_warm_cache() -> None:
 
 def main() -> None:
     _start_warm_cache()
-    httpd = HTTPServer((BIND, PORT), ValuationHandler)
+    httpd = ThreadingHTTPServer((BIND, PORT), ValuationHandler)
     print(f"mmd-valuation listening on http://{BIND}:{PORT}/")
     httpd.serve_forever()
 
