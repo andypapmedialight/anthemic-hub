@@ -419,6 +419,34 @@ FRESHNESS_FRED_SERIES = (
 )
 
 
+def _last_obs_date_from_fred_json(body: str) -> str | None:
+    try:
+        payload = json.loads(body)
+    except json.JSONDecodeError:
+        return None
+    obs = payload.get("observations") or []
+    if not obs:
+        return None
+    for row in reversed(obs):
+        if row.get("date") and row.get("value") not in (None, ".", ""):
+            return row["date"]
+    return None
+
+
+def _last_obs_date_from_fred_csv(text: str) -> str | None:
+    last_date = None
+    for line in text.strip().splitlines():
+        if line.startswith("observation_date") or not line.strip():
+            continue
+        parts = line.split(",", 1)
+        if len(parts) < 2:
+            continue
+        date, val = parts[0].strip(), parts[1].strip()
+        if date and val and val != ".":
+            last_date = date
+    return last_date
+
+
 def fred_last_observation(
     series_id: str,
     api_key: str | None = None,
@@ -428,31 +456,56 @@ def fred_last_observation(
 ) -> str | None:
     """Latest non-missing FRED observation date (YYYY-MM-DD)."""
     key = (api_key or os.environ.get("FRED_API_KEY", "")).strip()
-    if not key:
-        return None
     now = time.time()
     if not force:
         cached = _fred_obs_cache.get(series_id)
         if cached and now < cached[0]:
             return cached[1]
-    url = (
-        "https://api.stlouisfed.org/fred/series/observations"
-        f"?series_id={urllib.parse.quote(series_id)}"
-        f"&file_type=json&sort_order=desc&limit=1"
-        f"&api_key={urllib.parse.quote(key)}"
-    )
+
+    def remember(date: str | None) -> str | None:
+        if date:
+            _fred_obs_cache[series_id] = (now + FRED_FRESHNESS_CACHE_TTL, date)
+        return date
+
+    if key:
+        url = (
+            "https://api.stlouisfed.org/fred/series/observations"
+            f"?series_id={urllib.parse.quote(series_id)}"
+            f"&file_type=json&sort_order=desc&limit=1"
+            f"&api_key={urllib.parse.quote(key)}"
+        )
+        try:
+            body = _fetch(url, timeout=timeout).decode("utf-8", "replace")
+            date = _last_obs_date_from_fred_json(body)
+            if date:
+                return remember(date)
+        except Exception:
+            pass
+
+        hub = os.environ.get("HUB_ORIGIN", "https://anthemic-developments.com").rstrip("/")
+        try:
+            proxy_url = (
+                f"{hub}/economics/proxy/fred?"
+                f"id={urllib.parse.quote(series_id)}&start=2015-01-01"
+            )
+            body = _fetch(proxy_url, timeout=timeout).decode("utf-8", "replace")
+            date = _last_obs_date_from_fred_json(body)
+            if date:
+                return remember(date)
+        except Exception:
+            pass
+
     try:
-        body = _fetch(url, timeout=timeout).decode("utf-8", "replace")
-        payload = json.loads(body)
-        obs = payload.get("observations") or []
-        if obs and obs[0].get("date"):
-            val = obs[0].get("value")
-            if val not in (None, ".", ""):
-                date = obs[0]["date"]
-                _fred_obs_cache[series_id] = (now + FRED_FRESHNESS_CACHE_TTL, date)
-                return date
+        csv_url = (
+            f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={urllib.parse.quote(series_id)}"
+            "&observation_start=2015-01-01"
+        )
+        text = _fetch_curl(csv_url, timeout=min(timeout, 20)).decode("utf-8", "replace")
+        date = _last_obs_date_from_fred_csv(text)
+        if date:
+            return remember(date)
     except Exception:
-        return None
+        pass
     return None
 
 
@@ -463,8 +516,10 @@ def fetch_freshness_api(api_key: str | None = None, *, force: bool = False) -> d
     now = time.time()
     if not force and _fred_freshness_cache:
         expires, payload = _fred_freshness_cache
-        if now < expires:
+        if now < expires and payload.get("series"):
             return payload
+        if not payload.get("series"):
+            _fred_freshness_cache = None
 
     stale_series: dict[str, dict] = {}
     if _fred_freshness_cache:
@@ -474,13 +529,13 @@ def fetch_freshness_api(api_key: str | None = None, *, force: bool = False) -> d
     series: dict[str, dict] = dict(stale_series)
     if key:
         def _fetch_one(sid: str) -> tuple[str, str | None]:
-            last = fred_last_observation(sid, key, force=force, timeout=8)
+            last = fred_last_observation(sid, key, force=force, timeout=12)
             return sid, last
 
         with ThreadPoolExecutor(max_workers=6) as pool:
             futures = [pool.submit(_fetch_one, sid) for sid in FRESHNESS_FRED_SERIES]
             try:
-                for fut in as_completed(futures, timeout=22):
+                for fut in as_completed(futures, timeout=35):
                     sid, last = fut.result()
                     if last:
                         series[sid] = {"lastObservation": last}
@@ -496,7 +551,7 @@ def fetch_freshness_api(api_key: str | None = None, *, force: bool = False) -> d
     }
     if key and series:
         _fred_freshness_cache = (now + FRED_FRESHNESS_CACHE_TTL, {**payload, "cached": True})
-    elif key and stale_series:
+    elif stale_series:
         payload["series"] = stale_series
         payload["cached"] = True
         payload["degraded"] = True

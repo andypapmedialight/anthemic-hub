@@ -251,10 +251,11 @@ if [[ -f "${INCOMING}/mmd/valuation_server.py" && -f "${INCOMING}/mmd/valuation_
     KEY="$(tr -d '\r\n' < "${FRED_KEY_FILE}")"
     {
       printf 'FRED_API_KEY=%s\n' "${KEY}"
+      printf 'HUB_ORIGIN=https://anthemic-developments.com\n'
       printf '# MMD_FRED_FRESHNESS_CACHE_TTL=300\n'
     } > "${MMD_ENV}"
   else
-    printf '# FRED_API_KEY not set — margin-debt uses public FRED CSV fallback\n# MMD_FRED_FRESHNESS_CACHE_TTL=300\n' > "${MMD_ENV}"
+    printf '# FRED_API_KEY not set — margin-debt uses public FRED CSV fallback\nHUB_ORIGIN=https://anthemic-developments.com\n# MMD_FRED_FRESHNESS_CACHE_TTL=300\n' > "${MMD_ENV}"
   fi
   chmod 640 "${MMD_ENV}"
   chown root:www-data "${MMD_ENV}"
@@ -272,6 +273,22 @@ if [[ -f "${INCOMING}/mmd/valuation_server.py" && -f "${INCOMING}/mmd/valuation_
     if command -v curl >/dev/null 2>&1; then
       if ! curl -fsS --max-time 10 http://127.0.0.1:8071/health >/dev/null; then
         echo "anthemic-hub-deploy-apply: mmd-valuation /health check failed" >&2
+        journalctl -u mmd-valuation.service -n 40 --no-pager >&2 || true
+        exit 1
+      fi
+      fresh_ok=0
+      for _ in 1 2 3 4 5 6; do
+        if curl -fsS --max-time 50 "http://127.0.0.1:8071/freshness?force=1" | python3 -c \
+          'import json,sys; d=json.load(sys.stdin); assert len(d.get("series") or {})>=1'; then
+          fresh_ok=1
+          break
+        fi
+        sleep 5
+      done
+      if [[ "${fresh_ok}" -ne 1 ]]; then
+        echo "anthemic-hub-deploy-apply: /freshness returned no FRED series (check FRED_API_KEY / upstream)" >&2
+        curl -fsS --max-time 10 http://127.0.0.1:8071/freshness 2>/dev/null | head -c 400 || true
+        echo >&2
         journalctl -u mmd-valuation.service -n 40 --no-pager >&2 || true
         exit 1
       fi

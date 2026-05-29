@@ -39,7 +39,9 @@ class ValuationHandler(BaseHTTPRequestHandler):
             self._json({"ok": True})
             return
         if path == "/freshness":
-            self._json(fetch_freshness_api())
+            qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+            force = qs.get("force", [""])[0].strip().lower() in ("1", "true", "yes")
+            self._json(fetch_freshness_api(force=force))
             return
         if path == "/valuation":
             self._valuation()
