@@ -602,6 +602,27 @@ def fred_last_observation_fast(
         return None
 
 
+def _freshness_min_gdp_series(key: str | None) -> dict[str, dict]:
+    """Guarantee at least GDP vintage when bulk FRED lookups fail (CI / cold start)."""
+    api_key = (key or os.environ.get("FRED_API_KEY", "")).strip()
+    last = fred_last_observation_fast(FRESHNESS_DEPLOY_SERIES, api_key or None, timeout=8)
+    if last:
+        return {FRESHNESS_DEPLOY_SERIES: {"lastObservation": last}}
+    if api_key:
+        start = time.strftime("%Y-%m-%d", time.gmtime(time.time() - 400 * 86400))
+        status, body, _ = fetch_fred_observations_proxy(
+            FRESHNESS_DEPLOY_SERIES,
+            start,
+            limit=2,
+            sort_order="desc",
+        )
+        if status == 200:
+            last = _last_obs_date_from_fred_json(body.decode("utf-8", "replace"))
+            if last:
+                return {FRESHNESS_DEPLOY_SERIES: {"lastObservation": last}}
+    return {}
+
+
 def fetch_freshness_deploy_probe(api_key: str | None = None) -> dict:
     """Fast loopback probe for deploy — never blocks on warm-cache lock."""
     global _fred_freshness_cache
@@ -615,16 +636,12 @@ def fetch_freshness_deploy_probe(api_key: str | None = None) -> dict:
             return _freshness_payload(stale, cached=True, degraded=True)
 
     if not key:
-        last = fred_last_observation_fast(FRESHNESS_DEPLOY_SERIES, None)
-        series = (
-            {FRESHNESS_DEPLOY_SERIES: {"lastObservation": last}} if last else {}
-        )
+        series = _freshness_min_gdp_series(None)
         return _freshness_payload(series, cached=False, degraded=not series) | {
             "fredApi": False,
         }
 
-    last = fred_last_observation_fast(FRESHNESS_DEPLOY_SERIES, key)
-    series = {FRESHNESS_DEPLOY_SERIES: {"lastObservation": last}} if last else {}
+    series = _freshness_min_gdp_series(key)
     payload = _freshness_payload(series, cached=False, degraded=not series)
     if series:
         _fred_freshness_cache = (now + FRED_FRESHNESS_CACHE_TTL, {**payload, "cached": True})
@@ -767,7 +784,18 @@ def fetch_freshness_api(
     if not force and not core_only and series and len(series) < len(FRESHNESS_FRED_SERIES):
         _schedule_freshness_refresh(key)
 
-    payload = _freshness_payload(series, cached=False, degraded=bool(stale_series and not force))
+    if not series and key:
+        series = _freshness_min_gdp_series(key)
+        if series and not force and not core_only:
+            _schedule_freshness_refresh(key)
+
+    degraded = bool(stale_series and not force) or (
+        bool(series) and len(series) < len(ids) and not core_only
+    )
+    if series and len(series) == 1 and FRESHNESS_DEPLOY_SERIES in series:
+        degraded = True
+
+    payload = _freshness_payload(series, cached=False, degraded=degraded)
     if series:
         _fred_freshness_cache = (now + FRED_FRESHNESS_CACHE_TTL, {**payload, "cached": True})
     elif stale_series:
