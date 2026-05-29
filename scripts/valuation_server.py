@@ -14,6 +14,13 @@ from socketserver import ThreadingMixIn
 _SCRIPTS = os.path.dirname(os.path.abspath(__file__))
 if _SCRIPTS not in sys.path:
     sys.path.insert(0, _SCRIPTS)
+from multilateral_fetch import (  # noqa: E402
+    METRICS as MULTILATERAL_METRICS,
+    fetch_multilateral_batch,
+    fetch_multilateral_history,
+    fetch_multilateral_metric,
+    warm_multilateral_cache,
+)
 from valuation_fetch import (  # noqa: E402
     METRICS,
     fetch_fred_observations_proxy,
@@ -27,6 +34,7 @@ from valuation_fetch import (  # noqa: E402
 BIND = os.environ.get("BIND", "127.0.0.1")
 PORT = int(os.environ.get("PORT", "8071"))
 ALLOWED_METRICS = frozenset(METRICS)
+ALLOWED_MULTILATERAL = frozenset(MULTILATERAL_METRICS)
 
 
 class ThreadingHTTPServer(ThreadingMixIn, HTTPServer):
@@ -61,6 +69,15 @@ class ValuationHandler(BaseHTTPRequestHandler):
             return
         if path == "/valuation":
             self._valuation()
+            return
+        if path == "/multilateral/health":
+            self._json({"ok": True})
+            return
+        if path == "/multilateral/history":
+            self._multilateral_history()
+            return
+        if path == "/multilateral":
+            self._multilateral()
             return
         self.send_error(404)
 
@@ -102,6 +119,45 @@ class ValuationHandler(BaseHTTPRequestHandler):
         except (BrokenPipeError, ConnectionResetError):
             pass
 
+    def _multilateral(self) -> None:
+        qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        metrics_raw = qs.get("metrics", [""])[0]
+        if metrics_raw:
+            ids = [m.strip() for m in metrics_raw.split(",") if m.strip()]
+            bad = [m for m in ids if m not in ALLOWED_MULTILATERAL]
+            if bad:
+                self.send_error(400, f"Invalid metrics: {', '.join(bad)}")
+                return
+            try:
+                self._json({"metrics": fetch_multilateral_batch(ids)})
+            except Exception as exc:
+                self._json({"error": str(exc)}, status=502)
+            return
+        metric = qs.get("metric", [""])[0]
+        if metric not in ALLOWED_MULTILATERAL:
+            self.send_error(400, "Invalid metric")
+            return
+        try:
+            self._json(fetch_multilateral_metric(metric))
+        except Exception as exc:
+            self._json({"error": str(exc)}, status=502)
+
+    def _multilateral_history(self) -> None:
+        qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        metric = qs.get("metric", [""])[0]
+        if metric not in ALLOWED_MULTILATERAL:
+            self.send_error(400, "Invalid metric")
+            return
+        days_raw = qs.get("days", ["1825"])[0]
+        try:
+            days = max(30, min(20 * 365, int(days_raw)))
+        except ValueError:
+            days = 1825
+        try:
+            self._json({"metric": metric, "series": fetch_multilateral_history(metric, days=days)})
+        except Exception as exc:
+            self._json({"error": str(exc)}, status=502)
+
     def _valuation(self) -> None:
         qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
         metrics_raw = qs.get("metrics", [""])[0]
@@ -136,6 +192,7 @@ def _start_warm_cache() -> None:
         time.sleep(10)
         try:
             warm_mmd_cache()
+            warm_multilateral_cache()
             print("mmd-valuation: warm cache ready", flush=True)
         except Exception as exc:
             print(f"mmd-valuation: warm cache failed: {exc}", flush=True)

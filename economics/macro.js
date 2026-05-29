@@ -15,6 +15,7 @@ const CACHE_TTL_MS = {
   crypto: 2 * 60 * 1000,
   valuation: 30 * 60 * 1000,
   valuationLive: 6 * 60 * 60 * 1000,
+  multilateral: 6 * 60 * 60 * 1000,
   default: 5 * 60 * 1000,
 };
 
@@ -159,6 +160,7 @@ function recordCardRefreshThrottle(itemKey) {
 }
 function cacheTierForKey(key) {
   if (key.startsWith('val-live:') || key.startsWith('val-live-batch')) return 'valuationLive';
+  if (key.startsWith('ml:') || key.startsWith('ml-batch')) return 'multilateral';
   if (key.startsWith('val:') || key.startsWith('val:fred')) return 'valuation';
   if (key.startsWith('b:')) return 'bond';
   if (key.startsWith('cg:') || key.includes(':q:')) return 'market';
@@ -200,6 +202,7 @@ function cacheKeyForItem(item, section) {
   if (section.key === 'bond') return `b:${item.id}`;
   if (section.key === 'fx') return `${activeProvider}:fx:${item.from}:${item.to}`;
   if (section.key === 'crypto') return `cg:${item.sym}`;
+  if (section.key === 'global') return `ml:${item.id}`;
   return k;
 }
 
@@ -378,7 +381,7 @@ function saveSectionOrderFor(section) {
 
 // ── At a Glance overview ───────────────────────────
 const OVERVIEW_MAX_ITEMS = 12;
-const OVERVIEW_PICKABLE_SECTIONS = ['eq', 'comm', 'bond', 'fx', 'crypto', 'val'];
+const OVERVIEW_PICKABLE_SECTIONS = ['eq', 'comm', 'bond', 'fx', 'crypto', 'val', 'global'];
 const OVERVIEW_DEFAULTS = [
   { sectionKey: 'eq', itemKey: '^AORD' },
   { sectionKey: 'eq', itemKey: '^GSPC' },
@@ -774,6 +777,37 @@ function isValuationLive(itemOrId) {
   return Boolean(item?.api);
 }
 
+// IMF DataMapper, OECD SDMX, World Bank WDI (hub /economics/proxy/multilateral)
+const GLOBAL_MACRO = [
+  { id: 'oecd-cli-au', label: 'OECD CLI — Australia', ticker: 'CLI-AU', sourceOrg: 'OECD', isPercent: false, def: true },
+  { id: 'oecd-cli-us', label: 'OECD CLI — United States', ticker: 'CLI-US', sourceOrg: 'OECD', isPercent: false, def: true },
+  { id: 'oecd-cconf-au', label: 'OECD Consumer Confidence — AU', ticker: 'CCI-AU', sourceOrg: 'OECD', isPercent: false, def: true },
+  { id: 'imf-gdp-au', label: 'IMF WEO GDP Growth — AU', ticker: 'WEO-AU', sourceOrg: 'IMF', isPercent: true, def: true },
+  { id: 'imf-gdp-us', label: 'IMF WEO GDP Growth — US', ticker: 'WEO-US', sourceOrg: 'IMF', isPercent: true, def: true },
+  { id: 'imf-unemployment-au', label: 'IMF Unemployment — AU', ticker: 'U/E-AU', sourceOrg: 'IMF', isPercent: true, def: true },
+  { id: 'imf-unemployment-us', label: 'IMF Unemployment — US', ticker: 'U/E-US', sourceOrg: 'IMF', isPercent: true, def: true },
+  { id: 'wb-gdp-growth-au', label: 'GDP Growth (actual) — AU', ticker: 'GDP-AU', sourceOrg: 'World Bank', isPercent: true, def: true },
+  { id: 'wb-gdp-growth-us', label: 'GDP Growth (actual) — US', ticker: 'GDP-US', sourceOrg: 'World Bank', isPercent: true, def: true },
+  { id: 'wb-gni-au', label: 'GNI per Capita — AU', ticker: 'GNI-AU', sourceOrg: 'World Bank', isPercent: false, def: true },
+  { id: 'oecd-cli-gb', label: 'OECD CLI — United Kingdom', ticker: 'CLI-GB', sourceOrg: 'OECD', isPercent: false, def: false },
+  { id: 'oecd-cli-jp', label: 'OECD CLI — Japan', ticker: 'CLI-JP', sourceOrg: 'OECD', isPercent: false, def: false },
+  { id: 'oecd-cli-de', label: 'OECD CLI — Germany', ticker: 'CLI-DE', sourceOrg: 'OECD', isPercent: false, def: false },
+  { id: 'oecd-bconf-au', label: 'OECD Business Confidence — AU', ticker: 'BCI-AU', sourceOrg: 'OECD', isPercent: false, def: false },
+  { id: 'oecd-bconf-us', label: 'OECD Business Confidence — US', ticker: 'BCI-US', sourceOrg: 'OECD', isPercent: false, def: false },
+  { id: 'oecd-cconf-us', label: 'OECD Consumer Confidence — US', ticker: 'CCI-US', sourceOrg: 'OECD', isPercent: false, def: false },
+  { id: 'imf-inflation-au', label: 'IMF CPI Inflation — AU', ticker: 'CPI-AU', sourceOrg: 'IMF', isPercent: true, def: false },
+  { id: 'imf-inflation-us', label: 'IMF CPI Inflation — US', ticker: 'CPI-US', sourceOrg: 'IMF', isPercent: true, def: false },
+  { id: 'imf-gov-debt-au', label: 'IMF Govt Debt — AU', ticker: 'DEBT-AU', sourceOrg: 'IMF', isPercent: true, def: false },
+  { id: 'imf-gov-debt-us', label: 'IMF Govt Debt — US', ticker: 'DEBT-US', sourceOrg: 'IMF', isPercent: true, def: false },
+  { id: 'imf-current-account-au', label: 'IMF Current Account — AU', ticker: 'CA-AU', sourceOrg: 'IMF', isPercent: true, def: false },
+  { id: 'imf-current-account-us', label: 'IMF Current Account — US', ticker: 'CA-US', sourceOrg: 'IMF', isPercent: true, def: false },
+  { id: 'wb-gni-us', label: 'GNI per Capita — US', ticker: 'GNI-US', sourceOrg: 'World Bank', isPercent: false, def: false },
+  { id: 'wb-trade-au', label: 'Trade (% GDP) — AU', ticker: 'TRD-AU', sourceOrg: 'World Bank', isPercent: true, def: false },
+  { id: 'wb-trade-us', label: 'Trade (% GDP) — US', ticker: 'TRD-US', sourceOrg: 'World Bank', isPercent: true, def: false },
+  { id: 'wb-inflation-au', label: 'CPI Inflation (actual) — AU', ticker: 'CPI-AU', sourceOrg: 'World Bank', isPercent: true, def: false },
+  { id: 'wb-inflation-us', label: 'CPI Inflation (actual) — US', ticker: 'CPI-US', sourceOrg: 'World Bank', isPercent: true, def: false },
+];
+
 const COMMODITIES = [
   { id: 'spot-gold',    sym: 'GC=F',               label: 'Gold Spot',      ticker: 'XAU',   unit: 'USD/oz', def: true,  dp: 2 },
   { id: 'spot-silver',  sym: 'SI=F',               label: 'Silver Spot',    ticker: 'XAG',   unit: 'USD/oz', def: true,  dp: 3 },
@@ -864,6 +898,13 @@ const SECTION_EXPLAINERS = {
     source: 'FRED (St. Louis Fed) for GDP, debt, and Buffett inputs; hub valuation API for FINRA margin, BIS/ISDA OTC, and AU Treasury/ASX references.',
     detail: 'Quarterly FRED series drive most cards. Live-reference cards (margin debt, OTC) show published levels with “as of” dates when available.',
   },
+  global: {
+    title: 'Market & source',
+    market: 'Cross-country macro indicators from official international institutions.',
+    venue: 'No exchange. OECD CLI, IMF WEO projections, and World Bank development indicators.',
+    source: 'Hub multilateral proxy: OECD SDMX (CLI), IMF DataMapper (WEO), World Bank API v2 (WDI).',
+    detail: 'Monthly OECD leading indicators; IMF annual WEO (forecasts flagged as Est.); World Bank annual WDI. Cached server-side — refresh sparingly.',
+  },
   comm: {
     title: 'Market & source',
     market: 'Physical commodity spot/reference market levels (metals, energy, and agricultural benchmarks).',
@@ -905,6 +946,11 @@ const SECTIONS = [
     key: 'val',  gridId: 'valuation-grid',   custId: 'cust-val',  items: VALUATION,
     fetch: (item, force) => fetchValuation(item.id, force),
     card:  null,
+  },
+  {
+    key: 'global', gridId: 'global-grid', custId: 'cust-global', items: GLOBAL_MACRO,
+    fetch: (item, force) => fetchMultilateral(item.id, force),
+    card: null,
   },
   {
     key: 'comm', gridId: 'commodities-grid', custId: 'cust-comm', items: COMMODITIES,
@@ -1426,6 +1472,68 @@ function valuationCardInfo(item) {
   return { title: item.label, ...block };
 }
 
+function globalCardInfo(item) {
+  const org = item.sourceOrg || 'Multilateral';
+  const links = {
+    OECD: infoLink('OECD Data Explorer', 'https://data-explorer.oecd.org/'),
+    IMF: infoLink('IMF DataMapper', 'https://www.imf.org/external/datamapper/'),
+    'World Bank': infoLink('World Bank Open Data', 'https://data.worldbank.org/'),
+  };
+  let summary = `${item.label} from ${org}.`;
+  let derived = 'Fetched via hub multilateral proxy on refresh.';
+  let data = item.id;
+  if (item.id.startsWith('oecd-cli-')) {
+    summary = `OECD composite leading indicator (${item.label.split('—').pop()?.trim() || 'country'}).`;
+    derived = 'Amplitude-adjusted CLI; latest month vs prior month.';
+    data = 'OECD SDMX DSD_STES@DF_CLI, measure LI.';
+  } else if (item.id.startsWith('oecd-bconf-')) {
+    summary = `OECD composite business confidence index for ${item.label.includes('AU') ? 'Australia' : 'the United States'}.`;
+    derived = 'Latest monthly observation vs prior month.';
+    data = 'OECD SDMX DSD_STES@DF_CLI, measure BCICP.';
+  } else if (item.id.startsWith('oecd-cconf-')) {
+    summary = `OECD composite consumer confidence index for ${item.label.includes('AU') ? 'Australia' : 'the United States'}.`;
+    derived = 'Latest monthly observation vs prior month.';
+    data = 'OECD SDMX DSD_STES@DF_CLI, measure CCICP.';
+  } else if (item.id.startsWith('imf-gdp-')) {
+    summary = 'IMF World Economic Outlook real GDP growth projection.';
+    derived = 'Near-term WEO vintage; forecast years marked Est.';
+    data = 'IMF DataMapper NGDP_RPCH.';
+  } else if (item.id.startsWith('imf-inflation-')) {
+    summary = 'IMF WEO consumer price inflation (annual %).';
+    data = 'IMF DataMapper PCPIPCH.';
+  } else if (item.id.startsWith('imf-gov-debt-')) {
+    summary = 'IMF general government gross debt (% of GDP).';
+    data = 'IMF DataMapper GGXWDG_NGDP.';
+  } else if (item.id.startsWith('imf-unemployment-')) {
+    summary = 'IMF WEO unemployment rate (% of labour force).';
+    data = 'IMF DataMapper LUR.';
+  } else if (item.id.startsWith('imf-current-account-')) {
+    summary = 'IMF current account balance (% of GDP).';
+    data = 'IMF DataMapper BCA_NGDPD.';
+  } else if (item.id.startsWith('wb-gni-')) {
+    summary = 'World Bank GNI per capita (Atlas method, current US$).';
+    data = 'World Bank NY.GNP.PCAP.CD.';
+  } else if (item.id.startsWith('wb-gdp-growth-')) {
+    summary = 'World Bank actual real GDP growth (annual %, WDI).';
+    derived = 'Published national-accounts growth — not an IMF forecast.';
+    data = 'World Bank NY.GDP.MKTP.KD.ZG.';
+  } else if (item.id.startsWith('wb-trade-')) {
+    summary = 'Trade (exports plus imports) as a share of GDP.';
+    data = 'World Bank NE.TRD.GNFS.ZS.';
+  } else if (item.id.startsWith('wb-inflation-')) {
+    summary = 'World Bank CPI inflation (annual %, WDI).';
+    data = 'World Bank FP.CPI.TOTL.ZG.';
+  }
+  return {
+    title: item.label,
+    summary,
+    derived,
+    data,
+    sourceHtml: `${links[org] || escapeHtml(org)} · hub /economics/proxy/multilateral`,
+    formula: changeFormulaeBlurb(item.isPercent ? 'ratio' : item.id.startsWith('wb-gni-') ? 'usd' : 'price'),
+  };
+}
+
 const CARD_INFO_RESOLVERS = {
   eq: equityCardInfo,
   comm: commodityCardInfo,
@@ -1433,6 +1541,7 @@ const CARD_INFO_RESOLVERS = {
   crypto: cryptoCardInfo,
   bond: bondCardInfo,
   val: valuationCardInfo,
+  global: globalCardInfo,
 };
 
 function getCardInfo(sectionKey, item) {
@@ -2832,6 +2941,66 @@ async function fetchValuationLiveBatch(metricIds, force = false) {
   }
 }
 
+function normalizeMultilateralRow(data) {
+  if (!data || data.error) return null;
+  const kind = data.freshnessKind || 'annual';
+  return attachFreshness({
+    ...data,
+    asOfUtc: data.asOfUtc ?? parseReferencePeriodUtc(data.asOf),
+  }, kind, { note: data.freshnessNote, estimated: kind === 'estimated' });
+}
+
+async function fetchMultilateral(metricId, force = false) {
+  const key = `ml:${metricId}`;
+  if (!force) { const c = cacheGet(key); if (c) return c; }
+  try {
+    const url = `${location.origin}/economics/proxy/multilateral?${new URLSearchParams({ metric: metricId })}`;
+    const r = await fetchWithTimeout(url, {}, 90000);
+    const data = await readFetchResponse(r, { asJson: true });
+    if (data?.error) throw new Error(data.error);
+    const result = normalizeMultilateralRow(data);
+    if (result) cacheSet(key, result);
+    return result;
+  } catch (err) {
+    console.warn('multilateral fetch failed', metricId, err);
+    return null;
+  }
+}
+
+async function fetchMultilateralBatch(metricIds, force = false) {
+  const ids = [...new Set(metricIds.filter(Boolean))];
+  if (!ids.length) return;
+  const pending = ids.filter(id => force || !cacheGet(`ml:${id}`));
+  if (!pending.length) return;
+  try {
+    const url = `${location.origin}/economics/proxy/multilateral?metrics=${pending.map(encodeURIComponent).join(',')}`;
+    const r = await fetchWithTimeout(url, {}, 120000);
+    const body = await readFetchResponse(r, { asJson: true });
+    if (body?.error && !body.metrics) throw new Error(body.error);
+    const metrics = body.metrics || body;
+    for (const id of pending) {
+      const row = normalizeMultilateralRow(metrics[id]);
+      if (row) cacheSet(`ml:${id}`, row);
+    }
+  } catch (err) {
+    console.warn('multilateral batch failed, falling back per metric', err);
+    await Promise.allSettled(pending.map(id => fetchMultilateral(id, force)));
+  }
+}
+
+function startMultilateralPrefetch(force = false) {
+  const visible = visOf(GLOBAL_MACRO);
+  if (!visible.length) return;
+  const run = () => {
+    void fetchMultilateralBatch(visible.map(item => item.id), force);
+  };
+  if (typeof requestIdleCallback === 'function') {
+    requestIdleCallback(run, { timeout: 6000 });
+  } else {
+    setTimeout(run, 3500);
+  }
+}
+
 function startValuationPrefetch(force = false) {
   const visible = visOf(VALUATION);
   if (!visible.length) return;
@@ -3179,6 +3348,7 @@ async function fetchBond(series_id, force = false) {
 const SECTION_LOAD_LABELS = {
   eq: 'Loading quotes…',
   val: 'Loading FRED & live metrics…',
+  global: 'Loading OECD / IMF / World Bank…',
   comm: 'Loading commodities…',
   bond: 'Loading yields…',
   fx: 'Loading FX rates…',
@@ -3356,6 +3526,35 @@ function collectCardMetas(section, items) {
         itemKey: item.id,
         sectionKey: section.key,
         failed: !d || !price,
+      }, item, section.key);
+    });
+  }
+
+  if (section.key === 'global') {
+    return items.map(item => {
+      const d = DATA[item.id];
+      const price = d?.display ?? (d?.price != null ? String(d.price) : null);
+      const extra = d?.source
+        ? `<div class="yield-extra"><span class="spread-label">Source</span>
+          <span class="spread-val buffett-fair">${escapeHtml(d.source)}</span></div>`
+        : '';
+      return withGoogleUrl({
+        ticker: item.ticker,
+        label: item.label,
+        price,
+        change: d?.change ?? null,
+        pct: d?.pct ?? null,
+        extra,
+        isRatio: Boolean(item.isPercent),
+        asOfUtc: d?.asOfUtc ?? null,
+        freshnessKind: d?.freshnessKind,
+        freshnessNote: d?.freshnessNote,
+        estimated: d?.estimated,
+        itemKey: item.id,
+        sectionKey: section.key,
+        failed: !d || !price,
+        cardClassExtra: 'card--reference',
+        showCardAsOf: Boolean(d?.asOfUtc || d?.asOf),
       }, item, section.key);
     });
   }
@@ -4272,6 +4471,51 @@ function renderInfoBox() {
       ],
       note: 'Used for all crypto prices — no proxy needed. Change % is 24-hour rolling (crypto trades 24/7). One batched request for all coins.',
     },
+    {
+      id: 'oecd',
+      name: 'OECD SDMX',
+      tag: 'Global Macro',
+      tagColor: 'var(--accent)',
+      rows: [
+        ['Key required', 'No'],
+        ['Rate limit',   '~60 req/hour'],
+        ['API type',     'Official SDMX REST'],
+        ['Coverage',     'CLI, leading indicators'],
+        ['Update freq',  'Monthly'],
+        ['Hub proxy',    '/economics/proxy/multilateral'],
+      ],
+      note: 'Composite Leading Indicators via sdmx.oecd.org. Server-cached 24h. Use OECD Data Explorer to build additional series URLs.',
+    },
+    {
+      id: 'imf',
+      name: 'IMF DataMapper',
+      tag: 'Global Macro',
+      tagColor: 'var(--gold)',
+      rows: [
+        ['Key required', 'No'],
+        ['Rate limit',   'Be gentle'],
+        ['API type',     'Official JSON'],
+        ['Coverage',     'WEO GDP, CPI, debt'],
+        ['Forecasts',    'Near-term WEO flagged Est.'],
+        ['Hub proxy',    '/economics/proxy/multilateral'],
+      ],
+      note: 'World Economic Outlook indicators from imf.org/external/datamapper. Forecast years shown with Est. freshness pill.',
+    },
+    {
+      id: 'worldbank',
+      name: 'World Bank API',
+      tag: 'Global Macro',
+      tagColor: 'var(--accent)',
+      rows: [
+        ['Key required', 'No'],
+        ['Rate limit',   'Generous'],
+        ['API type',     'Official REST v2'],
+        ['Coverage',     'WDI — GNI, trade, development'],
+        ['Update freq',  'Annual'],
+        ['Hub proxy',    '/economics/proxy/multilateral'],
+      ],
+      note: 'World Development Indicators via api.worldbank.org/v2. JSON responses cached server-side.',
+    },
   ];
 
   const privacyHtml = `
@@ -4284,7 +4528,8 @@ function renderInfoBox() {
     </div>`;
 
   box.innerHTML = privacyHtml + sources.map(s => {
-    const isSelectable = s.id !== 'fred' && s.id !== 'frank' && s.id !== 'coingecko';
+    const isSelectable = s.id !== 'fred' && s.id !== 'frank' && s.id !== 'coingecko'
+      && s.id !== 'oecd' && s.id !== 'imf' && s.id !== 'worldbank';
     const active = isSelectable && s.id === activeProvider;
     return `
       <div class="info-source${active ? ' info-source-active' : ''}">
@@ -4949,6 +5194,7 @@ async function loadAll(force = false) {
   updateDateLine();
   updateMarketStatus();
   startValuationPrefetch(effectiveForce);
+  startMultilateralPrefetch(effectiveForce);
   void loadBondSpreadFred(effectiveForce).then(data => { BOND_SPREAD_FRED = data || {}; });
 
   if (effectiveForce && activeProvider === 'alphavantage') {
@@ -4960,6 +5206,41 @@ async function loadAll(force = false) {
   async function loadSection(section) {
     const visible = visOf(section.items);
     if (!visible.length) return;
+
+    if (section.key === 'global') {
+      if (!effectiveForce) {
+        let painted = false;
+        for (const item of visible) {
+          const key = getItemKey(item);
+          const cached = cacheGet(`ml:${key}`) || cacheGetStale(`ml:${key}`);
+          if (cached) {
+            DATA[key] = cached;
+            painted = true;
+          }
+        }
+        if (painted) {
+          renderSectionGrid(section);
+          setSectionLoading(section, false);
+        }
+      }
+
+      try {
+        await fetchMultilateralBatch(visible.map(item => item.id), effectiveForce);
+        for (const item of visible) {
+          const key = getItemKey(item);
+          const cached = cacheGet(`ml:${key}`);
+          if (cached) DATA[key] = cached;
+          else delete DATA[key];
+        }
+      } catch (err) {
+        console.warn('global section load failed', err);
+      } finally {
+        renderSectionGrid(section);
+        renderCust(section);
+        setSectionLoading(section, false);
+      }
+      return;
+    }
 
     if (section.key === 'val') {
       if (!effectiveForce) {
@@ -5361,7 +5642,33 @@ async function fetchHistory(item, section, days) {
   if (section.key === 'val') {
     return fetchValuationHistory(item.id, days);
   }
+  if (section.key === 'global') {
+    return fetchMultilateralHistory(item.id, days);
+  }
   return null;
+}
+
+async function fetchMultilateralHistory(metricId, days) {
+  const cacheKey = `ml:hist:${metricId}:${days}`;
+  const cached = historyCacheGet(cacheKey);
+  if (cached) return cached;
+  if (!isHubEconomicsPage() || !isHubHostname()) return null;
+  try {
+    const url = `${location.origin}/economics/proxy/multilateral/history?${new URLSearchParams({
+      metric: metricId,
+      days: String(days),
+    })}`;
+    const r = await fetchWithTimeout(url, {}, 90000);
+    const body = await readFetchResponse(r, { asJson: true });
+    if (body?.error) throw new Error(body.error);
+    const series = sliceSeriesForChart(body.series || [], days);
+    if (!series?.length) return null;
+    historyCacheSet(cacheKey, series);
+    return series;
+  } catch (err) {
+    console.warn('multilateral history failed', metricId, err);
+    return null;
+  }
 }
 
 async function fetchValuationHistory(metricId, days) {
@@ -5435,6 +5742,7 @@ function buildChartSvg(series, opts = {}) {
   const stroke = up ? '#34d399' : '#f87171';
   const pctDp = opts.pctDp ?? dp;
   const fmtV = v => {
+    if (opts.gniUsd) return `$${Math.round(v).toLocaleString('en-US')}`;
     if (opts.usdBillions) return formatUsdCompact(v) || '–';
     if (opts.audBillions) return formatAudCompact(v) || '–';
     if (isPercent) return `${v.toFixed(pctDp)}%`;
@@ -5494,6 +5802,16 @@ function chartOpts(item, section) {
   if (section.key === 'val') {
     const pctDp = item.id === 'buffett' ? 0 : 1;
     return { isPercent: true, isRatio: true, dp: 2, pctDp, quarterlyNote: true };
+  }
+  if (section.key === 'global') {
+    if (item.id === 'wb-gni-au' || item.id === 'wb-gni-us') {
+      return { isPercent: false, dp: 0, gniUsd: true };
+    }
+    return {
+      isPercent: Boolean(item.isPercent),
+      isRatio: Boolean(item.isPercent),
+      dp: item.isPercent ? 1 : 2,
+    };
   }
   const isPercent = section.key === 'bond';
   const dp = quoteDecimals(item, section.key);
@@ -5626,6 +5944,7 @@ function getSectionName(sectionKey) {
   const names = {
     eq: 'Equities',
     val: 'Valuation',
+    global: 'Global Macro',
     comm: 'Commodities',
     bond: 'Treasuries',
     fx: 'Currencies',

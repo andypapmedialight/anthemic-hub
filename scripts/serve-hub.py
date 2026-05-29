@@ -9,6 +9,8 @@ Proxy: GET /economics/proxy/yahoo?sym=^GSPC&range=5d
        GET /economics/proxy/google?path=AAPL:NASDAQ
        GET /economics/proxy/valuation?metric=margin-debt
        GET /economics/proxy/valuation/health
+       GET /economics/proxy/multilateral?metric=oecd-cli-au
+       GET /economics/proxy/multilateral/history?metric=imf-gdp-au&days=1825
        GET /economics/proxy/fred/health
 """
 from __future__ import annotations
@@ -27,6 +29,13 @@ from http.server import HTTPServer, SimpleHTTPRequestHandler
 _SCRIPTS = os.path.dirname(os.path.abspath(__file__))
 if _SCRIPTS not in sys.path:
     sys.path.insert(0, _SCRIPTS)
+from multilateral_fetch import (  # noqa: E402
+    METRICS as MULTILATERAL_METRICS,
+    fetch_multilateral_batch,
+    fetch_multilateral_history,
+    fetch_multilateral_metric,
+    warm_multilateral_cache,
+)
 from valuation_fetch import (  # noqa: E402
     FRESHNESS_FRED_SERIES,
     METRICS,
@@ -157,6 +166,7 @@ def _warm_hub_cache() -> None:
     def run() -> None:
         try:
             warm_mmd_cache()
+            warm_multilateral_cache()
             card_start = time.strftime("%Y-%m-%d", time.gmtime(time.time() - 800 * 86400))
             for sid in VAL_WARM_FRED_SERIES:
                 _prime_fred_proxy_cache(sid, card_start)
@@ -194,6 +204,15 @@ class HubHandler(SimpleHTTPRequestHandler):
             return
         if path == "/economics/proxy/valuation":
             self._proxy_valuation()
+            return
+        if path == "/economics/proxy/multilateral/health":
+            self._send_json({"ok": True})
+            return
+        if path == "/economics/proxy/multilateral/history":
+            self._proxy_multilateral_history()
+            return
+        if path == "/economics/proxy/multilateral":
+            self._proxy_multilateral()
             return
         if path == "/economics/api/freshness":
             self._freshness_api()
@@ -296,6 +315,45 @@ class HubHandler(SimpleHTTPRequestHandler):
         self.end_headers()
         self._safe_write(body)
 
+    def _proxy_multilateral(self) -> None:
+        qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        metrics_raw = qs.get("metrics", [""])[0]
+        if metrics_raw:
+            ids = [m.strip() for m in metrics_raw.split(",") if m.strip()]
+            bad = [m for m in ids if m not in MULTILATERAL_METRICS]
+            if bad:
+                self.send_error(400, f"Invalid metrics: {', '.join(bad)}")
+                return
+            try:
+                self._send_json({"metrics": fetch_multilateral_batch(ids)})
+            except Exception as e:
+                self._send_json({"error": str(e)}, status=502)
+            return
+        metric = qs.get("metric", [""])[0]
+        if metric not in MULTILATERAL_METRICS:
+            self.send_error(400, "Invalid metric")
+            return
+        try:
+            self._send_json(fetch_multilateral_metric(metric))
+        except Exception as e:
+            self._send_json({"error": str(e)}, status=502)
+
+    def _proxy_multilateral_history(self) -> None:
+        qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        metric = qs.get("metric", [""])[0]
+        if metric not in MULTILATERAL_METRICS:
+            self.send_error(400, "Invalid metric")
+            return
+        days_raw = qs.get("days", ["1825"])[0]
+        try:
+            days = max(30, min(20 * 365, int(days_raw)))
+        except ValueError:
+            days = 1825
+        try:
+            self._send_json({"metric": metric, "series": fetch_multilateral_history(metric, days=days)})
+        except Exception as e:
+            self._send_json({"error": str(e)}, status=502)
+
     def _proxy_valuation(self) -> None:
         qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
         metrics_raw = qs.get("metrics", [""])[0]
@@ -372,6 +430,8 @@ def main():
     print(f"Google proxy:  http://{BIND}:{PORT}/economics/proxy/google?path=AAPL:NASDAQ")
     print(f"Valuation API: http://{BIND}:{PORT}/economics/proxy/valuation?metric=margin-debt")
     print(f"Valuation ping: http://{BIND}:{PORT}/economics/proxy/valuation/health")
+    print(f"Multilateral:  http://{BIND}:{PORT}/economics/proxy/multilateral?metric=oecd-cli-au")
+    print(f"Multilateral:  http://{BIND}:{PORT}/economics/proxy/multilateral/health")
     if FRED_API_KEY:
         print(f"FRED proxy:    api.stlouisfed.org (key loaded, {len(FRED_API_KEY)} chars)")
     else:
