@@ -1585,6 +1585,9 @@ function renderCard(meta, delay = 0) {
     </div>`;
 }
 const FETCH_TIMEOUT_MS = 12000;
+const FRED_FETCH_TIMEOUT_MS = 50000;
+const FRED_PROXY_MAX_CONCURRENT = 3;
+const FRED_PROXY_STAGGER_MS = 400;
 
 /** Set when hub/nginx returns HTTP 429 (limit_req on /economics/proxy/*). */
 let hubProxyRateLimited = false;
@@ -1621,6 +1624,15 @@ const proxyThrottle = (() => {
   return fn => new Promise((res, rej) => {
     const go = () => { active++; fn().then(res, rej).finally(() => { active--; queue.length && queue.shift()(); }); };
     active < 8 ? go() : queue.push(go);
+  });
+})();
+
+/** FRED upstream is slow — fewer concurrent hub proxy calls than Yahoo/Google. */
+const fredProxyThrottle = (() => {
+  let active = 0; const queue = [];
+  return fn => new Promise((res, rej) => {
+    const go = () => { active++; fn().then(res, rej).finally(() => { active--; queue.length && queue.shift()(); }); };
+    active < FRED_PROXY_MAX_CONCURRENT ? go() : queue.push(go);
   });
 })();
 
@@ -1684,8 +1696,7 @@ function localProxyUrl(target) {
     return `${base}/economics/proxy/yahoo?${p}`;
   }
   if (target.type === 'fred') {
-    const p = new URLSearchParams({ id: target.id, start: target.start });
-    return `${base}/economics/proxy/fred?${p}`;
+    return localFredProxyUrl(target.id, target.start);
   }
   if (target.type === 'google') {
     const p = new URLSearchParams({ path: target.path });
@@ -1755,8 +1766,8 @@ async function detectLocalProxy() {
 }
 
 function localFredProxyUrl(seriesId, start) {
-  const p = new URLSearchParams({ id: seriesId, start: start || '' });
-  return `${location.origin}/economics/proxy/fred?${p}`;
+  const startQ = encodeURIComponent(start || '2020-01-01');
+  return `${location.origin}/economics/proxy/fred?id=${encodeURIComponent(seriesId)}&start=${startQ}`;
 }
 
 function publicProxyUrls(canonicalUrl) {
@@ -2183,7 +2194,7 @@ async function fetchCommodity(item, force = false) {
       if (cached) return cached;
     }
     try {
-      const rows = await proxyThrottle(() => fetchFredSeriesRows(item.fredId, fredStartDate(5 * 365)));
+      const rows = await fredProxyThrottle(() => fetchFredSeriesRows(item.fredId, fredStartDate(VAL_FRED_CARD_LOOKBACK_DAYS)));
       if (!rows?.length) return null;
       const q = fredDailyQuoteFromRows(rows);
       if (!q) return null;
@@ -2324,7 +2335,7 @@ async function loadBondSpreadFred(force = false) {
   if (!force && bondSpreadFredPromise) return bondSpreadFredPromise;
   const start = fredStartDate(90);
   bondSpreadFredPromise = Promise.all(
-    BOND_SPREAD_FRED_IDS.map(async id => [id, await fetchFredSeriesRows(id, start)]),
+    BOND_SPREAD_FRED_IDS.map(id => fredProxyThrottle(async () => [id, await fetchFredSeriesRows(id, start)])),
   ).then(pairs => {
     const out = {};
     for (const [id, rows] of pairs) {
@@ -2840,10 +2851,14 @@ function fetchGdpCurrent(fred) {
   }, 'estimated', { estimated: true });
 }
 
-async function fetchFredSeriesRows(seriesId, start) {
+function fredProxyRetryableStatus(status) {
+  return status === 502 || status === 503 || status === 504;
+}
+
+async function fetchFredSeriesRows(seriesId, start, attempt = 0) {
   if (canUseHubFredProxy()) {
     try {
-      const r = await fetchWithTimeout(localFredProxyUrl(seriesId, start), {}, 60000);
+      const r = await fetchWithTimeout(localFredProxyUrl(seriesId, start), {}, FRED_FETCH_TIMEOUT_MS);
       if (r.ok) {
         const ct = r.headers.get('content-type') || '';
         const body = await r.text();
@@ -2851,8 +2866,18 @@ async function fetchFredSeriesRows(seriesId, start) {
         if (rows?.length) return rows;
       } else {
         noteHubHttpStatus(r.status);
+        if (attempt < 2 && fredProxyRetryableStatus(r.status)) {
+          await new Promise(res => setTimeout(res, 1200 * (attempt + 1)));
+          return fetchFredSeriesRows(seriesId, start, attempt + 1);
+        }
       }
-    } catch {}
+    } catch (err) {
+      if (attempt < 2) {
+        await new Promise(res => setTimeout(res, 1200 * (attempt + 1)));
+        return fetchFredSeriesRows(seriesId, start, attempt + 1);
+      }
+      console.warn('FRED proxy fetch failed', seriesId, err);
+    }
   }
   if (isHubEconomicsPage() && isHubHostname()) return null;
   const url = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=${seriesId}&observation_start=${start}`;
@@ -2919,12 +2944,12 @@ async function fetchValuationFredSeriesStaggered(lookbackDays) {
       : lookbackDays;
     const seriesStart = fredStartDate(lookback);
     try {
-      data[seriesId] = await proxyThrottle(() => fetchFredSeriesRows(seriesId, seriesStart));
+      data[seriesId] = await fredProxyThrottle(() => fetchFredSeriesRows(seriesId, seriesStart));
     } catch (err) {
       console.warn('FRED series fetch failed', seriesId, err);
       data[seriesId] = null;
     }
-    if (canUseHubFredProxy()) await new Promise(r => setTimeout(r, 220));
+    if (canUseHubFredProxy()) await new Promise(r => setTimeout(r, FRED_PROXY_STAGGER_MS));
   }
   return data;
 }
