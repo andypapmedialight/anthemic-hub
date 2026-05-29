@@ -168,10 +168,13 @@
   .trading-clock-countdown {
     margin-top: 2px;
     font-family: 'DM Mono', monospace;
-    font-size: 0.54rem;
-    letter-spacing: 0.04em;
-    color: var(--dim);
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: var(--gold);
   }
+  .trading-clock.open .trading-clock-countdown { color: var(--gold); }
+  .trading-clock.closed .trading-clock-countdown { color: #d4a84b; }
 
   @media (min-width: 720px) {
     .trading-clocks-bar {
@@ -266,6 +269,19 @@
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
+  }
+  .glance-cust-order-rows {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .sym-pill--label {
+    cursor: default;
+    pointer-events: none;
+    opacity: 1;
+    border-color: var(--border2);
+    color: var(--text);
+    background: var(--surface2);
   }
   @media (max-width: 600px) {
     .cards--glance {

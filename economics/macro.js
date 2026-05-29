@@ -461,15 +461,44 @@ function toggleOverviewRef(ref) {
   void loadOverviewItems(false);
 }
 
+function moveOverviewRef(sectionKey, itemKey, dir) {
+  if (!dir) return;
+  const ix = OVERVIEW_REFS.findIndex(r => r.sectionKey === sectionKey && r.itemKey === itemKey);
+  if (ix < 0) return;
+  const to = ix + dir;
+  if (to < 0 || to >= OVERVIEW_REFS.length) return;
+  const [ref] = OVERVIEW_REFS.splice(ix, 1);
+  OVERVIEW_REFS.splice(to, 0, ref);
+  saveOverviewRefs();
+  renderCustGlance();
+  renderGlanceGrid();
+}
+
 function renderCustGlance() {
   const el = document.getElementById('cust-glance');
   if (!el) return;
+  const parts = [];
+  if (OVERVIEW_REFS.length) {
+    parts.push(`<div class="glance-cust-group glance-cust-order">
+      <span class="glance-cust-label">Overview order</span>
+      <div class="glance-cust-order-rows">${OVERVIEW_REFS.map((ref, idx) => {
+    const resolved = resolveOverviewRef(ref);
+    const lbl = resolved?.item?.ticker || resolved?.item?.label || ref.itemKey;
+    const sectionName = getSectionName(ref.sectionKey);
+    return `<div class="sym-pill-row">
+      <span class="sym-pill sym-pill--label" title="${escapeHtml(sectionName)} · ${escapeHtml(lbl)}">${escapeHtml(lbl)}</span>
+      <button type="button" class="sym-move-btn" title="Move left" aria-label="Move ${escapeHtml(lbl)} left in overview"
+        data-overview-section="${escapeHtml(ref.sectionKey)}" data-overview-key="${escapeHtml(ref.itemKey)}" data-move-dir="-1"${idx === 0 ? ' disabled' : ''}>←</button>
+      <button type="button" class="sym-move-btn" title="Move right" aria-label="Move ${escapeHtml(lbl)} right in overview"
+        data-overview-section="${escapeHtml(ref.sectionKey)}" data-overview-key="${escapeHtml(ref.itemKey)}" data-move-dir="1"${idx === OVERVIEW_REFS.length - 1 ? ' disabled' : ''}>→</button>
+    </div>`;
+  }).join('')}</div></div>`);
+  }
   const bySection = new Map();
   for (const entry of buildOverviewCatalog()) {
     if (!bySection.has(entry.sectionKey)) bySection.set(entry.sectionKey, []);
     bySection.get(entry.sectionKey).push(entry);
   }
-  const parts = [];
   for (const sectionKey of OVERVIEW_PICKABLE_SECTIONS) {
     const entries = bySection.get(sectionKey);
     if (!entries?.length) continue;
@@ -5873,6 +5902,15 @@ function wireUi() {
     const pill = e.target.closest('.sym-pill');
     if (pill?.dataset.symKey) {
       toggleSym(pill.dataset.symKey, pill.dataset.sectionKey);
+      return;
+    }
+    const glanceMove = e.target.closest('[data-overview-section][data-overview-key][data-move-dir]');
+    if (glanceMove?.dataset.overviewSection) {
+      moveOverviewRef(
+        glanceMove.dataset.overviewSection,
+        glanceMove.dataset.overviewKey,
+        Number(glanceMove.dataset.moveDir || 0),
+      );
       return;
     }
     const moveBtn = e.target.closest('[data-move-key][data-move-dir]');
