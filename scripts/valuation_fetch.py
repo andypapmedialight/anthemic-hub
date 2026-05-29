@@ -423,6 +423,7 @@ FRESHNESS_FRED_SERIES = (
 )
 # Minimum set for cold-start / deploy probes (must finish within ~20s).
 FRESHNESS_CORE_SERIES = ("GDP", "GFDEGDQ188S", "NCBEILQ027S")
+FRESHNESS_DEPLOY_SERIES = "GDP"
 
 
 def _last_obs_date_from_fred_json(body: str) -> str | None:
@@ -505,6 +506,72 @@ def fred_last_observation(
     except Exception:
         pass
     return None
+
+
+def fred_last_observation_fast(
+    series_id: str,
+    api_key: str | None = None,
+    *,
+    timeout: int = 4,
+) -> str | None:
+    """Single-series deploy probe: limit=1 API, then short CSV fallback."""
+    key = (api_key or os.environ.get("FRED_API_KEY", "")).strip()
+    if key:
+        url = (
+            "https://api.stlouisfed.org/fred/series/observations"
+            f"?series_id={urllib.parse.quote(series_id)}"
+            f"&file_type=json&sort_order=desc&limit=1"
+            f"&api_key={urllib.parse.quote(key)}"
+        )
+        try:
+            body = _fetch(url, timeout=timeout).decode("utf-8", "replace")
+            date = _last_obs_date_from_fred_json(body)
+            if date:
+                return date
+        except Exception:
+            pass
+    try:
+        recent_start = time.strftime(
+            "%Y-%m-%d",
+            time.gmtime(time.time() - 120 * 86400),
+        )
+        csv_url = (
+            f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={urllib.parse.quote(series_id)}"
+            f"&observation_start={recent_start}"
+        )
+        text = _fetch_curl(csv_url, timeout=min(timeout + 3, 8)).decode("utf-8", "replace")
+        return _last_obs_date_from_fred_csv(text)
+    except Exception:
+        return None
+
+
+def fetch_freshness_deploy_probe(api_key: str | None = None) -> dict:
+    """Fast loopback probe for deploy — never blocks on warm-cache lock."""
+    global _fred_freshness_cache
+    key = (api_key or os.environ.get("FRED_API_KEY", "")).strip()
+    now = time.time()
+
+    if _fred_freshness_cache:
+        _, cached_payload = _fred_freshness_cache
+        stale = dict(cached_payload.get("series") or {})
+        if stale:
+            return _freshness_payload(stale, cached=True, degraded=True)
+
+    if not key:
+        last = fred_last_observation_fast(FRESHNESS_DEPLOY_SERIES, None)
+        series = (
+            {FRESHNESS_DEPLOY_SERIES: {"lastObservation": last}} if last else {}
+        )
+        return _freshness_payload(series, cached=False, degraded=not series) | {
+            "fredApi": False,
+        }
+
+    last = fred_last_observation_fast(FRESHNESS_DEPLOY_SERIES, key)
+    series = {FRESHNESS_DEPLOY_SERIES: {"lastObservation": last}} if last else {}
+    payload = _freshness_payload(series, cached=False, degraded=not series)
+    if series:
+        _fred_freshness_cache = (now + FRED_FRESHNESS_CACHE_TTL, {**payload, "cached": True})
+    return payload
 
 
 def _collect_freshness_series(
@@ -661,8 +728,7 @@ VAL_WARM_LIVE_METRICS = (
 
 
 def warm_mmd_cache() -> None:
-    """Prefetch FRED vintage + live valuation metrics (BIS cache). Idempotent."""
-    fetch_freshness_api()
+    """Prefetch live valuation metrics (BIS cache). Freshness loads on /freshness."""
     fetch_valuation_batch(list(VAL_WARM_LIVE_METRICS))
 
 

@@ -15,6 +15,7 @@ if _SCRIPTS not in sys.path:
 from valuation_fetch import (  # noqa: E402
     METRICS,
     fetch_freshness_api,
+    fetch_freshness_deploy_probe,
     fetch_valuation_batch,
     fetch_valuation_metric,
     warm_mmd_cache,
@@ -40,6 +41,10 @@ class ValuationHandler(BaseHTTPRequestHandler):
             return
         if path == "/freshness":
             qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+            deploy = qs.get("deploy", [""])[0].strip().lower() in ("1", "true", "yes")
+            if deploy:
+                self._json(fetch_freshness_deploy_probe())
+                return
             force = qs.get("force", [""])[0].strip().lower() in ("1", "true", "yes")
             core_only = qs.get("core", [""])[0].strip().lower() in ("1", "true", "yes")
             self._json(fetch_freshness_api(force=force, core_only=core_only))

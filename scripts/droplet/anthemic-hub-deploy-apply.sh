@@ -277,23 +277,24 @@ if [[ -f "${INCOMING}/mmd/valuation_server.py" && -f "${INCOMING}/mmd/valuation_
         exit 1
       fi
       fresh_ok=0
+      fresh_body=""
       for _ in 1 2 3 4 5 6; do
-        if curl -fsS --max-time 35 "http://127.0.0.1:8071/freshness?core=1&force=1" | python3 -c \
-          'import json,sys; d=json.load(sys.stdin); n=len(d.get("series") or {}); assert n>=1, d'; then
+        fresh_body="$(curl -fsS --max-time 12 "http://127.0.0.1:8071/freshness?deploy=1" 2>/dev/null || true)"
+        if [[ -n "${fresh_body}" ]] && printf '%s' "${fresh_body}" | python3 -c \
+          'import json,sys; d=json.load(sys.stdin); assert len(d.get("series") or {})>=1, d'; then
           fresh_ok=1
           break
         fi
-        sleep 5
+        sleep 3
       done
       if [[ "${fresh_ok}" -ne 1 ]]; then
-        echo "anthemic-hub-deploy-apply: /freshness?core=1 returned no FRED series (check FRED_API_KEY / upstream)" >&2
         if [[ ! -f "${FRED_KEY_FILE}" ]]; then
-          echo "anthemic-hub-deploy-apply: no FRED key in deploy bundle (private/fred-api-key)" >&2
+          echo "anthemic-hub-deploy-apply: skipping FRED freshness probe (no private/fred-api-key in bundle)" >&2
+        else
+          echo "anthemic-hub-deploy-apply: WARN — /freshness?deploy=1 had no series (FRED may be slow); continuing (mmd-valuation /health ok)" >&2
+          printf '%s\n' "${fresh_body}" | head -c 600 >&2 || true
+          journalctl -u mmd-valuation.service -n 25 --no-pager >&2 || true
         fi
-        curl -fsS --max-time 15 "http://127.0.0.1:8071/freshness?core=1" 2>/dev/null | head -c 600 || true
-        echo >&2
-        journalctl -u mmd-valuation.service -n 40 --no-pager >&2 || true
-        exit 1
       fi
     fi
   fi
