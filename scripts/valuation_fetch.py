@@ -424,6 +424,7 @@ def fred_last_observation(
     api_key: str | None = None,
     *,
     force: bool = False,
+    timeout: int = 12,
 ) -> str | None:
     """Latest non-missing FRED observation date (YYYY-MM-DD)."""
     key = (api_key or os.environ.get("FRED_API_KEY", "")).strip()
@@ -441,7 +442,7 @@ def fred_last_observation(
         f"&api_key={urllib.parse.quote(key)}"
     )
     try:
-        body = _fetch(url, timeout=12).decode("utf-8", "replace")
+        body = _fetch(url, timeout=timeout).decode("utf-8", "replace")
         payload = json.loads(body)
         obs = payload.get("observations") or []
         if obs and obs[0].get("date"):
@@ -464,20 +465,41 @@ def fetch_freshness_api(api_key: str | None = None, *, force: bool = False) -> d
         expires, payload = _fred_freshness_cache
         if now < expires:
             return payload
-    series: dict[str, dict] = {}
+
+    stale_series: dict[str, dict] = {}
+    if _fred_freshness_cache:
+        _, stale_payload = _fred_freshness_cache
+        stale_series = dict(stale_payload.get("series") or {})
+
+    series: dict[str, dict] = dict(stale_series)
     if key:
-        for sid in FRESHNESS_FRED_SERIES:
-            last = fred_last_observation(sid, key, force=force)
-            if last:
-                series[sid] = {"lastObservation": last}
+        def _fetch_one(sid: str) -> tuple[str, str | None]:
+            last = fred_last_observation(sid, key, force=force, timeout=8)
+            return sid, last
+
+        with ThreadPoolExecutor(max_workers=6) as pool:
+            futures = [pool.submit(_fetch_one, sid) for sid in FRESHNESS_FRED_SERIES]
+            try:
+                for fut in as_completed(futures, timeout=22):
+                    sid, last = fut.result()
+                    if last:
+                        series[sid] = {"lastObservation": last}
+            except TimeoutError:
+                pass
+
     payload = {
         "fredApi": bool(key),
         "series": series,
         "generatedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "cached": False,
+        "degraded": False,
     }
-    if key:
+    if key and series:
         _fred_freshness_cache = (now + FRED_FRESHNESS_CACHE_TTL, {**payload, "cached": True})
+    elif key and stale_series:
+        payload["series"] = stale_series
+        payload["cached"] = True
+        payload["degraded"] = True
     return payload
 
 
