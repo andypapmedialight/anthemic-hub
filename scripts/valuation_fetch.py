@@ -433,7 +433,7 @@ def fetch_bis_au_turnover() -> dict:
 
 
 def fetch_au_cgs() -> dict:
-    """Australian government debt securities on issue (BIS debt securities, AUD billions)."""
+    """Australian general government debt securities on issue (BIS, AUD billions)."""
     text = _fetch(BIS_DEBT_AU, timeout=90).decode("utf-8", "replace")
     rows = _parse_csv(text)
     candidates = [
@@ -442,14 +442,14 @@ def fetch_au_cgs() -> dict:
         if r.get("REF_AREA") == "AU"
         and r.get("INSTR_ASSET") == "F3"
         and r.get("ACCOUNTING_ENTRY") == "L"
-        and r.get("REF_SECTOR") == "S12"
+        and r.get("REF_SECTOR") == "S13"
         and r.get("UNIT_MEASURE") == "AUD"
         and r.get("STO") == "LE"
         and r.get("COUNTERPART_AREA") == "XW"
         and r.get("CURRENCY_DENOM") == "_T"
         and r.get("CUST_BREAKDOWN") == "_T"
         and r.get("CONSOLIDATION") == "N"
-        and r.get("MATURITY") == "S"
+        and r.get("MATURITY") == "T"
     ]
     if not candidates:
         raise RuntimeError("BIS AU debt row not found")

@@ -725,8 +725,8 @@ const VALUATION = [
   { id: 'public-debt',  label: 'US Public Debt',    ticker: 'PUB', def: true  },
   { id: 'private-debt', label: 'US Private Debt',   ticker: 'PRV', def: true  },
   { id: 'au-gdp',       label: 'AU GDP',            ticker: 'A-GDP', def: true  },
-  { id: 'au-public-debt',  label: 'AU Public Debt',  ticker: 'A-PUB', def: true  },
-  { id: 'au-private-debt', label: 'AU Private Debt', ticker: 'A-PRV', def: true  },
+  { id: 'au-public-debt',  label: 'AU General Govt Credit', ticker: 'A-GOV', def: true  },
+  { id: 'au-private-debt', label: 'AU Private Credit', ticker: 'A-PRV', def: true  },
   // Futures / leverage (live via hub /economics/proxy/valuation)
   {
     id: 'margin-debt',
@@ -779,8 +779,8 @@ const VALUATION = [
     label: 'AU Govt Securities',
     ticker: 'CGS',
     def: false,
-    fallbackDisplay: 'A$489B',
-    sublabel: 'Commonwealth bonds on issue',
+    fallbackDisplay: 'A$943B',
+    sublabel: 'General government debt securities (BIS, ≈ gross AGS)',
     lines: [
       ['Market', 'Physical AU debt stock'],
       ['Futures', '3Y & 10Y ASX bond contracts'],
@@ -1443,15 +1443,15 @@ function valuationCardInfo(item) {
       formula: 'AU GDP (A$B) = NGDPSAXDCAUQ / 1000',
     },
     'au-public-debt': {
-      summary: 'Australian general government credit as a percent of GDP (BIS, break-adjusted).',
-      derived: 'BIS % of GDP with estimated AUD level from aligned nominal GDP (ratio × GDP).',
-      data: 'FRED QAUGAN770A (% of GDP, quarterly) · NGDPSAXDCAUQ (GDP, quarterly).',
+      summary: 'BIS credit to the Australian general government sector as % of GDP — federal, state, territory, and local combined (SNA definition).',
+      derived: 'Not the same as Commonwealth gross or net debt from Treasury/AOFM. Level (A$) from FRED QAUGANXDCA when available, else ratio × nominal GDP.',
+      data: 'FRED QAUGAN770A (% GDP) · QAUGANXDCA (A$ billions) · NGDPSAXDCAUQ (GDP).',
       sourceHtml: infoLink('FRED / BIS', fred),
-      formula: 'Est. AUD = (% of GDP ÷ 100) × AU nominal GDP (A$B)',
+      formula: 'Compare: Treasury gross AGS face value ~A$960B; net debt ~A$540B; broader public sector GFS liabilities can exceed A$1.6T.',
     },
     'au-private-debt': {
-      summary: 'Australian private non-financial sector credit as a percent of GDP.',
-      derived: 'BIS % of GDP with estimated AUD level from aligned nominal GDP (ratio × GDP).',
+      summary: 'BIS credit to the Australian private non-financial sector (households, firms, NPISHs) as % of GDP.',
+      derived: 'Loans and debt securities from banks and other lenders — not government debt. Estimated A$ level from ratio × nominal GDP.',
       data: 'FRED QAUPAM770A (% of GDP, quarterly) · NGDPSAXDCAUQ (GDP, quarterly).',
       sourceHtml: infoLink('FRED / BIS', fred),
       formula: 'Est. AUD = (% of GDP ÷ 100) × AU nominal GDP (A$B)',
@@ -1478,10 +1478,10 @@ function valuationCardInfo(item) {
       formula: 'Card ≈ sum/avg of BIS GMV buckets (USD).',
     },
     'au-cgs': {
-      summary: 'Australian Commonwealth government securities on issue — physical government bond stock (AUD).',
-      derived: 'BIS debt securities statistics, Australia general government bonds (latest vs prior observation).',
-      data: 'BIS WS_NA_SEC_DSS, AUD billions.',
-      sourceHtml: `${infoLink('BIS', 'https://data.bis.org/')} · hub proxy`,
+      summary: 'Australian general government debt securities on issue (BIS, market value, AUD).',
+      derived: 'Closest dashboard proxy to Commonwealth gross AGS face value (~A$960B). Excludes net-debt asset offsets (~A$540B net) and non-security liabilities.',
+      data: 'BIS WS_NA_SEC_DSS — REF_SECTOR S13 (general government), MATURITY T (all maturities), AUD billions.',
+      sourceHtml: `${infoLink('BIS', 'https://data.bis.org/')} · ${infoLink('AOFM', 'https://www.aofm.gov.au/')} · hub proxy`,
       formula: changeFormulaeBlurb('usd').replace('USD', 'AUD'),
     },
     'asx-bond-fut': {
@@ -2628,6 +2628,8 @@ const FRED_PUBLIC_DEBT_LEVEL_SERIES = 'GFDEBTN';
 const FRED_GDP_NOWCAST_SERIES = 'GDPNOW';
 /** BIS govt credit % GDP (quarterly). IMF GGGDTAAUA188N is annual and lags ~1y on FRED. */
 const FRED_AU_PUBLIC_DEBT_SERIES = 'QAUGAN770A';
+const FRED_AU_PUBLIC_DEBT_LEVEL_SERIES = 'QAUGANXDCA';
+const FRED_AU_PRIVATE_DEBT_SERIES = 'QAUPAM770A';
 const BOND_SPREAD_FRED_IDS = ['DGS2', 'DGS10'];
 let BOND_SPREAD_FRED = null;
 let bondSpreadFredPromise = null;
@@ -2817,11 +2819,11 @@ function fetchAuPublicDebtCurrent(fred) {
   const rows = fred[FRED_AU_PUBLIC_DEBT_SERIES];
   const quote = quoteFromPercentRows(rows, 'quarterly');
   const ratioDate = latestFredRow(rows)?.date;
-  return attachAuDebtLevel(quote, fred, ratioDate);
+  return attachAuDebtLevel(quote, fred, ratioDate, FRED_AU_PUBLIC_DEBT_LEVEL_SERIES);
 }
 
 function fetchAuPrivateDebtCurrent(fred) {
-  const rows = fred.QAUPAM770A;
+  const rows = fred[FRED_AU_PRIVATE_DEBT_SERIES];
   const quote = quoteFromPercentRows(rows, 'quarterly');
   const ratioDate = latestFredRow(rows)?.date;
   return attachAuDebtLevel(quote, fred, ratioDate);
@@ -2873,10 +2875,16 @@ function pickAuGdpBillionsForDebt(fred, ratioDate) {
   return row ? row.v / 1000 : null;
 }
 
-function attachAuDebtLevel(quote, fred, ratioDate) {
+function attachAuDebtLevel(quote, fred, ratioDate, levelSeriesId = null) {
   if (!quote || quote.price == null) return quote;
+  const levelRow = levelSeriesId
+    ? latestFredRowOnOrBefore(fred[levelSeriesId], ratioDate)
+    : null;
+  let audBillions = levelRow?.v ?? null;
   const gdpBillions = pickAuGdpBillionsForDebt(fred, ratioDate);
-  const audBillions = gdpBillions != null ? (quote.price / 100) * gdpBillions : null;
+  if (audBillions == null && gdpBillions != null) {
+    audBillions = (quote.price / 100) * gdpBillions;
+  }
   const gdpRow = latestFredRowOnOrBefore(fred.NGDPSAXDCAUQ, ratioDate);
   return {
     ...quote,
@@ -2884,6 +2892,7 @@ function attachAuDebtLevel(quote, fred, ratioDate) {
     debtEstMeta: {
       gdpDate: gdpRow?.date || ratioDate || null,
       ratioDate: ratioDate || null,
+      levelSource: levelRow ? levelSeriesId : (gdpBillions != null ? 'ratio×gdp' : null),
     },
   };
 }
@@ -3120,11 +3129,11 @@ async function fetchFredSeriesRows(seriesId, start, attempt = 0, limit = null) {
   return txt ? parseFredCsvRows(txt) : null;
 }
 
-const VAL_FRED_IDS = ['GDP', FRED_GDP_NOWCAST_SERIES, 'NCBEILQ027S', 'GFDEGDQ188S', 'GFDEBTN', 'TCMDO', 'FGSDODNS', 'NGDPSAXDCAUQ', FRED_AU_PUBLIC_DEBT_SERIES, 'QAUPAM770A'];
+const VAL_FRED_IDS = ['GDP', FRED_GDP_NOWCAST_SERIES, 'NCBEILQ027S', 'GFDEGDQ188S', 'GFDEBTN', 'TCMDO', 'FGSDODNS', 'NGDPSAXDCAUQ', FRED_AU_PUBLIC_DEBT_SERIES, FRED_AU_PUBLIC_DEBT_LEVEL_SERIES, FRED_AU_PRIVATE_DEBT_SERIES];
 const VAL_FRED_MONTHLY_IDS = [FRED_TREASURY_MV_SERIES];
 const VAL_FRED_QUARTERLY_IDS = new Set([
   'GDP', 'NCBEILQ027S', 'GFDEGDQ188S', 'GFDEBTN', 'TCMDO', 'FGSDODNS',
-  'NGDPSAXDCAUQ', FRED_AU_PUBLIC_DEBT_SERIES, 'QAUPAM770A',
+  'NGDPSAXDCAUQ', FRED_AU_PUBLIC_DEBT_SERIES, FRED_AU_PUBLIC_DEBT_LEVEL_SERIES, FRED_AU_PRIVATE_DEBT_SERIES,
 ]);
 /** Minimum FRED series required before caching or showing valuation ratios. */
 const VAL_FRED_REQUIRED_IDS = ['GDP', 'NCBEILQ027S'];
@@ -3527,10 +3536,13 @@ function collectCardMetas(section, items) {
       } else if (item.id === 'au-public-debt' || item.id === 'au-private-debt') {
         isRatio = true;
         price = formatRatioPrice(d, 1);
-        extra = valuationAudExtra('Est. (AUD)', d?.audBillions);
+        const audLabel = d?.debtEstMeta?.levelSource === FRED_AU_PUBLIC_DEBT_LEVEL_SERIES
+          ? 'Level (AUD)'
+          : 'Est. (AUD)';
+        extra = valuationAudExtra(audLabel, d?.audBillions);
         extra += debtRatioExtraHtml(d);
         extra += `<div class="yield-extra"><span class="spread-label">Measure</span>
-          <span class="spread-val buffett-fair">% of GDP (est.)</span></div>`;
+          <span class="spread-val buffett-fair">% of GDP · BIS credit</span></div>`;
       } else {
         isRatio = true;
         price = formatRatioPrice(d, 1);
@@ -5732,7 +5744,7 @@ async function fetchValuationHistory(metricId, days) {
   } else if (metricId === 'au-public-debt') {
     series = fred[FRED_AU_PUBLIC_DEBT_SERIES]?.map(r => ({ t: new Date(r.date).getTime(), v: r.v })) ?? null;
   } else if (metricId === 'au-private-debt') {
-    series = fred.QAUPAM770A?.map(r => ({ t: new Date(r.date).getTime(), v: r.v })) ?? null;
+    series = fred[FRED_AU_PRIVATE_DEBT_SERIES]?.map(r => ({ t: new Date(r.date).getTime(), v: r.v })) ?? null;
   }
 
   series = sliceSeriesForChart(series, days);
