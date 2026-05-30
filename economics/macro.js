@@ -1706,7 +1706,7 @@ function renderCard(meta, delay = 0) {
   const mainInner = `
       <div class="card-ticker">${escapeHtml(meta.ticker)}</div>
       ${venueLine}
-      <div class="card-name">${escapeHtml(meta.label)}</div>
+      <div class="card-name" title="${escapeHtml(meta.label)}">${escapeHtml(meta.label)}</div>
       <div class="card-price">${priceStr}</div>
       <div class="card-change">
         ${freshnessPill

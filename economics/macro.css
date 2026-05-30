@@ -433,9 +433,14 @@
     font-weight: 600;
     color: var(--text);
     margin-bottom: 0.6rem;
-    white-space: nowrap;
+    padding-right: 2.75rem;
+    line-height: 1.25;
+    min-height: 2.5em;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
     overflow: hidden;
-    text-overflow: ellipsis;
+    overflow-wrap: anywhere;
   }
 
   .card-price {
