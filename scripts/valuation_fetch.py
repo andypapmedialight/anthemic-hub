@@ -165,9 +165,14 @@ def format_usd_trillions(millions: float) -> str:
 
 
 def format_aud_billions(billions: float) -> str:
-    if billions >= 100:
+    abs_b = abs(billions)
+    if abs_b >= 1000:
+        return f"A${billions / 1000:.2f}T"
+    if abs_b >= 100:
         return f"A${billions:.0f}B"
-    return f"A${billions:.1f}B"
+    if abs_b >= 1:
+        return f"A${billions:.1f}B"
+    return f"A${billions * 1000:.0f}M"
 
 
 def format_usd_billions_from_millions(millions: float) -> str:

@@ -2052,9 +2052,8 @@ function formatPointsChange(change, baseDp = 2) {
 function formatAudChange(changeBillions) {
   if (changeBillions == null || Number.isNaN(changeBillions)) return '';
   const v = Number(changeBillions);
-  const abs = Math.abs(v);
-  const body = abs >= 100 ? `A$${abs.toFixed(0)}B` : `A$${abs.toFixed(1)}B`;
-  return `${sign(v)}${body}`;
+  const body = formatAudCompact(Math.abs(v));
+  return body ? `${sign(v)}${body}` : '';
 }
 
 function formatAudCompact(billions) {
@@ -3498,17 +3497,18 @@ function collectCardMetas(section, items) {
 
       if (item.api) {
         const d = DATA[item.id];
-        const display = d?.display || item.fallbackDisplay || '–';
         let change = d?.change ?? null;
         let isUsd = false;
         let isAud = false;
         if (item.id === 'margin-debt' && change != null) {
           isUsd = true;
           change = change / 1000;
-        } else if (item.id === 'au-cgs' && change != null) {
+        } else if (item.id === 'au-cgs' || item.id === 'au-gdp') {
           isAud = true;
-        } else if (item.id === 'au-gdp') {
-          isAud = true;
+        }
+        let display = d?.display || item.fallbackDisplay || '–';
+        if (isAud && d?.price != null) {
+          display = formatAudCompact(d.price) || display;
         }
         const asOfUtc = d?.asOfUtc ?? parseReferencePeriodUtc(d?.asOf);
         const hubLive = d && !d.fallback && (d.live || d.display);
