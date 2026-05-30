@@ -307,6 +307,8 @@ function formatObservationPeriod(meta) {
   if (period && typeof period === 'string') {
     const s = period.trim();
     if (/^\d{4}$/.test(s)) return s;
+    const qLabel = s.match(/^(\d{4})-Q([1-4])$/i);
+    if (qLabel) return `Q${qLabel[2]} ${qLabel[1]}`;
     const ym = s.match(/^(\d{4})-(\d{2})$/);
     if (ym) {
       const d = new Date(Date.UTC(parseInt(ym[1], 10), parseInt(ym[2], 10) - 1, 1));
@@ -1068,6 +1070,12 @@ function parseReferencePeriodUtc(period) {
   if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
     const t = Date.parse(`${s}T00:00:00Z`);
     return Number.isNaN(t) ? null : t;
+  }
+  const qEnd = s.match(/^(\d{4})-Q([1-4])$/i);
+  if (qEnd) {
+    const y = parseInt(qEnd[1], 10);
+    const endMonth = parseInt(qEnd[2], 10) * 3;
+    return Date.UTC(y, endMonth, 0, 0, 0, 0);
   }
   if (/^\d{4}$/.test(s)) return Date.UTC(parseInt(s, 10), 11, 31, 0, 0, 0);
   return null;
@@ -2929,6 +2937,12 @@ function valuationReferenceExtra(item, live = null, asOfUtc = null) {
     html += `<div class="yield-extra"><span class="spread-label">Breakdown</span>
       <span class="spread-val">TB ${formatAudCompact(m.tbBillions)} · TIB ${formatAudCompact(m.tibBillions)} · T-Notes ${formatAudCompact(m.tnotesBillions)}</span></div>`;
   }
+  if (live?.gdpMeta?.quarterlyBillions?.length === 4) {
+    const m = live.gdpMeta;
+    const parts = m.quarters.map((p, i) => `${formatAudCompact(m.quarterlyBillions[i])} (${p})`);
+    html += `<div class="yield-extra"><span class="spread-label">Quarters</span>
+      <span class="spread-val">${escapeHtml(parts.join(' · '))}</span></div>`;
+  }
   if (item.source || live?.source) {
     const src = item.href
       ? `<a class="val-ref-link" href="${item.href}" target="_blank" rel="noopener noreferrer">${escapeHtml(live?.source || item.source)}</a>`
@@ -2948,7 +2962,7 @@ function normalizeValuationLiveRow(data) {
   const kind = data.freshnessKind || 'live';
   return attachFreshness({
     ...data,
-    live: kind === 'live',
+    live: true,
     asOfUtc: data.asOfUtc ?? parseReferencePeriodUtc(data.asOf),
   }, kind, { note: data.freshnessNote || (data.source ? String(data.source) : 'Hub valuation') });
 }
@@ -3497,6 +3511,7 @@ function collectCardMetas(section, items) {
           isAud = true;
         }
         const asOfUtc = d?.asOfUtc ?? parseReferencePeriodUtc(d?.asOf);
+        const hubLive = d && !d.fallback && (d.live || d.display);
         return {
           ticker: item.ticker,
           label: item.label,
@@ -3505,18 +3520,20 @@ function collectCardMetas(section, items) {
           pct: d?.pct ?? null,
           isUsd,
           isAud,
+          asOf: d?.asOf ?? null,
           asOfUtc,
           freshnessKind: d?.freshnessKind ?? (d?.live ? 'live' : d?.fallback ? 'reference' : 'daily'),
           freshnessNote: d?.freshnessNote ?? null,
+          pillLabel: item.id === 'au-gdp' && d?.freshnessKind === 'annual' ? 'Annual' : null,
           live: d?.live,
           fallback: d?.fallback,
-          extra: valuationReferenceExtra(item, d?.live ? d : null, asOfUtc),
+          extra: valuationReferenceExtra(item, hubLive ? d : null, asOfUtc),
           itemKey: item.id,
           sectionKey: section.key,
           failed: false,
           noChart: true,
           cardClassExtra: 'card--reference',
-          showCardAsOf: Boolean(asOfUtc),
+          showCardAsOf: Boolean(asOfUtc || d?.asOf),
         };
       }
 

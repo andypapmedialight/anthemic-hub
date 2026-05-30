@@ -266,6 +266,30 @@ def _fetch_fred_au_gdp_quarters() -> list[tuple[str, float]]:
     return out
 
 
+def _quarter_label_from_period(period: str) -> str | None:
+    m = re.match(r"^(\d{4})-(\d{2})$", period)
+    if not m:
+        return None
+    month = int(m.group(2))
+    q = {1: 1, 3: 1, 4: 2, 6: 2, 7: 3, 9: 3, 10: 4, 12: 4}.get(month)
+    if not q:
+        return None
+    return f"{m.group(1)}-Q{q}"
+
+
+def _quarter_end_utc_ms(label: str) -> int | None:
+    m = re.match(r"^(\d{4})-Q([1-4])$", label, re.I)
+    if not m:
+        return None
+    year = int(m.group(1))
+    end_month = int(m.group(2)) * 3
+    if end_month == 12:
+        end = datetime(year, 12, 31, tzinfo=timezone.utc)
+    else:
+        end = datetime(year, end_month + 1, 1, tzinfo=timezone.utc) - timedelta(days=1)
+    return int(end.timestamp() * 1000)
+
+
 def fetch_au_gdp_annual() -> dict:
     """Nominal GDP — annual sum of last 4 quarters (ABS preferred, IMF/FRED fallback)."""
     cached = _cache_get("aus:gdp", CACHE_TTL_ABS)
@@ -288,15 +312,18 @@ def fetch_au_gdp_annual() -> dict:
     prev_annual = sum(v for _, v in prev_window) if len(prev_window) == 4 else None
     q = quote_from_pair(annual, prev_annual)
     last_period = window[-1][0]
+    as_of = _quarter_label_from_period(last_period) or last_period
     card = {
         **q,
         "display": format_aud_billions(annual),
-        "asOf": last_period,
-        "asOfUtc": int(datetime.strptime(f"{last_period}-01", "%Y-%m-%d").replace(tzinfo=timezone.utc).timestamp() * 1000)
+        "asOf": as_of,
+        "asOfUtc": _quarter_end_utc_ms(as_of)
+        if re.match(r"\d{4}-Q[1-4]", as_of, re.I)
+        else int(datetime.strptime(f"{last_period}-01", "%Y-%m-%d").replace(tzinfo=timezone.utc).timestamp() * 1000)
         if re.match(r"\d{4}-\d{2}", last_period)
         else None,
         "source": source,
-        "freshnessKind": "quarterly",
+        "freshnessKind": "annual",
         "freshnessNote": "Annual nominal (sum of last 4 qtrs)",
         "gdpMeta": {
             "quarters": [p for p, _ in window],
