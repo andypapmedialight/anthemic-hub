@@ -433,7 +433,24 @@ def fetch_bis_au_turnover() -> dict:
 
 
 def fetch_au_cgs() -> dict:
-    """Australian general government debt securities on issue (BIS, AUD billions)."""
+    """Commonwealth AGS face value (AOFM monthly positions)."""
+    from aus_fetch import fetch_aofm_ags_face
+
+    try:
+        return fetch_aofm_ags_face()
+    except Exception:
+        return _fetch_au_cgs_bis_fallback()
+
+
+def fetch_au_gdp() -> dict:
+    """Nominal GDP annual (ABS preferred; IMF/FRED fallback)."""
+    from aus_fetch import fetch_au_gdp_annual
+
+    return fetch_au_gdp_annual()
+
+
+def _fetch_au_cgs_bis_fallback() -> dict:
+    """Legacy BIS debt securities (used only if AOFM fetch fails)."""
     text = _fetch(BIS_DEBT_AU, timeout=90).decode("utf-8", "replace")
     rows = _parse_csv(text)
     candidates = [
@@ -809,6 +826,7 @@ VAL_WARM_LIVE_METRICS = (
     "otc-notional",
     "otc-gmv",
     "au-cgs",
+    "au-gdp",
     "asx-bond-fut",
 )
 
@@ -823,6 +841,7 @@ METRICS = {
     "otc-notional": fetch_bis_otc_notional,
     "otc-gmv": fetch_bis_otc_gmv,
     "au-cgs": fetch_au_cgs,
+    "au-gdp": fetch_au_gdp,
     "asx-bond-fut": fetch_bis_au_turnover,
 }
 

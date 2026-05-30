@@ -242,6 +242,9 @@ mkdir -p "${MMD_OPT}"
 if [[ -f "${INCOMING}/mmd/valuation_server.py" && -f "${INCOMING}/mmd/valuation_fetch.py" ]]; then
   install -o root -g root -m 644 "${INCOMING}/mmd/valuation_fetch.py" "${MMD_OPT}/valuation_fetch.py"
   install -o root -g root -m 755 "${INCOMING}/mmd/valuation_server.py" "${MMD_OPT}/valuation_server.py"
+  if [[ -f "${INCOMING}/mmd/aus_fetch.py" ]]; then
+    install -o root -g root -m 644 "${INCOMING}/mmd/aus_fetch.py" "${MMD_OPT}/aus_fetch.py"
+  fi
   if [[ -f "${INCOMING}/mmd/multilateral_fetch.py" ]]; then
     install -o root -g root -m 644 "${INCOMING}/mmd/multilateral_fetch.py" "${MMD_OPT}/multilateral_fetch.py"
   fi

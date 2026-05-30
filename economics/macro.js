@@ -724,7 +724,7 @@ const VALUATION = [
   { id: 'us-gdp',       label: 'US GDP',            ticker: 'GDP', def: true  },
   { id: 'public-debt',  label: 'US Public Debt',    ticker: 'PUB', def: true  },
   { id: 'private-debt', label: 'US Private Debt',   ticker: 'PRV', def: true  },
-  { id: 'au-gdp',       label: 'AU GDP',            ticker: 'A-GDP', def: true  },
+  { id: 'au-gdp',       label: 'AU GDP',            ticker: 'A-GDP', def: true, api: 'au-gdp' },
   { id: 'au-public-debt',  label: 'AU General Govt Credit', ticker: 'A-GOV', def: true  },
   { id: 'au-private-debt', label: 'AU Private Credit', ticker: 'A-PRV', def: true  },
   // Futures / leverage (live via hub /economics/proxy/valuation)
@@ -779,8 +779,8 @@ const VALUATION = [
     label: 'AU Govt Securities',
     ticker: 'CGS',
     def: false,
-    fallbackDisplay: 'A$943B',
-    sublabel: 'General government debt securities (BIS, ≈ gross AGS)',
+    fallbackDisplay: 'A$966B',
+    sublabel: 'AOFM AGS face value (TB + TIB + T-Notes)',
     lines: [
       ['Market', 'Physical AU debt stock'],
       ['Futures', '3Y & 10Y ASX bond contracts'],
@@ -1436,11 +1436,11 @@ function valuationCardInfo(item) {
       formula: 'Private debt % GDP = ((TCMDO − FGSDODNS) / 1000) / GDP × 100',
     },
     'au-gdp': {
-      summary: 'Australian nominal gross domestic product — total current-price output of the Australian economy.',
-      derived: 'Latest quarterly nominal GDP from FRED IMF series, displayed in billions of AUD.',
-      data: 'FRED NGDPSAXDCAUQ (millions of domestic currency).',
-      sourceHtml: infoLink('FRED / IMF', fred),
-      formula: 'AU GDP (A$B) = NGDPSAXDCAUQ / 1000',
+      summary: 'Australian nominal GDP — annual total (sum of last four published quarters).',
+      derived: 'Primary: ABS National Accounts via Data API when reachable. Fallback: IMF/FRED NGDPSAXDCAUQ (same 4-quarter sum).',
+      data: 'ABS ANA_AGG (preferred) · FRED NGDPSAXDCAUQ (fallback). Billions AUD.',
+      sourceHtml: `${infoLink('ABS', 'https://www.abs.gov.au/statistics/economy/national-accounts')} · ${infoLink('FRED / IMF', fred)}`,
+      formula: 'Annual GDP (A$B) = sum of last 4 quarterly nominal GDP prints',
     },
     'au-public-debt': {
       summary: 'BIS credit to the Australian general government sector as % of GDP — federal, state, territory, and local combined (SNA definition).',
@@ -1478,10 +1478,10 @@ function valuationCardInfo(item) {
       formula: 'Card ≈ sum/avg of BIS GMV buckets (USD).',
     },
     'au-cgs': {
-      summary: 'Australian general government debt securities on issue (BIS, market value, AUD).',
-      derived: 'Closest dashboard proxy to Commonwealth gross AGS face value (~A$960B). Excludes net-debt asset offsets (~A$540B net) and non-security liabilities.',
-      data: 'BIS WS_NA_SEC_DSS — REF_SECTOR S13 (general government), MATURITY T (all maturities), AUD billions.',
-      sourceHtml: `${infoLink('BIS', 'https://data.bis.org/')} · ${infoLink('AOFM', 'https://www.aofm.gov.au/')} · hub proxy`,
+      summary: 'Commonwealth Australian Government Securities (AGS) on issue at face value — AOFM monthly positions.',
+      derived: 'Total main funding instruments (Treasury Bonds + capital-indexed TIB + Treasury Notes). Closest live proxy to gross AGS (~A$960B).',
+      data: 'AOFM Data Hub portfolio aggregate (dealt), FaceValue tab. BIS S13 used only if AOFM unavailable.',
+      sourceHtml: `${infoLink('AOFM Data Hub', 'https://www.aofm.gov.au/data-hub')} · ${infoLink('BIS', 'https://data.bis.org/')} · hub proxy`,
       formula: changeFormulaeBlurb('usd').replace('USD', 'AUD'),
     },
     'asx-bond-fut': {
@@ -2789,17 +2789,18 @@ function fetchPrivateDebtCurrent(fred) {
 
 function fetchAuGdpCurrent(fred) {
   const rows = sortedFredRows(fred.NGDPSAXDCAUQ);
-  if (!rows.length) return null;
-  const last = rows[rows.length - 1];
-  const prev = rows.length > 1 ? rows[rows.length - 2] : null;
-  const price = last.v / 1000;
-  const prevPrice = prev ? prev.v / 1000 : null;
+  if (rows.length < 4) return null;
+  const window = rows.slice(-4);
+  const prevWindow = rows.length >= 8 ? rows.slice(-8, -4) : null;
+  const annual = window.reduce((sum, row) => sum + row.v / 1000, 0);
+  const prevAnnual = prevWindow ? prevWindow.reduce((sum, row) => sum + row.v / 1000, 0) : null;
+  const last = window[window.length - 1];
   return attachFreshness({
-    price,
-    change: prevPrice != null ? pointsChange(price, prevPrice) : null,
-    pct: prevPrice != null ? pctChange(price, prevPrice) : null,
+    price: annual,
+    change: prevAnnual != null ? pointsChange(annual, prevAnnual) : null,
+    pct: prevAnnual != null ? pctChange(annual, prevAnnual) : null,
     asOfUtc: fredDateToUtc(last.date),
-  }, 'quarterly', { note: quarterLabelFromFredDate(last.date) });
+  }, 'quarterly', { note: 'Annual nominal (4q sum) · FRED fallback' });
 }
 
 function quoteFromPercentRows(rows, kind = 'quarterly', note = null) {
@@ -2871,8 +2872,12 @@ function latestFredRowOnOrBefore(rows, date) {
 function pickAuGdpBillionsForDebt(fred, ratioDate) {
   const rows = fred.NGDPSAXDCAUQ;
   if (!rows?.length) return null;
-  const row = latestFredRowOnOrBefore(rows, ratioDate);
-  return row ? row.v / 1000 : null;
+  const sorted = sortedFredRows(rows);
+  const anchor = ratioDate || sorted[sorted.length - 1].date;
+  const eligible = sorted.filter(r => r.date <= anchor);
+  const window = eligible.slice(-4);
+  if (window.length < 4) return null;
+  return window.reduce((sum, row) => sum + row.v / 1000, 0);
 }
 
 function attachAuDebtLevel(quote, fred, ratioDate, levelSeriesId = null) {
@@ -2919,7 +2924,12 @@ function valuationReferenceExtra(item, live = null, asOfUtc = null) {
     html += `<div class="yield-extra"><span class="spread-label">As of</span>
       <span class="spread-val">${period}${utc ? escapeHtml(utc) : ''}</span></div>`;
   }
-  if (item.source) {
+  if (live?.aofmMeta?.tbBillions != null) {
+    const m = live.aofmMeta;
+    html += `<div class="yield-extra"><span class="spread-label">Breakdown</span>
+      <span class="spread-val">TB ${formatAudCompact(m.tbBillions)} · TIB ${formatAudCompact(m.tibBillions)} · T-Notes ${formatAudCompact(m.tnotesBillions)}</span></div>`;
+  }
+  if (item.source || live?.source) {
     const src = item.href
       ? `<a class="val-ref-link" href="${item.href}" target="_blank" rel="noopener noreferrer">${escapeHtml(live?.source || item.source)}</a>`
       : escapeHtml(live?.source || item.source);
@@ -2935,11 +2945,12 @@ function valuationReferenceExtra(item, live = null, asOfUtc = null) {
 
 function normalizeValuationLiveRow(data) {
   if (!data || data.error) return null;
+  const kind = data.freshnessKind || 'live';
   return attachFreshness({
     ...data,
-    live: true,
+    live: kind === 'live',
     asOfUtc: data.asOfUtc ?? parseReferencePeriodUtc(data.asOf),
-  }, 'live', { note: data.source ? String(data.source) : 'Hub valuation' });
+  }, kind, { note: data.freshnessNote || (data.source ? String(data.source) : 'Hub valuation') });
 }
 
 async function fetchValuationLive(metricId, force = false) {
@@ -3482,6 +3493,8 @@ function collectCardMetas(section, items) {
           change = change / 1000;
         } else if (item.id === 'au-cgs' && change != null) {
           isAud = true;
+        } else if (item.id === 'au-gdp') {
+          isAud = true;
         }
         const asOfUtc = d?.asOfUtc ?? parseReferencePeriodUtc(d?.asOf);
         return {
@@ -3515,8 +3528,12 @@ function collectCardMetas(section, items) {
       } else if (item.id === 'au-gdp') {
         isAud = true;
         price = formatAudCompact(d?.price);
-        extra = `<div class="yield-extra"><span class="spread-label">Series</span>
-          <span class="spread-val buffett-fair">Nominal GDP (FRED)</span></div>`;
+        extra = `<div class="yield-extra"><span class="spread-label">Source</span>
+          <span class="spread-val buffett-fair">${escapeHtml(d?.source || 'ABS / FRED')}</span></div>`;
+        if (d?.freshnessNote) {
+          extra += `<div class="yield-extra"><span class="spread-label">Measure</span>
+            <span class="spread-val">${escapeHtml(d.freshnessNote)}</span></div>`;
+        }
       } else if (item.id === 'buffett') {
         isRatio = true;
         price = formatRatioPrice(d, 0);
