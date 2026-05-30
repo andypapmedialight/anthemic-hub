@@ -435,12 +435,8 @@
     margin-bottom: 0.6rem;
     padding-right: 2.75rem;
     line-height: 1.25;
-    min-height: 2.5em;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    overflow: hidden;
     overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .card-price {
@@ -488,6 +484,8 @@
     font-size: 0.58rem;
     color: var(--dim);
     line-height: 1.35;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
   .card-asof--stale { color: var(--muted); }
 
@@ -555,18 +553,24 @@
   .yield-extra {
     margin-top: 8px;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
+    flex-wrap: wrap;
     gap: 4px;
   }
   .spread-label {
     font-family: 'DM Mono', monospace;
     font-size: 0.6rem;
     color: var(--dim);
+    flex-shrink: 0;
   }
   .spread-val {
     font-family: 'DM Mono', monospace;
     font-size: 0.62rem;
     font-weight: 500;
+    min-width: 0;
+    flex: 1 1 8rem;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
   .spread-val--muted {
     color: var(--dim);
