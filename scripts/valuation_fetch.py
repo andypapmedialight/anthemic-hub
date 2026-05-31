@@ -1202,6 +1202,12 @@ def _oecd_stes(country: str, measure: str, note: str) -> dict:
     return fetch_oecd_stes(country, measure, note=note)
 
 
+def _au_gdp_growth_yoy() -> dict:
+    from aus_fetch import fetch_au_gdp_growth_yoy
+
+    return fetch_au_gdp_growth_yoy()
+
+
 MULTILATERAL_METRIC_SPECS: dict[str, dict] = {
     # OECD — composite leading indicator
     "oecd-cli-au": {"label": "OECD CLI — Australia", "ticker": "CLI", "fn": lambda: _oecd_cli("AUS")},
@@ -1255,7 +1261,7 @@ MULTILATERAL_METRIC_SPECS: dict[str, dict] = {
     "wb-gdp-growth-au": {
         "label": "GDP Growth (actual) — AU",
         "ticker": "GDP",
-        "fn": lambda: _wb("NY.GDP.MKTP.KD.ZG", "AUS"),
+        "fn": _au_gdp_growth_yoy,
     },
     "wb-gdp-growth-us": {
         "label": "GDP Growth (actual) — US",

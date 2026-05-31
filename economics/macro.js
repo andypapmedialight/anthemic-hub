@@ -822,7 +822,7 @@ const GLOBAL_MACRO = [
   { id: 'imf-gdp-us', label: 'IMF WEO GDP Growth — US', ticker: 'WEO-US', sourceOrg: 'IMF', isPercent: true, def: true },
   { id: 'imf-unemployment-au', label: 'IMF Unemployment — AU', ticker: 'U/E-AU', sourceOrg: 'IMF', isPercent: true, def: true },
   { id: 'imf-unemployment-us', label: 'IMF Unemployment — US', ticker: 'U/E-US', sourceOrg: 'IMF', isPercent: true, def: true },
-  { id: 'wb-gdp-growth-au', label: 'GDP Growth (actual) — AU', ticker: 'GDP-AU', sourceOrg: 'World Bank', isPercent: true, def: true },
+  { id: 'wb-gdp-growth-au', label: 'AU GDP Growth (YoY)', ticker: 'GDP-AU', sourceOrg: 'OECD / ABS', isPercent: true, def: true },
   { id: 'wb-gdp-growth-us', label: 'GDP Growth (actual) — US', ticker: 'GDP-US', sourceOrg: 'World Bank', isPercent: true, def: true },
   { id: 'wb-gni-au', label: 'GNI per Capita — AU', ticker: 'GNI-AU', sourceOrg: 'World Bank', isPercent: false, def: true },
   { id: 'oecd-cli-gb', label: 'OECD CLI — United Kingdom', ticker: 'CLI-GB', sourceOrg: 'OECD', isPercent: false, def: false },
@@ -1555,6 +1555,10 @@ function globalCardInfo(item) {
   } else if (item.id.startsWith('wb-gni-')) {
     summary = 'World Bank GNI per capita (Atlas method, current US$).';
     data = 'World Bank NY.GNP.PCAP.CD.';
+  } else if (item.id === 'wb-gdp-growth-au') {
+    summary = 'Australian real GDP growth — through-year to the latest published quarter.';
+    derived = 'Primary: OECD Main Economic Indicators via FRED (same quarter, year ago). World Bank WDI annual is fallback when quarterly fetch fails (often 1+ year behind).';
+    data = 'FRED AUSGDPRQPSMEI · World Bank NY.GDP.MKTP.KD.ZG (fallback).';
   } else if (item.id.startsWith('wb-gdp-growth-')) {
     summary = 'World Bank actual real GDP growth (annual %, WDI).';
     derived = 'Published national-accounts growth — not an IMF forecast.';

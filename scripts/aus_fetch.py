@@ -290,6 +290,83 @@ def _quarter_end_utc_ms(label: str) -> int | None:
     return int(end.timestamp() * 1000)
 
 
+FRED_AU_GDP_YOY = "AUSGDPRQPSMEI"  # OECD MEI — real GDP, same period previous year (%)
+
+
+def _fetch_fred_au_gdp_yoy_quarters() -> list[tuple[str, float]]:
+    import json
+
+    from valuation_fetch import fetch_fred_observations_proxy
+
+    status, body, _ct = fetch_fred_observations_proxy("AUSGDPRQPSMEI", start="2018-01-01")
+    if status != 200:
+        raise RuntimeError(f"FRED AUSGDPRQPSMEI HTTP {status}")
+
+    rows: list[tuple[str, float]] = []
+    if body[:1] == b"{":
+        payload = json.loads(body.decode("utf-8", "replace"))
+        obs = payload.get("observations") or []
+        for o in obs:
+            val = o.get("value")
+            if val in (None, ".", ""):
+                continue
+            rows.append((str(o["date"]), float(val)))
+    else:
+        for line in body.decode("utf-8", "replace").strip().splitlines():
+            if line.startswith("observation_date") or not line.strip():
+                continue
+            dt, val = line.split(",", 1)
+            rows.append((dt.strip(), float(val)))
+
+    if not rows:
+        raise RuntimeError("FRED AU GDP YoY empty")
+    return [(dt[:7] if len(dt) >= 7 else dt, v) for dt, v in rows]
+
+
+def fetch_au_gdp_growth_yoy() -> dict:
+    """Real GDP growth — through-year to latest quarter (OECD MEI via FRED; WB annual fallback)."""
+    cached = _cache_get("aus:gdp-growth", CACHE_TTL_ABS)
+    if cached is not None:
+        return dict(cached)
+
+    source = "FRED / OECD"
+    try:
+        quarters = _fetch_fred_au_gdp_yoy_quarters()
+    except Exception:
+        from valuation_fetch import _card_from_rows, _rows_to_series, fetch_worldbank
+
+        wb = fetch_worldbank("NY.GDP.MKTP.KD.ZG", "AUS")
+        card = dict(wb)
+        card["source"] = "World Bank"
+        card["freshnessKind"] = "annual"
+        card["freshnessNote"] = "World Bank annual actual (typically lags 1+ year)"
+        card.pop("history", None)
+        _cache_set("aus:gdp-growth", card)
+        return dict(card)
+
+    from valuation_fetch import _card_from_rows, _rows_to_series
+
+    card = _card_from_rows(
+        quarters,
+        source=source,
+        freshness_kind="quarterly",
+        dp=1,
+        suffix="%",
+        freshness_note="Real GDP, through-year to latest quarter",
+    )
+    last_period = quarters[-1][0]
+    as_of = _quarter_label_from_period(last_period) or last_period
+    card["asOf"] = as_of
+    card["asOfUtc"] = (
+        _quarter_end_utc_ms(as_of)
+        if re.match(r"\d{4}-Q[1-4]", as_of, re.I)
+        else None
+    )
+    card["history"] = _rows_to_series(quarters)
+    _cache_set("aus:gdp-growth", card)
+    return dict(card)
+
+
 def fetch_au_gdp_annual() -> dict:
     """Nominal GDP — annual sum of last 4 quarters (ABS preferred, IMF/FRED fallback)."""
     cached = _cache_get("aus:gdp", CACHE_TTL_ABS)
