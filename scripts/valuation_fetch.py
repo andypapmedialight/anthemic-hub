@@ -1087,12 +1087,19 @@ def _imf_country_series(indicator: str, country: str) -> dict[str, float]:
 
 
 def _imf_card_rows(series: dict[str, float]) -> list[tuple[str, float]]:
-    """Prefer near-term WEO vintages (not far-future 2030+ projections on the card)."""
+    """Prefer current-year WEO vintage on the card, not far-future projections (e.g. 2027)."""
     rows = sorted(series.items(), key=lambda r: int(r[0]))
-    horizon = datetime.now(timezone.utc).year + 1
-    window = [(y, v) for y, v in rows if int(y) <= horizon]
-    if len(window) >= 2:
-        return window
+    now_y = datetime.now(timezone.utc).year
+    rows = [(y, v) for y, v in rows if int(y) <= now_y + 1]
+    if not rows:
+        return []
+    current = [(y, v) for y, v in rows if int(y) == now_y]
+    if current:
+        y0, v0 = current[-1]
+        prior = [(y, v) for y, v in rows if int(y) < now_y]
+        if prior:
+            return [prior[-1], (y0, v0)]
+        return [(y0, v0)]
     return rows[-2:] if len(rows) >= 2 else rows
 
 
@@ -1202,6 +1209,18 @@ def _oecd_stes(country: str, measure: str, note: str) -> dict:
     return fetch_oecd_stes(country, measure, note=note)
 
 
+def _au_unemployment() -> dict:
+    from aus_fetch import fetch_au_unemployment_rate
+
+    return fetch_au_unemployment_rate()
+
+
+def _au_cpi_inflation() -> dict:
+    from aus_fetch import fetch_au_cpi_inflation_yoy
+
+    return fetch_au_cpi_inflation_yoy()
+
+
 def _au_gdp_growth_yoy() -> dict:
     from aus_fetch import fetch_au_gdp_growth_yoy
 
@@ -1243,7 +1262,11 @@ MULTILATERAL_METRIC_SPECS: dict[str, dict] = {
     "imf-inflation-us": {"label": "IMF CPI Inflation — US", "ticker": "CPI", "fn": lambda: _imf("PCPIPCH", "USA")},
     "imf-gov-debt-au": {"label": "IMF Govt Debt — AU", "ticker": "DEBT", "fn": lambda: _imf("GGXWDG_NGDP", "AUS")},
     "imf-gov-debt-us": {"label": "IMF Govt Debt — US", "ticker": "DEBT", "fn": lambda: _imf("GGXWDG_NGDP", "USA")},
-    "imf-unemployment-au": {"label": "IMF Unemployment — AU", "ticker": "U/E", "fn": lambda: _imf("LUR", "AUS")},
+    "imf-unemployment-au": {
+        "label": "IMF Unemployment — AU",
+        "ticker": "U/E",
+        "fn": _au_unemployment,
+    },
     "imf-unemployment-us": {"label": "IMF Unemployment — US", "ticker": "U/E", "fn": lambda: _imf("LUR", "USA")},
     "imf-current-account-au": {
         "label": "IMF Current Account — AU",
@@ -1273,7 +1296,7 @@ MULTILATERAL_METRIC_SPECS: dict[str, dict] = {
     "wb-inflation-au": {
         "label": "CPI Inflation (actual) — AU",
         "ticker": "CPI",
-        "fn": lambda: _wb("FP.CPI.TOTL.ZG", "AUS"),
+        "fn": _au_cpi_inflation,
     },
     "wb-inflation-us": {
         "label": "CPI Inflation (actual) — US",

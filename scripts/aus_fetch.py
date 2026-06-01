@@ -291,22 +291,23 @@ def _quarter_end_utc_ms(label: str) -> int | None:
 
 
 FRED_AU_GDP_YOY = "AUSGDPRQPSMEI"  # OECD MEI — real GDP, same period previous year (%)
+FRED_AU_CPI_INDEX = "AUSCPIALLQINMEI"  # CPI all items, quarterly index
+FRED_AU_UNEMP = "LRUNTTTTAUM156S"  # unemployment rate, monthly SA (%)
 
 
-def _fetch_fred_au_gdp_yoy_quarters() -> list[tuple[str, float]]:
+def _fred_obs_series(series_id: str, start: str = "2018-01-01") -> list[tuple[str, float]]:
     import json
 
     from valuation_fetch import fetch_fred_observations_proxy
 
-    status, body, _ct = fetch_fred_observations_proxy("AUSGDPRQPSMEI", start="2018-01-01")
+    status, body, _ct = fetch_fred_observations_proxy(series_id, start=start)
     if status != 200:
-        raise RuntimeError(f"FRED AUSGDPRQPSMEI HTTP {status}")
+        raise RuntimeError(f"FRED {series_id} HTTP {status}")
 
     rows: list[tuple[str, float]] = []
     if body[:1] == b"{":
         payload = json.loads(body.decode("utf-8", "replace"))
-        obs = payload.get("observations") or []
-        for o in obs:
+        for o in payload.get("observations") or []:
             val = o.get("value")
             if val in (None, ".", ""):
                 continue
@@ -317,10 +318,32 @@ def _fetch_fred_au_gdp_yoy_quarters() -> list[tuple[str, float]]:
                 continue
             dt, val = line.split(",", 1)
             rows.append((dt.strip(), float(val)))
-
     if not rows:
-        raise RuntimeError("FRED AU GDP YoY empty")
-    return [(dt[:7] if len(dt) >= 7 else dt, v) for dt, v in rows]
+        raise RuntimeError(f"FRED {series_id} empty")
+    return rows
+
+
+def _period_ym(date_str: str) -> str:
+    return date_str[:7] if len(date_str) >= 7 else date_str
+
+
+def _yoy_from_quarterly_index(rows: list[tuple[str, float]]) -> list[tuple[str, float]]:
+    by_period = {p: v for p, v in rows}
+    out: list[tuple[str, float]] = []
+    for period in sorted(by_period.keys()):
+        ym = re.match(r"^(\d{4})-(\d{2})$", period)
+        if not ym:
+            continue
+        prev = f"{int(ym.group(1)) - 1}-{ym.group(2)}"
+        if prev not in by_period or by_period[prev] == 0:
+            continue
+        yoy = (by_period[period] / by_period[prev] - 1) * 100
+        out.append((period, yoy))
+    return out
+
+
+def _fetch_fred_au_gdp_yoy_quarters() -> list[tuple[str, float]]:
+    return [(_period_ym(dt), v) for dt, v in _fred_obs_series(FRED_AU_GDP_YOY, start="2018-01-01")]
 
 
 def fetch_au_gdp_growth_yoy() -> dict:
@@ -367,6 +390,96 @@ def fetch_au_gdp_growth_yoy() -> dict:
     return dict(card)
 
 
+def fetch_au_cpi_inflation_yoy() -> dict:
+    """CPI inflation — through-year to latest quarter (FRED/OECD index YoY; WB annual fallback)."""
+    cached = _cache_get("aus:cpi-yoy", CACHE_TTL_ABS)
+    if cached is not None:
+        return dict(cached)
+
+    try:
+        index_rows = [(_period_ym(dt), v) for dt, v in _fred_obs_series(FRED_AU_CPI_INDEX, start="2010-01-01")]
+        quarters = _yoy_from_quarterly_index(index_rows)
+        if len(quarters) < 2:
+            raise RuntimeError("insufficient AU CPI YoY quarters")
+        source = "FRED / OECD"
+    except Exception:
+        from valuation_fetch import fetch_worldbank
+
+        wb = fetch_worldbank("FP.CPI.TOTL.ZG", "AUS")
+        card = dict(wb)
+        card["source"] = "World Bank"
+        card["freshnessKind"] = "annual"
+        card["freshnessNote"] = "World Bank annual actual (typically lags 1+ year)"
+        card.pop("history", None)
+        _cache_set("aus:cpi-yoy", card)
+        return dict(card)
+
+    from valuation_fetch import _card_from_rows, _rows_to_series
+
+    card = _card_from_rows(
+        quarters,
+        source=source,
+        freshness_kind="quarterly",
+        dp=1,
+        suffix="%",
+        freshness_note="CPI all items, through-year to latest quarter",
+    )
+    last_period = quarters[-1][0]
+    as_of = _quarter_label_from_period(last_period) or last_period
+    card["asOf"] = as_of
+    card["asOfUtc"] = (
+        _quarter_end_utc_ms(as_of)
+        if re.match(r"\d{4}-Q[1-4]", as_of, re.I)
+        else None
+    )
+    card["history"] = _rows_to_series(quarters)
+    _cache_set("aus:cpi-yoy", card)
+    return dict(card)
+
+
+def fetch_au_unemployment_rate() -> dict:
+    """Unemployment rate — latest month (FRED/OECD; IMF WEO fallback)."""
+    cached = _cache_get("aus:unemp", CACHE_TTL_ABS)
+    if cached is not None:
+        return dict(cached)
+
+    try:
+        monthly = [(_period_ym(dt), v) for dt, v in _fred_obs_series(FRED_AU_UNEMP, start="2018-01-01")]
+        if len(monthly) < 2:
+            raise RuntimeError("insufficient AU unemployment months")
+        source = "FRED / OECD"
+    except Exception:
+        from valuation_fetch import fetch_imf_datamapper
+
+        card = dict(fetch_imf_datamapper("LUR", "AUS"))
+        card["freshnessNote"] = card.get("freshnessNote") or "IMF WEO (annual or forecast)"
+        _cache_set("aus:unemp", card)
+        return dict(card)
+
+    from valuation_fetch import _card_from_rows, _rows_to_series
+
+    card = _card_from_rows(
+        monthly,
+        source=source,
+        freshness_kind="monthly",
+        dp=1,
+        suffix="%",
+        freshness_note="Unemployment rate, seasonally adjusted",
+    )
+    last_period = monthly[-1][0]
+    ym = re.match(r"^(\d{4})-(\d{2})$", last_period)
+    if ym:
+        month_num = int(ym.group(2))
+        month_name = datetime(int(ym.group(1)), month_num, 1, tzinfo=timezone.utc).strftime("%b %Y")
+        card["asOf"] = month_name
+        card["asOfUtc"] = int(
+            datetime(int(ym.group(1)), month_num, 1, tzinfo=timezone.utc).timestamp() * 1000
+        )
+    card["history"] = _rows_to_series(monthly)
+    _cache_set("aus:unemp", card)
+    return dict(card)
+
+
 def fetch_au_gdp_annual() -> dict:
     """Nominal GDP — annual sum of last 4 quarters (ABS preferred, IMF/FRED fallback)."""
     cached = _cache_get("aus:gdp", CACHE_TTL_ABS)
@@ -401,7 +514,11 @@ def fetch_au_gdp_annual() -> dict:
         else None,
         "source": source,
         "freshnessKind": "annual",
-        "freshnessNote": "Annual nominal (sum of last 4 qtrs)",
+        "freshnessNote": (
+            "Annual nominal (sum of last 4 qtrs)"
+            if source == "ABS"
+            else "Annual nominal (4q sum) · FRED fallback (ABS API unavailable)"
+        ),
         "gdpMeta": {
             "quarters": [p for p, _ in window],
             "quarterlyBillions": [v for _, v in window],

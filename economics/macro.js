@@ -820,7 +820,7 @@ const GLOBAL_MACRO = [
   { id: 'oecd-cconf-au', label: 'OECD Consumer Confidence — AU', ticker: 'CCI-AU', sourceOrg: 'OECD', isPercent: false, def: true },
   { id: 'imf-gdp-au', label: 'IMF WEO GDP Growth — AU', ticker: 'WEO-AU', sourceOrg: 'IMF', isPercent: true, def: true },
   { id: 'imf-gdp-us', label: 'IMF WEO GDP Growth — US', ticker: 'WEO-US', sourceOrg: 'IMF', isPercent: true, def: true },
-  { id: 'imf-unemployment-au', label: 'IMF Unemployment — AU', ticker: 'U/E-AU', sourceOrg: 'IMF', isPercent: true, def: true },
+  { id: 'imf-unemployment-au', label: 'AU Unemployment', ticker: 'U/E-AU', sourceOrg: 'FRED / OECD', isPercent: true, def: true },
   { id: 'imf-unemployment-us', label: 'IMF Unemployment — US', ticker: 'U/E-US', sourceOrg: 'IMF', isPercent: true, def: true },
   { id: 'wb-gdp-growth-au', label: 'AU GDP Growth (YoY)', ticker: 'GDP-AU', sourceOrg: 'OECD / ABS', isPercent: true, def: true },
   { id: 'wb-gdp-growth-us', label: 'GDP Growth (actual) — US', ticker: 'GDP-US', sourceOrg: 'World Bank', isPercent: true, def: true },
@@ -840,7 +840,7 @@ const GLOBAL_MACRO = [
   { id: 'wb-gni-us', label: 'GNI per Capita — US', ticker: 'GNI-US', sourceOrg: 'World Bank', isPercent: false, def: false },
   { id: 'wb-trade-au', label: 'Trade (% GDP) — AU', ticker: 'TRD-AU', sourceOrg: 'World Bank', isPercent: true, def: false },
   { id: 'wb-trade-us', label: 'Trade (% GDP) — US', ticker: 'TRD-US', sourceOrg: 'World Bank', isPercent: true, def: false },
-  { id: 'wb-inflation-au', label: 'CPI Inflation (actual) — AU', ticker: 'CPI-AU', sourceOrg: 'World Bank', isPercent: true, def: false },
+  { id: 'wb-inflation-au', label: 'AU CPI Inflation (YoY)', ticker: 'CPI-AU', sourceOrg: 'OECD / ABS', isPercent: true, def: false },
   { id: 'wb-inflation-us', label: 'CPI Inflation (actual) — US', ticker: 'CPI-US', sourceOrg: 'World Bank', isPercent: true, def: false },
 ];
 
@@ -1546,19 +1546,33 @@ function globalCardInfo(item) {
   } else if (item.id.startsWith('imf-gov-debt-')) {
     summary = 'IMF general government gross debt (% of GDP).';
     data = 'IMF DataMapper GGXWDG_NGDP.';
+  } else if (item.id === 'imf-unemployment-au') {
+    summary = 'Australian unemployment rate — seasonally adjusted, monthly.';
+    derived = 'Primary: OECD/FRED monthly series. IMF WEO is fallback (annual or forecast).';
+    data = 'FRED LRUNTTTTAUM156S · IMF DataMapper LUR (fallback).';
   } else if (item.id.startsWith('imf-unemployment-')) {
     summary = 'IMF WEO unemployment rate (% of labour force).';
     data = 'IMF DataMapper LUR.';
   } else if (item.id.startsWith('imf-current-account-')) {
     summary = 'IMF current account balance (% of GDP).';
     data = 'IMF DataMapper BCA_NGDPD.';
-  } else if (item.id.startsWith('wb-gni-')) {
-    summary = 'World Bank GNI per capita (Atlas method, current US$).';
-    data = 'World Bank NY.GNP.PCAP.CD.';
   } else if (item.id === 'wb-gdp-growth-au') {
     summary = 'Australian real GDP growth — through-year to the latest published quarter.';
     derived = 'Primary: OECD Main Economic Indicators via FRED (same quarter, year ago). World Bank WDI annual is fallback when quarterly fetch fails (often 1+ year behind).';
     data = 'FRED AUSGDPRQPSMEI · World Bank NY.GDP.MKTP.KD.ZG (fallback).';
+  } else if (item.id === 'wb-inflation-au') {
+    summary = 'Australian CPI inflation — through-year to the latest published quarter.';
+    derived = 'Primary: OECD CPI index via FRED (YoY on quarterly index). World Bank WDI annual is fallback (typically lags 1+ year).';
+    data = 'FRED AUSCPIALLQINMEI · World Bank FP.CPI.TOTL.ZG (fallback).';
+  } else if (item.id === 'wb-gni-au' || item.id === 'wb-trade-au') {
+    summary = item.id === 'wb-gni-au'
+      ? 'World Bank GNI per capita (Atlas method, current US$).'
+      : 'Trade (exports plus imports) as a share of GDP.';
+    derived = 'World Bank WDI annual releases typically lag national accounts by 1–2 years; no fresher AU feed wired yet.';
+    data = item.id === 'wb-gni-au' ? 'World Bank NY.GNP.PCAP.CD.' : 'World Bank NE.TRD.GNFS.ZS.';
+  } else if (item.id.startsWith('wb-gni-')) {
+    summary = 'World Bank GNI per capita (Atlas method, current US$).';
+    data = 'World Bank NY.GNP.PCAP.CD.';
   } else if (item.id.startsWith('wb-gdp-growth-')) {
     summary = 'World Bank actual real GDP growth (annual %, WDI).';
     derived = 'Published national-accounts growth — not an IMF forecast.';
