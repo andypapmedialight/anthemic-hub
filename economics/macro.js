@@ -4794,7 +4794,7 @@ const MARKET_VENUES = {
     tz: 'Asia/Tokyo',
     tzShort: 'JST',
     open: [9, 0],
-    close: [15, 0],
+    close: [15, 30],
     lunch: [[11, 30], [12, 30]],
     weekdays: [1, 2, 3, 4, 5],
     kind: 'cash',
@@ -4940,13 +4940,14 @@ function tradingClockHtml(centre, now = new Date()) {
   const state = evaluateVenue(centre.id, now);
   const time = formatCentreTime(now, venue.tz);
   const day = formatCentreWeekday(now, venue.tz);
-  const status = state.open ? 'Open' : 'Closed';
+  const phase = state.phase || (state.open ? 'open' : 'closed');
+  const status = phase === 'open' ? 'Open' : phase === 'lunch' ? 'Lunch' : 'Closed';
   const countdown = state.nextAt
-    ? `${state.open ? 'Closes' : 'Opens'} in ${formatCountdown(state.nextAt, now)}`
+    ? `${state.nextLabel || (state.open ? 'Closes for the day' : 'Opens for the day')} in ${formatCountdown(state.nextAt, now)}`
     : '';
-  return `<div class="trading-clock ${state.open ? 'open' : 'closed'}" title="${escapeHtml(state.hours)} · ${escapeHtml(state.detail)}">
+  return `<div class="trading-clock ${phase}" title="${escapeHtml(state.hours)} · ${escapeHtml(state.detail)}">
     <div class="trading-clock-head">
-      <span class="dot ${state.open ? 'open' : 'closed'}" aria-hidden="true"></span>
+      <span class="dot ${phase === 'open' ? 'open' : phase === 'lunch' ? 'lunch' : 'closed'}" aria-hidden="true"></span>
       <span class="trading-clock-city">${escapeHtml(centre.city)}</span>
     </div>
     <div class="trading-clock-time" aria-live="off">${escapeHtml(time)}</div>
@@ -4984,19 +4985,67 @@ function formatClock(date, timeZone, withUtc = true) {
   return `${local} (${utc} UTC)`;
 }
 
-function cashSessionOpen(venue, date = new Date()) {
+function formatCashVenueHours(venue) {
+  const fmt = ([h, m]) => `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  if (venue.lunch) {
+    return `${fmt(venue.open)}–${fmt(venue.lunch[0])}, ${fmt(venue.lunch[1])}–${fmt(venue.close)} ${venue.tzShort}`;
+  }
+  return `${fmt(venue.open)}–${fmt(venue.close)} ${venue.tzShort}`;
+}
+
+/** open | lunch | closed — cash venues with a midday break. */
+function cashSessionPhase(venue, date = new Date()) {
   const t = tzParts(date, venue.tz);
-  if (!venue.weekdays.includes(t.day)) return false;
+  if (!venue.weekdays.includes(t.day)) return 'closed';
   const nowM = mins(t.h, t.m);
   const openM = mins(venue.open[0], venue.open[1]);
   const closeM = mins(venue.close[0], venue.close[1]);
-  if (nowM < openM || nowM >= closeM) return false;
+  if (nowM < openM || nowM >= closeM) return 'closed';
   if (venue.lunch) {
     const lunchStart = mins(venue.lunch[0][0], venue.lunch[0][1]);
     const lunchEnd = mins(venue.lunch[1][0], venue.lunch[1][1]);
-    if (nowM >= lunchStart && nowM < lunchEnd) return false;
+    if (nowM >= lunchStart && nowM < lunchEnd) return 'lunch';
   }
-  return true;
+  return 'open';
+}
+
+function cashSessionOpen(venue, date = new Date()) {
+  return cashSessionPhase(venue, date) === 'open';
+}
+
+function edgeMinutesAt(venue, at) {
+  const p = tzParts(at, venue.tz);
+  return mins(p.h, p.m);
+}
+
+/** Countdown prefix: lunch break vs end-of-day vs reopen. */
+function cashCountdownLabel(venue, at, currentlyOpen, now = new Date()) {
+  if (!at) return currentlyOpen ? 'Closes' : 'Opens';
+  if (!venue.lunch) {
+    if (currentlyOpen) return 'Closes for the day';
+    const openYmd = venueLocalYmd(at, venue.tz);
+    const nowYmd = venueLocalYmd(now, venue.tz);
+    if (openYmd !== nowYmd) return `Opens ${formatCentreWeekday(at, venue.tz)}`;
+    return 'Opens for the day';
+  }
+  const edgeM = edgeMinutesAt(venue, at);
+  const openM = mins(venue.open[0], venue.open[1]);
+  const closeM = mins(venue.close[0], venue.close[1]);
+  const lunchStartM = mins(venue.lunch[0][0], venue.lunch[0][1]);
+  const lunchEndM = mins(venue.lunch[1][0], venue.lunch[1][1]);
+  if (currentlyOpen) {
+    if (edgeM === lunchStartM) return 'Closes for lunch';
+    if (edgeM === closeM) return 'Closes for the day';
+    return 'Closes';
+  }
+  if (edgeM === lunchEndM) return 'Reopens after lunch';
+  if (edgeM === openM) {
+    const openYmd = venueLocalYmd(at, venue.tz);
+    const nowYmd = venueLocalYmd(now, venue.tz);
+    if (openYmd !== nowYmd) return `Opens ${formatCentreWeekday(at, venue.tz)}`;
+    return 'Opens for the day';
+  }
+  return 'Opens';
 }
 
 function findNextCashTransition(venue, from, wantOpen) {
@@ -5019,20 +5068,31 @@ function findNextCashTransition(venue, from, wantOpen) {
 }
 
 function evaluateCashVenue(venue, now = new Date()) {
-  const open = cashSessionOpen(venue, now);
-  const hours = `${String(venue.open[0]).padStart(2, '0')}:${String(venue.open[1]).padStart(2, '0')}–${String(venue.close[0]).padStart(2, '0')}:${String(venue.close[1]).padStart(2, '0')} ${venue.tzShort}`;
+  const phase = cashSessionPhase(venue, now);
+  const open = phase === 'open';
+  const hours = formatCashVenueHours(venue);
   if (open) {
     const closeAt = findNextCashTransition(venue, now, false);
+    const closeLabel = cashCountdownLabel(venue, closeAt, true, now);
     const detail = closeAt
-      ? `Open · closes ${formatClock(closeAt, venue.tz)}`
+      ? `Open · ${closeLabel.toLowerCase()} ${formatClock(closeAt, venue.tz)}`
       : `Open · ${hours}`;
-    return { open: true, detail, hours, nextAt: closeAt || null };
+    return { open: true, phase, detail, hours, nextAt: closeAt || null, nextLabel: closeLabel };
+  }
+  if (phase === 'lunch') {
+    const openAt = findNextCashTransition(venue, now, true);
+    const openLabel = cashCountdownLabel(venue, openAt, false, now);
+    const detail = openAt
+      ? `Lunch break · reopens ${formatClock(openAt, venue.tz)}`
+      : `Lunch break · ${hours}`;
+    return { open: false, phase, detail, hours, nextAt: openAt || null, nextLabel: openLabel };
   }
   const openAt = findNextCashTransition(venue, now, true);
+  const openLabel = cashCountdownLabel(venue, openAt, false, now);
   const detail = openAt
-    ? `Closed · opens ${formatClock(openAt, venue.tz)}`
+    ? `Closed · ${openLabel.toLowerCase()} ${formatClock(openAt, venue.tz)}`
     : `Closed · ${hours}`;
-  return { open: false, detail, hours, nextAt: openAt || null };
+  return { open: false, phase, detail, hours, nextAt: openAt || null, nextLabel: openLabel };
 }
 
 /** CME Globex: Sun 17:00 – Fri 16:00 CT; daily halt 16:00–17:00 CT. */

@@ -164,6 +164,7 @@
     text-transform: uppercase;
   }
   .trading-clock.open .trading-clock-status { color: var(--up); }
+  .trading-clock.lunch .trading-clock-status { color: var(--gold); }
   .trading-clock.closed .trading-clock-status { color: var(--dim); }
   .trading-clock-countdown {
     margin-top: 2px;
@@ -174,7 +175,9 @@
     color: var(--gold);
   }
   .trading-clock.open .trading-clock-countdown { color: var(--gold); }
+  .trading-clock.lunch .trading-clock-countdown { color: #d4a84b; }
   .trading-clock.closed .trading-clock-countdown { color: #d4a84b; }
+  .trading-clock .dot.lunch { background: var(--gold); box-shadow: 0 0 6px color-mix(in srgb, var(--gold) 55%, transparent); }
 
   @media (min-width: 720px) {
     .trading-clocks-bar {
