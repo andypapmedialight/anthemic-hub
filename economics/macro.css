@@ -598,6 +598,18 @@
     color: var(--gold);
     letter-spacing: -0.02em;
   }
+  .card--forecast {
+    border-style: dashed;
+    border-color: color-mix(in srgb, var(--gold) 45%, var(--border2));
+  }
+  .card--forecast .card-price {
+    font-size: 1.2rem;
+    color: var(--gold);
+    letter-spacing: -0.02em;
+  }
+  .section--forecast .section-label {
+    color: color-mix(in srgb, var(--gold) 70%, var(--text));
+  }
   .val-ref-link {
     color: var(--accent);
     text-decoration: none;

@@ -1103,6 +1103,47 @@ def _imf_card_rows(series: dict[str, float]) -> list[tuple[str, float]]:
     return rows[-2:] if len(rows) >= 2 else rows
 
 
+def _imf_forecast_card_rows(series: dict[str, float]) -> list[tuple[str, float]]:
+    """Headline = nearest WEO forecast year (current year onward); change vs prior year."""
+    rows = sorted(series.items(), key=lambda r: int(r[0]))
+    now_y = datetime.now(timezone.utc).year
+    forward = [(y, v) for y, v in rows if int(y) >= now_y]
+    if len(forward) >= 2:
+        return forward[:2]
+    if len(forward) == 1:
+        prior = [(y, v) for y, v in rows if int(y) < now_y]
+        if prior:
+            return [prior[-1], forward[0]]
+        return forward
+    return rows[-2:] if len(rows) >= 2 else rows
+
+
+def fetch_imf_forecast_datamapper(indicator: str, country: str, *, suffix: str = "%") -> dict:
+    """IMF WEO projection — for Forecast section (not mixed with published actuals)."""
+    cache_key = f"imf:forecast:{indicator}:{country}"
+    cached = _ml_cache_get(cache_key, CACHE_TTL_IMF)
+    if cached is not None:
+        return dict(cached)
+
+    raw = _imf_country_series(indicator, country)
+    rows = sorted(raw.items(), key=lambda r: int(r[0]))
+    card_rows = _imf_forecast_card_rows(raw)
+    now_y = datetime.now(timezone.utc).year
+    card = _card_from_rows(
+        card_rows,
+        source="IMF WEO",
+        freshness_kind="estimated",
+        dp=1,
+        suffix=suffix,
+        forecast_from_year=now_y,
+        freshness_note="IMF WEO forecast",
+    )
+    card["forecast"] = True
+    card["history"] = _rows_to_series([(y, v) for y, v in rows if int(y) >= now_y - 1])
+    _ml_cache_set(cache_key, card)
+    return dict(card)
+
+
 def fetch_imf_datamapper(indicator: str, country: str, *, suffix: str = "%") -> dict:
     cache_key = f"imf:card:{indicator}:{country}"
     cached = _ml_cache_get(cache_key, CACHE_TTL_IMF)
@@ -1193,6 +1234,10 @@ def fetch_worldbank(indicator: str, country_iso3: str, *, dp: int = 1, suffix: s
     return dict(card)
 
 
+def _imf_forecast(indicator: str, country: str) -> dict:
+    return fetch_imf_forecast_datamapper(indicator, country)
+
+
 def _imf(indicator: str, country: str) -> dict:
     return fetch_imf_datamapper(indicator, country)
 
@@ -1256,27 +1301,31 @@ MULTILATERAL_METRIC_SPECS: dict[str, dict] = {
         "fn": lambda: _oecd_stes("USA", "CCICP", "Composite consumer confidence"),
     },
     # IMF WEO — growth, prices, debt, labour, external balance
-    "imf-gdp-au": {"label": "IMF WEO GDP Growth — AU", "ticker": "WEO", "fn": lambda: _imf("NGDP_RPCH", "AUS")},
-    "imf-gdp-us": {"label": "IMF WEO GDP Growth — US", "ticker": "WEO", "fn": lambda: _imf("NGDP_RPCH", "USA")},
-    "imf-inflation-au": {"label": "IMF CPI Inflation — AU", "ticker": "CPI", "fn": lambda: _imf("PCPIPCH", "AUS")},
-    "imf-inflation-us": {"label": "IMF CPI Inflation — US", "ticker": "CPI", "fn": lambda: _imf("PCPIPCH", "USA")},
-    "imf-gov-debt-au": {"label": "IMF Govt Debt — AU", "ticker": "DEBT", "fn": lambda: _imf("GGXWDG_NGDP", "AUS")},
-    "imf-gov-debt-us": {"label": "IMF Govt Debt — US", "ticker": "DEBT", "fn": lambda: _imf("GGXWDG_NGDP", "USA")},
+    "imf-gdp-au": {"label": "IMF WEO GDP Growth — AU", "ticker": "WEO", "fn": lambda: _imf_forecast("NGDP_RPCH", "AUS")},
+    "imf-gdp-us": {"label": "IMF WEO GDP Growth — US", "ticker": "WEO", "fn": lambda: _imf_forecast("NGDP_RPCH", "USA")},
+    "imf-inflation-au": {"label": "IMF CPI Inflation — AU", "ticker": "CPI", "fn": lambda: _imf_forecast("PCPIPCH", "AUS")},
+    "imf-inflation-us": {"label": "IMF CPI Inflation — US", "ticker": "CPI", "fn": lambda: _imf_forecast("PCPIPCH", "USA")},
+    "imf-gov-debt-au": {"label": "IMF Govt Debt — AU", "ticker": "DEBT", "fn": lambda: _imf_forecast("GGXWDG_NGDP", "AUS")},
+    "imf-gov-debt-us": {"label": "IMF Govt Debt — US", "ticker": "DEBT", "fn": lambda: _imf_forecast("GGXWDG_NGDP", "USA")},
     "imf-unemployment-au": {
         "label": "IMF Unemployment — AU",
         "ticker": "U/E",
         "fn": _au_unemployment,
     },
-    "imf-unemployment-us": {"label": "IMF Unemployment — US", "ticker": "U/E", "fn": lambda: _imf("LUR", "USA")},
+    "imf-unemployment-us": {
+        "label": "IMF Unemployment — US",
+        "ticker": "U/E",
+        "fn": lambda: _imf_forecast("LUR", "USA"),
+    },
     "imf-current-account-au": {
         "label": "IMF Current Account — AU",
         "ticker": "CA",
-        "fn": lambda: _imf("BCA_NGDPD", "AUS"),
+        "fn": lambda: _imf_forecast("BCA_NGDPD", "AUS"),
     },
     "imf-current-account-us": {
         "label": "IMF Current Account — US",
         "ticker": "CA",
-        "fn": lambda: _imf("BCA_NGDPD", "USA"),
+        "fn": lambda: _imf_forecast("BCA_NGDPD", "USA"),
     },
     # World Bank WDI — levels, growth, trade, inflation
     "wb-gni-au": {"label": "GNI per Capita — AU", "ticker": "GNI", "fn": lambda: _wb("NY.GNP.PCAP.CD", "AUS", dp=0, suffix="")},
@@ -1359,7 +1408,6 @@ def warm_multilateral_cache() -> None:
         "oecd-cli-us",
         "imf-gdp-au",
         "imf-gdp-us",
-        "imf-unemployment-au",
         "wb-gdp-growth-au",
         "wb-gni-au",
     )

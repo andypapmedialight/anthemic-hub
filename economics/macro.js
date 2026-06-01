@@ -204,7 +204,7 @@ function cacheKeyForItem(item, section) {
   if (section.key === 'bond') return `b:${item.id}`;
   if (section.key === 'fx') return `${activeProvider}:fx:${item.from}:${item.to}`;
   if (section.key === 'crypto') return `cg:${item.sym}`;
-  if (section.key === 'global') return `ml:${item.id}`;
+  if (section.key === 'global' || section.key === 'forecast') return `ml:${item.id}`;
   return k;
 }
 
@@ -246,6 +246,7 @@ function inferFreshnessKind(meta) {
   if (sk === 'fx') return 'daily';
   if (sk === 'eq' || sk === 'comm' || sk === 'crypto') return 'live';
   if (sk === 'val') return 'quarterly';
+  if (sk === 'forecast') return 'estimated';
   if (sk === 'global') return meta.freshnessKind || 'annual';
   if (sk === 'bond' && meta.asOfUtc != null && isDateOnlyUtc(meta.asOfUtc)) return 'daily';
   if (meta.asOfUtc != null && isDateOnlyUtc(meta.asOfUtc)) return 'daily';
@@ -818,10 +819,7 @@ const GLOBAL_MACRO = [
   { id: 'oecd-cli-au', label: 'OECD CLI — Australia', ticker: 'CLI-AU', sourceOrg: 'OECD', isPercent: false, def: true },
   { id: 'oecd-cli-us', label: 'OECD CLI — United States', ticker: 'CLI-US', sourceOrg: 'OECD', isPercent: false, def: true },
   { id: 'oecd-cconf-au', label: 'OECD Consumer Confidence — AU', ticker: 'CCI-AU', sourceOrg: 'OECD', isPercent: false, def: true },
-  { id: 'imf-gdp-au', label: 'IMF WEO GDP Growth — AU', ticker: 'WEO-AU', sourceOrg: 'IMF', isPercent: true, def: true },
-  { id: 'imf-gdp-us', label: 'IMF WEO GDP Growth — US', ticker: 'WEO-US', sourceOrg: 'IMF', isPercent: true, def: true },
   { id: 'imf-unemployment-au', label: 'AU Unemployment', ticker: 'U/E-AU', sourceOrg: 'FRED / OECD', isPercent: true, def: true },
-  { id: 'imf-unemployment-us', label: 'IMF Unemployment — US', ticker: 'U/E-US', sourceOrg: 'IMF', isPercent: true, def: true },
   { id: 'wb-gdp-growth-au', label: 'AU GDP Growth (YoY)', ticker: 'GDP-AU', sourceOrg: 'OECD / ABS', isPercent: true, def: true },
   { id: 'wb-gdp-growth-us', label: 'GDP Growth (actual) — US', ticker: 'GDP-US', sourceOrg: 'World Bank', isPercent: true, def: true },
   { id: 'wb-gni-au', label: 'GNI per Capita — AU', ticker: 'GNI-AU', sourceOrg: 'World Bank', isPercent: false, def: true },
@@ -831,17 +829,24 @@ const GLOBAL_MACRO = [
   { id: 'oecd-bconf-au', label: 'OECD Business Confidence — AU', ticker: 'BCI-AU', sourceOrg: 'OECD', isPercent: false, def: false },
   { id: 'oecd-bconf-us', label: 'OECD Business Confidence — US', ticker: 'BCI-US', sourceOrg: 'OECD', isPercent: false, def: false },
   { id: 'oecd-cconf-us', label: 'OECD Consumer Confidence — US', ticker: 'CCI-US', sourceOrg: 'OECD', isPercent: false, def: false },
+  { id: 'wb-gni-us', label: 'GNI per Capita — US', ticker: 'GNI-US', sourceOrg: 'World Bank', isPercent: false, def: false },
+  { id: 'wb-trade-au', label: 'Trade (% GDP) — AU', ticker: 'TRD-AU', sourceOrg: 'World Bank', isPercent: true, def: false },
+  { id: 'wb-trade-us', label: 'Trade (% GDP) — US', ticker: 'TRD-US', sourceOrg: 'World Bank', isPercent: true, def: false },
+  { id: 'wb-inflation-au', label: 'AU CPI Inflation (YoY)', ticker: 'CPI-AU', sourceOrg: 'OECD / ABS', isPercent: true, def: false },
+  { id: 'wb-inflation-us', label: 'CPI Inflation (actual) — US', ticker: 'CPI-US', sourceOrg: 'World Bank', isPercent: true, def: false },
+];
+
+/** IMF WEO projections — kept separate from published actuals in Global Macro. */
+const FORECAST_MACRO = [
+  { id: 'imf-gdp-au', label: 'IMF WEO GDP Growth — AU', ticker: 'WEO-AU', sourceOrg: 'IMF', isPercent: true, def: true },
+  { id: 'imf-gdp-us', label: 'IMF WEO GDP Growth — US', ticker: 'WEO-US', sourceOrg: 'IMF', isPercent: true, def: true },
+  { id: 'imf-unemployment-us', label: 'IMF Unemployment — US', ticker: 'U/E-US', sourceOrg: 'IMF', isPercent: true, def: true },
   { id: 'imf-inflation-au', label: 'IMF CPI Inflation — AU', ticker: 'CPI-AU', sourceOrg: 'IMF', isPercent: true, def: false },
   { id: 'imf-inflation-us', label: 'IMF CPI Inflation — US', ticker: 'CPI-US', sourceOrg: 'IMF', isPercent: true, def: false },
   { id: 'imf-gov-debt-au', label: 'IMF Govt Debt — AU', ticker: 'DEBT-AU', sourceOrg: 'IMF', isPercent: true, def: false },
   { id: 'imf-gov-debt-us', label: 'IMF Govt Debt — US', ticker: 'DEBT-US', sourceOrg: 'IMF', isPercent: true, def: false },
   { id: 'imf-current-account-au', label: 'IMF Current Account — AU', ticker: 'CA-AU', sourceOrg: 'IMF', isPercent: true, def: false },
   { id: 'imf-current-account-us', label: 'IMF Current Account — US', ticker: 'CA-US', sourceOrg: 'IMF', isPercent: true, def: false },
-  { id: 'wb-gni-us', label: 'GNI per Capita — US', ticker: 'GNI-US', sourceOrg: 'World Bank', isPercent: false, def: false },
-  { id: 'wb-trade-au', label: 'Trade (% GDP) — AU', ticker: 'TRD-AU', sourceOrg: 'World Bank', isPercent: true, def: false },
-  { id: 'wb-trade-us', label: 'Trade (% GDP) — US', ticker: 'TRD-US', sourceOrg: 'World Bank', isPercent: true, def: false },
-  { id: 'wb-inflation-au', label: 'AU CPI Inflation (YoY)', ticker: 'CPI-AU', sourceOrg: 'OECD / ABS', isPercent: true, def: false },
-  { id: 'wb-inflation-us', label: 'CPI Inflation (actual) — US', ticker: 'CPI-US', sourceOrg: 'World Bank', isPercent: true, def: false },
 ];
 
 const COMMODITIES = [
@@ -936,10 +941,17 @@ const SECTION_EXPLAINERS = {
   },
   global: {
     title: 'Market & source',
-    market: 'Cross-country macro indicators from official international institutions.',
-    venue: 'No exchange. OECD CLI, IMF WEO projections, and World Bank development indicators.',
-    source: 'Hub multilateral proxy: OECD SDMX (CLI), IMF DataMapper (WEO), World Bank API v2 (WDI).',
-    detail: 'Monthly OECD leading indicators; IMF annual WEO (forecasts flagged as Est.); World Bank annual WDI. Cached server-side — refresh sparingly.',
+    market: 'Cross-country macro indicators from official international institutions — published actuals and leading indicators.',
+    venue: 'No exchange. OECD CLI and confidence indices; World Bank WDI; FRED/OECD for fresher AU labour and prices.',
+    source: 'Hub multilateral proxy: OECD SDMX (CLI), World Bank API v2 (WDI), FRED/OECD quarterly series for AU.',
+    detail: 'Monthly OECD leading indicators; World Bank annual WDI (typically 1–2 year lag). AU GDP growth, CPI, and unemployment prefer quarterly/monthly feeds over WDI where available.',
+  },
+  forecast: {
+    title: 'Market & source',
+    market: 'IMF World Economic Outlook projections — forward-looking estimates, not published national accounts.',
+    venue: 'No exchange. Annual WEO vintage; headline year is the current calendar year or next when available.',
+    source: 'Hub multilateral proxy: IMF DataMapper (WEO database).',
+    detail: 'All cards in this section are forecasts (Est.). Compare against Global Macro actuals for the same metric where both exist.',
   },
   comm: {
     title: 'Market & source',
@@ -972,6 +984,11 @@ const SECTION_EXPLAINERS = {
 };
 
 // ── Section Registry ──────────────────────────────
+const MULTILATERAL_SECTION_KEYS = new Set(['global', 'forecast']);
+function isMultilateralSection(section) {
+  return MULTILATERAL_SECTION_KEYS.has(section?.key);
+}
+
 const SECTIONS = [
   {
     key: 'eq',   gridId: 'equities-grid',    custId: 'cust-eq',   items: EQUITIES,
@@ -985,6 +1002,11 @@ const SECTIONS = [
   },
   {
     key: 'global', gridId: 'global-grid', custId: 'cust-global', items: GLOBAL_MACRO,
+    fetch: (item, force) => fetchMultilateral(item.id, force),
+    card: null,
+  },
+  {
+    key: 'forecast', gridId: 'forecast-grid', custId: 'cust-forecast', items: FORECAST_MACRO,
     fetch: (item, force) => fetchMultilateral(item.id, force),
     card: null,
   },
@@ -1602,6 +1624,7 @@ const CARD_INFO_RESOLVERS = {
   bond: bondCardInfo,
   val: valuationCardInfo,
   global: globalCardInfo,
+  forecast: globalCardInfo,
 };
 
 function getCardInfo(sectionKey, item) {
@@ -3074,7 +3097,7 @@ async function fetchMultilateralBatch(metricIds, force = false) {
 }
 
 function startMultilateralPrefetch(force = false) {
-  const visible = visOf(GLOBAL_MACRO);
+  const visible = [...visOf(GLOBAL_MACRO), ...visOf(FORECAST_MACRO)];
   if (!visible.length) return;
   const run = () => {
     void fetchMultilateralBatch(visible.map(item => item.id), force);
@@ -3433,7 +3456,8 @@ async function fetchBond(series_id, force = false) {
 const SECTION_LOAD_LABELS = {
   eq: 'Loading quotes…',
   val: 'Loading FRED & live metrics…',
-  global: 'Loading OECD / IMF / World Bank…',
+  global: 'Loading OECD / World Bank…',
+  forecast: 'Loading IMF WEO forecasts…',
   comm: 'Loading commodities…',
   bond: 'Loading yields…',
   fx: 'Loading FX rates…',
@@ -3628,7 +3652,8 @@ function collectCardMetas(section, items) {
     });
   }
 
-  if (section.key === 'global') {
+  if (isMultilateralSection(section)) {
+    const isForecast = section.key === 'forecast';
     return items.map(item => {
       const d = DATA[item.id];
       const price = d?.display ?? (d?.price != null ? String(d.price) : null);
@@ -3646,13 +3671,14 @@ function collectCardMetas(section, items) {
         isRatio: Boolean(item.isPercent),
         asOf: d?.asOf ?? null,
         asOfUtc: d?.asOfUtc ?? null,
-        freshnessKind: d?.freshnessKind,
+        freshnessKind: d?.freshnessKind ?? (isForecast ? 'estimated' : undefined),
         freshnessNote: d?.freshnessNote,
-        estimated: d?.estimated,
+        estimated: isForecast || d?.estimated,
         itemKey: item.id,
         sectionKey: section.key,
         failed: !d || !price,
-        cardClassExtra: 'card--reference',
+        cardClassExtra: isForecast ? 'card--forecast' : 'card--reference',
+        pillLabel: isForecast ? 'Forecast' : null,
         showCardAsOf: Boolean(d?.asOfUtc || d?.asOf),
       }, item, section.key);
     });
@@ -5306,7 +5332,7 @@ async function loadAll(force = false) {
     const visible = visOf(section.items);
     if (!visible.length) return;
 
-    if (section.key === 'global') {
+    if (isMultilateralSection(section)) {
       if (!effectiveForce) {
         let painted = false;
         for (const item of visible) {
@@ -5332,7 +5358,7 @@ async function loadAll(force = false) {
           else delete DATA[key];
         }
       } catch (err) {
-        console.warn('global section load failed', err);
+        console.warn(`${section.key} section load failed`, err);
       } finally {
         renderSectionGrid(section);
         renderCust(section);
@@ -5741,7 +5767,7 @@ async function fetchHistory(item, section, days) {
   if (section.key === 'val') {
     return fetchValuationHistory(item.id, days);
   }
-  if (section.key === 'global') {
+  if (isMultilateralSection(section)) {
     return fetchMultilateralHistory(item.id, days);
   }
   return null;
@@ -5902,7 +5928,7 @@ function chartOpts(item, section) {
     const pctDp = item.id === 'buffett' ? 0 : 1;
     return { isPercent: true, isRatio: true, dp: 2, pctDp, quarterlyNote: true };
   }
-  if (section.key === 'global') {
+  if (isMultilateralSection(section)) {
     if (item.id === 'wb-gni-au' || item.id === 'wb-gni-us') {
       return { isPercent: false, dp: 0, gniUsd: true };
     }
@@ -5910,6 +5936,7 @@ function chartOpts(item, section) {
       isPercent: Boolean(item.isPercent),
       isRatio: Boolean(item.isPercent),
       dp: item.isPercent ? 1 : 2,
+      quarterlyNote: section.key === 'forecast',
     };
   }
   const isPercent = section.key === 'bond';
@@ -6044,6 +6071,7 @@ function getSectionName(sectionKey) {
     eq: 'Equities',
     val: 'Valuation',
     global: 'Global Macro',
+    forecast: 'Forecasts',
     comm: 'Commodities',
     bond: 'Treasuries',
     fx: 'Currencies',
