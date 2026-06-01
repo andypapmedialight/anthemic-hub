@@ -42,7 +42,9 @@ from valuation_fetch import (  # noqa: E402
     fetch_fred_observations_proxy,
     fetch_freshness_api,
     fetch_valuation_batch,
+    fetch_valuation_history,
     fetch_valuation_metric,
+    VALUATION_HISTORY_METRICS,
     fred_last_observation,
     warm_mmd_cache,
 )
@@ -204,6 +206,9 @@ class HubHandler(SimpleHTTPRequestHandler):
             return
         if path == "/economics/proxy/valuation":
             self._proxy_valuation()
+            return
+        if path == "/economics/proxy/valuation/history":
+            self._proxy_valuation_history()
             return
         if path == "/economics/proxy/multilateral/health":
             self._send_json({"ok": True})
@@ -375,6 +380,22 @@ class HubHandler(SimpleHTTPRequestHandler):
         try:
             data = fetch_valuation_metric(metric)
             self._send_json(data)
+        except Exception as e:
+            self._send_json({"error": str(e)}, status=502)
+
+    def _proxy_valuation_history(self) -> None:
+        qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        metric = qs.get("metric", [""])[0]
+        if metric not in VALUATION_HISTORY_METRICS:
+            self.send_error(400, "Invalid metric")
+            return
+        days_raw = qs.get("days", ["1825"])[0]
+        try:
+            days = max(30, min(20 * 365, int(days_raw)))
+        except ValueError:
+            days = 1825
+        try:
+            self._send_json({"metric": metric, "series": fetch_valuation_history(metric, days=days)})
         except Exception as e:
             self._send_json({"error": str(e)}, status=502)
 

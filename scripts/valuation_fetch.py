@@ -858,6 +858,19 @@ def fetch_valuation_metric(metric: str) -> dict:
     return fn()
 
 
+VALUATION_HISTORY_METRICS = frozenset({"au-cgs"})
+
+
+def fetch_valuation_history(metric: str, *, days: int = 1825) -> list[dict]:
+    if metric not in VALUATION_HISTORY_METRICS:
+        raise ValueError(f"No history for metric: {metric}")
+    if metric == "au-cgs":
+        from aus_fetch import fetch_aofm_ags_history
+
+        return fetch_aofm_ags_history(days=days)
+    return []
+
+
 def fetch_valuation_batch(metric_ids: list[str]) -> dict[str, dict]:
     """Fetch several live metrics in one request (shared BIS cache, parallel upstream)."""
     unique: list[str] = []

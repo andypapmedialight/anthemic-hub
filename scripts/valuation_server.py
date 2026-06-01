@@ -24,7 +24,9 @@ from valuation_fetch import (  # noqa: E402
     fetch_multilateral_history,
     fetch_multilateral_metric,
     fetch_valuation_batch,
+    fetch_valuation_history,
     fetch_valuation_metric,
+    VALUATION_HISTORY_METRICS,
     warm_mmd_cache,
     warm_multilateral_cache,
 )
@@ -67,6 +69,9 @@ class ValuationHandler(BaseHTTPRequestHandler):
             return
         if path == "/valuation":
             self._valuation()
+            return
+        if path == "/valuation/history":
+            self._valuation_history()
             return
         if path == "/multilateral/health":
             self._json({"ok": True})
@@ -176,6 +181,22 @@ class ValuationHandler(BaseHTTPRequestHandler):
             return
         try:
             self._json(fetch_valuation_metric(metric))
+        except Exception as exc:
+            self._json({"error": str(exc)}, status=502)
+
+    def _valuation_history(self) -> None:
+        qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        metric = qs.get("metric", [""])[0]
+        if metric not in VALUATION_HISTORY_METRICS:
+            self.send_error(400, "Invalid metric")
+            return
+        days_raw = qs.get("days", ["1825"])[0]
+        try:
+            days = max(30, min(20 * 365, int(days_raw)))
+        except ValueError:
+            days = 1825
+        try:
+            self._json({"metric": metric, "series": fetch_valuation_history(metric, days=days)})
         except Exception as exc:
             self._json({"error": str(exc)}, status=502)
 

@@ -181,15 +181,38 @@ def _resolve_aofm_dealt_xlsx_url() -> str:
     return AOFM_DEALT_FALLBACK
 
 
+def fetch_aofm_ags_rows() -> list[dict]:
+    """AOFM FaceValue sheet rows (cached; shared by card + chart history)."""
+    cached = _cache_get("aofm:rows", CACHE_TTL_AOFM)
+    if cached is not None:
+        return list(cached)
+
+    url = _resolve_aofm_dealt_xlsx_url()
+    raw = _fetch(url, timeout=90)
+    rows = _parse_aofm_face_value_rows(raw)
+    _cache_set("aofm:rows", rows)
+    return rows
+
+
+def fetch_aofm_ags_history(*, days: int = 1825) -> list[dict]:
+    from valuation_fetch import _rows_to_series
+
+    rows = fetch_aofm_ags_rows()
+    series = _rows_to_series([(r["period"], r["total_main"]) for r in rows])
+    if not series:
+        return []
+    cutoff = int(time.time() * 1000) - days * 86400000
+    trimmed = [p for p in series if p["t"] >= cutoff]
+    return trimmed if len(trimmed) >= 2 else series[-min(len(series), 36):]
+
+
 def fetch_aofm_ags_face() -> dict:
     """Commonwealth AGS face value (AOFM monthly positions — total main funding instruments)."""
     cached = _cache_get("aofm:ags", CACHE_TTL_AOFM)
     if cached is not None:
         return dict(cached)
 
-    url = _resolve_aofm_dealt_xlsx_url()
-    raw = _fetch(url, timeout=90)
-    rows = _parse_aofm_face_value_rows(raw)
+    rows = fetch_aofm_ags_rows()
     last = rows[-1]
     prev = rows[-2] if len(rows) > 1 else None
     billions = last["total_main"]

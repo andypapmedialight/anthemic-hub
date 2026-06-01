@@ -814,6 +814,17 @@ function isValuationLive(itemOrId) {
   return Boolean(item?.api);
 }
 
+/** Live valuation cards that still have chart history (FRED or hub history API). */
+const VALUATION_CHARTABLE_LIVE = new Set(['au-gdp', 'margin-debt', 'au-cgs']);
+
+function valuationHasChart(itemOrId) {
+  const id = typeof itemOrId === 'string' ? itemOrId : itemOrId?.id;
+  const item = VALUATION.find(v => v.id === id);
+  if (!item) return false;
+  if (item.api) return VALUATION_CHARTABLE_LIVE.has(id);
+  return true;
+}
+
 // IMF DataMapper, OECD SDMX, World Bank WDI (hub /economics/proxy/multilateral)
 const GLOBAL_MACRO = [
   { id: 'oecd-cli-au', label: 'OECD CLI — Australia', ticker: 'CLI-AU', sourceOrg: 'OECD', isPercent: false, def: true },
@@ -2674,6 +2685,7 @@ function prevFredRow(rows) {
 const FRED_TREASURY_MV_SERIES = 'MVMTD027MNFRBDAL';
 const FRED_PUBLIC_DEBT_LEVEL_SERIES = 'GFDEBTN';
 const FRED_GDP_NOWCAST_SERIES = 'GDPNOW';
+const FRED_MARGIN_DEBT_SERIES = 'BOGZ1FL663067003Q';
 /** BIS govt credit % GDP (quarterly). IMF GGGDTAAUA188N is annual and lags ~1y on FRED. */
 const FRED_AU_PUBLIC_DEBT_SERIES = 'QAUGAN770A';
 const FRED_AU_PUBLIC_DEBT_LEVEL_SERIES = 'QAUGANXDCA';
@@ -2926,6 +2938,18 @@ function pickAuGdpBillionsForDebt(fred, ratioDate) {
   const window = eligible.slice(-4);
   if (window.length < 4) return null;
   return window.reduce((sum, row) => sum + row.v / 1000, 0);
+}
+
+/** Rolling 4-quarter nominal GDP (AUD billions) — matches AU GDP card headline. */
+function buildAuGdpAnnualSeries(fred) {
+  const sorted = sortedFredRows(fred.NGDPSAXDCAUQ);
+  if (sorted.length < 4) return null;
+  const series = [];
+  for (let i = 3; i < sorted.length; i++) {
+    const annual = sorted.slice(i - 3, i + 1).reduce((s, r) => s + r.v / 1000, 0);
+    series.push({ t: new Date(sorted[i].date).getTime(), v: annual });
+  }
+  return series.length ? series : null;
 }
 
 function attachAuDebtLevel(quote, fred, ratioDate, levelSeriesId = null) {
@@ -3195,7 +3219,7 @@ async function fetchFredSeriesRows(seriesId, start, attempt = 0, limit = null) {
 }
 
 const VAL_FRED_IDS = ['GDP', FRED_GDP_NOWCAST_SERIES, 'NCBEILQ027S', 'GFDEGDQ188S', 'GFDEBTN', 'TCMDO', 'FGSDODNS', 'NGDPSAXDCAUQ', FRED_AU_PUBLIC_DEBT_SERIES, FRED_AU_PUBLIC_DEBT_LEVEL_SERIES, FRED_AU_PRIVATE_DEBT_SERIES];
-const VAL_FRED_MONTHLY_IDS = [FRED_TREASURY_MV_SERIES];
+const VAL_FRED_MONTHLY_IDS = [FRED_TREASURY_MV_SERIES, FRED_MARGIN_DEBT_SERIES];
 const VAL_FRED_QUARTERLY_IDS = new Set([
   'GDP', 'NCBEILQ027S', 'GFDEGDQ188S', 'GFDEBTN', 'TCMDO', 'FGSDODNS',
   'NGDPSAXDCAUQ', FRED_AU_PUBLIC_DEBT_SERIES, FRED_AU_PUBLIC_DEBT_LEVEL_SERIES, FRED_AU_PRIVATE_DEBT_SERIES,
@@ -3573,7 +3597,7 @@ function collectCardMetas(section, items) {
           itemKey: item.id,
           sectionKey: section.key,
           failed: false,
-          noChart: true,
+          noChart: !valuationHasChart(item),
           cardClassExtra: 'card--reference',
           showCardAsOf: Boolean(asOfUtc || d?.asOf),
         };
@@ -5603,6 +5627,7 @@ const COMPARE_MAX_ITEMS = 6;
 
 function chartPeriodsFor(item, section) {
   if (section.key === 'val') return CHART_PERIODS.filter(p => p.days >= 30);
+  if (isMultilateralSection(section)) return CHART_PERIODS.filter(p => p.days >= 30);
   if (section.key === 'bond' && !item.yTicker) return CHART_PERIODS.filter(p => p.days >= 30);
   if (section.key === 'fx') return CHART_PERIODS.filter(p => p.days >= 7);
   return CHART_PERIODS;
@@ -5796,8 +5821,34 @@ async function fetchMultilateralHistory(metricId, days) {
   }
 }
 
+async function fetchValuationLiveHistory(metricId, days) {
+  const cacheKey = `val-live:hist:${metricId}:${days}`;
+  const cached = historyCacheGet(cacheKey);
+  if (cached) return cached;
+  if (!isHubEconomicsPage() || !isHubHostname()) return null;
+  try {
+    const url = `${location.origin}/economics/proxy/valuation/history?${new URLSearchParams({
+      metric: metricId,
+      days: String(days),
+    })}`;
+    const r = await fetchWithTimeout(url, {}, 90000);
+    const body = await readFetchResponse(r, { asJson: true });
+    if (body?.error) throw new Error(body.error);
+    const series = sliceSeriesForChart(body.series || [], days);
+    if (!series?.length) return null;
+    historyCacheSet(cacheKey, series);
+    return series;
+  } catch (err) {
+    console.warn('valuation live history failed', metricId, err);
+    return null;
+  }
+}
+
 async function fetchValuationHistory(metricId, days) {
-  if (isValuationLive(metricId)) return null;
+  if (metricId === 'au-cgs' && isValuationLive(metricId)) {
+    return fetchValuationLiveHistory(metricId, days);
+  }
+  if (isValuationLive(metricId) && !VALUATION_CHARTABLE_LIVE.has(metricId)) return null;
 
   const cacheKey = `val:${metricId}:${days}`;
   const cached = historyCacheGet(cacheKey);
@@ -5818,7 +5869,12 @@ async function fetchValuationHistory(metricId, days) {
     const ratios = buildPrivateDebtRatios(fred.TCMDO, fred.FGSDODNS, fred.GDP);
     series = ratios?.map(r => ({ t: r.t, v: r.ratio })) ?? null;
   } else if (metricId === 'au-gdp') {
-    series = fred.NGDPSAXDCAUQ?.map(r => ({ t: new Date(r.date).getTime(), v: r.v / 1000 })) ?? null;
+    series = buildAuGdpAnnualSeries(fred);
+  } else if (metricId === 'margin-debt') {
+    series = fred[FRED_MARGIN_DEBT_SERIES]?.map(r => ({
+      t: new Date(r.date).getTime(),
+      v: r.v / 1000,
+    })) ?? null;
   } else if (metricId === 'au-public-debt') {
     series = fred[FRED_AU_PUBLIC_DEBT_SERIES]?.map(r => ({ t: new Date(r.date).getTime(), v: r.v })) ?? null;
   } else if (metricId === 'au-private-debt') {
@@ -5923,6 +5979,12 @@ function chartOpts(item, section) {
   }
   if (section.key === 'val' && item.id === 'au-gdp') {
     return { isPercent: false, audBillions: true, dp: 2, quarterlyNote: true };
+  }
+  if (section.key === 'val' && item.id === 'au-cgs') {
+    return { isPercent: false, audBillions: true, dp: 2 };
+  }
+  if (section.key === 'val' && item.id === 'margin-debt') {
+    return { isPercent: false, usdBillions: true, dp: 2, quarterlyNote: true };
   }
   if (section.key === 'val') {
     const pctDp = item.id === 'buffett' ? 0 : 1;
