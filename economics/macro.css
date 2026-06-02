@@ -759,6 +759,21 @@
     word-break: break-word;
   }
 
+  .footer-disclaimer {
+    flex: 1 1 100%;
+    width: 100%;
+    margin: 0.65rem 0 0;
+    padding-top: 0.65rem;
+    border-top: 1px solid var(--border);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    line-height: 1.5;
+    color: var(--dim);
+    text-align: center;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
   .market-hours,
   .section-markets {
     display: flex;

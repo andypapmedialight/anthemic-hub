@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Design lab · Anthemic Developments</title>
+  <meta name="description" content="Scroll-driven layout experiments on the Anthemic hub." />
+  <meta name="robots" content="noindex" />
+  <link rel="preconnect" href="https://fonts.bunny.net" crossorigin />
+  <link rel="stylesheet" href="https://fonts.bunny.net/css?family=figtree:400,500,600|fraunces:600,700&display=swap" />
+  <style>
+    html { color-scheme: dark; --bg: #0e1015; --fg: #eceef4; --dim: #949db0; --accent: #c9a227; --live: #6b9cff; --border: #2a3140; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; font-family: "Figtree", system-ui, sans-serif; background: var(--bg); color: var(--fg); padding: 40px 20px 56px; }
+    .wrap { max-width: 42rem; margin: 0 auto; }
+    h1 { font-family: "Fraunces", Georgia, serif; font-size: 1.85rem; margin: 0 0 8px; color: var(--accent); }
+    .lede { margin: 0 0 28px; color: var(--dim); line-height: 1.6; }
+    ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+    li a {
+      display: block; padding: 18px 20px; border-radius: 12px; border: 1px solid var(--border);
+      text-decoration: none; color: inherit; background: rgba(255,255,255,0.03);
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    li a:hover { border-color: var(--live); transform: translateY(-2px); }
+    .tag { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--live); }
+    .title { font-size: 1.15rem; font-weight: 600; margin: 6px 0 4px; }
+    .desc { margin: 0; font-size: 0.9rem; color: var(--dim); line-height: 1.5; }
+    .back { margin-top: 32px; font-size: 0.9rem; }
+    .back a { color: var(--dim); }
+    .back a:hover { color: var(--live); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Design lab</h1>
+    <p class="lede">Prototype pages for layout and motion ideas. Not production polish — experiments only. Feedback welcome.</p>
+    <ul>
+      <li>
+        <a href="/design/stop-making-sense/">
+          <span class="tag">Scroll experiment · Live</span>
+          <div class="title">Stop Making Sense stage build</div>
+          <p class="desc">The set starts empty. Scrolling does not move the scene down — it wheels in lights, rigs, and musicians until the stage is full. Inspired by the Talking Heads concert film.</p>
+        </a>
+      </li>
+    </ul>
+    <p class="back"><a href="/">← Anthemic hub</a></p>
+  </div>
+</body>
+</html>

@@ -188,8 +188,14 @@
     .catch(function () { return null; });
   window.__hubGalleryManifestPromise = galleryManifestPromise;
 
+  var hubJsonUrl = (function () {
+    var meta = document.querySelector('meta[name="hub-content-version"]');
+    var v = meta && meta.getAttribute('content');
+    return v ? '/content/hub.json?v=' + encodeURIComponent(v) : '/content/hub.json';
+  })();
+
   Promise.all([
-    fetch('/content/hub.json').then(function (r) {
+    fetch(hubJsonUrl, { cache: 'no-store' }).then(function (r) {
       if (!r.ok) throw new Error('no content');
       return r.json();
     }),
@@ -285,6 +291,9 @@
         applyReadingListFromHub(c);
         setupFavouriteBands(c);
         bindCaseStudyNav();
+        try {
+          document.dispatchEvent(new CustomEvent("hub-content-ready", { detail: c }));
+        } catch (e) {}
       }
     })
     .catch(function () {
@@ -618,6 +627,9 @@
   window.hubScrollMarginTopPx = scrollMarginTopPx;
   window.hubScrollToAnchor = scrollToHubAnchor;
   window.hubResolveScrollAnchor = interestScrollAnchor;
+  window.hubSetInterest = function (interest, opts) {
+    setInterest(interest, opts || {});
+  };
   function setInterest(interest, opts) {
     opts = opts || {};
     if (interestValues.indexOf(interest) === -1) interest = "all";

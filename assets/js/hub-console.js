@@ -16,6 +16,8 @@
   var targets = document.querySelectorAll("[data-console-scene]");
   var current = "who";
   var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var scrollSyncLocked = false;
+  var scrollSyncLockTimer = null;
   var mobileToggle = document.getElementById("console-mobile-toggle");
   var typedScenes = {};
   var typeRunId = 0;
@@ -169,6 +171,14 @@
     syncMobileToggle();
   }
 
+  function lockScrollSync(ms) {
+    scrollSyncLocked = true;
+    if (scrollSyncLockTimer) window.clearTimeout(scrollSyncLockTimer);
+    scrollSyncLockTimer = window.setTimeout(function () {
+      scrollSyncLocked = false;
+    }, ms || 1200);
+  }
+
   function setScene(id, fromScroll) {
     if (!CAPTIONS[id]) id = "intro";
     cancelTypewriter();
@@ -190,6 +200,7 @@
       t.classList.toggle("console-target-active", t.getAttribute("data-console-scene") === id);
     });
     if (!fromScroll) {
+      lockScrollSync(reduced ? 200 : 1400);
       scrollToSceneTarget(document.querySelector('[data-console-scene="' + id + '"]'));
     }
     if (typeof window.syncHubSiteNavActive === "function") {
@@ -213,6 +224,7 @@
     if (io) io.disconnect();
     io = new IntersectionObserver(
       function (entries) {
+        if (scrollSyncLocked) return;
         var best = null;
         var bestRatio = 0;
         entries.forEach(function (e) {
@@ -241,6 +253,125 @@
   if (typeof MOBILE_MQ.addEventListener === "function") {
     MOBILE_MQ.addEventListener("change", bindScrollSync);
   }
+
+  window.hubSetScene = function (id, fromScroll) {
+    setScene(id, !!fromScroll);
+  };
+
+  var cliForm = document.getElementById("console-cli");
+  var cliInput = document.getElementById("console-cli-input");
+  var cliOut = document.getElementById("console-cli-out");
+  var cliHost = document.getElementById("split-rail-host");
+  var consoleChrome = document.querySelector(".console-chrome");
+
+  function setCommandMode(on) {
+    if (cliForm) cliForm.classList.toggle("is-command-mode", on);
+    if (cliHost) cliHost.classList.toggle("is-cli-command-mode", on);
+  }
+
+  function syncCommandMode() {
+    if (!cliInput) return;
+    setCommandMode(document.activeElement === cliInput);
+  }
+
+  function isTypingTarget(el) {
+    if (!el) return false;
+    var tag = el.tagName;
+    return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || el.isContentEditable;
+  }
+
+  function showCliOut(text) {
+    if (!cliOut) return;
+    if (!text) {
+      cliOut.textContent = "";
+      cliOut.hidden = true;
+      return;
+    }
+    cliOut.textContent = text;
+    cliOut.hidden = false;
+  }
+
+  function focusConsoleCli() {
+    if (!cliInput) return;
+    setCommandMode(true);
+    cliInput.focus();
+    cliInput.select();
+  }
+
+  function exitCommandMode() {
+    if (!cliInput) return;
+    cliInput.blur();
+    showCliOut("");
+    setCommandMode(false);
+  }
+
+  function runConsoleCommand(line) {
+    var raw = String(line || "").trim();
+    if (!raw) return;
+    var lower = raw.toLowerCase();
+    var parts = lower.split(/\s+/);
+
+    if (lower === "help" || lower === "cinnamon help" || lower === "cinnamon --help") {
+      showCliOut("cinnamon find <topic> — music, projects, work, reading, about, skills, filter · cinnamon wag");
+      return;
+    }
+
+    if (parts[0] === "cinnamon" && parts[1] === "wag") {
+      if (typeof window.cinnamonWag === "function") window.cinnamonWag();
+      showCliOut("→ tail wag engaged.");
+      return;
+    }
+
+    if (parts[0] === "cinnamon" && parts[1] === "find" && parts.length > 2) {
+      var target = raw.slice(raw.toLowerCase().indexOf("find") + 4).trim();
+      if (typeof window.cinnamonFind === "function" && window.cinnamonFind(target)) {
+        showCliOut("→ Cinnamon is on it.");
+      } else {
+        showCliOut("cinnamon: unknown scent: " + target);
+      }
+      return;
+    }
+
+    if (lower === "qa status cinnamon") {
+      if (typeof window.cinnamonFind === "function") window.cinnamonFind("about");
+      showCliOut("✓ morale: high");
+      return;
+    }
+
+    showCliOut("command not found: " + raw);
+  }
+
+  if (cliForm && cliInput) {
+    cliForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      runConsoleCommand(cliInput.value);
+      cliInput.value = "";
+    });
+    cliInput.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") {
+        exitCommandMode();
+      }
+    });
+    cliInput.addEventListener("blur", function () {
+      window.setTimeout(syncCommandMode, 0);
+    });
+  }
+
+  if (consoleChrome) {
+    consoleChrome.addEventListener("click", function (e) {
+      if (e.target.closest(".console-scene-btn, .console-mobile-toggle, .console-cli-input")) return;
+      if (e.target.closest(".console-titlebar, .console-caption")) focusConsoleCli();
+    });
+  }
+
+  document.addEventListener("keydown", function (e) {
+    if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (isTypingTarget(document.activeElement)) return;
+    if (e.key !== "`" && e.key !== "/") return;
+    if (!document.getElementById("workshop-console")) return;
+    e.preventDefault();
+    focusConsoleCli();
+  });
 
   setScene("who", true);
 })();

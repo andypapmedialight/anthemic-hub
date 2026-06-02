@@ -1,0 +1,444 @@
+/* Stop Making Sense — scroll builds the stage (pinned viewport) */
+:root {
+  --sms-bg: #060508;
+  --sms-floor: #1a1410;
+  --sms-floor-lit: #2d2218;
+  --sms-spot: rgba(255, 200, 120, 0.35);
+  --sms-back: #120f14;
+  --sms-amp: #1c1c22;
+  --sms-amp-grill: #0e0e12;
+  --sms-accent: #6b9cff;
+  --sms-gold: #e8b84a;
+  --sms-fig: #2a2630;
+  --sms-fig-highlight: #4a4458;
+  --sms-hud: rgba(8, 6, 10, 0.82);
+  --sms-font: "Figtree", system-ui, sans-serif;
+  --sms-display: "Fraunces", Georgia, serif;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+html { color-scheme: dark; }
+
+body.sms-page {
+  font-family: var(--sms-font);
+  background: var(--sms-bg);
+  color: #eceef4;
+  min-height: 100vh;
+}
+
+.sms-top {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px;
+  background: linear-gradient(180deg, rgba(6, 5, 8, 0.92) 0%, transparent 100%);
+  pointer-events: none;
+}
+.sms-top a {
+  pointer-events: auto;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: rgba(236, 238, 244, 0.75);
+  text-decoration: none;
+}
+.sms-top a:hover { color: var(--sms-accent); }
+.sms-top-title {
+  font-family: var(--sms-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--sms-gold);
+  letter-spacing: 0.02em;
+}
+
+.sms-scroller { position: relative; }
+
+.sms-pin {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  min-height: 480px;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.sms-void {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 55% at 50% 95%, rgba(40, 28, 18, 0.5) 0%, transparent 55%),
+    radial-gradient(ellipse 120% 80% at 50% 110%, #0a080c 0%, var(--sms-bg) 45%),
+    linear-gradient(180deg, #0c0a10 0%, var(--sms-bg) 100%);
+}
+
+.sms-spot {
+  position: absolute;
+  left: 50%;
+  top: -5%;
+  width: 55%;
+  height: 75%;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse 50% 70% at 50% 0%, var(--sms-spot) 0%, transparent 72%);
+  opacity: 0.5;
+  transition: opacity 1s ease;
+  pointer-events: none;
+}
+.sms-spot.is-hot { opacity: 1; }
+
+.sms-stage {
+  position: absolute;
+  inset: 0;
+  perspective: 900px;
+  perspective-origin: 50% 42%;
+}
+
+.sms-stage-inner {
+  position: absolute;
+  left: 50%;
+  bottom: 14%;
+  width: min(92vw, 720px);
+  height: 52%;
+  transform: translateX(-50%);
+  transform-style: preserve-3d;
+}
+
+.sms-layer {
+  position: absolute;
+  opacity: 0;
+  transition:
+    opacity 0.55s ease,
+    transform 1s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.8s ease;
+  pointer-events: none;
+}
+.sms-layer.is-on-stage {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+  filter: none;
+}
+
+.sms-layer.from-left:not(.is-on-stage) {
+  transform: translate3d(-72vw, 0, 0) rotate(-2.5deg) scale(0.92);
+}
+.sms-layer.from-right:not(.is-on-stage) {
+  transform: translate3d(72vw, 0, 0) rotate(2.5deg) scale(0.92);
+}
+.sms-layer.from-back:not(.is-on-stage) {
+  transform: translate3d(0, -30vh, -120px) scale(0.85);
+}
+.sms-layer.from-floor:not(.is-on-stage) {
+  transform: translate3d(0, 45vh, 0) scale(0.9);
+}
+
+.sms-hall {
+  position: absolute;
+  inset: -8% -6% auto;
+  height: 115%;
+  pointer-events: none;
+  z-index: 0;
+}
+.sms-hall .sms-graphic {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center top;
+  opacity: 0.55;
+}
+
+.sms-graphic {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.55))
+    brightness(1.12) contrast(1.08);
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.sms-prop--amp-r.is-on-stage .sms-graphic--flip {
+  transform: scaleX(-1);
+}
+
+.sms-graphic--vendor {
+  filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.55))
+    brightness(0.92) contrast(1.05);
+}
+
+.sms-credits {
+  margin: 0;
+  padding: 12px 18px 20px;
+  font-size: 0.72rem;
+  color: rgba(236, 238, 244, 0.45);
+  text-align: center;
+}
+.sms-credits a {
+  color: var(--sms-accent);
+}
+.sms-credits--placeholder {
+  display: block;
+}
+body.sms-has-vendor-graphics .sms-credits--placeholder {
+  display: none;
+}
+
+.sms-prop {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.sms-prop--backdrop {
+  left: 4%;
+  right: 4%;
+  bottom: 18%;
+  height: 72%;
+  z-index: 1;
+}
+.sms-prop--floor {
+  left: 3%;
+  right: 3%;
+  bottom: 0;
+  height: 30%;
+  z-index: 2;
+}
+.sms-prop--amp-l {
+  left: 0;
+  bottom: 22%;
+  width: 14%;
+  height: 42%;
+  z-index: 4;
+}
+.sms-prop--amp-r {
+  right: 0;
+  bottom: 22%;
+  width: 14%;
+  height: 42%;
+  z-index: 4;
+}
+.sms-prop--drums {
+  left: 36%;
+  bottom: 20%;
+  width: 28%;
+  height: 38%;
+  z-index: 5;
+}
+.sms-prop--keys {
+  left: 10%;
+  bottom: 22%;
+  width: 22%;
+  height: 30%;
+  z-index: 6;
+}
+.sms-prop--bass {
+  right: 8%;
+  bottom: 22%;
+  width: 16%;
+  height: 40%;
+  z-index: 6;
+}
+.sms-prop--guitar {
+  right: 24%;
+  bottom: 22%;
+  width: 14%;
+  height: 52%;
+  z-index: 7;
+}
+.sms-prop--vocal {
+  left: 40%;
+  bottom: 20%;
+  width: 18%;
+  height: 62%;
+  z-index: 8;
+}
+.sms-prop--lights {
+  left: -2%;
+  right: -2%;
+  top: -18%;
+  height: 55%;
+  z-index: 9;
+  align-items: flex-start;
+}
+.sms-prop--lights .sms-graphic {
+  object-position: center top;
+}
+.sms-prop--lights.is-on-stage .sms-graphic {
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.5))
+    drop-shadow(0 0 40px rgba(255, 200, 120, 0.15));
+}
+.sms-prop--cables {
+  left: 6%;
+  right: 6%;
+  bottom: 2%;
+  height: 14%;
+  z-index: 3;
+}
+.sms-prop--crowd {
+  left: -4%;
+  right: -4%;
+  bottom: -2%;
+  height: 26%;
+  z-index: 10;
+}
+
+.sms-layer.from-left:not(.is-on-stage)::after,
+.sms-layer.from-right:not(.is-on-stage)::after {
+  content: "";
+  position: absolute;
+  top: 30%;
+  width: 40%;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, rgba(255, 220, 150, 0.25), transparent);
+  opacity: 0.6;
+}
+.sms-layer.from-left:not(.is-on-stage)::after {
+  right: -20%;
+}
+.sms-layer.from-right:not(.is-on-stage)::after {
+  left: -20%;
+}
+
+.sms-fog {
+  inset: 0;
+  background: radial-gradient(ellipse 100% 60% at 50% 80%, rgba(107, 156, 255, 0.06) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 1.2s ease;
+}
+.sms-fog.is-on-stage { opacity: 1; }
+
+.sms-stage-inner {
+  transform: translateX(-50%) translateY(calc(var(--sms-depth, 0) * -12px));
+}
+
+.sms-hud {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  z-index: 50;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--sms-hud);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+}
+.sms-hud-kicker {
+  margin: 0 0 4px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sms-gold);
+}
+.sms-hud-cue {
+  margin: 0 0 10px;
+  font-family: var(--sms-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.sms-progress {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+.sms-progress-fill {
+  display: block;
+  height: 100%;
+  width: 0%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--sms-gold), var(--sms-accent));
+  transition: width 0.15s ease-out;
+}
+.sms-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.sms-step-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  transition: background 0.2s, transform 0.2s;
+}
+.sms-step-dot.is-done {
+  background: var(--sms-accent);
+  transform: scale(1.15);
+}
+.sms-step-dot.is-current {
+  background: var(--sms-gold);
+  box-shadow: 0 0 8px rgba(232, 184, 74, 0.5);
+}
+
+.sms-scroll-spacer {
+  height: 880vh;
+  pointer-events: none;
+}
+
+.sms-skip {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  z-index: 101;
+  font-size: 0.75rem;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(10, 8, 12, 0.85);
+  color: rgba(236, 238, 244, 0.8);
+  cursor: pointer;
+  font-family: inherit;
+}
+.sms-skip:hover { border-color: var(--sms-accent); color: #fff; }
+
+.sms-intro-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+  background: rgba(6, 5, 8, 0.55);
+  transition: opacity 0.6s ease, visibility 0.6s;
+  pointer-events: none;
+}
+.sms-intro-overlay.is-hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+.sms-intro-overlay p {
+  margin: 0;
+  max-width: 22rem;
+  font-family: var(--sms-display);
+  font-size: 1.2rem;
+  line-height: 1.5;
+  color: rgba(236, 238, 244, 0.9);
+}
+.sms-intro-overlay span {
+  display: block;
+  margin-top: 10px;
+  font-family: var(--sms-font);
+  font-size: 0.8rem;
+  color: rgba(236, 238, 244, 0.55);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sms-layer,
+  .sms-spot,
+  .sms-fog,
+  .sms-progress-fill {
+    transition: none;
+  }
+  .sms-scroll-spacer { height: auto; min-height: 0; }
+  .sms-pin { position: relative; min-height: 70vh; }
+}

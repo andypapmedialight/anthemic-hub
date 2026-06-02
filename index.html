@@ -62,13 +62,17 @@
   }
   </script>
   <link rel="preconnect" href="https://fonts.bunny.net" crossorigin />
-  <link rel="preload" href="/assets/css/hub.css?v=dev" as="style" />
+  <meta name="hub-content-version" content="20260602" />
+  <link rel="preload" href="/assets/css/hub.css?v=3" as="style" />
   <link rel="stylesheet" href="https://fonts.bunny.net/css?family=figtree:400,500,600|fraunces:600,700|jetbrains-mono:400,500,600&display=swap" />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%230e1015%22%2F%3E%3Cpath%20d%3D%22M10%2032%20L13%2018%20L16%2046%20L19%2022%20L22%2042%20L25%2020%20L28%2044%20L31%2026%20L34%2040%20L37%2024%20L43%2038%20L49%2028%20L55%2034%22%20fill%3D%22none%22%20stroke%3D%22%236b9cff%22%20stroke-width%3D%223.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%223%22%20fill%3D%22%23c9a227%22%2F%3E%3C%2Fsvg%3E" />
   <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%230e1015%22%2F%3E%3Cpath%20d%3D%22M10%2032%20L13%2018%20L16%2046%20L19%2022%20L22%2042%20L25%2020%20L28%2044%20L31%2026%20L34%2040%20L37%2024%20L43%2038%20L49%2028%20L55%2034%22%20fill%3D%22none%22%20stroke%3D%22%236b9cff%22%20stroke-width%3D%223.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%223%22%20fill%3D%22%23c9a227%22%2F%3E%3C%2Fsvg%3E" />
 
-  <link rel="stylesheet" href="/assets/css/hub.css?v=dev" />
-  <script src="/assets/js/theme-init.js?v=dev"></script>
+  <link rel="stylesheet" href="/assets/css/hub.css?v=19" />
+  <link rel="stylesheet" href="/assets/css/cinnamon-nav.css?v=14" />
+  <link rel="preload" href="/assets/cinnamon-agent.png?v=4" as="image" type="image/png" />
+  <link rel="preload" href="/assets/cinnamon-tail.png?v=11" as="image" type="image/png" />
+  <script src="/assets/js/theme-init.js?v=3"></script>
 </head>
 <body class="layout-alt">
   <header class="hub-header">
@@ -112,13 +116,107 @@
   </header>
 
   <div class="wrap split-shell">
-    <aside class="split-console" aria-label="Workshop console preview">
+    <div class="hub-intro-host split-rail-host" id="split-rail-host">
+      <div class="hub-intro-grid" id="hub-intro-grid">
+      <div class="hub-who-block hub-who-intro-col" id="hub-section-who" data-console-scene="who" aria-label="About">
+        <h2 class="section-heading hub-who-heading"><span class="sec-title">Who's Andy?</span></h2>
+        <article class="card card--profile card--profile-text" id="who-am-i-card">
+          <p class="profile-ships" id="profile-ships">Full Stack Engineer · Infrastructure Architect · 4 String Groover · dog-approved</p>
+          <p class="desc" id="who-am-i-body">Andy Papadopoulos, trained as a software engineer - senior developer, full-stack engineer,
+             and infrastructure architect at Mecca Medialight in Melbourne. He designs and ships web apps, mentors where he can, and tinkers on the side.
+             Off the clock he plays music, teaches bass, and scratches creative itches here under Anthemic.
+             Cinnamon, the site guide alongside, runs quality assurance and keeps morale high.</p>
+          <div class="card-profile-actions">
+            <a href="https://www.linkedin.com/in/andy-papadopoulos/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+            <a id="profile-instagram" href="https://www.instagram.com/anthemstothefall/" target="_blank" rel="noopener noreferrer">Instagram</a>
+            <a href="https://anthemstothefall.bandcamp.com/" target="_blank" rel="noopener noreferrer">Bandcamp</a>
+            <a href="/brain/">Brain map</a>
+          </div>
+        </article>
+      </div>
+      <div class="hub-intro-dock-column">
+        <div class="split-rail-spacer hub-intro-spacer" id="split-rail-spacer" aria-hidden="true"></div>
+        <div class="hub-intro-dock" id="hub-intro-dock">
+          <div class="split-rail-toolbar hub-intro-toolbar" role="toolbar" aria-label="Guide and workshop panels">
+            <button type="button" class="split-rail-expand" id="split-rail-expand" hidden aria-pressed="false" aria-label="Expand guide and CLI">Expand</button>
+          </div>
+          <button type="button" class="hub-panel-float hub-panel-float--guide" id="open-hub-guide" hidden aria-controls="hub-guide-panel">Open site guide</button>
+          <button type="button" class="hub-panel-float hub-panel-float--cli" id="open-hub-cli" hidden aria-controls="hub-cli-panel">Open workshop CLI</button>
+      <div class="cinnamon-agent-slot hub-guide-intro-col" id="hub-guide-panel">
+        <div class="cinnamon-agent-anchor" id="cinnamon-agent-anchor" aria-hidden="true"></div>
+        <section class="cinnamon-agent" id="cinnamon-agent" aria-label="Cinnamon, site guide">
+        <button type="button" class="hub-panel-close hub-panel-close--guide" id="close-hub-guide" aria-controls="hub-guide-panel">Close site guide</button>
+        <div class="cinnamon-agent-panel">
+          <div class="cinnamon-agent-figure" aria-hidden="true">
+            <img
+              class="cinnamon-tail"
+              src="/assets/cinnamon-tail.png?v=11"
+              width="46"
+              height="200"
+              alt=""
+              decoding="async"
+            />
+            <img
+              class="cinnamon-agent-img"
+              src="/assets/cinnamon-agent.png?v=4"
+              width="480"
+              height="480"
+              alt=""
+              decoding="async"
+            />
+          </div>
+          <div class="cinnamon-agent-voice">
+            <p class="cinnamon-agent-kicker">Site guide</p>
+            <div class="cinnamon-speech" role="group" aria-label="Cinnamon says">
+              <p class="cinnamon-agent-bubble" id="cinnamon-bubble" aria-live="polite">I'm Cinnamon - i find stuff. What are you sniffing for?</p>
+            </div>
+          </div>
+          <div class="cinnamon-agent-main">
+            <div class="cinnamon-agent-controls">
+              <div class="cinnamon-agent-chips" id="cinnamon-chips" role="group" aria-label="What to find"></div>
+              <div class="cinnamon-agent-row">
+                <label class="cinnamon-agent-query-wrap">
+                  <span class="visually-hidden">Describe what you want to find</span>
+                  <input
+                    type="search"
+                    class="cinnamon-agent-query"
+                    id="cinnamon-query"
+                    autocomplete="off"
+                    enterkeyhint="search"
+                    placeholder="Sniff for gigs, work, reading…"
+                  />
+                </label>
+                <button type="button" class="cinnamon-agent-find" id="cinnamon-find" disabled aria-disabled="true">Find it</button>
+                <button type="button" class="cinnamon-sound-toggle" id="cinnamon-sound-toggle" aria-pressed="false" aria-label="Sound off">Sound off</button>
+              </div>
+            </div>
+            <ul class="cinnamon-agent-fallback" aria-label="All hub sections">
+              <li><a href="#hub-section-who" data-scene-jump="who">About</a></li>
+              <li><a href="#hub-section-skills" data-scene-jump="intro">Skills</a></li>
+              <li><a href="#interest-bar" data-scene-jump="lens">Filter</a></li>
+              <li><a href="#hub-section-projects" data-scene-jump="projects">Projects</a></li>
+              <li><a href="#hub-section-music" data-scene-jump="music">Music</a></li>
+              <li><a href="#hub-section-bio" data-scene-jump="bio">Music bio</a></li>
+              <li><a href="#hub-section-reading" data-scene-jump="reading">Reading</a></li>
+              <li><a href="#hub-section-work" data-scene-jump="work">Work</a></li>
+            </ul>
+          </div>
+          <p class="cinnamon-hint">
+            <span class="cinnamon-hint-wide">CLI on the right: <kbd>`</kbd> or <kbd>/</kbd> to focus, then <strong>Enter</strong>. Try <code>cinnamon wag</code>.</span>
+            <span class="cinnamon-hint-narrow">Start typing in the box — my tail wags when you sniff around.</span>
+          </p>
+        </div>
+        </section>
+      </div>
+    <aside class="split-console hub-cli-intro-col" id="hub-cli-panel" aria-label="Workshop console preview">
+      <button type="button" class="hub-panel-close hub-panel-close--cli" id="close-hub-cli" aria-controls="hub-cli-panel">Close workshop CLI</button>
       <div class="workshop-console" id="workshop-console">
         <div class="console-chrome">
-          <div class="console-titlebar">
+          <div class="console-titlebar" tabindex="0" aria-describedby="console-titlebar-tip">
             <span class="console-dots" aria-hidden="true"><i></i><i></i><i></i></span>
             <span class="console-title">anthemic@hub — workshop</span>
             <button type="button" class="console-mobile-toggle" id="console-mobile-toggle" aria-expanded="true" aria-controls="console-body">Collapse</button>
+            <span class="console-titlebar-tip" id="console-titlebar-tip" role="tooltip">A scroll-synced preview of the hub — scenes follow Skills, projects, music, and more as you move down the page. Press <kbd>`</kbd> or <kbd>/</kbd> to type commands (<code>cinnamon find music</code>, <code>cinnamon wag</code>).</span>
           </div>
           <p class="console-caption" id="console-caption">What — skills &amp; links</p>
           <div class="console-body" id="console-body">
@@ -137,7 +235,8 @@
 <span class="c-out">  Mecca Medialight · Melbourne</span>
 <span class="c-out">  full-stack · infra architect · 4-string · dog-approved</span>
 <span class="c-prompt">$</span> <span class="c-cmd">qa status cinnamon</span>
-<span class="c-ok">✓ morale: high</span></code></pre>
+<span class="c-ok">✓ morale: high</span>
+<span class="c-dim">  hint: ` or / — cinnamon find music</span></code></pre>
             <pre class="console-scene" data-scene="lens" hidden><code><span class="c-dim"># hub filter</span>
 <span class="c-prompt">$</span> <span class="c-cmd">hub filter --interest music</span>
 <span class="c-out">  highlighting: gigs · setlist · bass · bandcamp</span>
@@ -167,6 +266,22 @@
 <span class="c-out">  Laravel · modern front ends · CI/CD</span>
 <span class="c-out">  role: senior dev / full-stack / infra</span></code></pre>
           </div>
+          <form class="console-cli" id="console-cli" aria-label="Workshop command line">
+            <label class="console-cli-label" for="console-cli-input">Command</label>
+            <span class="c-prompt console-cli-prompt" aria-hidden="true">$</span>
+            <input
+              type="text"
+              class="console-cli-input"
+              id="console-cli-input"
+              autocomplete="off"
+              spellcheck="false"
+              aria-label="Type a workshop command"
+              placeholder="cinnamon find music — press Enter"
+            />
+            <button type="submit" class="console-cli-run">Enter</button>
+            <p class="console-cli-hint">Focus with <kbd>`</kbd> or <kbd>/</kbd> · <code>cinnamon wag</code> · <code>cinnamon find music</code></p>
+            <p class="console-cli-out" id="console-cli-out" aria-live="polite" hidden></p>
+          </form>
           <div class="console-foot">
             <button type="button" class="console-scene-btn" data-scene-jump="intro">skills</button>
             <button type="button" class="console-scene-btn is-active" data-scene-jump="who">about</button>
@@ -180,42 +295,16 @@
         </div>
       </div>
     </aside>
+        </div>
+      </div>
+      </div>
+      <div class="split-rail-sentinel hub-intro-sentinel" id="split-rail-sentinel" aria-hidden="true"></div>
+    </div>
+
     <div class="split-scroll">
       <main>
     <div class="wrap">
 
-      <div class="hub-who-block" id="hub-section-who" data-console-scene="who" aria-label="About">
-        <h2 class="section-heading hub-who-heading"><span class="sec-title">Who's Andy?</span></h2>
-        <article class="card card--profile" id="who-am-i-card">
-          <div class="card-profile-layout">
-            <div class="card-profile-photo-wrap">
-              <img
-                src="/assets/cinnamon.jpg"
-                width="800"
-                height="600"
-                alt="Andy Papadopoulos with Cinnamon, the dog."
-                loading="lazy"
-                decoding="async"
-                onerror="this.style.display='none'; var f=this.nextElementSibling; if(f) f.hidden=false;"
-              />
-              <div class="card-profile-fallback" hidden>Add <code>assets/cinnamon.jpg</code> to this repo (photo of you and Cinnamon).</div>
-            </div>
-            <div class="card-profile-body">
-              <p class="profile-ships" id="profile-ships">Full Stack Engineer · Infrastructure Architect · 4 String Groover · dog-approved</p>
-              <p class="desc" id="who-am-i-body">Andy Papadopoulos, trained as a software engineer - senior developer, full-stack engineer,
-                 and infrastructure architect at Mecca Medialight in Melbourne. He designs and ships web apps, mentors where he can, and tinkers on the side. 
-                 Off the clock he plays music, teaches bass, and scratches creative itches here under Anthemic. 
-                 Cinnamon (pictured) runs quality assurance and keeps morale high.</p>
-              <div class="card-profile-actions">
-                <a href="https://www.linkedin.com/in/andy-papadopoulos/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
-                <a id="profile-instagram" href="https://www.instagram.com/anthemstothefall/" target="_blank" rel="noopener noreferrer">Instagram</a>
-                <a href="https://anthemstothefall.bandcamp.com/" target="_blank" rel="noopener noreferrer">Bandcamp</a>
-                <a href="/brain/">Brain map</a>
-              </div>
-            </div>
-          </div>
-        </article>
-      </div>
       <div class="hub-skills-block" id="hub-section-skills" data-console-scene="intro" aria-label="Skills and links">
         <h2 class="section-heading hub-skills-heading"><span class="sec-title">Skills</span></h2>
         <section class="employer-strip">
@@ -275,7 +364,7 @@
           </span>
           <div class="interest-bar-head-copy">
             <p class="interest-bar-kicker">Hub filter</p>
-            <p class="interest-bar-desc">Highlight matching links in the main column. Pick <strong>Everything</strong> to reset.</p>
+            <p class="interest-bar-desc">Pick <strong>Everything</strong> to reset.</p>
           </div>
         </div>
         <div class="interest-bar-main">
@@ -511,7 +600,33 @@
 
     </div>
   </footer>
-  <script src="/assets/js/hub.js?v=dev" defer></script>
-  <script src="/assets/js/hub-nav.js?v=dev" defer></script>
-  <script src="/assets/js/hub-console.js?v=dev" defer></script>
+  <div class="cinnamon-trail" id="cinnamon-trail" aria-hidden="true" hidden></div>
+  <div class="cinnamon-spotlight" id="cinnamon-spotlight" hidden aria-live="polite">
+    <div class="cinnamon-spotlight-card">
+      <div class="cinnamon-spotlight-figure" aria-hidden="true">
+        <img
+          class="cinnamon-spotlight-tail"
+          src="/assets/cinnamon-tail.png?v=11"
+          width="46"
+          height="200"
+          alt=""
+          decoding="async"
+        />
+        <img
+          class="cinnamon-spotlight-img"
+          src="/assets/cinnamon-agent.png?v=4"
+          width="480"
+          height="480"
+          alt=""
+          decoding="async"
+        />
+      </div>
+      <p class="cinnamon-spotlight-bubble" id="cinnamon-spotlight-bubble"></p>
+    </div>
+  </div>
+  <script src="/assets/js/hub.js?v=3" defer></script>
+  <script src="/assets/js/hub-nav.js?v=3" defer></script>
+  <script src="/assets/js/hub-console.js?v=4" defer></script>
+  <script src="/assets/js/hub-rail.js?v=7" defer></script>
+  <script src="/assets/js/cinnamon-nav.js?v=6" defer></script>
 </html>

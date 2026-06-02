@@ -52,7 +52,85 @@
     "PJ Harvey",
     "Massive Attack"
   ],
-  "who_am_i": "Andy Papadopoulos, trained as a software engineer - senior developer, full-stack engineer, and infrastructure architect at Mecca Medialight in Melbourne. He designs and ships web apps, mentors where he can, and tinkers on the side. Off the clock he plays music, teaches bass, and scratches creative itches here under Anthemic. Cinnamon (pictured) is the dog who runs quality assurance on morale.",
+  "who_am_i": "Andy Papadopoulos, trained as a software engineer - senior developer, full-stack engineer, and infrastructure architect at Mecca Medialight in Melbourne. He designs and ships web apps, mentors where he can, and tinkers on the side. Off the clock he plays music, teaches bass, and scratches creative itches here under Anthemic. Cinnamon, the site guide above, runs quality assurance on morale.",
+  "cinnamon_nav": {
+    "greeting": "I'm Cinnamon - i find stuff. What are you sniffing for?",
+    "find_label": "Find it",
+    "found_message_template": "Found it, {section}, NOW WHERE THE SNAX AT?!",
+    "placeholder": "Sniff for gigs, swarm, reading list…",
+    "keyword_interests": [
+      { "keywords": ["swarm", "civic", "community", "murray", "reporter", "safer"], "interest": "community" },
+      { "keywords": ["gig", "gigs", "bass", "band", "bandcamp", "music", "live", "setlist", "anthems"], "interest": "music" },
+      { "keywords": ["lesson", "lessons", "teaching", "coach", "coaching", "student"], "interest": "teaching" },
+      { "keywords": ["brain", "map", "3d", "atlas", "creative", "macro", "economics"], "interest": "creative" },
+      { "keywords": ["writing", "essay", "personal", "quill"], "interest": "personal" },
+      { "keywords": ["hire", "mecca", "work", "job", "deck", "pitch", "professional"], "interest": "work" },
+      { "keywords": ["read", "reading", "books", "shelf", "library", "shelfie"], "interest": "personal" }
+    ],
+    "intents": [
+      {
+        "id": "about",
+        "label": "About Andy",
+        "scene": "who",
+        "keywords": ["about", "andy", "who", "profile", "dog"],
+        "reply": "About Andy. I'll show you."
+      },
+      {
+        "id": "skills",
+        "label": "Skills",
+        "scene": "intro",
+        "interest": "work",
+        "keywords": ["skills", "stack", "tech", "engineer", "developer", "full-stack", "react"],
+        "reply": "Skills and links. On it."
+      },
+      {
+        "id": "filter",
+        "label": "Filter hub",
+        "scene": "lens",
+        "keywords": ["filter", "interest", "sort", "lens", "everything"],
+        "reply": "Hub filter — pick what matters."
+      },
+      {
+        "id": "projects",
+        "label": "Projects",
+        "scene": "projects",
+        "keywords": ["project", "projects", "setlist", "brain", "swarm", "app", "build", "macro", "morning"],
+        "reply": "Anthemic projects. This way."
+      },
+      {
+        "id": "music",
+        "label": "Gigs & bass",
+        "scene": "music",
+        "interest": "music",
+        "keywords": ["gig", "gigs", "bass", "music", "band", "bandcamp", "live", "calendar"],
+        "reply": "Music section. Good sticks."
+      },
+      {
+        "id": "bio",
+        "label": "Music bio",
+        "scene": "bio",
+        "interest": "music",
+        "keywords": ["music bio", "bands", "instruments", "anthems", "origin story"],
+        "reply": "Music bio — long story, good ears."
+      },
+      {
+        "id": "reading",
+        "label": "Reading",
+        "scene": "reading",
+        "interest": "personal",
+        "keywords": ["read", "reading", "books", "shelf", "library", "reading list", "shelfie"],
+        "reply": "Reading list. Smells like ideas."
+      },
+      {
+        "id": "work",
+        "label": "Work & hire",
+        "scene": "work",
+        "interest": "work",
+        "keywords": ["work", "hire", "job", "mecca", "professional", "deck", "pitch", "linkedin"],
+        "reply": "Work and hire deck. Lead on."
+      }
+    ]
+  },
   "music_bio_origin": [
     "A long, long time ago in a decade far far away that has come to be known as 'the eighties' one of Andy's best friends ran into their classroom at a Melbourne school, his eyes wide with excitement having recently played a drum kit for the first time: 'Maaate!', he proclaimed in an English accent which had shown only the slightest hint of ockerisation, '...we have to put a band together!, it'll be great!, we'll get heaps of chicks!' Andy's eyes widened though he was still unsure of his particular role in this venture, but his friend continued, '....you've got big hands - you can play bass!'",
     "And so, that very week, having no idea what they were looking for, the two went round to check out a cheap bass they had seen advertised in the trading paper. The seller invited them into his bedroom, but as neither of the new band members could play a note, the seller had to demonstrate. He flicked on the radio, plugged the bass into the stereo amp and jammed along to Phil Collins and Billy Ocean's 'Easy Lover'. Andy and his mate were positively dribbling - 'We are SO doing this!'",
