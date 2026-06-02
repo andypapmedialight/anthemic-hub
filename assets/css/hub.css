@@ -2656,6 +2656,20 @@
       }
     }
     @media (max-width: 719px) {
+      .hub-intro-dock {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+      }
+      .hub-intro-dock > * {
+        min-width: 0;
+      }
+      #hub-guide-panel .cinnamon-agent-panel {
+        padding-right: 10px;
+      }
+      .hub-panel-close--guide {
+        top: 8px;
+        right: 8px;
+      }
       .split-console {
         display: none !important;
       }

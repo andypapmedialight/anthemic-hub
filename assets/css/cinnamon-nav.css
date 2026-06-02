@@ -598,7 +598,7 @@ html[data-theme="light"] .cinnamon-agent {
   .cinnamon-agent-panel {
     grid-template-columns: 84px minmax(0, 1fr);
     padding: 8px 10px;
-    gap: 8px 6px;
+    gap: 8px 8px;
   }
 
   .cinnamon-agent {
@@ -606,16 +606,29 @@ html[data-theme="light"] .cinnamon-agent {
   }
 
   .cinnamon-agent-row {
-    grid-template-columns: auto auto;
-    justify-content: start;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
   }
 
   .cinnamon-agent-query-wrap {
-    width: min(100%, 16rem);
+    width: 100%;
+    min-width: 0;
+    grid-column: 1 / -1;
   }
 
   .cinnamon-agent-find {
-    width: auto;
+    width: 100%;
+    min-height: 38px;
+  }
+
+  .cinnamon-sound-toggle {
+    min-height: 38px;
+    justify-self: stretch;
+  }
+
+  .cinnamon-agent-controls {
+    min-width: 0;
   }
 }
 
