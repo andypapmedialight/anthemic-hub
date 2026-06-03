@@ -81,20 +81,30 @@ jobs:
       - name: Verify deploy bundle has no public secrets (after staging)
         run: node scripts/check-deploy-secrets.js
 
-      - name: Write FRED API key (private staging only, not under economics/)
+      - name: Write Morning Macro API keys (private staging only, not under economics/)
         env:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+          ABS_INDICATOR_API_KEY: ${{ secrets.ABS_INDICATOR_API_KEY }}
         run: |
           set -euo pipefail
           mkdir -p incoming-hub/private
-          key="${FRED_API_KEY:-}"
-          key="${key//$'\r'/}"
-          key="${key//$'\n'/}"
-          if [[ -n "${key}" ]]; then
-            printf '%s\n' "${key}" > incoming-hub/private/fred-api-key
+          fred="${FRED_API_KEY:-}"
+          fred="${fred//$'\r'/}"
+          fred="${fred//$'\n'/}"
+          if [[ -n "${fred}" ]]; then
+            printf '%s\n' "${fred}" > incoming-hub/private/fred-api-key
             chmod 600 incoming-hub/private/fred-api-key
           else
             rm -f incoming-hub/private/fred-api-key
+          fi
+          abs="${ABS_INDICATOR_API_KEY:-}"
+          abs="${abs//$'\r'/}"
+          abs="${abs//$'\n'/}"
+          if [[ -n "${abs}" ]]; then
+            printf '%s\n' "${abs}" > incoming-hub/private/abs-indicator-api-key
+            chmod 600 incoming-hub/private/abs-indicator-api-key
+          else
+            rm -f incoming-hub/private/abs-indicator-api-key
           fi
 
       - name: Install SSH key
@@ -134,7 +144,7 @@ jobs:
           # --no-perms: avoid rsync exit 23 when remote cannot set mode 600 on secret files.
           rsync -rlvz --no-perms -e "${RSYNC_SSH}" ./incoming-hub/private/ "${DEST}private/"
           ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            'chmod 600 incoming-hub/private/contact.env incoming-hub/private/fred-api-key 2>/dev/null || true'
+            'chmod 600 incoming-hub/private/contact.env incoming-hub/private/fred-api-key incoming-hub/private/abs-indicator-api-key 2>/dev/null || true'
           mkdir -p ./incoming-mmd-staging/mmd
           cp ./scripts/valuation_fetch.py ./scripts/valuation_server.py ./scripts/multilateral_fetch.py ./scripts/aus_fetch.py ./incoming-mmd-staging/mmd/
           cp ./scripts/droplet/mmd-valuation.service ./incoming-mmd-staging/mmd/

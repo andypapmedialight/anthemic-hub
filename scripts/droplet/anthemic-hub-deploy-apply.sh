@@ -253,16 +253,21 @@ if [[ -f "${INCOMING}/mmd/valuation_server.py" && -f "${INCOMING}/mmd/valuation_
       /etc/systemd/system/mmd-valuation.service
   fi
   mkdir -p /etc/anthemic-mmd
-  if [[ -f "${FRED_KEY_FILE}" ]]; then
-    KEY="$(tr -d '\r\n' < "${FRED_KEY_FILE}")"
-    {
-      printf 'FRED_API_KEY=%s\n' "${KEY}"
-      printf 'HUB_ORIGIN=https://anthemic-developments.com\n'
-      printf '# MMD_FRED_FRESHNESS_CACHE_TTL=300\n'
-    } > "${MMD_ENV}"
-  else
-    printf '# FRED_API_KEY not set — margin-debt uses public FRED CSV fallback\nHUB_ORIGIN=https://anthemic-developments.com\n# MMD_FRED_FRESHNESS_CACHE_TTL=300\n' > "${MMD_ENV}"
-  fi
+  ABS_KEY_FILE="${INCOMING}/private/abs-indicator-api-key"
+  {
+    if [[ -f "${FRED_KEY_FILE}" ]]; then
+      printf 'FRED_API_KEY=%s\n' "$(tr -d '\r\n' < "${FRED_KEY_FILE}")"
+    else
+      printf '# FRED_API_KEY not set — margin-debt uses public FRED CSV fallback\n'
+    fi
+    if [[ -f "${ABS_KEY_FILE}" ]]; then
+      printf 'ABS_INDICATOR_API_KEY=%s\n' "$(tr -d '\r\n' < "${ABS_KEY_FILE}")"
+    else
+      printf '# ABS_INDICATOR_API_KEY not set — AU headline cards use FRED/OECD fallback\n'
+    fi
+    printf 'HUB_ORIGIN=https://anthemic-developments.com\n'
+    printf '# MMD_FRED_FRESHNESS_CACHE_TTL=300\n'
+  } > "${MMD_ENV}"
   chmod 640 "${MMD_ENV}"
   chown root:www-data "${MMD_ENV}"
   if command -v systemctl >/dev/null 2>&1; then

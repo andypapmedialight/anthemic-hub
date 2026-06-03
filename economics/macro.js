@@ -4665,6 +4665,21 @@ function renderInfoBox() {
       ],
       note: 'World Development Indicators via api.worldbank.org/v2. JSON responses cached server-side.',
     },
+    {
+      id: 'abs-indicator',
+      name: 'ABS Indicator API',
+      tag: 'AU headlines',
+      tagColor: 'var(--gold)',
+      rows: [
+        ['Key required', 'Yes (server)'],
+        ['Rate limit',   '10 req/s per key'],
+        ['API type',     'Official SDMX'],
+        ['Coverage',     'AU CPI, GDP, labour force headlines'],
+        ['Release time', '11:30am AEST (release day)'],
+        ['Configured on', 'Hub server only — not in this browser'],
+      ],
+      note: 'Headline Australian statistics from indicator.api.abs.gov.au when ABS_INDICATOR_API_KEY is set on the hub (same place as FRED_API_KEY). AU GDP Growth, CPI, and Unemployment cards prefer this feed; otherwise FRED/OECD fallbacks apply. The separate ABS Data API (nominal GDP quarters) does not use this key.',
+    },
   ];
 
   const privacyHtml = `
@@ -4678,7 +4693,7 @@ function renderInfoBox() {
 
   box.innerHTML = privacyHtml + sources.map(s => {
     const isSelectable = s.id !== 'fred' && s.id !== 'frank' && s.id !== 'coingecko'
-      && s.id !== 'oecd' && s.id !== 'imf' && s.id !== 'worldbank';
+      && s.id !== 'oecd' && s.id !== 'imf' && s.id !== 'worldbank' && s.id !== 'abs-indicator';
     const active = isSelectable && s.id === activeProvider;
     return `
       <div class="info-source${active ? ' info-source-active' : ''}">

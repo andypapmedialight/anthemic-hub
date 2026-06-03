@@ -130,18 +130,21 @@ def fetch_fred_observations_proxy(
         return 502, msg, "application/json"
 
 
-def _fetch_curl(url: str, timeout: int) -> bytes:
+def _fetch_curl(url: str, timeout: int, *, extra_headers: dict[str, str] | None = None) -> bytes:
+    cmd = [
+        "curl",
+        "-fsSL",
+        "--http1.1",
+        "-A",
+        UA,
+        "--max-time",
+        str(timeout),
+    ]
+    for hk, hv in (extra_headers or {}).items():
+        cmd.extend(["-H", f"{hk}: {hv}"])
+    cmd.append(url)
     proc = subprocess.run(
-        [
-            "curl",
-            "-fsSL",
-            "--http1.1",
-            "-A",
-            UA,
-            "--max-time",
-            str(timeout),
-            url,
-        ],
+        cmd,
         capture_output=True,
         check=False,
     )

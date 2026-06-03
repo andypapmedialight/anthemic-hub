@@ -81,29 +81,36 @@ def _parse_dotenv_pair(line: str) -> tuple[str, str] | None:
 
 
 def load_hub_env() -> bool:
-    """Load FRED_API_KEY from the environment or repo-root .env. Returns True if set."""
+    """Load Morning Macro secrets from the environment or repo-root .env."""
     global FRED_API_KEY
-    env_key = os.environ.get("FRED_API_KEY", "").strip().strip("\r")
-    if env_key:
-        FRED_API_KEY = env_key
-        return True
+    fred_set = False
+
+    env_fred = os.environ.get("FRED_API_KEY", "").strip().strip("\r")
+    if env_fred:
+        FRED_API_KEY = env_fred
+        fred_set = True
 
     path = os.path.join(ROOT, ".env")
-    if not os.path.isfile(path):
-        FRED_API_KEY = ""
-        return False
-    try:
-        with open(path, encoding="utf-8") as fh:
-            for raw in fh:
-                pair = _parse_dotenv_pair(raw)
-                if not pair or pair[0] != "FRED_API_KEY":
-                    continue
-                if pair[1]:
-                    FRED_API_KEY = pair[1]
-                    os.environ["FRED_API_KEY"] = pair[1]
-                break
-    except OSError:
-        FRED_API_KEY = ""
+    if os.path.isfile(path):
+        try:
+            with open(path, encoding="utf-8") as fh:
+                for raw in fh:
+                    pair = _parse_dotenv_pair(raw)
+                    if not pair or not pair[1]:
+                        continue
+                    key, val = pair
+                    if key == "FRED_API_KEY" and not fred_set:
+                        FRED_API_KEY = val
+                        os.environ["FRED_API_KEY"] = val
+                        fred_set = True
+                    elif key == "ABS_INDICATOR_API_KEY" and not os.environ.get("ABS_INDICATOR_API_KEY"):
+                        os.environ["ABS_INDICATOR_API_KEY"] = val
+        except OSError:
+            if not fred_set:
+                FRED_API_KEY = ""
+
+    if not fred_set:
+        FRED_API_KEY = FRED_API_KEY or ""
     return bool(FRED_API_KEY)
 
 
