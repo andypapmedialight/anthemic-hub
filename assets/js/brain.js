@@ -523,7 +523,7 @@
   stuckTimer = setTimeout(function () {
     if (!loadingDismissed) {
       showLoadError(
-        "The model is taking too long or the 3D viewer did not start. Confirm /assets/TestBrain.glb is deployed, disable strict blockers for ajax.googleapis.com (model-viewer), then refresh."
+        "The model is taking too long or the 3D viewer did not start. Confirm /assets/TestBrain.glb and /assets/vendor/model-viewer/ are deployed, then refresh."
       );
     }
   }, 45000);
