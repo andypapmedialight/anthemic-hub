@@ -88,10 +88,10 @@
 
   /* Orbit + target match hotspot data-position in brain/index.html */
   var zoneCamera = {
-    gigs: { orbit: "35deg 65deg 88%", target: "0.28m 0m 0.1m" },
-    work: { orbit: "20deg 55deg 95%", target: "0m 0.32m 0.14m" },
-    reading: { orbit: "-40deg 60deg 90%", target: "-0.24m 0.1m -0.04m" },
-    writing: { orbit: "15deg 70deg 92%", target: "0.12m -0.2m -0.22m" }
+    gigs: { orbit: "40deg 68deg 88%", target: "0.28m 0.08m -0.14m" },
+    work: { orbit: "185deg 62deg 94%", target: "0.04m 0.2m -0.2m" },
+    reading: { orbit: "-42deg 64deg 90%", target: "-0.24m 0.1m -0.1m" },
+    writing: { orbit: "175deg 72deg 92%", target: "0.1m -0.14m -0.3m" }
   };
 
   function syncZoneCameraFromHotspots() {

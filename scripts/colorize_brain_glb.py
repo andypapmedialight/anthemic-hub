@@ -16,12 +16,13 @@ ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "assets" / "TestBrain.glb.bak"
 DST = ROOT / "assets" / "TestBrain.glb"
 
-# Hotspot centres (model space) — match brain/index.html data-position
+# Hotspot centres (model space) — match brain/index.html data-position.
+# This GLB: anterior frontal ≈ negative Z; superior/posterior crown ≈ high +Y (not work).
 ZONES = (
-    ("zone-gigs", np.array([0.15, 0.02, 0.05]), [0.95, 0.78, 0.12, 1.0], [0.14, 0.1, 0.02]),
-    ("zone-work", np.array([0.04, 0.17, 0.08]), [0.35, 0.58, 1.0, 1.0], [0.04, 0.07, 0.16]),
-    ("zone-reading", np.array([-0.11, 0.06, 0.02]), [0.18, 0.78, 0.58, 1.0], [0.02, 0.1, 0.07]),
-    ("zone-writing", np.array([0.07, -0.02, -0.1]), [0.92, 0.38, 0.72, 1.0], [0.12, 0.04, 0.09]),
+    ("zone-gigs", np.array([0.28, 0.08, -0.14]), [0.95, 0.78, 0.12, 1.0], [0.14, 0.1, 0.02]),
+    ("zone-work", np.array([0.04, 0.2, -0.2]), [0.35, 0.58, 1.0, 1.0], [0.04, 0.07, 0.16]),
+    ("zone-reading", np.array([-0.24, 0.1, -0.1]), [0.18, 0.78, 0.58, 1.0], [0.02, 0.1, 0.07]),
+    ("zone-writing", np.array([0.1, -0.14, -0.3]), [0.92, 0.38, 0.72, 1.0], [0.12, 0.04, 0.09]),
 )
 BASE_NAME = "zone-base"
 BASE_COLOR = [0.34, 0.36, 0.44, 1.0]
@@ -38,14 +39,14 @@ def classify_triangles(centres: np.ndarray) -> np.ndarray:
 
     x, y, z = centres[:, 0], centres[:, 1], centres[:, 2]
     masks = np.zeros((len(centres), len(ZONES)), dtype=bool)
-    # Gigs — right lateral temporal / auditory belt (exterior right hemisphere)
-    masks[:, 0] = (x > 0.02) & (y > -0.38) & (y < 0.48) & (z > -0.32)
-    # Work — dorsal frontal / prefrontal crown (exterior top-front)
-    masks[:, 1] = (y > 0.02) & (z > -0.22) & (np.abs(x) < 0.5)
-    # Reading — left parieto-temporal (exterior left hemisphere)
-    masks[:, 2] = (x < -0.02) & (y > -0.22) & (y < 0.58)
-    # Writing — ventral frontal / Broca strip (exterior lower-front)
-    masks[:, 3] = (y < 0.2) & (z < 0.2) & (x > -0.22)
+    # Gigs — right lateral, anterior temporal (auditory belt)
+    masks[:, 0] = (x > 0.08) & (y > -0.2) & (y < 0.35) & (z > -0.45) & (z < -0.05)
+    # Work — dorsal prefrontal, anterior (negative Z), not superior/posterior crown (+Y back)
+    masks[:, 1] = (z < -0.05) & (z > -0.48) & (y > 0.0) & (y < 0.32) & (np.abs(x) < 0.36)
+    # Reading — left parieto-temporal
+    masks[:, 2] = (x < -0.08) & (y > -0.15) & (y < 0.4) & (z > -0.4) & (z < 0.1)
+    # Writing — ventral frontal / Broca (inferior-anterior)
+    masks[:, 3] = (y < 0.08) & (z < -0.15) & (z > -0.52) & (x > -0.12) & (x < 0.32)
 
     near = dist <= ZONE_RADIUS
     shell = masks & (dist <= ZONE_RADIUS_LOOSE)
