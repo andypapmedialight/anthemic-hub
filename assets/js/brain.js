@@ -86,18 +86,257 @@
     );
   });
 
-  var orbits = {
-    gigs: "35deg 65deg 88%",
-    work: "20deg 55deg 95%",
-    reading: "-40deg 60deg 90%",
-    writing: "15deg 70deg 92%"
+  /* Orbit + target match hotspot data-position in brain/index.html */
+  var zoneCamera = {
+    gigs: { orbit: "35deg 65deg 88%", target: "0.28m 0m 0.1m" },
+    work: { orbit: "20deg 55deg 95%", target: "0m 0.32m 0.14m" },
+    reading: { orbit: "-40deg 60deg 90%", target: "-0.24m 0.1m -0.04m" },
+    writing: { orbit: "15deg 70deg 92%", target: "0.12m -0.2m -0.22m" }
   };
+
+  function syncZoneCameraFromHotspots() {
+    mv.querySelectorAll("button.brain-hotspot[data-zone][data-position]").forEach(function (btn) {
+      var zone = btn.getAttribute("data-zone");
+      var pos = btn.getAttribute("data-position");
+      if (!zone || !pos || !zoneCamera[zone]) return;
+      var p = pos.trim().split(/\s+/);
+      if (p.length < 3) return;
+      zoneCamera[zone].target = p[0] + "m " + p[1] + "m " + p[2] + "m";
+    });
+  }
+
+  var lockedCameraZone = null;
+
+  function focusZoneCamera(zone) {
+    var cam = zoneCamera[zone];
+    if (!cam) return;
+    lockedCameraZone = zone;
+    try {
+      mv.autoRotate = false;
+      mv.removeAttribute("auto-rotate");
+    } catch (e0) {}
+    try {
+      if (cam.target) mv.cameraTarget = cam.target;
+      if (cam.orbit) mv.cameraOrbit = cam.orbit;
+    } catch (e1) {}
+  }
+
+  var zoneMaterialNames = {
+    gigs: "zone-gigs",
+    work: "zone-work",
+    reading: "zone-reading",
+    writing: "zone-writing"
+  };
+
+  var zoneEmissive = {
+    gigs: [0.1, 0.07, 0.01],
+    work: [0.03, 0.05, 0.12],
+    reading: [0.02, 0.08, 0.06],
+    writing: [0.1, 0.03, 0.07]
+  };
+  var zoneEmissivePeak = {
+    gigs: [0.42, 0.3, 0.06],
+    work: [0.14, 0.22, 0.45],
+    reading: [0.1, 0.32, 0.22],
+    writing: [0.38, 0.14, 0.28]
+  };
+  var zoneColorPeak = {
+    gigs: [1, 0.88, 0.22, 1],
+    work: [0.45, 0.68, 1, 1],
+    reading: [0.22, 0.92, 0.72, 1],
+    writing: [0.98, 0.5, 0.82, 1]
+  };
+  var zoneBaseColors = {};
+  var zoneMaterials = {};
+  var activePulseZone = null;
+  var pulseRaf = null;
+  var pulseStart = 0;
+  var reduceMotion =
+    typeof window !== "undefined" &&
+    window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function lerp4(a, b, t) {
+    return [
+      a[0] + (b[0] - a[0]) * t,
+      a[1] + (b[1] - a[1]) * t,
+      a[2] + (b[2] - a[2]) * t,
+      a[3] != null && b[3] != null ? a[3] + (b[3] - a[3]) * t : 1
+    ];
+  }
+
+  function pulseWave(ts) {
+    if (!pulseStart) pulseStart = ts;
+    var phase = (ts - pulseStart) * 0.0035;
+    var s = (Math.sin(phase) + 1) * 0.5;
+    return s * s * (3 - 2 * s);
+  }
+
+  function requestModelRender() {
+    try {
+      if (typeof mv.requestUpdate === "function") mv.requestUpdate();
+    } catch (e) {}
+  }
+
+  function zoneKeyForMaterial(name) {
+    for (var z in zoneMaterialNames) {
+      if (zoneMaterialNames[z] === name) return z;
+    }
+    return null;
+  }
+
+  function restoreBaseColor(material) {
+    var base = zoneBaseColors[material.name];
+    if (!base || !material.pbrMetallicRoughness) return;
+    try {
+      material.pbrMetallicRoughness.setBaseColorFactor(base.slice());
+    } catch (e) {}
+  }
+
+  function dimColor(base, factor) {
+    return [
+      base[0] * factor,
+      base[1] * factor,
+      base[2] * factor,
+      base[3] != null ? base[3] : 1
+    ];
+  }
+
+  function highlightBrainZones(activeZone, skipActiveMaterial) {
+    var model = mv.model;
+    if (!model || !model.materials) return;
+    for (var i = 0; i < model.materials.length; i++) {
+      var material = model.materials[i];
+      if (!material || !material.pbrMetallicRoughness) continue;
+      var name = material.name || "";
+      var zoneKey = zoneKeyForMaterial(name);
+      if (skipActiveMaterial && zoneKey === activeZone) continue;
+      var isActive = zoneKey && zoneKey === activeZone;
+      var isBase = name === "zone-base";
+      var base = zoneBaseColors[name];
+      var pbr = material.pbrMetallicRoughness;
+      try {
+        if (base && typeof pbr.setBaseColorFactor === "function") {
+          if (isActive) {
+            restoreBaseColor(material);
+          } else if (zoneKey) {
+            pbr.setBaseColorFactor(dimColor(base, 0.52));
+          } else {
+            restoreBaseColor(material);
+          }
+        }
+        if (typeof material.setEmissiveFactor === "function") {
+          if (isActive && zoneKey && zoneEmissive[zoneKey]) {
+            material.setEmissiveFactor(zoneEmissive[zoneKey].slice());
+          } else if (zoneKey && zoneEmissive[zoneKey]) {
+            material.setEmissiveFactor([
+              zoneEmissive[zoneKey][0] * 0.35,
+              zoneEmissive[zoneKey][1] * 0.35,
+              zoneEmissive[zoneKey][2] * 0.35
+            ]);
+          } else if (isBase) {
+            material.setEmissiveFactor([0.015, 0.015, 0.02]);
+          } else {
+            material.setEmissiveFactor([0, 0, 0]);
+          }
+        }
+        if (typeof pbr.setRoughnessFactor === "function") {
+          pbr.setRoughnessFactor(isActive ? 0.36 : isBase ? 0.6 : 0.48);
+        }
+      } catch (e) {}
+    }
+    requestModelRender();
+  }
+
+  function getZoneMaterial(zoneKey) {
+    return zoneMaterials[zoneKey] || null;
+  }
+
+  function stopZonePulse() {
+    if (pulseRaf) {
+      cancelAnimationFrame(pulseRaf);
+      pulseRaf = null;
+    }
+    pulseStart = 0;
+  }
+
+  function applyPulseFrame(ts) {
+    var zone = activePulseZone;
+    if (!zone) return;
+    var material = getZoneMaterial(zone);
+    if (!material || !material.pbrMetallicRoughness) return;
+    var wave = pulseWave(ts);
+    var base = zoneBaseColors[material.name];
+    var peak = zoneColorPeak[zone];
+    var pbr = material.pbrMetallicRoughness;
+    try {
+      if (base && peak && typeof pbr.setBaseColorFactor === "function") {
+        pbr.setBaseColorFactor(lerp4(base, peak, wave));
+      }
+      var emLo = zoneEmissive[zone];
+      var emHi = zoneEmissivePeak[zone];
+      if (emLo && emHi && typeof material.setEmissiveFactor === "function") {
+        var em = lerp4(
+          [emLo[0], emLo[1], emLo[2], 1],
+          [emHi[0], emHi[1], emHi[2], 1],
+          wave
+        );
+        material.setEmissiveFactor([em[0], em[1], em[2]]);
+      }
+      if (typeof pbr.setRoughnessFactor === "function") {
+        pbr.setRoughnessFactor(0.22 + (1 - wave) * 0.2);
+      }
+    } catch (e) {}
+    requestModelRender();
+  }
+
+  function pulseZoneFrame(ts) {
+    if (!activePulseZone) return;
+    applyPulseFrame(ts);
+    pulseRaf = requestAnimationFrame(pulseZoneFrame);
+  }
+
+  function startZonePulse(zone) {
+    if (!zone) return;
+    activePulseZone = zone;
+    if (!zoneMaterials[zone]) return;
+    stopZonePulse();
+    activePulseZone = zone;
+    pulseStart = 0;
+    highlightBrainZones(zone, true);
+    if (reduceMotion) {
+      applyPulseFrame(performance.now());
+      highlightBrainZones(zone, false);
+      applyPulseFrame(performance.now());
+      return;
+    }
+    applyPulseFrame(performance.now());
+    pulseRaf = requestAnimationFrame(pulseZoneFrame);
+  }
 
   function setActive(zone) {
     document.querySelectorAll(".zone").forEach(function (el) {
       el.classList.toggle("is-active", el.getAttribute("data-zone") === zone);
     });
+    focusZoneCamera(zone);
+    activePulseZone = zone;
+    startZonePulse(zone);
   }
+
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden) {
+      stopZonePulse();
+    } else if (activePulseZone) {
+      startZonePulse(activePulseZone);
+    }
+  });
+
+  mv.addEventListener("scene-graph-ready", function () {
+    try {
+      tuneBrainMaterials();
+    } catch (e) {}
+    if (activePulseZone) startZonePulse(activePulseZone);
+  });
 
   ["gigs", "work", "reading", "writing"].forEach(function (zone) {
     var z = document.getElementById("zone-" + zone);
@@ -105,67 +344,43 @@
       z.addEventListener("click", function (e) {
         if (e.target.closest("a")) return;
         setActive(zone);
-        if (orbits[zone]) mv.cameraOrbit = orbits[zone];
       });
     }
   });
 
-  /**
-   * This GLB reads as a flat dark mass under normal PBR lighting because
-   * base colours / roughness are authored very dark. model-viewer cannot
-   * invent surface detail, but lifting materials + exposure makes folds
-   * and lobes readable in the browser.
-   */
-  function liftMaterialsForClarity() {
+  /** Zone-tinted GLB (zone-* materials); keep PBR readable under exposure. */
+  function tuneBrainMaterials() {
     var model = mv.model;
     if (!model || !model.materials || !model.materials.length) return;
-    var mul = 3.4;
-    var add = 0.24;
+    var hasZones = false;
     for (var i = 0; i < model.materials.length; i++) {
-      var material = model.materials[i];
+      var n = model.materials[i].name || "";
+      if (n.indexOf("zone-") === 0) {
+        hasZones = true;
+        break;
+      }
+    }
+    if (!hasZones) return;
+    for (var j = 0; j < model.materials.length; j++) {
+      var material = model.materials[j];
       if (!material || !material.pbrMetallicRoughness) continue;
       var pbr = material.pbrMetallicRoughness;
-      var c = null;
-      var r = 0;
-      var g = 0;
-      var b = 0;
+      var c = pbr.baseColorFactor;
+      if (c && material.name) {
+        zoneBaseColors[material.name] = [
+          c[0] != null ? c[0] : 1,
+          c[1] != null ? c[1] : 1,
+          c[2] != null ? c[2] : 1,
+          c[3] != null ? c[3] : 1
+        ];
+        var zk = zoneKeyForMaterial(material.name);
+        if (zk) zoneMaterials[zk] = material;
+      }
       try {
-        c = pbr.baseColorFactor;
-        if (c && (typeof c.length === "number" || Array.isArray(c))) {
-          r = c[0] != null ? c[0] : 0;
-          g = c[1] != null ? c[1] : 0;
-          b = c[2] != null ? c[2] : 0;
-        }
-        var avg = (r + g + b) / 3;
-        /* Dark tint in the glTF: multiply toward visible greys. */
-        if (avg < 0.45) {
-          var a = c && c.length > 3 && c[3] != null ? c[3] : 1;
-          pbr.setBaseColorFactor([
-            Math.min(1, r * mul + add),
-            Math.min(1, g * mul + add),
-            Math.min(1, b * mul + add),
-            a
-          ]);
-        }
-        if (typeof pbr.setRoughnessFactor === "function") {
-          var r0 = typeof pbr.roughnessFactor === "number" ? pbr.roughnessFactor : 1;
-          /* Already-light materials: do not crush roughness or they clip to white under high exposure. */
-          var rough =
-            avg >= 0.75 ? Math.max(0.4, Math.min(1, r0 * 0.92)) : Math.max(0.06, Math.min(1, r0 * 0.5));
-          pbr.setRoughnessFactor(rough);
-        }
-        if (typeof pbr.setMetallicFactor === "function") {
-          pbr.setMetallicFactor(0);
+        if (typeof material.setMetallicFactor === "function") {
+          material.setMetallicFactor(0);
         }
       } catch (e) {}
-      try {
-        if (typeof material.setEmissiveFactor === "function") {
-          /* Strong emissive on already-bright albedo (e.g. TestBrain) blows the whole mesh to white. */
-          var em =
-            avg < 0.45 ? [0.06, 0.058, 0.07] : [0, 0, 0];
-          material.setEmissiveFactor(em);
-        }
-      } catch (e2) {}
     }
   }
 
@@ -208,11 +423,6 @@
     if (now - lastHotspotActivate < 220) return;
     lastHotspotActivate = now;
     setActive(zone);
-    if (orbits[zone]) {
-      try {
-        mv.cameraOrbit = orbits[zone];
-      } catch (err) {}
-    }
     var panel = document.getElementById("zone-" + zone);
     if (panel) {
       try {
@@ -259,11 +469,10 @@
     modelReadyHandled = true;
     dismissLoading();
     try {
-      liftMaterialsForClarity();
+      tuneBrainMaterials();
     } catch (e1) {}
-    try {
-      mv.cameraOrbit = orbits.work;
-    } catch (e2) {}
+    syncZoneCameraFromHotspots();
+    applyInitialZone();
     wireHotspotButtonsDirect();
     setTimeout(wireHotspotButtonsDirect, 400);
   }
@@ -277,7 +486,26 @@
     } catch (e) {}
   }
 
+  function zoneFromHash() {
+    var h = (location.hash || "").replace(/^#/, "");
+    if (h.indexOf("zone-") === 0) return h.slice(5);
+    return null;
+  }
+
+  function applyInitialZone() {
+    var z = zoneFromHash();
+    if (z && zoneCamera[z]) {
+      setActive(z);
+      return;
+    }
+    setActive("work");
+  }
+
   mv.addEventListener("load", onBrainModelReady);
+  window.addEventListener("hashchange", function () {
+    var z = zoneFromHash();
+    if (z && zoneCamera[z] && z !== lockedCameraZone) setActive(z);
+  });
 
   /* load can fire before this deferred script runs; poll mv.loaded for a short window. */
   tryLoadedFromState();
