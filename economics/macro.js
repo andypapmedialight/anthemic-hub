@@ -749,13 +749,14 @@ const VALUATION = [
   {
     id: 'otc-notional',
     api: 'otc-notional',
-    label: 'OTC Derivatives',
+    label: 'Derivatives',
     ticker: 'OTC',
     def: true,
     fallbackDisplay: '$845.7T',
-    sublabel: 'Notional outstanding (global)',
+    sublabel: 'OTC notional outstanding (global)',
     lines: [
-      ['Scope', 'Futures, swaps & other OTC'],
+      ['OTC', 'Over-the-counter — not exchange-traded'],
+      ['Scope', 'Futures, swaps & other derivatives'],
       ['vs GMV', 'Notional ≠ economic exposure'],
     ],
     source: 'BIS / ISDA',
@@ -764,13 +765,14 @@ const VALUATION = [
   {
     id: 'otc-gmv',
     api: 'otc-gmv',
-    label: 'OTC Gross Exposure',
+    label: 'Derivatives - Gross Exposure',
     ticker: 'GMV',
     def: true,
     fallbackDisplay: '$21.8T',
-    sublabel: 'Gross market value (mark-to-market)',
+    sublabel: 'OTC gross market value (mark-to-market)',
     lines: [
-      ['Meaning', 'Actual economic exposure'],
+      ['OTC', 'Over-the-counter — not exchange-traded'],
+      ['Meaning', 'Gross mark-to-market exposure'],
       ['Context', 'Much smaller than notional'],
     ],
     source: 'BIS',
@@ -1505,14 +1507,14 @@ function valuationCardInfo(item) {
       formula: changeFormulaeBlurb('usd'),
     },
     'otc-notional': {
-      summary: 'Global OTC derivatives notional outstanding — contractual face value of all open OTC derivatives (much larger than economic exposure).',
+      summary: 'Global over-the-counter (OTC) derivatives notional outstanding — contractual face value of all open OTC derivatives (much larger than economic exposure).',
       derived: 'BIS semiannual OTC derivatives statistics; headline total notional for reporting dealers.',
       data: 'BIS WS_OTC_DERIV2 (USD millions → T on card).',
       sourceHtml: `${infoLink('BIS Data Portal', item.href || 'https://data.bis.org/topics/OTC_DER')} · hub proxy`,
       formula: 'Card value = BIS reported notional (USD, consolidated dealers).',
     },
     'otc-gmv': {
-      summary: 'OTC derivatives gross market value (mark-to-market) — closer to economic exposure than notional.',
+      summary: 'OTC (over-the-counter) derivatives gross market value — mark-to-market exposure closer to economic risk than notional.',
       derived: 'BIS GMV aggregate (average of reported instrument buckets when needed).',
       data: 'BIS WS_OTC_DERIV2, GMV measure (USD millions).',
       sourceHtml: `${infoLink('BIS', item.href || 'https://data.bis.org/topics/OTC_DER')} · hub proxy`,
@@ -2957,6 +2959,12 @@ function valuationUsdExtra(label, billions) {
     <span class="spread-val spread-val--figure buffett-fair">${usd}</span></div>`;
 }
 
+function valuationRatioExtra(label, ratio, dp = 1) {
+  if (ratio == null || Number.isNaN(Number(ratio))) return '';
+  return `<div class="yield-extra yield-extra--sub"><span class="spread-label">${label}</span>
+    <span class="spread-val spread-val--muted">${Number(ratio).toFixed(dp)}%</span></div>`;
+}
+
 function valuationAudExtra(label, billions) {
   const aud = formatAudCompact(billions);
   if (!aud) return '';
@@ -3692,25 +3700,20 @@ function collectCardMetas(section, items) {
         extra += buffettExtraHtml(d);
       } else if (item.id === 'public-debt' || item.id === 'private-debt') {
         isRatio = true;
-        price = formatRatioPrice(d, 1);
-        const usdLabel = d?.debtEstMeta?.treasuryFiscalData ? 'Held by public (USD)' : 'Est. (USD)';
-        extra = valuationUsdExtra(usdLabel, d?.usdBillions);
+        price = formatUsdCompact(d?.usdBillions) || formatRatioPrice(d, 1);
+        extra = valuationRatioExtra('% of GDP', d?.price, 1);
         extra += debtRatioExtraHtml(d);
-        const measure = d?.debtEstMeta?.treasuryFiscalData
-          ? 'Debt held by the public % GDP'
-          : '% of GDP (est.)';
-        extra += `<div class="yield-extra"><span class="spread-label">Measure</span>
-          <span class="spread-val buffett-fair">${escapeHtml(measure)}</span></div>`;
+        if (d?.debtEstMeta?.treasuryFiscalData) {
+          extra += `<div class="yield-extra yield-extra--sub"><span class="spread-label">Measure</span>
+            <span class="spread-val spread-val--muted">Debt held by the public</span></div>`;
+        }
       } else if (item.id === 'au-public-debt' || item.id === 'au-private-debt') {
         isRatio = true;
-        price = formatRatioPrice(d, 1);
-        const audLabel = d?.debtEstMeta?.levelSource === FRED_AU_PUBLIC_DEBT_LEVEL_SERIES
-          ? 'Level (AUD)'
-          : 'Est. (AUD)';
-        extra = valuationAudExtra(audLabel, d?.audBillions);
+        price = formatAudCompact(d?.audBillions) || formatRatioPrice(d, 1);
+        extra = valuationRatioExtra('% of GDP', d?.price, 1);
         extra += debtRatioExtraHtml(d);
-        extra += `<div class="yield-extra"><span class="spread-label">Measure</span>
-          <span class="spread-val buffett-fair">% of GDP · BIS credit</span></div>`;
+        extra += `<div class="yield-extra yield-extra--sub"><span class="spread-label">Source</span>
+          <span class="spread-val spread-val--muted">BIS credit to GDP</span></div>`;
       } else {
         isRatio = true;
         price = formatRatioPrice(d, 1);
