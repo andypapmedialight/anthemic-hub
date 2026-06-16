@@ -3386,13 +3386,26 @@ function buildFredLookup(rows) {
   };
 }
 
+function chartFallbackObsCount(days) {
+  if (days <= 1) return 2;
+  if (days <= 7) return 7;
+  if (days <= 30) return 22;
+  if (days <= 180) return 130;
+  return 262;
+}
+
 function sliceSeriesForChart(series, days) {
   if (!series?.length) return series;
   const cutoff = Date.now() - days * 86400000;
   const inWindow = series.filter(p => p.t >= cutoff);
   if (inWindow.length >= 2) return inWindow;
-  const keep = days <= 1 ? 2 : days <= 7 ? 2 : days <= 30 ? 4 : days <= 180 ? 12 : 24;
+  const keep = chartFallbackObsCount(days);
   return series.slice(-Math.min(series.length, Math.max(2, keep)));
+}
+
+function seriesLagsSelectedPeriod(series, days) {
+  if (!series?.length) return false;
+  return series[series.length - 1].t < Date.now() - days * 86400000;
 }
 
 async function fetchValuationFredSeriesStaggered(lookbackDays) {
@@ -6215,7 +6228,9 @@ function buildChartSvg(series, opts = {}) {
 
   const noteHtml = quarterlyNote
     ? '<p class="chart-note">Quarterly FRED data — short periods show the latest observations.</p>'
-    : '';
+    : opts.fredDailyNote
+      ? '<p class="chart-note">Daily FRED series — showing the latest published observations (release may lag calendar period).</p>'
+      : '';
   return { html: noteHtml + svg, statsHtml };
 }
 
@@ -6249,7 +6264,9 @@ function chartOpts(item, section) {
   }
   const isPercent = section.key === 'bond';
   const dp = quoteDecimals(item, section.key);
-  return { isPercent, isYield: section.key === 'bond', dp };
+  const fredDaily = (section.key === 'comm' && item.fredId)
+    || (section.key === 'bond' && !item.yTicker);
+  return { isPercent, isYield: section.key === 'bond', dp, fredDailyNote: fredDaily };
 }
 
 let chartFocusTrapHandler = null;
@@ -6326,7 +6343,11 @@ async function loadChartModal() {
 
   try {
     const series = await fetchHistory(item, section, chartState.days);
-    const { html, statsHtml } = buildChartSvg(series, opts);
+    const optsWithLag = {
+      ...opts,
+      fredDailyNote: opts.fredDailyNote && seriesLagsSelectedPeriod(series, chartState.days),
+    };
+    const { html, statsHtml } = buildChartSvg(series, optsWithLag);
     body.innerHTML = html;
     stats.innerHTML = statsHtml;
   } catch (err) {
