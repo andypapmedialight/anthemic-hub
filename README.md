@@ -129,7 +129,7 @@ Config lives in **anthemic-ops** repo (`nginx/sites-available/anthemic-hub.conf`
 `/economics/` is a multi-source macro dashboard with resilient quote/freshness behavior and market context tooling.
 
 - Section coverage: Equities, Valuation, Commodities, US Treasuries, Currencies, and Crypto.
-- Provider stack: Yahoo / Google / Alpha Vantage for quotes, Frankfurter (ECB) for FX references, CoinGecko for crypto, FRED for macro/valuation series, optional ABS Indicator API for headline AU releases (server-side key).
+- Provider stack: Yahoo / Google / Alpha Vantage for quotes, Frankfurter (ECB) for FX references, CoinGecko for crypto, FRED for macro/valuation series, optional ABS Indicator API for headline AU releases, U.S. Treasury Fiscal Data for daily federal debt (server-side).
 - Freshness UX: per-card as-of timestamps, freshness pills (`Live`, `Daily`, `Est.`, `Qtrly`, `Ref`), and page-level data-vintage footer.
 - Equity venue visibility: cards and add-stock picker show exchange/venue labels (static mappings + provider metadata fallbacks).
 - Compare chart modal: user-selectable multi-series chart (up to 6 instruments, all sections), range tabs, normalization modes, and mobile-compatible controls.

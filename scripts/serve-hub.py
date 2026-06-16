@@ -36,6 +36,7 @@ from multilateral_fetch import (  # noqa: E402
     fetch_multilateral_metric,
     warm_multilateral_cache,
 )
+from treasury_fetch import fetch_treasury_metric, TREASURY_METRICS  # noqa: E402
 from valuation_fetch import (  # noqa: E402
     FRESHNESS_FRED_SERIES,
     METRICS,
@@ -226,6 +227,12 @@ class HubHandler(SimpleHTTPRequestHandler):
         if path == "/economics/proxy/multilateral":
             self._proxy_multilateral()
             return
+        if path == "/economics/proxy/treasury/health":
+            self._send_json({"ok": True})
+            return
+        if path == "/economics/proxy/treasury":
+            self._proxy_treasury()
+            return
         if path == "/economics/api/freshness":
             self._freshness_api()
             return
@@ -326,6 +333,17 @@ class HubHandler(SimpleHTTPRequestHandler):
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self._safe_write(body)
+
+    def _proxy_treasury(self) -> None:
+        qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        metric = qs.get("metric", [""])[0]
+        if metric not in TREASURY_METRICS:
+            self.send_error(400, "Invalid metric")
+            return
+        try:
+            self._send_json(fetch_treasury_metric(metric))
+        except Exception as e:
+            self._send_json({"error": str(e)}, status=502)
 
     def _proxy_multilateral(self) -> None:
         qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
@@ -460,6 +478,7 @@ def main():
     print(f"Valuation ping: http://{BIND}:{PORT}/economics/proxy/valuation/health")
     print(f"Multilateral:  http://{BIND}:{PORT}/economics/proxy/multilateral?metric=oecd-cli-au")
     print(f"Multilateral:  http://{BIND}:{PORT}/economics/proxy/multilateral/health")
+    print(f"Treasury API:  http://{BIND}:{PORT}/economics/proxy/treasury?metric=debt-to-penny")
     if FRED_API_KEY:
         print(f"FRED proxy:    api.stlouisfed.org (key loaded, {len(FRED_API_KEY)} chars)")
     else:

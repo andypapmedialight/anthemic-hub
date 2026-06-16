@@ -146,7 +146,7 @@ jobs:
           ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
             'chmod 600 incoming-hub/private/contact.env incoming-hub/private/fred-api-key incoming-hub/private/abs-indicator-api-key 2>/dev/null || true'
           mkdir -p ./incoming-mmd-staging/mmd
-          cp ./scripts/valuation_fetch.py ./scripts/valuation_server.py ./scripts/multilateral_fetch.py ./scripts/aus_fetch.py ./incoming-mmd-staging/mmd/
+          cp ./scripts/valuation_fetch.py ./scripts/valuation_server.py ./scripts/multilateral_fetch.py ./scripts/aus_fetch.py ./scripts/treasury_fetch.py ./incoming-mmd-staging/mmd/
           cp ./scripts/droplet/mmd-valuation.service ./incoming-mmd-staging/mmd/
           rsync -avz -e "${RSYNC_SSH}" ./incoming-mmd-staging/mmd/ "${DEST}mmd/"
           rm -rf ./incoming-mmd-staging

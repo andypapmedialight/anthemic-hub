@@ -36,6 +36,10 @@ PORT = int(os.environ.get("PORT", "8071"))
 ALLOWED_METRICS = frozenset(METRICS)
 ALLOWED_MULTILATERAL = frozenset(MULTILATERAL_METRICS)
 
+from treasury_fetch import TREASURY_METRICS, fetch_treasury_metric  # noqa: E402
+
+ALLOWED_TREASURY = frozenset(TREASURY_METRICS)
+
 
 class ThreadingHTTPServer(ThreadingMixIn, HTTPServer):
     daemon_threads = True
@@ -81,6 +85,12 @@ class ValuationHandler(BaseHTTPRequestHandler):
             return
         if path == "/multilateral":
             self._multilateral()
+            return
+        if path == "/treasury/health":
+            self._json({"ok": True})
+            return
+        if path == "/treasury":
+            self._treasury()
             return
         self.send_error(404)
 
@@ -181,6 +191,17 @@ class ValuationHandler(BaseHTTPRequestHandler):
             return
         try:
             self._json(fetch_valuation_metric(metric))
+        except Exception as exc:
+            self._json({"error": str(exc)}, status=502)
+
+    def _treasury(self) -> None:
+        qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        metric = qs.get("metric", [""])[0]
+        if metric not in ALLOWED_TREASURY:
+            self.send_error(400, "Invalid metric")
+            return
+        try:
+            self._json(fetch_treasury_metric(metric))
         except Exception as exc:
             self._json({"error": str(exc)}, status=502)
 

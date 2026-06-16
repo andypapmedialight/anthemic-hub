@@ -1464,9 +1464,9 @@ function valuationCardInfo(item) {
     },
     'public-debt': {
       summary: 'Federal government debt held by the public as a percent of GDP — sovereign leverage vs economic output.',
-      derived: 'Latest nominal GDP (FRED) with federal debt stock scaled from the newest Z.1 quarter using monthly Treasury market-value data.',
-      data: 'FRED GFDEGDQ188S, GFDEBTN, GDP, MVMTD027MNFRBDAL.',
-      sourceHtml: infoLink('FRED', fred),
+      derived: 'Daily debt held by the public from U.S. Treasury Fiscal Data (Debt to the Penny), divided by latest nominal GDP (FRED, with GDPNow projection when ahead of the quarterly print). Falls back to quarterly FRED debt scaled via Treasury market value.',
+      data: 'Treasury debt_to_penny (preferred) · FRED GFDEBTN, GFDEGDQ188S, GDP, GDPNOW.',
+      sourceHtml: `${infoLink('U.S. Treasury Fiscal Data', 'https://fiscaldata.treasury.gov/datasets/debt-to-penny/debt-to-penny')} · ${infoLink('FRED / BEA', fred)}`,
       formula: changeFormulaeBlurb('ratio'),
     },
     'private-debt': {
@@ -2743,6 +2743,14 @@ function debtRatioExtraHtml(d) {
   if (!d?.debtEstMeta) return '';
   const m = d.debtEstMeta;
   let html = '';
+  if (m.treasuryFiscalData && m.debtDate) {
+    html += `<div class="yield-extra"><span class="spread-label">Debt as of</span>
+      <span class="spread-val">${escapeHtml(m.debtDate)}</span></div>`;
+    if (m.totalDebtBillions != null) {
+      html += `<div class="yield-extra"><span class="spread-label">Total debt</span>
+        <span class="spread-val">${escapeHtml(formatUsdCompact(m.totalDebtBillions))}</span></div>`;
+    }
+  }
   if (m.scaled) {
     html += `<div class="yield-extra"><span class="spread-label">Estimate</span>
       <span class="spread-val">Debt scaled via Treasury MV (${escapeHtml(m.treasuryMvDate || '—')})</span></div>`;
@@ -2762,13 +2770,52 @@ function debtRatioExtraHtml(d) {
   return html;
 }
 
-function fetchPublicDebtCurrent(fred) {
+function fetchPublicDebtCurrent(fred, treasury = null) {
   const official = fredRowsToQuote(fred.GFDEGDQ188S);
   const anchorRatio = latestFredRow(fred.GFDEGDQ188S);
   const gdpPick = pickGdpDenominator(fred);
+  if (!gdpPick) return official;
+
+  const heldBillions = treasury?.debtHeldPublicBillions;
+  if (heldBillions > 0) {
+    const debtBillions = heldBillions;
+    const ratio = (debtBillions / gdpPick.billions) * 100;
+    const prevHeld = treasury.prevDebtHeldPublicBillions;
+    const prevRatio = prevHeld > 0 && gdpPick.billions
+      ? (prevHeld / gdpPick.billions) * 100
+      : null;
+    const asOfUtc = treasury.asOfUtc ?? fredDateToUtc(treasury.recordDate);
+
+    return attachFreshness({
+      price: ratio,
+      change: prevRatio != null
+        ? pointsChange(ratio, prevRatio)
+        : (official ? pointsChange(ratio, official.price) : null),
+      pct: prevRatio != null
+        ? pctChange(ratio, prevRatio)
+        : (official ? pctChange(ratio, official.price) : null),
+      asOfUtc,
+      usdBillions: debtBillions,
+      source: treasury.source || 'U.S. Treasury',
+      debtEstMeta: {
+        scaled: false,
+        treasuryFiscalData: true,
+        debtDate: treasury.recordDate,
+        totalDebtBillions: treasury.totalDebtBillions,
+        gdpDate: gdpPick.date,
+        gdpNowcast: gdpPick.source === 'nowcast',
+      },
+      anchorDate: treasury.recordDate,
+      freshnessNote: [
+        treasury.freshnessNote || 'Treasury Fiscal Data · debt held by the public',
+        gdpPick.freshnessNote,
+      ].filter(Boolean).join(' · ') || null,
+    }, 'daily', { estimated: gdpPick.source === 'nowcast' });
+  }
+
   const debtLevel = latestFredRow(fred[FRED_PUBLIC_DEBT_LEVEL_SERIES]);
   const treasuryMv = fred[FRED_TREASURY_MV_SERIES];
-  if (!anchorRatio || !gdpPick || !debtLevel) return official;
+  if (!anchorRatio || !debtLevel) return official;
 
   const { scale, asOfDate: treasuryMvDate } = treasuryMv?.length
     ? treasuryMvScaleFactor(treasuryMv, anchorRatio.date)
@@ -3019,6 +3066,22 @@ function valuationReferenceExtra(item, live = null, asOfUtc = null) {
       <span class="spread-val">Benchmark — use Refresh if live fetch did not run</span></div>`;
   }
   return html;
+}
+
+async function fetchTreasuryDebtPenny(force = false) {
+  const key = 'treasury:debt-penny';
+  if (!force) { const c = cacheGet(key); if (c) return c; }
+  try {
+    const url = `${location.origin}/economics/proxy/treasury?${new URLSearchParams({ metric: 'debt-to-penny' })}`;
+    const r = await fetchWithTimeout(url, {}, 30000);
+    const data = await readFetchResponse(r, { asJson: true });
+    if (data?.error) throw new Error(data.error);
+    cacheSet(key, data);
+    return data;
+  } catch (err) {
+    console.warn('treasury debt_to_penny failed', err);
+    return null;
+  }
 }
 
 function normalizeValuationLiveRow(data) {
@@ -3413,7 +3476,8 @@ async function fetchValuation(metricId, force = false) {
     } else if (metricId === 'us-gdp') {
       result = fetchGdpCurrent(fred);
     } else if (metricId === 'public-debt') {
-      result = fetchPublicDebtCurrent(fred);
+      const treasury = await fetchTreasuryDebtPenny(force);
+      result = fetchPublicDebtCurrent(fred, treasury);
     } else if (metricId === 'private-debt') {
       result = fetchPrivateDebtCurrent(fred);
     } else if (metricId === 'au-gdp') {
@@ -3629,10 +3693,14 @@ function collectCardMetas(section, items) {
       } else if (item.id === 'public-debt' || item.id === 'private-debt') {
         isRatio = true;
         price = formatRatioPrice(d, 1);
-        extra = valuationUsdExtra('Est. (USD)', d?.usdBillions);
+        const usdLabel = d?.debtEstMeta?.treasuryFiscalData ? 'Held by public (USD)' : 'Est. (USD)';
+        extra = valuationUsdExtra(usdLabel, d?.usdBillions);
         extra += debtRatioExtraHtml(d);
+        const measure = d?.debtEstMeta?.treasuryFiscalData
+          ? 'Debt held by the public % GDP'
+          : '% of GDP (est.)';
         extra += `<div class="yield-extra"><span class="spread-label">Measure</span>
-          <span class="spread-val buffett-fair">% of GDP (est.)</span></div>`;
+          <span class="spread-val buffett-fair">${escapeHtml(measure)}</span></div>`;
       } else if (item.id === 'au-public-debt' || item.id === 'au-private-debt') {
         isRatio = true;
         price = formatRatioPrice(d, 1);
@@ -4666,6 +4734,20 @@ function renderInfoBox() {
       note: 'World Development Indicators via api.worldbank.org/v2. JSON responses cached server-side.',
     },
     {
+      id: 'treasury-fiscal',
+      name: 'U.S. Treasury Fiscal Data',
+      tag: 'US fiscal',
+      tagColor: 'var(--gold)',
+      rows: [
+        ['Key required', 'No'],
+        ['Rate limit',   'Be gentle'],
+        ['API type',     'Official REST'],
+        ['Coverage',     'Debt to the Penny (daily)'],
+        ['Hub proxy',    '/economics/proxy/treasury'],
+      ],
+      note: 'Daily federal debt from api.fiscaldata.treasury.gov. US Public Debt card uses debt held by the public vs FRED GDP (GDPNow when ahead). No API key.',
+    },
+    {
       id: 'abs-indicator',
       name: 'ABS Indicator API',
       tag: 'AU headlines',
@@ -4693,7 +4775,8 @@ function renderInfoBox() {
 
   box.innerHTML = privacyHtml + sources.map(s => {
     const isSelectable = s.id !== 'fred' && s.id !== 'frank' && s.id !== 'coingecko'
-      && s.id !== 'oecd' && s.id !== 'imf' && s.id !== 'worldbank' && s.id !== 'abs-indicator';
+      && s.id !== 'oecd' && s.id !== 'imf' && s.id !== 'worldbank' && s.id !== 'abs-indicator'
+      && s.id !== 'treasury-fiscal';
     const active = isSelectable && s.id === activeProvider;
     return `
       <div class="info-source${active ? ' info-source-active' : ''}">

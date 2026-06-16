@@ -245,6 +245,9 @@ if [[ -f "${INCOMING}/mmd/valuation_server.py" && -f "${INCOMING}/mmd/valuation_
   if [[ -f "${INCOMING}/mmd/aus_fetch.py" ]]; then
     install -o root -g root -m 644 "${INCOMING}/mmd/aus_fetch.py" "${MMD_OPT}/aus_fetch.py"
   fi
+  if [[ -f "${INCOMING}/mmd/treasury_fetch.py" ]]; then
+    install -o root -g root -m 644 "${INCOMING}/mmd/treasury_fetch.py" "${MMD_OPT}/treasury_fetch.py"
+  fi
   if [[ -f "${INCOMING}/mmd/multilateral_fetch.py" ]]; then
     install -o root -g root -m 644 "${INCOMING}/mmd/multilateral_fetch.py" "${MMD_OPT}/multilateral_fetch.py"
   fi
