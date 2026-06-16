@@ -16,13 +16,13 @@ const integrity = `sha384-${hash}`;
 const tag = `<script src="macro.js" defer integrity="${integrity}" crossorigin="anonymous"></script>`;
 
 let html = fs.readFileSync(HTML, 'utf8');
-if (!html.includes('src="macro.js"')) {
+if (!html.includes('src="macro.js')) {
   html = html.replace(
     /<script src="\/economics\/macro\.js" defer><\/script>/,
     tag,
   );
 } else {
-  html = html.replace(/<script src="macro\.js" defer[^>]*><\/script>/, tag);
+  html = html.replace(/<script src="macro\.js(?:\?[^"]*)?" defer[^>]*><\/script>/, tag);
 }
 fs.writeFileSync(HTML, html);
 console.log(`stamp-economics-sri: ${integrity.slice(0, 20)}…`);

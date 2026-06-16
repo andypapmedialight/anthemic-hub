@@ -42,6 +42,7 @@ jobs:
           sed -i "s|/assets/js/hub-console\\.js[^\"']*|/assets/js/hub-console.js?v=${VER}|g" index.html
           sed -i "s|/bass/site\\.css[^\"']*|/bass/site.css?v=${VER}|g" bass/index.html
           sed -i "s|macro\\.css[^\"']*|macro.css?v=${VER}|g" economics/index.html
+          sed -i "s|src=\"macro\\.js[^\"']*\"|src=\"macro.js?v=${VER}\"|g" economics/index.html
           sed -i "s|/hire/pitch\\.css[^\"']*|/hire/pitch.css?v=${VER}|g" hire/index.html
           sed -i "s|/hire/pitch\\.js[^\"']*|/hire/pitch.js?v=${VER}|g" hire/index.html
 
