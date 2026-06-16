@@ -6231,7 +6231,7 @@ function buildChartSvg(series, opts = {}) {
     : opts.fredDailyNote
       ? '<p class="chart-note">Daily FRED series — showing the latest published observations (release may lag calendar period).</p>'
       : '';
-  return { html: noteHtml + svg, statsHtml };
+  return { html: svg + noteHtml, statsHtml };
 }
 
 function chartOpts(item, section) {

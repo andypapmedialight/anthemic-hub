@@ -1318,7 +1318,8 @@
   .chart-modal-body {
     min-height: 200px;
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: stretch;
     justify-content: center;
     color: var(--muted);
     font-family: 'DM Mono', monospace;
@@ -1329,10 +1330,17 @@
     width: 100%;
     height: auto;
     display: block;
+    flex-shrink: 0;
   }
 
   .chart-empty { margin: 0; color: var(--dim); font-size: 0.8rem; }
-  .chart-note { margin: 0 0 0.5rem; color: var(--dim); font-size: 0.72rem; line-height: 1.35; }
+  .chart-note {
+    margin: 0.5rem 0 0;
+    color: var(--dim);
+    font-size: 0.72rem;
+    line-height: 1.35;
+    flex-shrink: 0;
+  }
 
   .chart-modal-stats {
     display: grid;
