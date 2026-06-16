@@ -42,6 +42,11 @@ INDICATOR_HEADLINE_DIMS: dict[str, dict[str, str]] = {
 
 CACHE_TTL_AOFM = 43200
 CACHE_TTL_ABS = 21600
+CACHE_TTL_BIS_CREDIT = 21600
+BIS_TOTAL_CREDIT_URL = (
+    "https://stats.bis.org/api/v1/data/BIS,WS_TC,2.0/.?"
+    "detail=dataonly&format=csvdata&startPeriod=2020&endPeriod=2030"
+)
 INDICATOR_MIN_INTERVAL = 0.11  # stay under 10 req/s per key
 
 UA = (
@@ -756,6 +761,145 @@ def fetch_au_gdp_annual() -> dict:
     }
     _cache_set("aus:gdp", card)
     return dict(card)
+
+
+def _bis_period_to_ym(period: str) -> str:
+    m = re.match(r"^(\d{4})-Q([1-4])$", period, re.I)
+    if not m:
+        return period
+    return f"{m.group(1)}-{int(m.group(2)) * 3:02d}"
+
+
+def _bis_period_label(period: str) -> str:
+    m = re.match(r"^(\d{4})-Q([1-4])$", period, re.I)
+    if not m:
+        return period
+    return f"Q{m.group(2)} {m.group(1)}"
+
+
+def _annual_gdp_at(quarters: list[tuple[str, float]], anchor_ym: str) -> float | None:
+    eligible = [(p, v) for p, v in quarters if p <= anchor_ym]
+    if len(eligible) < 4:
+        return None
+    window = eligible[-4:]
+    return sum(v for _, v in window)
+
+
+def _latest_annual_gdp(quarters: list[tuple[str, float]]) -> tuple[str, float] | None:
+    if len(quarters) < 4:
+        return None
+    window = quarters[-4:]
+    return window[-1][0], sum(v for _, v in window)
+
+
+def _parse_bis_au_credit_csv(text: str, borrower: str, unit: str) -> list[tuple[str, float]]:
+    """BIS WS_TC v2 rows: Q,AU,{G|P},A,M,{770|XDC},A,period,value."""
+    out: list[tuple[str, float]] = []
+    for line in text.strip().splitlines():
+        if line.startswith("FREQ,") or not line.strip():
+            continue
+        parts = line.split(",")
+        if len(parts) < 9:
+            continue
+        if parts[1] != "AU" or parts[2] != borrower or parts[3] != "A" or parts[4] != "M":
+            continue
+        if parts[5] != unit or parts[6] != "A":
+            continue
+        period = parts[7]
+        try:
+            val = float(parts[8])
+        except ValueError:
+            continue
+        out.append((period, val))
+    out.sort(key=lambda row: row[0])
+    return out
+
+
+def _fetch_bis_au_credit_rows() -> str:
+    cached = _cache_get("bis:au-credit-csv", CACHE_TTL_BIS_CREDIT)
+    if cached is not None:
+        return str(cached)
+    text = _fetch(BIS_TOTAL_CREDIT_URL, timeout=90).decode("utf-8", "replace")
+    _cache_set("bis:au-credit-csv", text)
+    return text
+
+
+def fetch_bis_au_credit(*, borrower: str) -> dict:
+    """BIS total credit to AU general government (G) or private non-financial (P)."""
+    if borrower not in {"G", "P"}:
+        raise ValueError(f"unknown borrower: {borrower}")
+    cache_key = f"bis:au-credit:{borrower}"
+    cached = _cache_get(cache_key, CACHE_TTL_BIS_CREDIT)
+    if cached is not None:
+        return dict(cached)
+
+    text = _fetch_bis_au_credit_rows()
+    pct_rows = _parse_bis_au_credit_csv(text, borrower, "770")
+    aud_rows = _parse_bis_au_credit_csv(text, borrower, "XDC")
+    if len(pct_rows) < 1:
+        raise RuntimeError(f"BIS AU credit % GDP empty ({borrower})")
+
+    ratio_period, ratio = pct_rows[-1]
+    prev_ratio_period, prev_ratio = pct_rows[-2] if len(pct_rows) > 1 else (None, None)
+    aud_billions = aud_rows[-1][1] if aud_rows else None
+    prev_aud = aud_rows[-2][1] if len(aud_rows) > 1 else None
+
+    gdp_quarters = _fetch_fred_au_gdp_quarters()
+    ratio_anchor_ym = _bis_period_to_ym(ratio_period)
+    ratio_gdp = _annual_gdp_at(gdp_quarters, ratio_anchor_ym) if gdp_quarters else None
+    latest_gdp = _latest_annual_gdp(gdp_quarters) if gdp_quarters else None
+    level_scaled = False
+    gdp_period = ratio_anchor_ym
+    gdp_label = _quarter_label_from_period(ratio_anchor_ym) or _bis_period_label(ratio_period)
+
+    if (
+        aud_billions is not None
+        and latest_gdp
+        and ratio_gdp
+        and latest_gdp[0] > ratio_anchor_ym
+        and latest_gdp[1] > ratio_gdp > 0
+    ):
+        aud_billions = aud_billions * (latest_gdp[1] / ratio_gdp)
+        level_scaled = True
+        gdp_period = latest_gdp[0]
+        gdp_label = _bis_period_label(_quarter_label_from_period(latest_gdp[0]) or latest_gdp[0])
+    elif aud_billions is None and ratio_gdp is not None:
+        aud_billions = (ratio / 100.0) * (latest_gdp[1] if latest_gdp else ratio_gdp)
+        level_scaled = True
+
+    q = quote_from_pair(ratio, prev_ratio)
+    ratio_label = _bis_period_label(ratio_period)
+    freshness_note = f"BIS credit · {ratio_label}"
+    if level_scaled and latest_gdp and latest_gdp[0] > ratio_anchor_ym:
+        freshness_note += f" · A$ est. to {gdp_label} GDP"
+
+    card = {
+        **q,
+        "audBillions": aud_billions,
+        "asOf": ratio_label,
+        "asOfUtc": _quarter_end_utc_ms(ratio_period),
+        "source": "BIS",
+        "freshnessKind": "quarterly",
+        "freshnessNote": freshness_note,
+        "estimated": level_scaled,
+        "debtEstMeta": {
+            "ratioDate": ratio_period,
+            "gdpDate": gdp_period,
+            "levelScaled": level_scaled,
+            "levelSource": "BIS/XDC" if aud_rows else "ratio×gdp",
+            "prevAudBillions": prev_aud,
+        },
+    }
+    _cache_set(cache_key, card)
+    return dict(card)
+
+
+def fetch_bis_au_govt_credit() -> dict:
+    return fetch_bis_au_credit(borrower="G")
+
+
+def fetch_bis_au_private_credit() -> dict:
+    return fetch_bis_au_credit(borrower="P")
 
 
 AUS_METRICS = frozenset({"au-cgs", "au-gdp"})

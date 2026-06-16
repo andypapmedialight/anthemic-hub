@@ -835,6 +835,8 @@ VAL_WARM_LIVE_METRICS = (
     "otc-gmv",
     "au-cgs",
     "au-gdp",
+    "au-public-debt",
+    "au-private-debt",
     "asx-bond-fut",
 )
 
@@ -844,12 +846,26 @@ def warm_mmd_cache() -> None:
     fetch_valuation_batch(list(VAL_WARM_LIVE_METRICS))
 
 
+def fetch_au_public_debt() -> dict:
+    from aus_fetch import fetch_bis_au_govt_credit
+
+    return fetch_bis_au_govt_credit()
+
+
+def fetch_au_private_debt() -> dict:
+    from aus_fetch import fetch_bis_au_private_credit
+
+    return fetch_bis_au_private_credit()
+
+
 METRICS = {
     "margin-debt": fetch_margin_debt,
     "otc-notional": fetch_bis_otc_notional,
     "otc-gmv": fetch_bis_otc_gmv,
     "au-cgs": fetch_au_cgs,
     "au-gdp": fetch_au_gdp,
+    "au-public-debt": fetch_au_public_debt,
+    "au-private-debt": fetch_au_private_debt,
     "asx-bond-fut": fetch_bis_au_turnover,
 }
 

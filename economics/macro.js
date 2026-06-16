@@ -227,6 +227,12 @@ function quarterLabelFromFredDate(dateStr) {
   return `Q${q} ${y}`;
 }
 
+function bisPeriodLabel(period) {
+  if (!period) return '';
+  const m = String(period).match(/^(\d{4})-Q([1-4])$/i);
+  return m ? `Q${m[2]} ${m[1]}` : period;
+}
+
 function isDateOnlyUtc(ms) {
   const d = new Date(ms);
   return (
@@ -728,8 +734,8 @@ const VALUATION = [
   { id: 'public-debt',  label: 'US Public Debt',    ticker: 'PUB', def: true  },
   { id: 'private-debt', label: 'US Private Debt',   ticker: 'PRV', def: true  },
   { id: 'au-gdp',       label: 'AU GDP',            ticker: 'A-GDP', def: true, api: 'au-gdp' },
-  { id: 'au-public-debt',  label: 'AU General Govt Credit', ticker: 'A-GOV', def: true  },
-  { id: 'au-private-debt', label: 'AU Private Credit', ticker: 'A-PRV', def: true  },
+  { id: 'au-public-debt',  label: 'AU General Govt Credit', ticker: 'A-GOV', def: true, api: 'au-public-debt', fallbackDisplay: 'A$1.49T', source: 'BIS', href: 'https://data.bis.org/topics/TOTAL_CREDIT' },
+  { id: 'au-private-debt', label: 'AU Private Credit', ticker: 'A-PRV', def: true, api: 'au-private-debt', fallbackDisplay: 'A$5.03T', source: 'BIS', href: 'https://data.bis.org/topics/TOTAL_CREDIT' },
   // Futures / leverage (live via hub /economics/proxy/valuation)
   {
     id: 'margin-debt',
@@ -1487,17 +1493,17 @@ function valuationCardInfo(item) {
     },
     'au-public-debt': {
       summary: 'BIS credit to the Australian general government sector as % of GDP — federal, state, territory, and local combined (SNA definition).',
-      derived: 'Not the same as Commonwealth gross or net debt from Treasury/AOFM. Level (A$) from FRED QAUGANXDCA when available, else ratio × nominal GDP.',
-      data: 'FRED QAUGAN770A (% GDP) · QAUGANXDCA (A$ billions) · NGDPSAXDCAUQ (GDP).',
-      sourceHtml: infoLink('FRED / BIS', fred),
+      derived: 'BIS total credit (direct API, same-day as BIS release). A$ level scaled to latest nominal GDP when GDP is ahead of the credit quarter.',
+      data: 'BIS WS_TC v2 (% GDP + AUD market value) · FRED NGDPSAXDCAUQ for GDP scaling.',
+      sourceHtml: `${infoLink('BIS credit statistics', 'https://data.bis.org/topics/TOTAL_CREDIT')} · hub proxy`,
       formula: 'Compare: Treasury gross AGS face value ~A$960B; net debt ~A$540B; broader public sector GFS liabilities can exceed A$1.6T.',
     },
     'au-private-debt': {
       summary: 'BIS credit to the Australian private non-financial sector (households, firms, NPISHs) as % of GDP.',
-      derived: 'Loans and debt securities from banks and other lenders — not government debt. Estimated A$ level from ratio × nominal GDP.',
-      data: 'FRED QAUPAM770A (% of GDP, quarterly) · NGDPSAXDCAUQ (GDP, quarterly).',
-      sourceHtml: infoLink('FRED / BIS', fred),
-      formula: 'Est. AUD = (% of GDP ÷ 100) × AU nominal GDP (A$B)',
+      derived: 'BIS total credit via hub proxy. A$ headline uses BIS market-value level, scaled to latest GDP when GDP prints ahead of BIS credit.',
+      data: 'BIS WS_TC v2 · quarterly release (Mar/Jun/Sep/Dec). RBA monthly D2 lending is more timely but a narrower bank-lending measure.',
+      sourceHtml: `${infoLink('BIS', 'https://data.bis.org/topics/TOTAL_CREDIT')} · hub proxy`,
+      formula: 'Est. AUD = BIS level × (latest 4q GDP ÷ GDP at credit quarter) when GDP is newer.',
     },
     'margin-debt': {
       summary: 'FINRA aggregate debit balances in customer securities margin accounts — a proxy for stock-market leverage and speculative demand.',
@@ -2762,10 +2768,16 @@ function debtRatioExtraHtml(d) {
       <span class="spread-val">${escapeHtml(m.debtAnchorDate)}</span></div>`;
   }
   if (m.ratioDate) {
-    html += `<div class="yield-extra"><span class="spread-label">Ratio</span>
-      <span class="spread-val">${escapeHtml(m.ratioDate)}</span></div>`;
+    const ratioLabel = bisPeriodLabel(m.ratioDate) || m.ratioDate;
+    html += `<div class="yield-extra"><span class="spread-label">BIS credit</span>
+      <span class="spread-val">${escapeHtml(ratioLabel)}</span></div>`;
   }
-  if (m.gdpDate) {
+  if (m.levelScaled && m.gdpDate && m.ratioDate) {
+    const gdpLabel = bisPeriodLabel(m.gdpDate) || quarterLabelFromFredDate(m.gdpDate) || m.gdpDate;
+    html += `<div class="yield-extra yield-extra--sub"><span class="spread-label">A$ estimate</span>
+      <span class="spread-val spread-val--muted">Scaled to ${escapeHtml(gdpLabel)} GDP</span></div>`;
+  }
+  if (m.gdpDate && !m.levelScaled) {
     html += `<div class="yield-extra"><span class="spread-label">GDP</span>
       <span class="spread-val">${escapeHtml(m.gdpDate)}</span></div>`;
   }
@@ -2984,11 +2996,13 @@ function latestFredRowOnOrBefore(rows, date) {
   return pick || sorted[0];
 }
 
-function pickAuGdpBillionsForDebt(fred, ratioDate) {
+function pickAuGdpBillionsForDebt(fred, ratioDate, { latest = false } = {}) {
   const rows = fred.NGDPSAXDCAUQ;
   if (!rows?.length) return null;
   const sorted = sortedFredRows(rows);
-  const anchor = ratioDate || sorted[sorted.length - 1].date;
+  const anchor = latest
+    ? sorted[sorted.length - 1].date
+    : (ratioDate || sorted[sorted.length - 1].date);
   const eligible = sorted.filter(r => r.date <= anchor);
   const window = eligible.slice(-4);
   if (window.length < 4) return null;
@@ -3013,18 +3027,45 @@ function attachAuDebtLevel(quote, fred, ratioDate, levelSeriesId = null) {
     ? latestFredRowOnOrBefore(fred[levelSeriesId], ratioDate)
     : null;
   let audBillions = levelRow?.v ?? null;
-  const gdpBillions = pickAuGdpBillionsForDebt(fred, ratioDate);
-  if (audBillions == null && gdpBillions != null) {
-    audBillions = (quote.price / 100) * gdpBillions;
+  const ratioGdpBillions = pickAuGdpBillionsForDebt(fred, ratioDate);
+  const latestGdpBillions = pickAuGdpBillionsForDebt(fred, null, { latest: true });
+  const latestGdpRow = latestFredRow(fred.NGDPSAXDCAUQ);
+  const ratioGdpRow = latestFredRowOnOrBefore(fred.NGDPSAXDCAUQ, ratioDate);
+  const gdpAhead = Boolean(latestGdpRow && ratioDate && latestGdpRow.date > ratioDate);
+  let levelScaled = false;
+
+  if (
+    audBillions != null
+    && gdpAhead
+    && ratioGdpBillions > 0
+    && latestGdpBillions > ratioGdpBillions
+  ) {
+    audBillions = audBillions * (latestGdpBillions / ratioGdpBillions);
+    levelScaled = true;
+  } else if (audBillions == null && (latestGdpBillions != null || ratioGdpBillions != null)) {
+    const gdpPick = gdpAhead ? latestGdpBillions : ratioGdpBillions;
+    audBillions = (quote.price / 100) * gdpPick;
+    levelScaled = gdpAhead;
   }
-  const gdpRow = latestFredRowOnOrBefore(fred.NGDPSAXDCAUQ, ratioDate);
+
+  let freshnessNote = quote.freshnessNote;
+  if (gdpAhead && levelScaled) {
+    const ratioLabel = quarterLabelFromFredDate(ratioDate);
+    const gdpLabel = quarterLabelFromFredDate(latestGdpRow.date);
+    const extra = `A$ est. to ${gdpLabel} GDP (BIS ratio ${ratioLabel})`;
+    freshnessNote = freshnessNote ? `${freshnessNote} · ${extra}` : extra;
+  }
+
   return {
     ...quote,
     audBillions,
+    estimated: quote.estimated || levelScaled,
+    freshnessNote,
     debtEstMeta: {
-      gdpDate: gdpRow?.date || ratioDate || null,
+      gdpDate: latestGdpRow?.date || ratioGdpRow?.date || ratioDate || null,
       ratioDate: ratioDate || null,
-      levelSource: levelRow ? levelSeriesId : (gdpBillions != null ? 'ratio×gdp' : null),
+      levelScaled,
+      levelSource: levelRow ? levelSeriesId : (audBillions != null ? 'ratio×gdp' : null),
     },
   };
 }
@@ -3463,6 +3504,21 @@ async function fetchValuation(metricId, force = false) {
   if (isValuationLive(metricId)) {
     const live = await fetchValuationLive(metricId, force);
     if (live) return live;
+    if (metricId === 'au-public-debt' || metricId === 'au-private-debt') {
+      const key = `val:${metricId}`;
+      if (!force) { const c = cacheGet(key); if (c) return c; }
+      try {
+        const fred = await getValuationFredRows(force);
+        if (!fred) return null;
+        const result = metricId === 'au-public-debt'
+          ? fetchAuPublicDebtCurrent(fred)
+          : fetchAuPrivateDebtCurrent(fred);
+        if (result) cacheSet(key, result);
+        return result;
+      } catch {
+        return null;
+      }
+    }
     const item = VALUATION.find(v => v.id === metricId);
     return item
       ? attachFreshness(
@@ -3643,6 +3699,35 @@ function collectCardMetas(section, items) {
           change = change / 1000;
         } else if (item.id === 'au-cgs' || item.id === 'au-gdp') {
           isAud = true;
+        } else if (item.id === 'au-public-debt' || item.id === 'au-private-debt') {
+          const asOfUtc = d?.asOfUtc ?? parseReferencePeriodUtc(d?.asOf);
+          const hubLive = d && !d.fallback && (d.live || d.price != null);
+          return {
+            ticker: item.ticker,
+            label: item.label,
+            price: formatAudCompact(d?.audBillions) || formatRatioPrice(d, 1),
+            change: d?.change ?? null,
+            pct: d?.pct ?? null,
+            extra: valuationRatioExtra('% of GDP', d?.price, 1)
+              + debtRatioExtraHtml(d)
+              + `<div class="yield-extra yield-extra--sub"><span class="spread-label">Source</span>
+                <span class="spread-val spread-val--muted">BIS credit to GDP</span></div>`,
+            isRatio: true,
+            asOf: d?.asOf ?? null,
+            asOfUtc,
+            freshnessKind: d?.freshnessKind ?? 'quarterly',
+            freshnessNote: d?.freshnessNote ?? null,
+            estimated: d?.estimated,
+            debtEstMeta: d?.debtEstMeta,
+            live: d?.live,
+            fallback: d?.fallback,
+            itemKey: item.id,
+            sectionKey: section.key,
+            failed: !d || !(d.audBillions != null || d.price != null),
+            noChart: !valuationHasChart(item),
+            cardClassExtra: '',
+            showCardAsOf: Boolean(asOfUtc || d?.asOf),
+          };
         }
         let display = d?.display || item.fallbackDisplay || '–';
         if (isAud && d?.price != null) {
