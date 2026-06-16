@@ -39,7 +39,11 @@ DEST=/var/www/anthemic-hub
 SELF_INCOMING="${INCOMING}/anthemic-hub-deploy-apply.sh"
 APPLY_BIN="/usr/local/bin/anthemic-hub-deploy-apply.sh"
 if [[ "${EUID:-$(id -u)}" -eq 0 ]] && [[ -f "${SELF_INCOMING}" ]]; then
-  install -m 755 -o root -g root "${SELF_INCOMING}" "${APPLY_BIN}"
+  if ! cmp -s "${SELF_INCOMING}" "${APPLY_BIN}" 2>/dev/null; then
+    install -m 755 -o root -g root "${SELF_INCOMING}" "${APPLY_BIN}"
+    echo "anthemic-hub-deploy-apply: updated ${APPLY_BIN}; re-running with new script" >&2
+    exec "${APPLY_BIN}" "${INCOMING}"
+  fi
 fi
 
 if [[ ! -f "${INCOMING}/index.html" ]]; then
@@ -240,13 +244,15 @@ MMD_OPT=/opt/anthemic-mmd
 MMD_ENV=/etc/anthemic-mmd/valuation.env
 mkdir -p "${MMD_OPT}"
 if [[ -f "${INCOMING}/mmd/valuation_server.py" && -f "${INCOMING}/mmd/valuation_fetch.py" ]]; then
+  if [[ ! -f "${INCOMING}/mmd/treasury_fetch.py" ]]; then
+    echo "anthemic-hub-deploy-apply: missing ${INCOMING}/mmd/treasury_fetch.py (required by valuation_server.py)" >&2
+    exit 1
+  fi
   install -o root -g root -m 644 "${INCOMING}/mmd/valuation_fetch.py" "${MMD_OPT}/valuation_fetch.py"
   install -o root -g root -m 755 "${INCOMING}/mmd/valuation_server.py" "${MMD_OPT}/valuation_server.py"
+  install -o root -g root -m 644 "${INCOMING}/mmd/treasury_fetch.py" "${MMD_OPT}/treasury_fetch.py"
   if [[ -f "${INCOMING}/mmd/aus_fetch.py" ]]; then
     install -o root -g root -m 644 "${INCOMING}/mmd/aus_fetch.py" "${MMD_OPT}/aus_fetch.py"
-  fi
-  if [[ -f "${INCOMING}/mmd/treasury_fetch.py" ]]; then
-    install -o root -g root -m 644 "${INCOMING}/mmd/treasury_fetch.py" "${MMD_OPT}/treasury_fetch.py"
   fi
   if [[ -f "${INCOMING}/mmd/multilateral_fetch.py" ]]; then
     install -o root -g root -m 644 "${INCOMING}/mmd/multilateral_fetch.py" "${MMD_OPT}/multilateral_fetch.py"
@@ -273,6 +279,11 @@ if [[ -f "${INCOMING}/mmd/valuation_server.py" && -f "${INCOMING}/mmd/valuation_
   } > "${MMD_ENV}"
   chmod 640 "${MMD_ENV}"
   chown root:www-data "${MMD_ENV}"
+  if ! python3 -c "import sys; sys.path.insert(0, '${MMD_OPT}'); import treasury_fetch" 2>/dev/null; then
+    echo "anthemic-hub-deploy-apply: treasury_fetch import failed under ${MMD_OPT}" >&2
+    ls -la "${MMD_OPT}" >&2 || true
+    exit 1
+  fi
   if command -v systemctl >/dev/null 2>&1; then
     systemctl daemon-reload
     systemctl enable mmd-valuation.service
