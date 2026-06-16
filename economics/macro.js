@@ -895,6 +895,12 @@ const COMMODITY_CATALOG = [
   { id: 'spot-cocoa', fredId: 'PCOCOUSDM', label: 'Cocoa Spot', ticker: 'COCOA', unit: 'USD/mt' },
 ];
 
+/** FRED commodity refs that update monthly (not daily like WTI/Brent). */
+const FRED_DAILY_COMMODITY_IDS = new Set(['DCOILWTICO', 'DCOILBRENTEU']);
+const FRED_MONTHLY_COMMODITY_IDS = new Set(
+  COMMODITY_CATALOG.map(e => e.fredId).filter(id => id && !FRED_DAILY_COMMODITY_IDS.has(id)),
+);
+
 const FX_PAIRS = [
   { from: 'AUD', to: 'USD', label: 'AUD / USD', def: true  },
   { from: 'EUR', to: 'USD', label: 'EUR / USD', def: true  },
@@ -3386,7 +3392,14 @@ function buildFredLookup(rows) {
   };
 }
 
-function chartFallbackObsCount(days) {
+function chartFallbackObsCount(days, cadence = 'daily', medianGapMs = null) {
+  if (cadence !== 'daily' && cadence !== 'weekly' && medianGapMs) {
+    const obsInPeriod = Math.ceil((days * 86400000) / medianGapMs) + 1;
+    if (days <= 30) return Math.max(2, Math.min(obsInPeriod, 3));
+    if (days <= 180) return Math.max(2, Math.min(obsInPeriod, 8));
+    if (days <= 365) return Math.max(2, Math.min(obsInPeriod, 14));
+    return Math.max(2, Math.min(obsInPeriod, 24));
+  }
   if (days <= 1) return 2;
   if (days <= 7) return 7;
   if (days <= 30) return 22;
@@ -3394,18 +3407,64 @@ function chartFallbackObsCount(days) {
   return 262;
 }
 
+function medianSeriesGapMs(series) {
+  if (!series?.length || series.length < 2) return null;
+  const gaps = [];
+  for (let i = 1; i < series.length; i++) gaps.push(series[i].t - series[i - 1].t);
+  gaps.sort((a, b) => a - b);
+  return gaps[Math.floor(gaps.length / 2)];
+}
+
+function inferSeriesCadence(series) {
+  const gap = medianSeriesGapMs(series);
+  if (!gap) return 'daily';
+  const gapDays = gap / 86400000;
+  if (gapDays >= 60) return 'quarterly';
+  if (gapDays >= 20) return 'monthly';
+  if (gapDays >= 5) return 'weekly';
+  return 'daily';
+}
+
 function sliceSeriesForChart(series, days) {
   if (!series?.length) return series;
+  const medianGapMs = medianSeriesGapMs(series);
+  const cadence = inferSeriesCadence(series);
   const cutoff = Date.now() - days * 86400000;
   const inWindow = series.filter(p => p.t >= cutoff);
   if (inWindow.length >= 2) return inWindow;
-  const keep = chartFallbackObsCount(days);
+  const keep = chartFallbackObsCount(days, cadence, medianGapMs);
   return series.slice(-Math.min(series.length, Math.max(2, keep)));
 }
 
 function seriesLagsSelectedPeriod(series, days) {
   if (!series?.length) return false;
   return series[series.length - 1].t < Date.now() - days * 86400000;
+}
+
+function fredCadenceForChartItem(item, section) {
+  if (section.key === 'comm' && item.fredId) {
+    if (FRED_MONTHLY_COMMODITY_IDS.has(item.fredId)) return 'monthly';
+    if (FRED_DAILY_COMMODITY_IDS.has(item.fredId)) return 'daily';
+    return 'daily';
+  }
+  if (section.key === 'bond' && !item.yTicker) return 'daily';
+  return null;
+}
+
+function shouldShowFredChartNote(series, days, cadence) {
+  if (!cadence) return false;
+  if (cadence === 'monthly') return true;
+  return seriesLagsSelectedPeriod(series, days);
+}
+
+function fredChartNoteHtml(cadence) {
+  if (cadence === 'monthly') {
+    return '<p class="chart-note">Monthly FRED series — chart uses the latest published months (release may lag the calendar period).</p>';
+  }
+  if (cadence === 'daily') {
+    return '<p class="chart-note">Daily FRED series — showing the latest published observations (release may lag calendar period).</p>';
+  }
+  return '';
 }
 
 async function fetchValuationFredSeriesStaggered(lookbackDays) {
@@ -5889,6 +5948,9 @@ function chartPeriodsFor(item, section) {
   if (isMultilateralSection(section)) return CHART_PERIODS.filter(p => p.days >= 30);
   if (section.key === 'bond' && !item.yTicker) return CHART_PERIODS.filter(p => p.days >= 30);
   if (section.key === 'fx') return CHART_PERIODS.filter(p => p.days >= 7);
+  if (section.key === 'comm' && item.fredId && FRED_MONTHLY_COMMODITY_IDS.has(item.fredId)) {
+    return CHART_PERIODS.filter(p => p.days >= 30);
+  }
   return CHART_PERIODS;
 }
 
@@ -6228,8 +6290,8 @@ function buildChartSvg(series, opts = {}) {
 
   const noteHtml = quarterlyNote
     ? '<p class="chart-note">Quarterly FRED data — short periods show the latest observations.</p>'
-    : opts.fredDailyNote
-      ? '<p class="chart-note">Daily FRED series — showing the latest published observations (release may lag calendar period).</p>'
+    : (opts.fredChartNote && opts.fredCadence)
+      ? fredChartNoteHtml(opts.fredCadence)
       : '';
   return { html: svg + noteHtml, statsHtml };
 }
@@ -6264,9 +6326,8 @@ function chartOpts(item, section) {
   }
   const isPercent = section.key === 'bond';
   const dp = quoteDecimals(item, section.key);
-  const fredDaily = (section.key === 'comm' && item.fredId)
-    || (section.key === 'bond' && !item.yTicker);
-  return { isPercent, isYield: section.key === 'bond', dp, fredDailyNote: fredDaily };
+  const fredCadence = fredCadenceForChartItem(item, section);
+  return { isPercent, isYield: section.key === 'bond', dp, fredCadence };
 }
 
 let chartFocusTrapHandler = null;
@@ -6343,9 +6404,13 @@ async function loadChartModal() {
 
   try {
     const series = await fetchHistory(item, section, chartState.days);
+    const inferred = inferSeriesCadence(series);
+    const fredCadence = opts.fredCadence
+      || (inferred === 'monthly' || inferred === 'quarterly' ? inferred : null);
     const optsWithLag = {
       ...opts,
-      fredDailyNote: opts.fredDailyNote && seriesLagsSelectedPeriod(series, chartState.days),
+      fredCadence,
+      fredChartNote: shouldShowFredChartNote(series, chartState.days, fredCadence),
     };
     const { html, statsHtml } = buildChartSvg(series, optsWithLag);
     body.innerHTML = html;
