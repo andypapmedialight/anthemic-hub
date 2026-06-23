@@ -24,6 +24,7 @@ const STALE_AFTER_MS = {
   live: 30 * 60 * 1000,
   daily: 3 * 86400000,
   monthly: 75 * 86400000,
+  semiannual: 200 * 86400000,
   quarterly: 120 * 86400000,
   annual: Infinity,
   estimated: 45 * 86400000,
@@ -290,6 +291,7 @@ function staleAsOfWording(meta) {
   if (kind === 'estimated') return 'last estimate';
   if (kind === 'annual') return 'last release';
   if (kind === 'monthly') return 'last month';
+  if (kind === 'semiannual') return 'last release';
   if (kind === 'daily' && meta.freshnessNote?.includes('prior biz day')) return 'prior business day';
   return 'market close';
 }
@@ -302,6 +304,7 @@ function resolveFreshnessPill(meta) {
   if (kind === 'quarterly') return 'Qtrly';
   if (kind === 'annual') return 'Annual';
   if (kind === 'monthly') return 'Monthly';
+  if (kind === 'semiannual') return 'Semiannual';
   if (kind === 'daily') return 'Daily';
   if (meta.sessionOpen === false) return 'Closed';
   if (kind === 'live' || meta.live) return 'Live';
@@ -312,7 +315,7 @@ function freshnessPillClass(label) {
   if (label === 'Closed') return 'pill pill--ref';
   if (label === 'Live') return 'pill pill--live';
   if (label === 'Est.') return 'pill pill--est';
-  if (label === 'Ref' || label === 'Qtrly' || label === 'Daily' || label === 'Annual' || label === 'Monthly') {
+  if (label === 'Ref' || label === 'Qtrly' || label === 'Daily' || label === 'Annual' || label === 'Monthly' || label === 'Semiannual') {
     return 'pill pill--ref';
   }
   return 'pill neu';

@@ -36,7 +36,7 @@ FINRA_MARGIN_XLSX = (
 )
 BIS_OTC_OUT = (
     "https://stats.bis.org/api/v1/data/BIS,WS_OTC_DERIV2,1.0/.?"
-    "detail=dataonly&format=csvdata&startPeriod=2025-S2&endPeriod=2025-S2"
+    "detail=dataonly&format=csvdata&startPeriod=2024-S1"
 )
 BIS_OTC_TURNOVER = (
     "https://stats.bis.org/api/v1/data/BIS,WS_DER_OTC_TOV,1.0/.?"
@@ -50,8 +50,7 @@ BIS_DEBT_AU = (
 FRED_MARGIN_SERIES = "BOGZ1FL663067003Q"
 
 UA = (
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-    "AppleWebKit/537.36 Chrome/124.0 Safari/537.36"
+    "Mozilla/5.0 (compatible; MorningMacro/1.0; +https://anthemic-developments.com/economics/)"
 )
 _FRED_ID_RE = re.compile(r"^[A-Z0-9]+$")
 FRED_OBS_PROXY_CACHE_TTL = int(os.environ.get("MMD_FRED_OBS_CACHE_TTL", "300"))
@@ -191,7 +190,7 @@ def quote_from_pair(current: float, previous: float | None) -> dict:
 def fetch_finra_margin() -> dict:
     """FINRA aggregate debit balances ($ millions)."""
     try:
-        html = _fetch_curl(FINRA_MARGIN_HTML, timeout=12).decode("utf-8", "replace")
+        html = _fetch(FINRA_MARGIN_HTML, timeout=25).decode("utf-8", "replace")
         rows = re.findall(
             r"<tr><td>([^<]+)</td><td>([0-9,]+)</td>",
             html,
@@ -210,13 +209,15 @@ def fetch_finra_margin() -> dict:
                 "display": format_usd_trillions(cur["debitMillions"]),
                 "asOf": cur["month"],
                 "source": "FINRA",
+                "freshnessKind": "monthly",
+                "freshnessNote": "FINRA margin statistics",
             }
     except Exception:
         pass
 
     # Fallback: official Excel (when HTML is blocked)
     try:
-        raw = _fetch_curl(FINRA_MARGIN_XLSX, timeout=12)
+        raw = _fetch(FINRA_MARGIN_XLSX, timeout=25)
     except Exception:
         raise RuntimeError("FINRA margin parse failed") from None
     z = zipfile.ZipFile(io.BytesIO(raw))
@@ -246,7 +247,14 @@ def fetch_finra_margin() -> dict:
                 continue
     if len(data_rows) >= 2:
         q = quote_from_pair(data_rows[0], data_rows[1])
-        return {**q, "display": format_usd_trillions(data_rows[0]), "asOf": "Latest", "source": "FINRA"}
+        return {
+            **q,
+            "display": format_usd_trillions(data_rows[0]),
+            "asOf": "Latest",
+            "source": "FINRA",
+            "freshnessKind": "monthly",
+            "freshnessNote": "FINRA margin statistics",
+        }
     raise RuntimeError("FINRA margin parse failed")
 
 
@@ -330,6 +338,8 @@ def fetch_fred_margin() -> dict:
         "asOf": cur_date,
         "source": "FRED Z.1",
         "measureLabel": "Broker-dealer margin receivables",
+        "freshnessKind": "quarterly",
+        "freshnessNote": "FRED Z.1 (FINRA unavailable)",
     }
 
 
@@ -353,10 +363,18 @@ def _bis_otc_rows() -> list[dict[str, str]]:
     return rows
 
 
+def _bis_latest_period(rows: list[dict[str, str]]) -> str:
+    periods = [r.get("TIME_PERIOD", "") for r in rows if r.get("TIME_PERIOD")]
+    return max(periods) if periods else ""
+
+
 def _bis_match(rows: list[dict[str, str]], **want: str) -> dict[str, str] | None:
     matches = [row for row in rows if all(row.get(k) == v for k, v in want.items())]
     if not matches:
         return None
+    period = _bis_latest_period(matches)
+    if period:
+        matches = [m for m in matches if m.get("TIME_PERIOD") == period]
     total = [m for m in matches if m.get("DER_CURR_LEG1") == "TO1" and m.get("DER_CURR_LEG2") == "TO1"]
     pool = total or matches
     return max(pool, key=lambda r: float(r["OBS_VALUE"]))
@@ -386,6 +404,8 @@ def fetch_bis_otc_notional() -> dict:
         "display": format_usd_trillions(millions),
         "asOf": period,
         "source": "BIS",
+        "freshnessKind": "semiannual",
+        "freshnessNote": "BIS OTC derivatives",
     }
 
 
@@ -418,6 +438,8 @@ def fetch_bis_otc_gmv() -> dict:
         "display": format_usd_trillions(millions),
         "asOf": period,
         "source": "BIS",
+        "freshnessKind": "semiannual",
+        "freshnessNote": "BIS OTC derivatives",
     }
 
 
