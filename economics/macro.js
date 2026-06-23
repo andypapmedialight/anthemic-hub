@@ -37,6 +37,14 @@ const VAL_FRED_CARD_LOOKBACK_DAYS = 800;
 const COMM_FRED_LOOKBACK_DAYS = 120;
 /** COMEX copper futures (USD/lb) → FRED-style USD/metric ton. */
 const LBS_PER_METRIC_TON = 2204.62262185;
+const LB_PER_KG = LBS_PER_METRIC_TON / 1000;
+/** CBOT corn futures (USX ¢/bu, 56 lb/bu) → USD/metric ton. */
+const CORN_CENTS_BUSHEL_TO_USD_MT = LBS_PER_METRIC_TON / 5600;
+/** ICE/NYMEX ag futures quoted USX ¢/lb → card units. */
+const CENTS_PER_LB_TO_USD_LB = 0.01;
+const CENTS_PER_LB_TO_USD_KG = 0.01 * LB_PER_KG;
+/** IMF global wheat spot on FRED (monthly export benchmark, not exchange-traded). */
+const FRED_WHEAT_SPOT_ID = 'PWHEAMTUSDM';
 const BOND_SPREAD_FRED_LOOKBACK_DAYS = 45;
 const FRED_PROXY_LIMIT_CARD = 150;
 const FRED_PROXY_LIMIT_SPREAD = 60;
@@ -677,6 +685,33 @@ function loadCustomCommodities() {
         delete item.fredId;
         item.sym = item.sym || 'BZ=F';
       }
+      if (item?.fredId === 'PIORECRUSDM') {
+        delete item.fredId;
+        item.sym = item.sym || 'TIO=F';
+      }
+      if (item?.fredId === 'PNGASUSDM') {
+        delete item.fredId;
+        item.sym = item.sym || 'NG=F';
+      }
+      if (item?.fredId === 'PMAIZMTUSDM') {
+        delete item.fredId;
+        item.sym = item.sym || 'ZC=F';
+        item.priceMul = item.priceMul || CORN_CENTS_BUSHEL_TO_USD_MT;
+      }
+      if (item?.fredId === 'PCOFFOTMUSDM') {
+        delete item.fredId;
+        item.sym = item.sym || 'KC=F';
+        item.priceMul = item.priceMul || CENTS_PER_LB_TO_USD_LB;
+      }
+      if (item?.fredId === 'PSUGAISAUSDM') {
+        delete item.fredId;
+        item.sym = item.sym || 'SB=F';
+        item.priceMul = item.priceMul || CENTS_PER_LB_TO_USD_KG;
+      }
+      if (item?.fredId === 'PCOCOUSDM') {
+        delete item.fredId;
+        item.sym = item.sym || 'CC=F';
+      }
     }
   } catch {
     CUSTOM_COMMODITIES = [];
@@ -889,10 +924,10 @@ const COMMODITIES = [
   { id: 'spot-copper',  sym: 'HG=F', priceMul: LBS_PER_METRIC_TON, label: 'Copper Spot',    ticker: 'CU',    unit: 'USD/mt', def: true,  dp: 2 },
   { id: 'spot-wti',     sym: 'CL=F',               label: 'WTI Spot',       ticker: 'WTI',   unit: 'USD/bbl', def: true, dp: 2 },
   { id: 'spot-brent',   sym: 'BZ=F',               label: 'Brent Spot',     ticker: 'BRENT', unit: 'USD/bbl', def: true, dp: 2 },
-  { id: 'spot-ironore', fredId: 'PIORECRUSDM',      label: 'Iron Ore Spot',  ticker: 'IRON',  unit: 'USD/dmtu', def: false, dp: 2 },
-  { id: 'spot-gas',     fredId: 'PNGASUSDM',        label: 'Natural Gas Spot', ticker: 'NG',  unit: 'USD/mmbtu', def: false, dp: 3 },
-  { id: 'spot-wheat',   fredId: 'PWHEAMTUSDM',      label: 'Wheat Spot',     ticker: 'WHEAT', unit: 'USD/mt', def: false, dp: 2 },
-  { id: 'spot-corn',    fredId: 'PMAIZMTUSDM',      label: 'Corn Spot',      ticker: 'CORN',  unit: 'USD/mt', def: false, dp: 2 },
+  { id: 'spot-ironore', sym: 'TIO=F',              label: 'Iron Ore Spot',  ticker: 'IRON',  unit: 'USD/dmtu', def: false, dp: 2 },
+  { id: 'spot-gas',     sym: 'NG=F',               label: 'Natural Gas Spot', ticker: 'NG',  unit: 'USD/mmbtu', def: false, dp: 3 },
+  { id: 'spot-wheat',   fredId: FRED_WHEAT_SPOT_ID, label: 'Wheat Spot',     ticker: 'WHEAT', unit: 'USD/mt', def: false, dp: 2 },
+  { id: 'spot-corn',    sym: 'ZC=F', priceMul: CORN_CENTS_BUSHEL_TO_USD_MT, label: 'Corn Spot', ticker: 'CORN', unit: 'USD/mt', def: false, dp: 2 },
 ];
 
 const COMMODITY_CATALOG = [
@@ -901,13 +936,13 @@ const COMMODITY_CATALOG = [
   { id: 'spot-copper', sym: 'HG=F', priceMul: LBS_PER_METRIC_TON, label: 'Copper Spot', ticker: 'CU', unit: 'USD/mt' },
   { id: 'spot-wti', sym: 'CL=F', label: 'WTI Spot', ticker: 'WTI', unit: 'USD/bbl' },
   { id: 'spot-brent', sym: 'BZ=F', label: 'Brent Spot', ticker: 'BRENT', unit: 'USD/bbl' },
-  { id: 'spot-ironore', fredId: 'PIORECRUSDM', label: 'Iron Ore Spot', ticker: 'IRON', unit: 'USD/dmtu' },
-  { id: 'spot-gas', fredId: 'PNGASUSDM', label: 'Natural Gas Spot', ticker: 'NG', unit: 'USD/mmbtu' },
-  { id: 'spot-wheat', fredId: 'PWHEAMTUSDM', label: 'Wheat Spot', ticker: 'WHEAT', unit: 'USD/mt' },
-  { id: 'spot-corn', fredId: 'PMAIZMTUSDM', label: 'Corn Spot', ticker: 'CORN', unit: 'USD/mt' },
-  { id: 'spot-coffee', fredId: 'PCOFFOTMUSDM', label: 'Coffee Spot', ticker: 'COFFEE', unit: 'USD/lb' },
-  { id: 'spot-sugar', fredId: 'PSUGAISAUSDM', label: 'Sugar Spot', ticker: 'SUGAR', unit: 'USD/kg' },
-  { id: 'spot-cocoa', fredId: 'PCOCOUSDM', label: 'Cocoa Spot', ticker: 'COCOA', unit: 'USD/mt' },
+  { id: 'spot-ironore', sym: 'TIO=F', label: 'Iron Ore Spot', ticker: 'IRON', unit: 'USD/dmtu' },
+  { id: 'spot-gas', sym: 'NG=F', label: 'Natural Gas Spot', ticker: 'NG', unit: 'USD/mmbtu' },
+  { id: 'spot-wheat', fredId: FRED_WHEAT_SPOT_ID, label: 'Wheat Spot', ticker: 'WHEAT', unit: 'USD/mt' },
+  { id: 'spot-corn', sym: 'ZC=F', priceMul: CORN_CENTS_BUSHEL_TO_USD_MT, label: 'Corn Spot', ticker: 'CORN', unit: 'USD/mt' },
+  { id: 'spot-coffee', sym: 'KC=F', priceMul: CENTS_PER_LB_TO_USD_LB, label: 'Coffee Spot', ticker: 'COFFEE', unit: 'USD/lb' },
+  { id: 'spot-sugar', sym: 'SB=F', priceMul: CENTS_PER_LB_TO_USD_KG, label: 'Sugar Spot', ticker: 'SUGAR', unit: 'USD/kg' },
+  { id: 'spot-cocoa', sym: 'CC=F', label: 'Cocoa Spot', ticker: 'COCOA', unit: 'USD/mt' },
 ];
 
 /** FRED commodity refs that update monthly (ag/industrial spot series). */
@@ -995,9 +1030,9 @@ const SECTION_EXPLAINERS = {
   comm: {
     title: 'Market & source',
     market: 'Physical commodity spot/reference market levels (metals, energy, and agricultural benchmarks).',
-    venue: 'Gold, silver, copper, WTI, and Brent use exchange futures via Yahoo; other cards use FRED spot/reference series.',
-    source: 'Yahoo Finance futures for major metals and energy; FRED commodity price series for ag/industrial references.',
-    detail: 'Futures cards show the latest session close. FRED cards are spot/reference levels and may update monthly.',
+    venue: 'Metals and energy use exchange futures via Yahoo; wheat uses the IMF monthly global spot benchmark; other ag cards use exchange futures.',
+    source: 'Yahoo Finance futures for metals, energy, and most ag; IMF/FRED monthly spot for wheat (PWHEAMTUSDM).',
+    detail: 'Futures cards show the latest session close. Wheat is IMF export spot (monthly average) — not a daily or exchange price.',
   },
   bond: {
     title: 'Market & source',
@@ -1415,7 +1450,9 @@ function commodityCardInfo(item) {
     title: item.label,
     summary: `${item.label} is a spot/reference commodity benchmark level.${item.sym ? ' Live quote via Yahoo.' : ''}`,
     derived: item.fredId
-      ? 'Latest published FRED spot/reference value and change vs the prior observation.'
+      ? (item.fredId === FRED_WHEAT_SPOT_ID
+        ? 'Latest IMF global wheat export spot (monthly average, USD/mt) vs the prior month.'
+        : 'Latest published FRED spot/reference value and change vs the prior observation.')
       : 'Latest market quote and change vs the prior session.',
     data: `${source.data}. Card ticker: ${item.ticker}.${unit}`,
     sourceHtml: infoLink(source.label, source.href),
@@ -2464,7 +2501,7 @@ async function fetchCommodity(item, force = false) {
         FRED_PROXY_LIMIT_CARD,
       ));
       if (!rows?.length) return null;
-      const q = fredDailyQuoteFromRows(rows);
+      const q = fredCommodityQuoteFromRows(rows, item.fredId);
       if (!q) return null;
       const note = q.freshnessNote ? `${q.freshnessNote} · ${item.fredId}` : `FRED · ${item.fredId}`;
       const result = { ...q, freshnessNote: note };
@@ -2578,6 +2615,26 @@ function fredDailyQuoteFromRows(rows) {
     asOfUtc: fredDateToUtc(last.date),
     obsDate: last.date,
   }, 'daily', { note: 'FRED daily' });
+}
+
+function fredCommodityQuoteFromRows(rows, fredId) {
+  if (!rows?.length) return null;
+  const sorted = sortedFredRows(rows);
+  const last = sorted[sorted.length - 1];
+  const prev = sorted.length > 1 ? sorted[sorted.length - 2] : null;
+  const monthly = FRED_MONTHLY_COMMODITY_IDS.has(fredId);
+  const note = fredId === FRED_WHEAT_SPOT_ID
+    ? 'IMF wheat spot · monthly'
+    : monthly
+      ? 'FRED monthly'
+      : 'FRED daily';
+  return attachFreshness({
+    price: last.v,
+    change: prev ? pointsChange(last.v, prev.v) : null,
+    pct: prev ? pctChange(last.v, prev.v) : null,
+    asOfUtc: fredDateToUtc(last.date),
+    obsDate: last.date,
+  }, monthly ? 'monthly' : 'daily', { note });
 }
 
 function computeBondSpreadFred(spreadFred) {
