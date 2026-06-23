@@ -35,6 +35,8 @@ let macroFreshnessSummary = null;
 const VAL_FRED_CARD_LOOKBACK_DAYS = 800;
 /** Spot commodity cards only need the latest observation + prior period. */
 const COMM_FRED_LOOKBACK_DAYS = 120;
+/** COMEX copper futures (USD/lb) → FRED-style USD/metric ton. */
+const LBS_PER_METRIC_TON = 2204.62262185;
 const BOND_SPREAD_FRED_LOOKBACK_DAYS = 45;
 const FRED_PROXY_LIMIT_CARD = 150;
 const FRED_PROXY_LIMIT_SPREAD = 60;
@@ -662,6 +664,19 @@ function loadCustomCommodities() {
         delete item.fredId;
         item.sym = item.sym || 'SI=F';
       }
+      if (item?.fredId === 'PCOPPUSDM') {
+        delete item.fredId;
+        item.sym = item.sym || 'HG=F';
+        item.priceMul = item.priceMul || LBS_PER_METRIC_TON;
+      }
+      if (item?.fredId === 'DCOILWTICO') {
+        delete item.fredId;
+        item.sym = item.sym || 'CL=F';
+      }
+      if (item?.fredId === 'DCOILBRENTEU') {
+        delete item.fredId;
+        item.sym = item.sym || 'BZ=F';
+      }
     }
   } catch {
     CUSTOM_COMMODITIES = [];
@@ -871,9 +886,9 @@ const FORECAST_MACRO = [
 const COMMODITIES = [
   { id: 'spot-gold',    sym: 'GC=F',               label: 'Gold Spot',      ticker: 'XAU',   unit: 'USD/oz', def: true,  dp: 2 },
   { id: 'spot-silver',  sym: 'SI=F',               label: 'Silver Spot',    ticker: 'XAG',   unit: 'USD/oz', def: true,  dp: 3 },
-  { id: 'spot-copper',  fredId: 'PCOPPUSDM',        label: 'Copper Spot',    ticker: 'CU',    unit: 'USD/mt', def: true,  dp: 2 },
-  { id: 'spot-wti',     fredId: 'DCOILWTICO',       label: 'WTI Spot',       ticker: 'WTI',   unit: 'USD/bbl', def: true, dp: 2 },
-  { id: 'spot-brent',   fredId: 'DCOILBRENTEU',     label: 'Brent Spot',     ticker: 'BRENT', unit: 'USD/bbl', def: true, dp: 2 },
+  { id: 'spot-copper',  sym: 'HG=F', priceMul: LBS_PER_METRIC_TON, label: 'Copper Spot',    ticker: 'CU',    unit: 'USD/mt', def: true,  dp: 2 },
+  { id: 'spot-wti',     sym: 'CL=F',               label: 'WTI Spot',       ticker: 'WTI',   unit: 'USD/bbl', def: true, dp: 2 },
+  { id: 'spot-brent',   sym: 'BZ=F',               label: 'Brent Spot',     ticker: 'BRENT', unit: 'USD/bbl', def: true, dp: 2 },
   { id: 'spot-ironore', fredId: 'PIORECRUSDM',      label: 'Iron Ore Spot',  ticker: 'IRON',  unit: 'USD/dmtu', def: false, dp: 2 },
   { id: 'spot-gas',     fredId: 'PNGASUSDM',        label: 'Natural Gas Spot', ticker: 'NG',  unit: 'USD/mmbtu', def: false, dp: 3 },
   { id: 'spot-wheat',   fredId: 'PWHEAMTUSDM',      label: 'Wheat Spot',     ticker: 'WHEAT', unit: 'USD/mt', def: false, dp: 2 },
@@ -883,9 +898,9 @@ const COMMODITIES = [
 const COMMODITY_CATALOG = [
   { id: 'spot-gold', sym: 'GC=F', label: 'Gold Spot', ticker: 'XAU', unit: 'USD/oz' },
   { id: 'spot-silver', sym: 'SI=F', label: 'Silver Spot', ticker: 'XAG', unit: 'USD/oz' },
-  { id: 'spot-copper', fredId: 'PCOPPUSDM', label: 'Copper Spot', ticker: 'CU', unit: 'USD/mt' },
-  { id: 'spot-wti', fredId: 'DCOILWTICO', label: 'WTI Spot', ticker: 'WTI', unit: 'USD/bbl' },
-  { id: 'spot-brent', fredId: 'DCOILBRENTEU', label: 'Brent Spot', ticker: 'BRENT', unit: 'USD/bbl' },
+  { id: 'spot-copper', sym: 'HG=F', priceMul: LBS_PER_METRIC_TON, label: 'Copper Spot', ticker: 'CU', unit: 'USD/mt' },
+  { id: 'spot-wti', sym: 'CL=F', label: 'WTI Spot', ticker: 'WTI', unit: 'USD/bbl' },
+  { id: 'spot-brent', sym: 'BZ=F', label: 'Brent Spot', ticker: 'BRENT', unit: 'USD/bbl' },
   { id: 'spot-ironore', fredId: 'PIORECRUSDM', label: 'Iron Ore Spot', ticker: 'IRON', unit: 'USD/dmtu' },
   { id: 'spot-gas', fredId: 'PNGASUSDM', label: 'Natural Gas Spot', ticker: 'NG', unit: 'USD/mmbtu' },
   { id: 'spot-wheat', fredId: 'PWHEAMTUSDM', label: 'Wheat Spot', ticker: 'WHEAT', unit: 'USD/mt' },
@@ -895,10 +910,9 @@ const COMMODITY_CATALOG = [
   { id: 'spot-cocoa', fredId: 'PCOCOUSDM', label: 'Cocoa Spot', ticker: 'COCOA', unit: 'USD/mt' },
 ];
 
-/** FRED commodity refs that update monthly (not daily like WTI/Brent). */
-const FRED_DAILY_COMMODITY_IDS = new Set(['DCOILWTICO', 'DCOILBRENTEU']);
+/** FRED commodity refs that update monthly (ag/industrial spot series). */
 const FRED_MONTHLY_COMMODITY_IDS = new Set(
-  COMMODITY_CATALOG.map(e => e.fredId).filter(id => id && !FRED_DAILY_COMMODITY_IDS.has(id)),
+  COMMODITY_CATALOG.map(e => e.fredId).filter(Boolean),
 );
 
 const FX_PAIRS = [
@@ -981,9 +995,9 @@ const SECTION_EXPLAINERS = {
   comm: {
     title: 'Market & source',
     market: 'Physical commodity spot/reference market levels (metals, energy, and agricultural benchmarks).',
-    venue: 'Reference series rather than exchange-traded futures contracts. Units vary by commodity (e.g., USD/oz, USD/bbl, USD/mt).',
-    source: 'FRED commodity price series (daily/monthly reference observations).',
-    detail: 'These are spot/reference levels, not front-month futures. Update cadence depends on each source series and may be daily or monthly.',
+    venue: 'Gold, silver, copper, WTI, and Brent use exchange futures via Yahoo; other cards use FRED spot/reference series.',
+    source: 'Yahoo Finance futures for major metals and energy; FRED commodity price series for ag/industrial references.',
+    detail: 'Futures cards show the latest session close. FRED cards are spot/reference levels and may update monthly.',
   },
   bond: {
     title: 'Market & source',
@@ -2414,6 +2428,27 @@ async function fetchFX(from, to, force = false) {
   } catch { return null; }
 }
 
+function commodityPriceMul(item) {
+  const m = item?.priceMul;
+  return Number.isFinite(m) && m > 0 ? m : 1;
+}
+
+function scaleCommodityQuote(item, quote) {
+  const m = commodityPriceMul(item);
+  if (!quote || m === 1) return quote;
+  return {
+    ...quote,
+    price: quote.price * m,
+    change: quote.change != null ? quote.change * m : null,
+  };
+}
+
+function scaleCommodityHistory(item, series) {
+  const m = commodityPriceMul(item);
+  if (!series?.length || m === 1) return series;
+  return series.map(p => ({ ...p, v: p.v * m }));
+}
+
 async function fetchCommodity(item, force = false) {
   if (item?.fredId) {
     const key = `fred:comm:${item.fredId}`;
@@ -2440,7 +2475,8 @@ async function fetchCommodity(item, force = false) {
     }
   }
   if (!item?.sym) return null;
-  return fetchQuote(item.sym, force);
+  const q = await fetchQuote(item.sym, force);
+  return scaleCommodityQuote(item, q);
 }
 
 function parseFredCsvRows(txt) {
@@ -3444,7 +3480,6 @@ function seriesLagsSelectedPeriod(series, days) {
 function fredCadenceForChartItem(item, section) {
   if (section.key === 'comm' && item.fredId) {
     if (FRED_MONTHLY_COMMODITY_IDS.has(item.fredId)) return 'monthly';
-    if (FRED_DAILY_COMMODITY_IDS.has(item.fredId)) return 'daily';
     return 'daily';
   }
   if (section.key === 'bond' && !item.yTicker) return 'daily';
@@ -6097,7 +6132,10 @@ async function fetchHistory(item, section, days) {
   }
   if (section.key === 'comm') {
     if (item.fredId) return fetchFredHistory(item.fredId, days);
-    if (item.sym) return fetchYahooHistory(item.sym, days);
+    if (item.sym) {
+      const series = await fetchYahooHistory(item.sym, days);
+      return scaleCommodityHistory(item, series);
+    }
     return null;
   }
   if (section.key === 'bond') {
