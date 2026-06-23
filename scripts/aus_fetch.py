@@ -21,8 +21,8 @@ AOFM_DEALT_FALLBACK = (
 ABS_DATA_API = "https://data.api.abs.gov.au/rest"
 ABS_INDICATOR_API = "https://indicator.api.abs.gov.au"
 ABS_GDP_DATAFLOW = "ABS,ANA_AGG,1.0.0"
-# Expenditure measure — GDP(A), current price, seasonally adjusted, quarterly.
-ABS_GDP_KEY = "1.1.1.10.50.0010.10.Q.AUS.A"
+# ANA_AGG 1.0.0: MEASURE.DATA_ITEM.TSEST.REGION.FREQ — current-price GDP, SA, Australia, quarterly.
+ABS_GDP_KEY = "M3.GPM.20.AUS.Q"
 # Headline releases (ABS Indicator API — requires ABS_INDICATOR_API_KEY, x-api-key header).
 INDICATOR_GDP_GROWTH = "GDPE_H"
 INDICATOR_CPI = "CPI_H"
@@ -80,7 +80,7 @@ def _abs_fetch(url: str, timeout: int = 45) -> bytes:
         url,
         headers={
             "User-Agent": UA,
-            "Accept": "application/json",
+            "Accept": "application/vnd.sdmx.data+json;version=1.0.0-wd",
         },
     )
     try:
@@ -421,31 +421,60 @@ def fetch_aofm_ags_face() -> dict:
     return dict(card)
 
 
+def _normalize_quarter_period(period: str) -> str:
+    """Map ABS YYYY-Qn to YYYY-MM (quarter-end month) for FRED-compatible ordering."""
+    m = re.match(r"^(\d{4})-Q([1-4])$", period, re.I)
+    if m:
+        return f"{m.group(1)}-{int(m.group(2)) * 3:02d}"
+    return period
+
+
 def _parse_abs_json_observations(payload: dict) -> list[tuple[str, float]]:
     rows: list[tuple[str, float]] = []
-    datasets = payload.get("data", {}).get("dataSets") or payload.get("dataSets") or []
+    data = payload.get("data") or {}
+    datasets = data.get("dataSets") or payload.get("dataSets") or []
     if not datasets:
         return rows
-    obs = datasets[0].get("observations") or {}
-    structure = payload.get("data", {}).get("structures") or payload.get("structures") or []
+
+    structure = data.get("structure") or data.get("structures")
+    if isinstance(structure, list) and structure:
+        structure = structure[0]
+    if not isinstance(structure, dict):
+        structure = {}
+
     periods: list[str] = []
-    if structure:
-        dims = structure[0].get("dimensions", {}).get("observation") or []
-        for dim in dims:
-            if dim.get("id") in ("TIME_PERIOD", "TIME", "FREQ"):
-                for val in dim.get("values") or []:
-                    periods.append(str(val.get("id") or val.get("name") or ""))
-                break
-    if not periods:
-        periods = sorted({k.split(":")[0] for k in obs.keys() if obs.get(k)})
-    for key, val in obs.items():
-        idx = int(key.split(":")[0])
-        period = periods[idx] if idx < len(periods) else key
-        try:
-            v = float(val[0])
-        except (IndexError, TypeError, ValueError):
-            continue
-        rows.append((period, v))
+    dims = (structure.get("dimensions") or {}).get("observation") or []
+    for dim in dims:
+        if dim.get("id") in ("TIME_PERIOD", "TIME", "FREQ"):
+            for val in dim.get("values") or []:
+                periods.append(str(val.get("id") or val.get("name") or ""))
+            break
+
+    ds0 = datasets[0]
+    series_map = ds0.get("series") or {}
+    if series_map:
+        for ser in series_map.values():
+            for tidx, val in (ser.get("observations") or {}).items():
+                try:
+                    i = int(tidx)
+                    period = periods[i] if i < len(periods) else str(tidx)
+                    v = float(val[0])
+                except (IndexError, TypeError, ValueError):
+                    continue
+                rows.append((period, v))
+    else:
+        obs = ds0.get("observations") or {}
+        if not periods:
+            periods = sorted({k.split(":")[0] for k in obs.keys() if obs.get(k)})
+        for key, val in obs.items():
+            idx = int(key.split(":")[0])
+            period = periods[idx] if idx < len(periods) else key
+            try:
+                v = float(val[0])
+            except (IndexError, TypeError, ValueError):
+                continue
+            rows.append((period, v))
+
     rows.sort(key=lambda r: r[0])
     return rows
 
@@ -454,13 +483,20 @@ def _fetch_abs_gdp_quarters() -> list[tuple[str, float]]:
     url = (
         f"{ABS_DATA_API}/data/{urllib.parse.quote(ABS_GDP_DATAFLOW)}"
         f"/{urllib.parse.quote(ABS_GDP_KEY)}"
-        f"?lastNObservations=8&format=jsondata"
+        f"?lastNObservations=8&startPeriod=2020-Q1"
     )
-    payload = json.loads(_abs_fetch(url).decode("utf-8", "replace"))
+    raw = _abs_fetch(url)
+    try:
+        payload = json.loads(raw.decode("utf-8", "replace"))
+    except json.JSONDecodeError as exc:
+        raise RuntimeError("ABS GDP response not JSON") from exc
+    if payload.get("errors"):
+        raise RuntimeError(f"ABS GDP API error: {payload['errors']}")
     rows = _parse_abs_json_observations(payload)
     if not rows:
         raise RuntimeError("ABS GDP empty")
-    return rows
+    # API values are AUD millions; store billions to match FRED NGDPSAXDCAUQ path.
+    return [(_normalize_quarter_period(p), v / 1000.0) for p, v in rows]
 
 
 def _fetch_fred_au_gdp_quarters() -> list[tuple[str, float]]:
@@ -475,6 +511,8 @@ def _fetch_fred_au_gdp_quarters() -> list[tuple[str, float]]:
 
 
 def _quarter_label_from_period(period: str) -> str | None:
+    if re.match(r"^\d{4}-Q[1-4]$", period, re.I):
+        return period.upper().replace("q", "Q")
     m = re.match(r"^(\d{4})-(\d{2})$", period)
     if not m:
         return None
