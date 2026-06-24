@@ -23,9 +23,15 @@
     color: var(--text);
     font-family: 'Syne', sans-serif;
     min-height: 100vh;
+    min-height: 100dvh;
     padding: 2rem;
     font-size: 14px;
     line-height: 1.5;
+  }
+
+  html {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   /* ── Header ───────────────────────────────────────────── */
@@ -101,13 +107,35 @@
     position: fixed;
     z-index: 9500;
     max-width: min(26rem, calc(100vw - 24px));
-    padding: 12px 14px;
+    padding: 12px 14px 12px;
+    padding-right: 2rem;
     background: #121820;
     border: 1px solid rgba(251, 191, 36, 0.55);
     border-radius: 8px;
     box-shadow: 0 14px 48px rgba(0, 0, 0, 0.5);
-    pointer-events: none;
     line-height: 1.45;
+  }
+  .edu-tooltip:not([hidden]) {
+    pointer-events: auto;
+  }
+  .edu-tooltip-close {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: var(--surface2);
+    color: var(--muted);
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .edu-tooltip-close:hover {
+    border-color: var(--gold);
+    color: var(--text);
   }
   .edu-tooltip[hidden] { display: none; }
   .edu-tooltip-kicker {
@@ -148,6 +176,8 @@
     padding: 0 0 0 1rem;
     max-height: 9rem;
     overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
     font-size: 0.65rem;
     color: var(--muted);
     line-height: 1.4;
@@ -198,7 +228,8 @@
     overflow-x: auto;
     overflow-y: hidden;
     overscroll-behavior-x: contain;
-    touch-action: pan-x;
+    /* manipulation: allow vertical page scroll; pan-x alone blocks it on iOS Safari */
+    touch-action: manipulation;
     padding-bottom: 1.1rem;
     margin-bottom: 1.25rem;
     border-bottom: 1px solid var(--border);
@@ -384,7 +415,7 @@
       overflow-x: auto;
       overflow-y: hidden;
       overscroll-behavior-x: contain;
-      touch-action: pan-x;
+      touch-action: manipulation;
       -webkit-overflow-scrolling: touch;
       scroll-snap-type: x proximity;
       padding-bottom: 4px;

@@ -1768,6 +1768,25 @@ function renderInfoModalBody(info) {
 // ── Education / explainer mode ─────────────────────
 let educationMode = localStorage.getItem('mmd:education') === '1';
 const eduState = { activeCard: null, hideTimer: null };
+const EDU_TOOLTIP_HIDE_MS = 400;
+
+function cancelEducationTooltipHide() {
+  clearTimeout(eduState.hideTimer);
+  eduState.hideTimer = null;
+}
+
+function educationTooltipEl() {
+  return document.getElementById('edu-tooltip');
+}
+
+function isInsideEducationPopover(el) {
+  if (!el || !(el instanceof Element)) return false;
+  const tip = educationTooltipEl();
+  return Boolean(
+    el.closest('.card[data-item-key][data-section-key]')
+    || (tip && !tip.hidden && tip.contains(el)),
+  );
+}
 
 /**
  * Index / ETF membership for learning-mode tooltips.
@@ -2038,15 +2057,14 @@ function syncEducationModeUi() {
     btn.setAttribute('aria-pressed', educationMode ? 'true' : 'false');
     btn.textContent = educationMode ? 'Explaining' : 'Explain';
     btn.title = educationMode
-      ? 'Learning mode on — hover or tap cards for plain-language notes'
+      ? 'Learning mode on — hover cards; scroll the popup; Esc or × to close'
       : 'Turn on learning mode — hover cards for plain-language explanations';
   }
 }
 
 function hideEducationTooltip() {
-  clearTimeout(eduState.hideTimer);
-  eduState.hideTimer = null;
-  const tip = document.getElementById('edu-tooltip');
+  cancelEducationTooltipHide();
+  const tip = educationTooltipEl();
   if (tip) tip.hidden = true;
   if (eduState.activeCard) {
     eduState.activeCard.classList.remove('card--edu-active');
@@ -2078,10 +2096,10 @@ function positionEducationTooltip(card) {
 
 function showEducationTooltip(card) {
   if (!educationMode || !card?.dataset?.itemKey) return;
-  clearTimeout(eduState.hideTimer);
+  cancelEducationTooltipHide();
   const { sectionKey, itemKey } = card.dataset;
   const exp = getEducationExplainer(sectionKey, itemKey);
-  const tip = document.getElementById('edu-tooltip');
+  const tip = educationTooltipEl();
   if (!tip) return;
   document.getElementById('edu-tooltip-title').textContent = exp.title || '';
   document.getElementById('edu-tooltip-body').textContent = exp.body || '';
@@ -2097,8 +2115,8 @@ function showEducationTooltip(card) {
 }
 
 function scheduleHideEducationTooltip() {
-  clearTimeout(eduState.hideTimer);
-  eduState.hideTimer = setTimeout(hideEducationTooltip, 120);
+  cancelEducationTooltipHide();
+  eduState.hideTimer = setTimeout(hideEducationTooltip, EDU_TOOLTIP_HIDE_MS);
 }
 
 function setEducationMode(on) {
@@ -2115,6 +2133,11 @@ function toggleEducationMode() {
 function wireEducationMode() {
   syncEducationModeUi();
   document.getElementById('education-btn')?.addEventListener('click', toggleEducationMode);
+  document.getElementById('edu-tooltip-close')?.addEventListener('click', hideEducationTooltip);
+
+  const tip = educationTooltipEl();
+  tip?.addEventListener('mouseenter', cancelEducationTooltipHide);
+  tip?.addEventListener('mouseleave', scheduleHideEducationTooltip);
 
   document.addEventListener('mouseover', e => {
     if (!educationMode) return;
@@ -2128,22 +2151,23 @@ function wireEducationMode() {
   document.addEventListener('mouseout', e => {
     if (!educationMode) return;
     const card = e.target.closest('.card[data-item-key][data-section-key]');
-    if (!card) return;
+    if (!card || card !== eduState.activeCard) return;
     const to = e.relatedTarget;
-    if (to && card.contains(to)) return;
+    if (isInsideEducationPopover(to)) return;
     scheduleHideEducationTooltip();
   });
 
   document.addEventListener('click', e => {
     if (!educationMode) return;
-    if (e.target.closest('.card-info, .card-chart, .card-refresh, #education-btn')) return;
+    if (e.target.closest('.card-info, .card-chart, .card-refresh, #education-btn, #edu-tooltip-close')) return;
+    if (e.target.closest('#edu-tooltip')) return;
     const card = e.target.closest('.card[data-item-key][data-section-key]');
     if (!card) {
       hideEducationTooltip();
       return;
     }
     if (window.matchMedia('(hover: hover)').matches) return;
-    if (eduState.activeCard === card && !document.getElementById('edu-tooltip')?.hidden) {
+    if (eduState.activeCard === card && tip && !tip.hidden) {
       hideEducationTooltip();
       return;
     }
@@ -2161,6 +2185,14 @@ function wireEducationMode() {
 
 const infoState = { returnFocus: null };
 
+/** Keep body scroll in sync with open modals (clears stale inline lock on reload). */
+function syncBodyScrollLock() {
+  const locked = ['chart-modal', 'info-modal', 'compare-modal'].some(
+    id => document.getElementById(id)?.hidden === false,
+  );
+  document.body.style.overflow = locked ? 'hidden' : '';
+}
+
 function closeInfoModal() {
   const modal = document.getElementById('info-modal');
   if (!modal) return;
@@ -2168,7 +2200,7 @@ function closeInfoModal() {
   infoState.returnFocus = null;
   modal.hidden = true;
   modal.inert = true;
-  document.body.style.overflow = document.getElementById('chart-modal')?.hidden === false ? 'hidden' : '';
+  syncBodyScrollLock();
   if (restore instanceof HTMLElement && document.contains(restore)) {
     restore.focus({ preventScroll: true });
   }
@@ -2192,9 +2224,7 @@ function openInfoModal(itemKey, sectionKey) {
     : null;
   modal.hidden = false;
   modal.inert = false;
-  if (document.getElementById('chart-modal')?.hidden !== false) {
-    document.body.style.overflow = 'hidden';
-  }
+  syncBodyScrollLock();
   document.getElementById('info-modal-close')?.focus();
 }
 
@@ -6913,7 +6943,7 @@ function closeChart() {
   chartState.sectionKey = null;
   modal.hidden = true;
   modal.inert = true;
-  document.body.style.overflow = document.getElementById('info-modal')?.hidden === false ? 'hidden' : '';
+  syncBodyScrollLock();
   removeChartFocusTrap();
   if (restore instanceof HTMLElement && document.contains(restore)) {
     restore.focus({ preventScroll: true });
@@ -6979,7 +7009,7 @@ async function openChart(itemKey, sectionKey) {
     : null;
   modal.hidden = false;
   modal.inert = false;
-  document.body.style.overflow = 'hidden';
+  syncBodyScrollLock();
   installChartFocusTrap();
   document.getElementById('chart-modal-close')?.focus();
   await loadChartModal();
@@ -7209,7 +7239,7 @@ function openCompare() {
   compareState.returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   modal.hidden = false;
   modal.inert = false;
-  document.body.style.overflow = 'hidden';
+  syncBodyScrollLock();
   renderCompareModal();
   void renderCompareChart();
   document.getElementById('compare-search')?.focus();
@@ -7221,10 +7251,7 @@ function closeCompare() {
   compareState.open = false;
   modal.hidden = true;
   modal.inert = true;
-  document.body.style.overflow =
-    (document.getElementById('chart-modal')?.hidden === false || document.getElementById('info-modal')?.hidden === false)
-      ? 'hidden'
-      : '';
+  syncBodyScrollLock();
   const restore = compareState.returnFocus;
   compareState.returnFocus = null;
   if (restore instanceof HTMLElement && document.contains(restore)) restore.focus({ preventScroll: true });
@@ -7242,6 +7269,8 @@ function saveKey() {
 }
 
 function wireUi() {
+  syncBodyScrollLock();
+  window.addEventListener('pageshow', syncBodyScrollLock);
   wireAddStockPanel();
   wireAddCommodityPanel();
   document.getElementById('api-banner')?.addEventListener('submit', e => {

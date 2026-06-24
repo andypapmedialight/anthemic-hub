@@ -182,7 +182,8 @@
 </div>
 
 <!-- ── Indicator info modal ── -->
-<div id="edu-tooltip" class="edu-tooltip" role="tooltip" hidden>
+<div id="edu-tooltip" class="edu-tooltip" role="dialog" aria-modal="false" aria-labelledby="edu-tooltip-title" hidden>
+  <button type="button" class="edu-tooltip-close" id="edu-tooltip-close" aria-label="Close explanation">&times;</button>
   <div class="edu-tooltip-kicker">Learning mode</div>
   <div class="edu-tooltip-title" id="edu-tooltip-title"></div>
   <div class="edu-tooltip-body" id="edu-tooltip-body"></div>
