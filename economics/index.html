@@ -36,6 +36,9 @@
     <div class="date-line" id="date-line">–</div>
   </div>
   <div class="header-right">
+    <button type="button" class="refresh-btn education-btn" id="education-btn" aria-pressed="false" title="Hover cards for plain-language explanations">
+      Explain
+    </button>
     <button type="button" class="refresh-btn compare-btn" id="compare-btn">
       Compare
     </button>
@@ -179,6 +182,13 @@
 </div>
 
 <!-- ── Indicator info modal ── -->
+<div id="edu-tooltip" class="edu-tooltip" role="tooltip" hidden>
+  <div class="edu-tooltip-kicker">Learning mode</div>
+  <div class="edu-tooltip-title" id="edu-tooltip-title"></div>
+  <div class="edu-tooltip-body" id="edu-tooltip-body"></div>
+  <div class="edu-tooltip-why" id="edu-tooltip-why"></div>
+</div>
+
 <div id="info-modal" class="info-modal" hidden inert>
   <div class="info-modal-backdrop" data-info-close aria-hidden="true"></div>
   <div class="info-modal-panel" role="dialog" aria-modal="true" aria-labelledby="info-modal-title">

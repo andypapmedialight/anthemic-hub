@@ -1399,6 +1399,35 @@ function infoLink(name, url) {
   return `<a href="${escapeAttr(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(name)}</a>`;
 }
 
+/** Data Sources panel — ABS vs BIS vs AOFM rationale for AU valuation cards. */
+function auDataSourcesGuidanceHtml() {
+  const abs = infoLink('ABS', 'https://www.abs.gov.au/statistics/economy/national-accounts');
+  const bis = infoLink('BIS credit statistics', 'https://data.bis.org/topics/TOTAL_CREDIT');
+  const aofm = infoLink('AOFM Data Hub', 'https://www.aofm.gov.au/data-hub');
+  const rba = infoLink('RBA Table D2', 'https://www.rba.gov.au/statistics/frequency/financial-aggregates.html');
+  return `
+    <div class="info-source info-source--guidance">
+      <div class="info-source-header">
+        <span class="info-source-name">Australian macro — which source?</span>
+        <span class="info-tag" style="color:var(--gold);border-color:var(--gold)">AU guide</span>
+      </div>
+      <div class="info-note">
+        ${abs} is the authoritative, timeliest source for Australian domestic statistics (GDP, CPI, employment).
+        ${bis} harmonizes national data for cross-country credit comparisons — not “more Australian,” but makes AU–US–EU ratios comparable on the same methodology.
+        ${aofm} is the canonical source for Commonwealth securities on issue (not ABS or BIS).
+      </div>
+      <table class="info-table">
+        <tr><td class="info-key">A-GDP</td><td class="info-val">${abs} National Accounts</td></tr>
+        <tr><td class="info-key">GDP / CPI / jobs</td><td class="info-val">ABS Indicator API (when keyed)</td></tr>
+        <tr><td class="info-key">A-GOV / A-PRV</td><td class="info-val">${bis} total credit (% GDP)</td></tr>
+        <tr><td class="info-key">A-CGS</td><td class="info-val">${aofm} AGS face value</td></tr>
+      </table>
+      <div class="info-note info-note--planned">
+        <strong>Planned:</strong> ${rba} monthly financial aggregates for timelier bank lending — narrower than BIS total private credit, but updates monthly.
+      </div>
+    </div>`;
+}
+
 function infoPara(text) {
   if (!text) return '';
   return escapeHtml(text).replace(/\n/g, '<br>');
@@ -1546,23 +1575,23 @@ function valuationCardInfo(item) {
     },
     'au-gdp': {
       summary: 'Australian nominal GDP — annual total (sum of last four published quarters).',
-      derived: 'Primary: ABS National Accounts via Data API when reachable. Fallback: IMF/FRED NGDPSAXDCAUQ (same 4-quarter sum).',
+      derived: 'ABS is primary: official national accounts, timelier than FRED/IMF mirrors. Data API (ANA_AGG) when reachable; same 4-quarter sum via FRED NGDPSAXDCAUQ as fallback. See Data Sources → Australian macro guide.',
       data: 'ABS ANA_AGG (preferred) · FRED NGDPSAXDCAUQ (fallback). Billions AUD.',
       sourceHtml: `${infoLink('ABS', 'https://www.abs.gov.au/statistics/economy/national-accounts')} · ${infoLink('FRED / IMF', fred)}`,
       formula: 'Annual GDP (A$B) = sum of last 4 quarterly nominal GDP prints',
     },
     'au-public-debt': {
-      summary: 'BIS credit to the Australian general government sector as % of GDP — federal, state, territory, and local combined (SNA definition).',
-      derived: 'BIS total credit (direct API, same-day as BIS release). A$ level scaled to latest nominal GDP when GDP is ahead of the credit quarter.',
-      data: 'BIS WS_TC v2 (% GDP + AUD market value) · FRED NGDPSAXDCAUQ for GDP scaling.',
+      summary: 'BIS credit to the Australian general government sector as % of GDP — federal, state, territory, and local combined (SNA definition). Not Treasury net debt.',
+      derived: 'BIS for comparability with US/EU credit cards (harmonized methodology). % of GDP is the published BIS ratio; A$ headline scales Q4 credit to latest ABS GDP when GDP is ahead — hence Est. For Commonwealth bonds alone, use A-CGS (AOFM).',
+      data: 'BIS WS_TC v2 (% GDP + AUD market value) · ABS/FRED GDP for scaling. BIS typically lags GDP by one quarter.',
       sourceHtml: `${infoLink('BIS credit statistics', 'https://data.bis.org/topics/TOTAL_CREDIT')} · hub proxy`,
-      formula: 'Compare: Treasury gross AGS face value ~A$960B; net debt ~A$540B; broader public sector GFS liabilities can exceed A$1.6T.',
+      formula: 'Compare: AOFM gross AGS ~A$960B; Treasury net debt ~A$540B; BIS general govt credit ~A$1.5T (broader SNA definition).',
     },
     'au-private-debt': {
       summary: 'BIS credit to the Australian private non-financial sector (households, firms, NPISHs) as % of GDP.',
-      derived: 'BIS total credit via hub proxy. A$ headline uses BIS market-value level, scaled to latest GDP when GDP prints ahead of BIS credit.',
-      data: 'BIS WS_TC v2 · quarterly release (Mar/Jun/Sep/Dec). RBA monthly D2 lending is more timely but a narrower bank-lending measure.',
-      sourceHtml: `${infoLink('BIS', 'https://data.bis.org/topics/TOTAL_CREDIT')} · hub proxy`,
+      derived: 'BIS total credit for cross-country leverage comparison. A$ headline scales BIS level to latest GDP when GDP prints ahead of BIS credit (Est.). Planned: RBA Table D2 monthly bank lending for a timelier, narrower AU-only series.',
+      data: 'BIS WS_TC v2 · quarterly. Planned upgrade: RBA D2 financial aggregates (monthly bank credit — not total sector credit).',
+      sourceHtml: `${infoLink('BIS', 'https://data.bis.org/topics/TOTAL_CREDIT')} · ${infoLink('RBA D2 (planned)', 'https://www.rba.gov.au/statistics/frequency/financial-aggregates.html')} · hub proxy`,
       formula: 'Est. AUD = BIS level × (latest 4q GDP ÷ GDP at credit quarter) when GDP is newer.',
     },
     'margin-debt': {
@@ -1588,7 +1617,7 @@ function valuationCardInfo(item) {
     },
     'au-cgs': {
       summary: 'Commonwealth Australian Government Securities (AGS) on issue at face value — AOFM monthly positions.',
-      derived: 'Total main funding instruments (Treasury Bonds + capital-indexed TIB + Treasury Notes). Closest live proxy to gross AGS (~A$960B).',
+      derived: 'AOFM is the right source for federal securities on issue — not ABS or BIS. Broader public-sector leverage is on A-GOV (BIS credit); net debt and GFS measures differ. See Data Sources → Australian macro guide.',
       data: 'AOFM Data Hub portfolio aggregate (dealt), FaceValue tab. BIS S13 used only if AOFM unavailable.',
       sourceHtml: `${infoLink('AOFM Data Hub', 'https://www.aofm.gov.au/data-hub')} · ${infoLink('BIS', 'https://data.bis.org/')} · hub proxy`,
       formula: changeFormulaeBlurb('usd').replace('USD', 'AUD'),
@@ -1734,6 +1763,250 @@ function renderInfoModalBody(info) {
       <h3 class="info-modal-h3">${escapeHtml(heading)}</h3>
       <div class="info-modal-text">${isHtml ? body : infoPara(body)}</div>
     </section>`).join('');
+}
+
+// ── Education / explainer mode ─────────────────────
+let educationMode = localStorage.getItem('mmd:education') === '1';
+const eduState = { activeCard: null, hideTimer: null };
+
+/** Plain-language rollover copy — keyed sectionKey:itemKey. */
+const EDUCATION_EXPLAINERS = {
+  'eq:^AORD': { title: 'ASX All Ordinaries', body: 'A broad index of almost every company listed on the Australian Securities Exchange (ASX).', why: 'A quick read on how Australian shares are doing overall.' },
+  'eq:^AXJO': { title: 'ASX 200', body: 'Tracks the 200 largest ASX-listed companies by market value.', why: 'The headline benchmark most Australians watch for local stocks.' },
+  'eq:^GSPC': { title: 'S&P 500', body: 'Tracks 500 large US companies across industries. It is a market-cap-weighted index, so bigger companies move it more.', why: 'Often treated as the main gauge of the US stock market.' },
+  'eq:^IXIC': { title: 'NASDAQ Composite', body: 'Includes thousands of US stocks listed on NASDAQ, with a heavy tilt to technology and growth companies.', why: 'Useful when you want tech and growth sentiment, not just the largest 500 names.' },
+  'eq:^NDX': { title: 'NASDAQ 100', body: 'The 100 largest non-financial companies on NASDAQ (Apple, Microsoft, Nvidia, etc.).', why: 'A concentrated look at big US tech and growth leaders.' },
+  'eq:^DJI': { title: 'Dow Jones Industrial Average', body: '30 large, well-known US companies. It is price-weighted (expensive stocks matter more), so it is older and less representative than the S&P 500.', why: 'Still widely quoted in news headlines for a “blue chip” US snapshot.' },
+  'eq:^RUT': { title: 'Russell 2000', body: 'About 2,000 smaller US companies (“small caps”).', why: 'Small caps often reflect domestic US growth and risk appetite differently from the S&P 500.' },
+  'eq:EEM': { title: 'Emerging Markets ETF', body: 'An exchange-traded fund holding shares in emerging-market countries (Asia, Latin America, etc.).', why: 'Shows investor appetite for faster-growing but riskier economies.' },
+  'eq:VGK': { title: 'Europe ETF', body: 'An ETF basket of European stocks.', why: 'A simple way to track European equity performance without picking individual countries.' },
+  'eq:EWJ': { title: 'Japan ETF', body: 'An ETF focused on Japanese companies.', why: 'Useful when you want Japan-specific equity exposure in one number.' },
+  'eq:VIXY': { title: 'VIX proxy (VIXY)', body: 'An ETF linked to volatility expectations. When markets expect big swings, volatility products tend to rise.', why: 'A rough “fear gauge” proxy — not the spot VIX index itself.' },
+  'eq:ARKK': { title: 'ARK Innovation ETF', body: 'Actively managed fund focused on disruptive tech themes (genomics, fintech, automation, etc.).', why: 'Often used as a sentiment barometer for speculative growth investing.' },
+  'val:buffett': { title: 'Buffett Indicator', body: 'Compares the total value of US stocks to US GDP. High readings mean the market is large relative to the economy; low readings the opposite.', why: 'A long-run valuation sanity check — not a timing tool for day trading.' },
+  'val:us-gdp': { title: 'US GDP', body: 'Gross domestic product: the dollar value of goods and services produced in the US over a period (here, nominal — not adjusted for inflation).', why: 'The size of the economy underpins earnings, tax revenue, and debt ratios.' },
+  'val:public-debt': { title: 'US Public Debt', body: 'Federal debt held by the public as a share of GDP — how big government borrowing is compared with the economy.', why: 'Higher ratios can mean more interest cost and less fiscal room in downturns.' },
+  'val:private-debt': { title: 'US Private Debt', body: 'Household and business borrowing (excluding federal government) as a share of GDP.', why: 'High private leverage can amplify booms and make slowdowns harder when borrowers deleverage.' },
+  'val:au-gdp': { title: 'Australian GDP', body: 'Sum of the last four quarters of nominal Australian GDP — the annual size of the economy in Australian dollars.', why: 'The denominator for many AU debt and credit ratios on this page.' },
+  'val:au-public-debt': { title: 'AU General Government Credit', body: 'BIS measure of all government borrowing (federal, state, local) as % of GDP — broader than Commonwealth bonds alone.', why: 'Compares Australia’s public leverage on the same basis as other countries. A$ level may be estimated when GDP is newer than credit data.' },
+  'val:au-private-debt': { title: 'AU Private Credit', body: 'Borrowing by households and non-financial businesses as % of GDP.', why: 'Shows how much private-sector debt supports spending and investment — a core macro risk variable.' },
+  'val:margin-debt': { title: 'US Margin Debt', body: 'Money investors have borrowed from brokers to buy securities on margin.', why: 'Rising margin debt can signal more speculation; sharp falls often coincide with market stress.' },
+  'val:otc-notional': { title: 'OTC Derivatives (Notional)', body: 'Face value of all over-the-counter derivatives contracts worldwide. Notional is much larger than true economic exposure.', why: 'Shows the scale of the derivatives market — useful context, not a direct “risk dollar” figure.' },
+  'val:otc-gmv': { title: 'OTC Gross Market Value', body: 'Mark-to-market value of OTC derivatives — closer to economic exposure than notional.', why: 'A tighter read on how large derivative positions are in dollar terms.' },
+  'val:au-cgs': { title: 'AU Government Securities', body: 'Face value of Commonwealth bonds and notes on issue (AOFM data).', why: 'The actual stock of federal securities — narrower than BIS “general government credit”.' },
+  'val:asx-bond-fut': { title: 'ASX Bond Futures', body: 'Exchange-traded contracts on Australian government bond prices (3-year and 10-year benchmarks).', why: 'Where institutions often express views on RBA policy and AU rates.' },
+  'bond:DGS2': { title: 'US 2-Year Yield', body: 'Market interest rate on 2-year US Treasury debt. Moves with near-term Fed policy expectations.', why: 'Short-end yields react quickly to rate hikes, cuts, and inflation surprises.' },
+  'bond:^FVX': { title: 'US 5-Year Yield', body: 'Yield on 5-year US government borrowing.', why: 'Middle of the curve — blends current policy with medium-term growth/inflation views.' },
+  'bond:^TNX': { title: 'US 10-Year Yield', body: 'Yield on 10-year US Treasuries — a global benchmark for long-term risk-free rates.', why: 'Affects mortgage rates, corporate borrowing costs, and how stocks are valued.' },
+  'bond:^TYX': { title: 'US 30-Year Yield', body: 'Longest commonly quoted US Treasury yield.', why: 'Reflects long-run inflation and growth expectations.' },
+  'bond:^IRX': { title: 'US 3-Month T-Bill', body: 'Very short-term US government borrowing rate.', why: 'Stays close to the policy rate corridor and money-market conditions.' },
+  'bond:DFF': { title: 'Fed Funds Rate', body: 'The US central bank’s overnight policy interest rate target.', why: 'The starting point for US monetary policy — “higher for longer” tightens financial conditions.' },
+  'bond:T10YIE': { title: '10-Year Breakeven Inflation', body: 'Market-implied average inflation over the next 10 years (from Treasury vs TIPS spreads).', why: 'Shows what bond investors expect inflation to be, not what it is today.' },
+  'comm:spot-gold': { title: 'Gold', body: 'Spot price per troy ounce. Gold is often seen as a store of value and hedge in uncertainty.', why: 'Rises when real yields fall or geopolitical risk increases — watch alongside the US dollar.' },
+  'comm:spot-silver': { title: 'Silver', body: 'Precious and industrial metal, usually more volatile than gold.', why: 'Part investment metal, part industrial demand — sensitive to growth and solar/tech cycles.' },
+  'comm:spot-copper': { title: 'Copper', body: 'Industrial metal used in wiring, construction, and electrification.', why: 'Nicknamed “Dr Copper” — often tracks global manufacturing activity.' },
+  'comm:spot-wti': { title: 'WTI Oil', body: 'West Texas Intermediate — US benchmark crude oil price per barrel.', why: 'Feeds into petrol prices, transport costs, and inflation.' },
+  'comm:spot-brent': { title: 'Brent Oil', body: 'International benchmark crude, common for seaborne oil trade.', why: 'Often the reference for Australian fuel import costs.' },
+  'comm:spot-ironore': { title: 'Iron Ore', body: 'Key input for steel; Australia is a major exporter.', why: 'Moves with Chinese construction and steel demand — important for AU terms of trade.' },
+  'comm:spot-gas': { title: 'Natural Gas', body: 'US Henry Hub benchmark (per million BTU).', why: 'Drives electricity and heating costs; volatile around weather and LNG demand.' },
+  'comm:spot-wheat': { title: 'Wheat', body: 'Global wheat spot benchmark (IMF monthly series on this dashboard).', why: 'Food-price inflation and emerging-market import bills react to grain shocks.' },
+  'comm:spot-corn': { title: 'Corn', body: 'A staple grain for food, feed, and ethanol.', why: 'Weather and biofuel policy can move prices quickly.' },
+  'fx:AUDUSD': { title: 'AUD / USD', body: 'How many US dollars one Australian dollar buys.', why: 'A weaker AUD makes imports costlier but helps exporters and overseas earnings.' },
+  'fx:EURUSD': { title: 'EUR / USD', body: 'Euro versus US dollar — the world’s most traded currency pair.', why: 'Moves with ECB vs Fed policy and global risk sentiment.' },
+  'fx:USDJPY': { title: 'USD / JPY', body: 'US dollar versus Japanese yen.', why: 'Often falls when investors seek safety (yen strength) and rises in “risk on” periods.' },
+  'fx:GBPUSD': { title: 'GBP / USD', body: 'British pound versus US dollar.', why: 'Reflects UK growth, Bank of England policy, and sterling-specific news.' },
+  'fx:USDCAD': { title: 'USD / CAD', body: 'US dollar versus Canadian dollar.', why: 'Moves with oil prices, US–Canada trade, and North American growth.' },
+  'fx:USDCHF': { title: 'USD / CHF', body: 'US dollar versus Swiss franc — franc is a traditional safe haven.', why: 'CHF strength often appears in flight-to-quality episodes.' },
+  'fx:USDMXN': { title: 'USD / MXN', body: 'US dollar versus Mexican peso.', why: 'Sensitive to US growth, remittances, and emerging-market risk appetite.' },
+  'fx:NZDUSD': { title: 'NZD / USD', body: 'New Zealand dollar versus US dollar.', why: 'Moves with dairy prices, RBNZ policy, and similar drivers to AUD.' },
+  'crypto:BTC-USD': { title: 'Bitcoin', body: 'The largest cryptocurrency by market value — decentralized digital money with a fixed supply schedule.', why: 'Often traded as a high-beta risk asset as well as a “digital gold” narrative.' },
+  'crypto:ETH-USD': { title: 'Ethereum', body: 'Blockchain platform for smart contracts and decentralized apps; its token is ETH.', why: 'Price reflects adoption of on-chain finance, NFTs, and layer-2 scaling.' },
+  'crypto:SOL-USD': { title: 'Solana', body: 'High-throughput blockchain competing for payments and DeFi activity.', why: 'More volatile altcoin — sentiment on “next-gen” chains.' },
+  'global:oecd-cli-au': { title: 'OECD Leading Indicator — Australia', body: 'Composite index designed to flag turning points in the economy before GDP confirms them.', why: 'Above 100 and rising often means expansion ahead; below 100 warns of slowdown.' },
+  'global:oecd-cli-us': { title: 'OECD Leading Indicator — US', body: 'Same methodology for the United States.', why: 'Useful cross-check on whether US growth is likely to accelerate or fade.' },
+  'global:wb-gdp-growth-au': { title: 'AU GDP Growth', body: 'How fast the Australian economy is growing compared with a year ago.', why: 'Strong growth supports jobs and profits; weak growth raises recession risk.' },
+  'global:wb-inflation-au': { title: 'AU CPI Inflation', body: 'How fast consumer prices are rising year-on-year.', why: 'Central banks react to inflation — high CPI usually means tighter policy and higher rates.' },
+  'global:imf-unemployment-au': { title: 'AU Unemployment', body: 'Share of the labour force without work (seasonally adjusted when available).', why: 'Low unemployment supports wages and spending; rising unemployment signals slack.' },
+  'forecast:imf-gdp-au': { title: 'IMF GDP Forecast — Australia', body: 'International Monetary Fund projection — not a published actual.', why: 'Shows where economists expect growth to land; treat as an estimate, not fact.' },
+};
+
+const EDUCATION_SECTION_HINTS = {
+  eq: 'Share prices reflect what investors will pay for a slice of company ownership right now.',
+  val: 'These are macro ratios and national accounts — slower-moving than stock quotes.',
+  bond: 'Yields are interest rates. When yields rise, existing bond prices usually fall.',
+  comm: 'Commodity prices feed into inflation, company costs, and export earnings.',
+  fx: 'Exchange rates show relative strength of one currency versus another.',
+  crypto: 'Crypto trades 24/7 and can be far more volatile than traditional assets.',
+  global: 'Published economic statistics — usually monthly or quarterly, not live.',
+  forecast: 'Projections from the IMF WEO — forward-looking estimates, not actual outcomes.',
+};
+
+function findSectionItem(sectionKey, itemKey) {
+  const section = SECTIONS.find(s => s.key === sectionKey);
+  if (section) {
+    const hit = section.items.find(i => getItemKey(i) === itemKey);
+    if (hit) return hit;
+  }
+  if (sectionKey === 'eq') {
+    return CUSTOM_EQUITIES.find(i => getItemKey(i) === itemKey) || null;
+  }
+  if (sectionKey === 'comm') {
+    const custom = CUSTOM_COMMODITIES.find(i => getItemKey(i) === itemKey);
+    if (custom) return custom;
+    return COMMODITY_CATALOG.find(i => getItemKey(i) === itemKey) || null;
+  }
+  return null;
+}
+
+function getEducationExplainer(sectionKey, itemKey) {
+  const keyed = EDUCATION_EXPLAINERS[`${sectionKey}:${itemKey}`];
+  if (keyed) return keyed;
+
+  const item = findSectionItem(sectionKey, itemKey);
+  if (item) {
+    const info = getCardInfo(sectionKey, item);
+    const body = info?.summary || 'Indicator on the Morning Macro dashboard.';
+    const derived = info?.derived ? ` ${info.derived.split('.')[0]}.` : '';
+    return {
+      title: info?.title || item.label || itemKey,
+      body: `${body}${derived}`.trim(),
+      why: EDUCATION_SECTION_HINTS[sectionKey] || 'Tap ⓘ on the card for formulas and data sources.',
+    };
+  }
+
+  return {
+    title: itemKey,
+    body: 'Market or macro reading on this dashboard.',
+    why: EDUCATION_SECTION_HINTS[sectionKey] || 'Tap ⓘ on the card for full technical details.',
+  };
+}
+
+function syncEducationModeUi() {
+  document.body.classList.toggle('education-mode', educationMode);
+  const btn = document.getElementById('education-btn');
+  if (btn) {
+    btn.classList.toggle('is-on', educationMode);
+    btn.setAttribute('aria-pressed', educationMode ? 'true' : 'false');
+    btn.textContent = educationMode ? 'Explaining' : 'Explain';
+    btn.title = educationMode
+      ? 'Learning mode on — hover or tap cards for plain-language notes'
+      : 'Turn on learning mode — hover cards for plain-language explanations';
+  }
+}
+
+function hideEducationTooltip() {
+  clearTimeout(eduState.hideTimer);
+  eduState.hideTimer = null;
+  const tip = document.getElementById('edu-tooltip');
+  if (tip) tip.hidden = true;
+  if (eduState.activeCard) {
+    eduState.activeCard.classList.remove('card--edu-active');
+    eduState.activeCard = null;
+  }
+}
+
+function positionEducationTooltip(card) {
+  const tip = document.getElementById('edu-tooltip');
+  if (!tip || tip.hidden) return;
+  const rect = card.getBoundingClientRect();
+  const margin = 10;
+  const gap = 8;
+  tip.style.left = '0';
+  tip.style.top = '0';
+  tip.hidden = false;
+  const tw = tip.offsetWidth;
+  const th = tip.offsetHeight;
+  let left = rect.left + rect.width / 2 - tw / 2;
+  left = Math.max(margin, Math.min(left, window.innerWidth - tw - margin));
+  let top = rect.bottom + gap;
+  if (top + th > window.innerHeight - margin) {
+    top = rect.top - th - gap;
+  }
+  if (top < margin) top = margin;
+  tip.style.left = `${Math.round(left)}px`;
+  tip.style.top = `${Math.round(top)}px`;
+}
+
+function showEducationTooltip(card) {
+  if (!educationMode || !card?.dataset?.itemKey) return;
+  clearTimeout(eduState.hideTimer);
+  const { sectionKey, itemKey } = card.dataset;
+  const exp = getEducationExplainer(sectionKey, itemKey);
+  const tip = document.getElementById('edu-tooltip');
+  if (!tip) return;
+  document.getElementById('edu-tooltip-title').textContent = exp.title || '';
+  document.getElementById('edu-tooltip-body').textContent = exp.body || '';
+  document.getElementById('edu-tooltip-why').textContent = exp.why || '';
+  if (eduState.activeCard && eduState.activeCard !== card) {
+    eduState.activeCard.classList.remove('card--edu-active');
+  }
+  eduState.activeCard = card;
+  card.classList.add('card--edu-active');
+  tip.hidden = false;
+  positionEducationTooltip(card);
+}
+
+function scheduleHideEducationTooltip() {
+  clearTimeout(eduState.hideTimer);
+  eduState.hideTimer = setTimeout(hideEducationTooltip, 120);
+}
+
+function setEducationMode(on) {
+  educationMode = Boolean(on);
+  try { localStorage.setItem('mmd:education', educationMode ? '1' : '0'); } catch {}
+  syncEducationModeUi();
+  if (!educationMode) hideEducationTooltip();
+}
+
+function toggleEducationMode() {
+  setEducationMode(!educationMode);
+}
+
+function wireEducationMode() {
+  syncEducationModeUi();
+  document.getElementById('education-btn')?.addEventListener('click', toggleEducationMode);
+
+  document.addEventListener('mouseover', e => {
+    if (!educationMode) return;
+    const card = e.target.closest('.card[data-item-key][data-section-key]');
+    if (!card) return;
+    const from = e.relatedTarget;
+    if (from && card.contains(from)) return;
+    showEducationTooltip(card);
+  });
+
+  document.addEventListener('mouseout', e => {
+    if (!educationMode) return;
+    const card = e.target.closest('.card[data-item-key][data-section-key]');
+    if (!card) return;
+    const to = e.relatedTarget;
+    if (to && card.contains(to)) return;
+    scheduleHideEducationTooltip();
+  });
+
+  document.addEventListener('click', e => {
+    if (!educationMode) return;
+    if (e.target.closest('.card-info, .card-chart, .card-refresh, #education-btn')) return;
+    const card = e.target.closest('.card[data-item-key][data-section-key]');
+    if (!card) {
+      hideEducationTooltip();
+      return;
+    }
+    if (window.matchMedia('(hover: hover)').matches) return;
+    if (eduState.activeCard === card && !document.getElementById('edu-tooltip')?.hidden) {
+      hideEducationTooltip();
+      return;
+    }
+    if (card.classList.contains('card--link-wrap')) e.preventDefault();
+    showEducationTooltip(card);
+  }, true);
+
+  window.addEventListener('scroll', () => {
+    if (eduState.activeCard) positionEducationTooltip(eduState.activeCard);
+  }, { passive: true });
+  window.addEventListener('resize', () => {
+    if (eduState.activeCard) positionEducationTooltip(eduState.activeCard);
+  });
 }
 
 const infoState = { returnFocus: null };
@@ -5003,6 +5276,20 @@ function renderInfoBox() {
       note: 'Daily federal debt from api.fiscaldata.treasury.gov. US Public Debt card uses debt held by the public vs FRED GDP (GDPNow when ahead). No API key.',
     },
     {
+      id: 'abs-data',
+      name: 'ABS Data API',
+      tag: 'AU national accounts',
+      tagColor: 'var(--gold)',
+      rows: [
+        ['Key required', 'No'],
+        ['API type',     'Official SDMX 3.0'],
+        ['Coverage',     'Nominal GDP quarters (ANA_AGG)'],
+        ['Powers',       'A-GDP valuation card'],
+        ['Hub proxy',    '/economics/proxy/valuation'],
+      ],
+      note: 'Quarterly nominal GDP via data.api.abs.gov.au (ANA_AGG). Preferred source for A-GDP; FRED/IMF fallback when unreachable. Separate from the Indicator API below.',
+    },
+    {
       id: 'abs-indicator',
       name: 'ABS Indicator API',
       tag: 'AU headlines',
@@ -5015,7 +5302,7 @@ function renderInfoBox() {
         ['Release time', '11:30am AEST (release day)'],
         ['Configured on', 'Hub server only — not in this browser'],
       ],
-      note: 'Headline Australian statistics from indicator.api.abs.gov.au when ABS_INDICATOR_API_KEY is set on the hub (same place as FRED_API_KEY). AU GDP Growth, CPI, and Unemployment cards prefer this feed; otherwise FRED/OECD fallbacks apply. The separate ABS Data API (nominal GDP quarters) does not use this key.',
+      note: 'Headline Australian statistics from indicator.api.abs.gov.au when ABS_INDICATOR_API_KEY is set on the hub (same place as FRED_API_KEY). AU GDP Growth, CPI, and Unemployment cards prefer this feed; otherwise FRED/OECD fallbacks apply.',
     },
   ];
 
@@ -5030,8 +5317,8 @@ function renderInfoBox() {
 
   box.innerHTML = privacyHtml + sources.map(s => {
     const isSelectable = s.id !== 'fred' && s.id !== 'frank' && s.id !== 'coingecko'
-      && s.id !== 'oecd' && s.id !== 'imf' && s.id !== 'worldbank' && s.id !== 'abs-indicator'
-      && s.id !== 'treasury-fiscal';
+      && s.id !== 'oecd' && s.id !== 'imf' && s.id !== 'worldbank' && s.id !== 'abs-data'
+      && s.id !== 'abs-indicator' && s.id !== 'treasury-fiscal';
     const active = isSelectable && s.id === activeProvider;
     return `
       <div class="info-source${active ? ' info-source-active' : ''}">
@@ -5049,7 +5336,7 @@ function renderInfoBox() {
           ? `<button type="button" class="info-btn${active ? ' info-btn-active' : ''}" data-provider="${s.id}" ${active ? 'disabled' : ''}>${active ? 'Active' : 'Use this source'}</button>`
           : ''}
       </div>`;
-  }).join('');
+  }).join('') + auDataSourcesGuidanceHtml();
 }
 
 function setInfoOpen(open) {
@@ -6851,6 +7138,7 @@ function wireUi() {
     await loadChartModal();
   });
   document.getElementById('compare-btn')?.addEventListener('click', openCompare);
+  wireEducationMode();
   document.getElementById('compare-modal-close')?.addEventListener('click', closeCompare);
   document.querySelectorAll('[data-compare-close]').forEach(el => {
     el.addEventListener('click', closeCompare);
@@ -6951,6 +7239,11 @@ function wireUi() {
 
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
+      const eduTip = document.getElementById('edu-tooltip');
+      if (educationMode && eduTip && !eduTip.hidden) {
+        hideEducationTooltip();
+        return;
+      }
       if (!document.getElementById('info-modal')?.hidden) {
         closeInfoModal();
         return;
