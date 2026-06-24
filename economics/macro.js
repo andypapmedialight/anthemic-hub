@@ -1769,6 +1769,120 @@ function renderInfoModalBody(info) {
 let educationMode = localStorage.getItem('mmd:education') === '1';
 const eduState = { activeCard: null, hideTimer: null };
 
+/**
+ * Index / ETF membership for learning-mode tooltips.
+ * Large indices list top names by weight; heading + total make the scope clear.
+ * @type {Record<string, { heading: string, members: string[], total?: number, note?: string, moreUrl?: string }>}
+ */
+const INDEX_CONSTITUENT_PROFILES = {
+  '^DJI': {
+    heading: 'All 30 Dow components',
+    members: [
+      '3M', 'Amazon', 'Amgen', 'American Express', 'Apple', 'Boeing', 'Caterpillar',
+      'Chevron', 'Cisco', 'Coca-Cola', 'Disney', 'Goldman Sachs', 'Home Depot', 'Honeywell',
+      'IBM', 'Johnson & Johnson', 'JPMorgan Chase', 'McDonald\'s', 'Merck', 'Microsoft',
+      'Nike', 'Nvidia', 'Procter & Gamble', 'Salesforce', 'Sherwin-Williams', 'Travelers',
+      'UnitedHealth', 'Verizon', 'Visa', 'Walmart',
+    ],
+    total: 30,
+    moreUrl: 'https://www.spglobal.com/spdji/en/indices/equity/dow-jones-industrial-average',
+  },
+  '^GSPC': {
+    heading: 'Largest S&P 500 members (cap-weighted)',
+    members: [
+      'Nvidia', 'Apple', 'Microsoft', 'Amazon', 'Meta', 'Broadcom', 'Alphabet (Google)',
+      'Tesla', 'Berkshire Hathaway', 'JPMorgan Chase', 'Visa', 'Exxon Mobil',
+    ],
+    total: 500,
+    note: 'Hundreds of sectors — from tech to utilities.',
+    moreUrl: 'https://www.spglobal.com/spdji/en/indices/equity/sp-500',
+  },
+  '^NDX': {
+    heading: 'Largest Nasdaq-100 members',
+    members: [
+      'Nvidia', 'Apple', 'Microsoft', 'Amazon', 'Meta', 'Broadcom', 'Tesla',
+      'Alphabet (Google)', 'Costco', 'Netflix', 'AMD', 'PepsiCo',
+    ],
+    total: 100,
+    note: 'Excludes financial companies by index rules.',
+    moreUrl: 'https://www.nasdaq.com/solutions/global-indexes/nasdaq-100',
+  },
+  '^IXIC': {
+    heading: 'Examples from Nasdaq Composite (3,000+ stocks)',
+    members: [
+      'Apple', 'Microsoft', 'Nvidia', 'Amazon', 'Meta', 'Alphabet (Google)', 'Tesla',
+      'Broadcom', 'Costco', 'Netflix', 'AMD', 'Intel', 'Starbucks', 'PayPal',
+    ],
+    total: 3000,
+    note: 'Every common stock listed on Nasdaq — heavily tech-weighted.',
+    moreUrl: 'https://www.nasdaq.com/market-activity/quotes/nasdaq-composite-index',
+  },
+  '^AXJO': {
+    heading: 'Largest ASX 200 members',
+    members: [
+      'BHP', 'Commonwealth Bank', 'CSL', 'National Australia Bank', 'Westpac',
+      'ANZ', 'Wesfarmers', 'Macquarie', 'Rio Tinto', 'Goodman Group', 'Telstra', 'Woolworths',
+    ],
+    total: 200,
+    moreUrl: 'https://www.asx.com.au/markets/trade-our-cash-market/asx-20',
+  },
+  '^AORD': {
+    heading: 'Largest All Ordinaries members',
+    members: [
+      'BHP', 'Commonwealth Bank', 'CSL', 'National Australia Bank', 'Westpac',
+      'ANZ', 'Wesfarmers', 'Macquarie', 'Rio Tinto', 'Goodman Group', 'Telstra', 'Fortescue',
+    ],
+    total: 500,
+    note: 'Covers nearly all ASX-listed companies; dominated by the biggest names.',
+    moreUrl: 'https://www.asx.com.au/markets/trade-our-cash-market/asx-20',
+  },
+  '^RUT': {
+    heading: 'Examples of Russell 2000 small caps',
+    members: [
+      'Celsius Holdings', 'Duolingo', 'Saia', 'Fabrinet', 'Medpace', 'Cava Group',
+      'Shift4 Payments', 'Super Micro Computer', 'Carvana', 'Texas Roadhouse',
+    ],
+    total: 2000,
+    note: 'US companies ranked roughly 1,001–3,000 by market cap; membership changes regularly.',
+    moreUrl: 'https://www.ftserussell.com/index/russell-2000',
+  },
+  EEM: {
+    heading: 'Largest MSCI Emerging Markets ETF holdings',
+    members: [
+      'Taiwan Semiconductor', 'Tencent', 'Alibaba', 'Samsung', 'Reliance Industries',
+      'Meituan', 'HDFC Bank', 'China Construction Bank', 'Naspers', 'Pinduoduo',
+    ],
+    note: 'Basket spans China, India, Taiwan, Korea, Brazil, and more.',
+    moreUrl: 'https://www.ishares.com/us/products/239637/ishares-msci-emerging-markets-etf',
+  },
+  VGK: {
+    heading: 'Largest Europe ETF holdings',
+    members: [
+      'Nestlé', 'ASML', 'Novo Nordisk', 'Roche', 'Shell', 'LVMH', 'AstraZeneca',
+      'SAP', 'Siemens', 'Unilever', 'Allianz', 'HSBC',
+    ],
+    note: 'Developed Europe — UK, France, Germany, Switzerland, etc.',
+    moreUrl: 'https://www.vanguard.com.au/invest/adviser/investments/8044',
+  },
+  EWJ: {
+    heading: 'Largest Japan ETF holdings',
+    members: [
+      'Toyota', 'Sony', 'Mitsubishi UFJ', 'Keyence', 'Tokyo Electron', 'Hitachi',
+      'Fast Retailing (Uniqlo)', 'Recruit Holdings', 'Nintendo', 'Daikin',
+    ],
+    moreUrl: 'https://www.ishares.com/us/products/239660/ishares-msci-japan-etf',
+  },
+  ARKK: {
+    heading: 'Largest ARK Innovation ETF holdings',
+    members: [
+      'Tesla', 'Coinbase', 'Roku', 'Robinhood', 'Palantir', 'CRISPR Therapeutics',
+      'Shopify', 'Tempus AI', 'AMD', 'Twist Bioscience',
+    ],
+    note: 'Actively managed — holdings change as the manager trades.',
+    moreUrl: 'https://www.ark-funds.com/funds/arkk',
+  },
+};
+
 /** Plain-language rollover copy — keyed sectionKey:itemKey. */
 const EDUCATION_EXPLAINERS = {
   'eq:^AORD': { title: 'ASX All Ordinaries', body: 'A broad index of almost every company listed on the Australian Securities Exchange (ASX).', why: 'A quick read on how Australian shares are doing overall.' },
@@ -1858,27 +1972,62 @@ function findSectionItem(sectionKey, itemKey) {
   return null;
 }
 
+function withIndexConstituents(sectionKey, itemKey, explainer) {
+  if (sectionKey !== 'eq') return explainer;
+  const profile = INDEX_CONSTITUENT_PROFILES[itemKey];
+  if (!profile) return explainer;
+  return { ...explainer, constituents: profile };
+}
+
+function renderEducationConstituents(profile) {
+  const wrap = document.getElementById('edu-tooltip-members');
+  const label = document.getElementById('edu-tooltip-members-label');
+  const list = document.getElementById('edu-tooltip-members-list');
+  const more = document.getElementById('edu-tooltip-members-more');
+  if (!wrap || !profile?.members?.length) {
+    if (wrap) wrap.hidden = true;
+    return;
+  }
+  wrap.hidden = false;
+  label.textContent = profile.heading || 'Includes';
+  list.innerHTML = profile.members.map(m => `<li>${escapeHtml(m)}</li>`).join('');
+  const parts = [];
+  if (profile.total != null && profile.total > profile.members.length) {
+    parts.push(`…and ${profile.total - profile.members.length} more`);
+  }
+  if (profile.note) parts.push(profile.note);
+  let moreHtml = parts.join('. ');
+  if (profile.moreUrl) {
+    const link = infoLink('Full list', profile.moreUrl);
+    moreHtml = moreHtml ? `${moreHtml} · ${link}` : link;
+  }
+  if (more) {
+    more.innerHTML = moreHtml;
+    more.hidden = !moreHtml;
+  }
+}
+
 function getEducationExplainer(sectionKey, itemKey) {
   const keyed = EDUCATION_EXPLAINERS[`${sectionKey}:${itemKey}`];
-  if (keyed) return keyed;
+  if (keyed) return withIndexConstituents(sectionKey, itemKey, keyed);
 
   const item = findSectionItem(sectionKey, itemKey);
   if (item) {
     const info = getCardInfo(sectionKey, item);
     const body = info?.summary || 'Indicator on the Morning Macro dashboard.';
     const derived = info?.derived ? ` ${info.derived.split('.')[0]}.` : '';
-    return {
+    return withIndexConstituents(sectionKey, itemKey, {
       title: info?.title || item.label || itemKey,
       body: `${body}${derived}`.trim(),
       why: EDUCATION_SECTION_HINTS[sectionKey] || 'Tap ⓘ on the card for formulas and data sources.',
-    };
+    });
   }
 
-  return {
+  return withIndexConstituents(sectionKey, itemKey, {
     title: itemKey,
     body: 'Market or macro reading on this dashboard.',
     why: EDUCATION_SECTION_HINTS[sectionKey] || 'Tap ⓘ on the card for full technical details.',
-  };
+  });
 }
 
 function syncEducationModeUi() {
@@ -1936,6 +2085,7 @@ function showEducationTooltip(card) {
   if (!tip) return;
   document.getElementById('edu-tooltip-title').textContent = exp.title || '';
   document.getElementById('edu-tooltip-body').textContent = exp.body || '';
+  renderEducationConstituents(exp.constituents);
   document.getElementById('edu-tooltip-why').textContent = exp.why || '';
   if (eduState.activeCard && eduState.activeCard !== card) {
     eduState.activeCard.classList.remove('card--edu-active');
