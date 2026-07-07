@@ -238,6 +238,30 @@ function quarterLabelFromFredDate(dateStr) {
   return `Q${q} ${y}`;
 }
 
+/** FRED quarterly rows use period-start dates; Z.1 stocks are end-of-quarter. */
+function fredQuarterEndDate(dateStr) {
+  if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+  const y = parseInt(dateStr.slice(0, 4), 10);
+  const m = parseInt(dateStr.slice(5, 7), 10);
+  const endMonth = m <= 3 ? 3 : m <= 6 ? 6 : m <= 9 ? 9 : 12;
+  const lastDay = new Date(Date.UTC(y, endMonth, 0)).getUTCDate();
+  return `${y}-${String(endMonth).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+}
+
+function fredQuarterEndUtc(dateStr) {
+  return fredDateToUtc(fredQuarterEndDate(dateStr));
+}
+
+function addFredQuarters(dateStr, quarters) {
+  if (!dateStr || quarters <= 0) return dateStr;
+  const y = parseInt(dateStr.slice(0, 4), 10);
+  const m = parseInt(dateStr.slice(5, 7), 10) - 1;
+  const total = y * 12 + m + quarters * 3;
+  const ny = Math.floor(total / 12);
+  const nm = (total % 12) + 1;
+  return `${ny}-${String(nm).padStart(2, '0')}-01`;
+}
+
 function bisPeriodLabel(period) {
   if (!period) return '';
   const m = String(period).match(/^(\d{4})-Q([1-4])$/i);
@@ -1547,7 +1571,7 @@ function valuationCardInfo(item) {
   const byId = {
     buffett: {
       summary: 'Warren Buffett’s “market cap to GDP” gauge: how large the US equity market is relative to the economy. High readings suggest stretched valuations vs history.',
-      derived: 'Numerator: Z.1 corporate equities (NCBEILQ027S), scaled from the latest Z.1 quarter to today using S&P 500 (^GSPC) moves. Denominator: nominal GDP (FRED), projected with Atlanta Fed GDPNow when the nowcast quarter is ahead of the latest GDP print.',
+      derived: 'Numerator: Z.1 corporate equities (NCBEILQ027S), scaled from the latest Z.1 quarter-end to today using S&P 500 (^GSPC) moves. Denominator: nominal GDP (FRED), projected quarter-by-quarter with Atlanta Fed GDPNow when the nowcast is ahead of the latest GDP print.',
       data: 'Cap: FRED NCBEILQ027S. GDP: FRED GDP + GDPNOW. Scale proxy: ^GSPC.',
       sourceHtml: infoLink('FRED', fred),
       formula: 'Buffett indicator = (market cap USD / nominal GDP USD) × 100\nEst. cap = Z.1 cap × (S&P now / S&P at Z.1 date)',
@@ -1824,7 +1848,7 @@ const INDEX_CONSTITUENT_PROFILES = {
     ],
     total: 100,
     note: 'Excludes financial companies by index rules.',
-    moreUrl: 'https://www.nasdaq.com/solutions/global-indexes/nasdaq-100',
+    moreUrl: 'https://indexes.nasdaqomx.com/Index/Overview/NDX',
   },
   '^IXIC': {
     heading: 'Examples from Nasdaq Composite (3,000+ stocks)',
@@ -1833,8 +1857,8 @@ const INDEX_CONSTITUENT_PROFILES = {
       'Broadcom', 'Costco', 'Netflix', 'AMD', 'Intel', 'Starbucks', 'PayPal',
     ],
     total: 3000,
-    note: 'Every common stock listed on Nasdaq — heavily tech-weighted.',
-    moreUrl: 'https://www.nasdaq.com/market-activity/quotes/nasdaq-composite-index',
+    note: 'Every common stock listed on Nasdaq — heavily tech-weighted. No single public full list; see index overview.',
+    moreUrl: 'https://indexes.nasdaqomx.com/Index/Overview/COMP',
   },
   '^AXJO': {
     heading: 'Largest ASX 200 members',
@@ -1843,7 +1867,7 @@ const INDEX_CONSTITUENT_PROFILES = {
       'ANZ', 'Wesfarmers', 'Macquarie', 'Rio Tinto', 'Goodman Group', 'Telstra', 'Woolworths',
     ],
     total: 200,
-    moreUrl: 'https://www.asx.com.au/markets/trade-our-cash-market/asx-20',
+    moreUrl: 'https://www.asx.com.au/markets/trade-our-cash-market/overview/indices/real-time-indices',
   },
   '^AORD': {
     heading: 'Largest All Ordinaries members',
@@ -1853,7 +1877,7 @@ const INDEX_CONSTITUENT_PROFILES = {
     ],
     total: 500,
     note: 'Covers nearly all ASX-listed companies; dominated by the biggest names.',
-    moreUrl: 'https://www.asx.com.au/markets/trade-our-cash-market/asx-20',
+    moreUrl: 'https://www.asx.com.au/markets/trade-our-cash-market/overview/indices/real-time-indices',
   },
   '^RUT': {
     heading: 'Examples of Russell 2000 small caps',
@@ -3032,14 +3056,16 @@ function buffettExtraHtml(d) {
   if (!d?.buffettMeta) return '';
   const m = d.buffettMeta;
   let html = '';
+  const capPeriod = quarterLabelFromFredDate(m.capZ1Date) || m.capZ1Date;
   const capLabel = m.capScaled
-    ? `Cap est. (Z.1 ${m.capZ1Date} × ${BUFFETT_SCALE_SYM})`
-    : `Cap (Z.1 ${m.capZ1Date})`;
+    ? `Cap est. (Z.1 ${capPeriod} × ${BUFFETT_SCALE_SYM})`
+    : `Cap (Z.1 ${capPeriod})`;
   html += `<div class="yield-extra"><span class="spread-label">Numerator</span>
     <span class="spread-val">${escapeHtml(capLabel)}</span></div>`;
+  const gdpPeriod = quarterLabelFromFredDate(m.gdpDate) || m.gdpDate;
   const gdpLabel = m.gdpNowcast
-    ? `Nominal GDP est. (${escapeHtml(m.gdpDate)} · GDPNow)`
-    : `Nominal GDP (${escapeHtml(m.gdpDate)})`;
+    ? `Nominal GDP est. (${escapeHtml(gdpPeriod)} · GDPNow)`
+    : `Nominal GDP (${escapeHtml(gdpPeriod)})`;
   html += `<div class="yield-extra"><span class="spread-label">Denominator</span>
     <span class="spread-val">${gdpLabel}</span></div>`;
   return html;
@@ -3151,16 +3177,17 @@ async function fetchBuffettCurrent(fred, force = false) {
   let capMillions = lastCap.v;
   let asOfUtc = null;
   let scaled = false;
+  const capAnchorDate = fredQuarterEndDate(lastCap.date);
 
   try {
-    const capTs = fredDateToUtc(lastCap.date);
+    const capTs = fredQuarterEndUtc(lastCap.date);
     const histDays = capTs
-      ? Math.min(400, Math.max(60, Math.ceil((Date.now() - capTs) / 86400000) + 14))
+      ? Math.min(400, Math.max(90, Math.ceil((Date.now() - capTs) / 86400000) + 21))
       : 180;
     const scale = await Promise.race([
       Promise.all([
         fetchQuote(BUFFETT_SCALE_SYM, force),
-        fetchYahooHistory(BUFFETT_SCALE_SYM, histDays),
+        fetchYahooHistory(BUFFETT_SCALE_SYM, histDays, { forAnchor: true }),
       ]).then(([live, hist]) => ({ live, hist })),
       new Promise((_, reject) => setTimeout(() => reject(new Error('Buffett scale timeout')), 15000)),
     ]);
@@ -3174,7 +3201,7 @@ async function fetchBuffettCurrent(fred, force = false) {
     console.warn('Buffett cap scale failed', err);
   }
 
-  if (!asOfUtc) asOfUtc = fredDateToUtc(lastCap.date);
+  if (!asOfUtc) asOfUtc = fredQuarterEndUtc(lastCap.date) ?? fredDateToUtc(lastCap.date);
 
   const ratio = buffettRatio(capMillions, gdpPick.billions);
   const change = historical ? pointsChange(ratio, historical.price) : null;
@@ -3190,11 +3217,12 @@ async function fetchBuffettCurrent(fred, force = false) {
       gdpDate: gdpPick.date,
       gdpNowcast,
       capZ1Date: lastCap.date,
+      capAnchorDate,
       capScaled: scaled,
     },
     anchorDate: lastCap.date,
     freshnessNote: [
-      scaled ? 'Cap scaled via ^GSPC' : `Z.1 cap ${lastCap.date}`,
+      scaled ? `Cap scaled via ^GSPC (${capAnchorDate})` : `Z.1 cap ${quarterLabelFromFredDate(lastCap.date) || lastCap.date}`,
       gdpPick.freshnessNote,
     ].filter(Boolean).join(' · '),
   }, 'estimated', { estimated: true });
@@ -3264,21 +3292,28 @@ let bondSpreadFredPromise = null;
 function pickGdpDenominator(fred) {
   const quarterly = latestFredRow(fred.GDP);
   if (!quarterly?.v) return null;
-  const nowcast = latestFredRow(fred[FRED_GDP_NOWCAST_SERIES]);
-  if (!nowcast?.v || nowcast.date <= quarterly.date) {
+  const nowcastRows = sortedFredRows(fred[FRED_GDP_NOWCAST_SERIES]);
+  const latestNowcast = latestFredRow(nowcastRows);
+  if (!latestNowcast?.v || latestNowcast.date <= quarterly.date) {
     return { billions: quarterly.v, date: quarterly.date, source: 'quarterly' };
   }
-  const months = monthsBetweenFredDates(quarterly.date, nowcast.date);
-  const quarters = Math.max(1, Math.round(months / 3));
-  const qGrowth = (nowcast.v / 100) / 4;
+  const nowcastByDate = new Map(nowcastRows.map(r => [r.date, r]));
   let billions = quarterly.v;
-  for (let i = 0; i < quarters; i++) billions *= (1 + qGrowth);
+  let cursor = quarterly.date;
+  let steps = 0;
+  while (cursor < latestNowcast.date && steps < 8) {
+    const nextQ = addFredQuarters(cursor, 1);
+    const nc = nowcastByDate.get(nextQ) || latestNowcast;
+    billions *= (1 + (nc.v / 100) / 4);
+    cursor = nextQ;
+    steps++;
+  }
   return {
     billions,
-    date: nowcast.date,
+    date: cursor,
     source: 'nowcast',
     anchorDate: quarterly.date,
-    freshnessNote: `GDP proj. · GDPNow ${nowcast.v.toFixed(1)}% SAAR`,
+    freshnessNote: `GDP proj. · GDPNow ${latestNowcast.v.toFixed(1)}% SAAR`,
   };
 }
 
@@ -6578,14 +6613,15 @@ function parseYahooSeries(data) {
   return series.length ? series : null;
 }
 
-async function fetchYahooHistory(sym, days) {
-  const cacheKey = `yh:${sym}:${days}`;
+async function fetchYahooHistory(sym, days, opts = {}) {
+  const forAnchor = opts.forAnchor === true;
+  const cacheKey = forAnchor ? `yh:${sym}:${days}:anchor` : `yh:${sym}:${days}`;
   const cached = historyCacheGet(cacheKey);
   if (cached) return cached;
   const { range, interval } = yahooHistoryParams(days);
   const data = await fetchRemote(yahooChartUrl(sym, range, interval), { asJson: true });
   let series = data ? parseYahooSeries(data) : null;
-  if (series) series = sliceSeriesForChart(series, days);
+  if (series && !forAnchor) series = sliceSeriesForChart(series, days);
   if (series) historyCacheSet(cacheKey, series);
   return series;
 }
