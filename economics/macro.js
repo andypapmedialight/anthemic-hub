@@ -2399,7 +2399,11 @@ function yahooChartUrl(sym, range = '5d', interval = '1d') {
   return `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=${interval}&range=${range}`;
 }
 
-function yahooHistoryParams(days) {
+function yahooHistoryParams(days, opts = {}) {
+  if (opts.forAnchor) {
+    if (days > 730) return { range: '5y', interval: '1d' };
+    if (days > 365) return { range: '2y', interval: '1d' };
+  }
   if (days <= 1) return { range: '1d', interval: '5m' };
   if (days <= 7) return { range: '7d', interval: '1h' };
   if (days <= 30) return { range: '1mo', interval: '1d' };
@@ -3005,7 +3009,7 @@ function parseFredCsvRows(txt) {
     if (!date || Number.isNaN(v)) continue;
     rows.push({ date, v });
   }
-  return rows;
+  return sortedFredRows(rows);
 }
 
 function parseFredApiRows(data) {
@@ -3018,7 +3022,7 @@ function parseFredApiRows(data) {
     if (Number.isNaN(v)) continue;
     rows.push({ date: o.date, v });
   }
-  return rows.length ? rows : null;
+  return rows.length ? sortedFredRows(rows) : null;
 }
 
 function parseFredResponseBody(body, contentType = '') {
@@ -3173,7 +3177,8 @@ async function fetchBuffettCurrent(fred, force = false) {
   const gdpPick = pickGdpDenominator(fred);
   if (!capRows?.length || !gdpPick) return historical;
 
-  const lastCap = capRows[capRows.length - 1];
+  const lastCap = latestFredRow(capRows);
+  if (!lastCap) return historical;
   let capMillions = lastCap.v;
   let asOfUtc = null;
   let scaled = false;
@@ -3932,7 +3937,12 @@ let valuationFredPromise = null;
 
 function fredBatchUsable(data) {
   if (!data || typeof data !== 'object') return false;
-  return VAL_FRED_REQUIRED_IDS.every(id => Array.isArray(data[id]) && data[id].length > 0);
+  if (!VAL_FRED_REQUIRED_IDS.every(id => Array.isArray(data[id]) && data[id].length > 0)) return false;
+  const cap = latestFredRow(data.NCBEILQ027S);
+  const gdp = latestFredRow(data.GDP);
+  if (!cap?.date || !gdp?.date) return false;
+  const capAgeMs = Date.now() - (fredQuarterEndUtc(cap.date) ?? fredDateToUtc(cap.date) ?? 0);
+  return capAgeMs < 400 * 86400000;
 }
 
 function clearValuationFredCache(lookbackDays = VAL_FRED_CARD_LOOKBACK_DAYS) {
@@ -6618,7 +6628,7 @@ async function fetchYahooHistory(sym, days, opts = {}) {
   const cacheKey = forAnchor ? `yh:${sym}:${days}:anchor` : `yh:${sym}:${days}`;
   const cached = historyCacheGet(cacheKey);
   if (cached) return cached;
-  const { range, interval } = yahooHistoryParams(days);
+  const { range, interval } = yahooHistoryParams(days, opts);
   const data = await fetchRemote(yahooChartUrl(sym, range, interval), { asJson: true });
   let series = data ? parseYahooSeries(data) : null;
   if (series && !forAnchor) series = sliceSeriesForChart(series, days);
