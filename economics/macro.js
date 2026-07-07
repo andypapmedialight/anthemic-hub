@@ -34,6 +34,9 @@ const STALE_AFTER_MS = {
 let macroFreshnessSummary = null;
 /** FRED rows for valuation cards (quarterly change); charts load a longer series on demand. */
 const VAL_FRED_CARD_LOOKBACK_DAYS = 800;
+/** Bump when valuation FRED batch shape/sort rules change (invalidates localStorage). */
+const VAL_FRED_BATCH_VERSION = 2;
+const VAL_FRED_BATCH_VERSION_KEY = 'val:fred-batch-version';
 /** Spot commodity cards only need the latest observation + prior period. */
 const COMM_FRED_LOOKBACK_DAYS = 120;
 /** COMEX copper futures (USD/lb) → FRED-style USD/metric ton. */
@@ -3427,7 +3430,7 @@ function fetchPublicDebtCurrent(fred, treasury = null) {
   if (!anchorRatio || !debtLevel) return official;
 
   const { scale, asOfDate: treasuryMvDate } = treasuryMv?.length
-    ? treasuryMvScaleFactor(treasuryMv, anchorRatio.date)
+    ? treasuryMvScaleFactor(treasuryMv, z1QuarterAnchorDate(anchorRatio.date))
     : { scale: 1, asOfDate: null };
 
   const debtBillions = (debtLevel.v / 1000) * scale;
@@ -3465,7 +3468,7 @@ function fetchPrivateDebtCurrent(fred) {
   if (!tcmdoRow || !fedRow || !gdpPick) return official;
 
   const { scale: fedScale, asOfDate: treasuryMvDate } = treasuryMv?.length
-    ? treasuryMvScaleFactor(treasuryMv, fedRow.date)
+    ? treasuryMvScaleFactor(treasuryMv, z1QuarterAnchorDate(fedRow.date))
     : { scale: 1, asOfDate: null };
 
   let scaledTcmdo = tcmdoRow.v;
@@ -3938,11 +3941,34 @@ let valuationFredPromise = null;
 function fredBatchUsable(data) {
   if (!data || typeof data !== 'object') return false;
   if (!VAL_FRED_REQUIRED_IDS.every(id => Array.isArray(data[id]) && data[id].length > 0)) return false;
-  const cap = latestFredRow(data.NCBEILQ027S);
-  const gdp = latestFredRow(data.GDP);
-  if (!cap?.date || !gdp?.date) return false;
-  const capAgeMs = Date.now() - (fredQuarterEndUtc(cap.date) ?? fredDateToUtc(cap.date) ?? 0);
-  return capAgeMs < 400 * 86400000;
+  const usQuarterly = ['NCBEILQ027S', 'GDP', 'GFDEGDQ188S', 'GFDEBTN', 'TCMDO', 'FGSDODNS'];
+  return usQuarterly.every(id => fredQuarterlyRowFresh(data[id]));
+}
+
+function z1QuarterAnchorDate(dateStr) {
+  return fredQuarterEndDate(dateStr) || dateStr;
+}
+
+function fredQuarterlyRowFresh(rows, maxAgeDays = 400) {
+  const row = latestFredRow(rows);
+  if (!row?.date) return false;
+  const anchorMs = fredQuarterEndUtc(row.date) ?? fredDateToUtc(row.date);
+  if (!anchorMs) return false;
+  return Date.now() - anchorMs < maxAgeDays * 86400000;
+}
+
+function ensureValuationFredBatchVersion() {
+  try {
+    const stored = localStorage.getItem(`mmd:${VAL_FRED_BATCH_VERSION_KEY}`);
+    if (stored === String(VAL_FRED_BATCH_VERSION)) return;
+    clearValuationFredCache();
+    for (const key of Object.keys(localStorage)) {
+      if (key.startsWith('mmd:val:') && key !== `mmd:${VAL_FRED_BATCH_VERSION_KEY}`) {
+        localStorage.removeItem(key);
+      }
+    }
+    localStorage.setItem(`mmd:${VAL_FRED_BATCH_VERSION_KEY}`, String(VAL_FRED_BATCH_VERSION));
+  } catch {}
 }
 
 function clearValuationFredCache(lookbackDays = VAL_FRED_CARD_LOOKBACK_DAYS) {
@@ -4117,7 +4143,7 @@ function buildBuffettRatios(capRows, gdpRows) {
   if (!capRows?.length || !gdpRows?.length) return null;
   const gdpAt = buildFredLookup(gdpRows);
   const ratios = [];
-  for (const row of capRows) {
+  for (const row of sortedFredRows(capRows)) {
     const gdp = gdpAt(row.date);
     if (gdp == null || gdp <= 0) continue;
     ratios.push({
@@ -4134,7 +4160,7 @@ function buildPrivateDebtRatios(totalRows, fedRows, gdpRows) {
   const fedAt = buildFredLookup(fedRows);
   const gdpAt = buildFredLookup(gdpRows);
   const ratios = [];
-  for (const row of totalRows) {
+  for (const row of sortedFredRows(totalRows)) {
     const fed = fedAt(row.date);
     const gdp = gdpAt(row.date);
     if (fed == null || gdp == null || gdp <= 0) continue;
@@ -4151,8 +4177,9 @@ function buildPrivateDebtRatios(totalRows, fedRows, gdpRows) {
 
 function quoteFromRatioSeries(ratios) {
   if (!ratios?.length) return null;
-  const lastRow = ratios[ratios.length - 1];
-  const prevRow = ratios.length > 1 ? ratios[ratios.length - 2] : null;
+  const sorted = [...ratios].sort((a, b) => a.date.localeCompare(b.date));
+  const lastRow = sorted[sorted.length - 1];
+  const prevRow = sorted.length > 1 ? sorted[sorted.length - 2] : null;
   const last = lastRow.ratio;
   const prev = prevRow?.ratio ?? null;
   const change = pointsChange(last, prev);
@@ -4241,27 +4268,10 @@ async function fetchBond(series_id, force = false) {
 
   if (!force) { const c = cacheGet(key); if (c) return c; }
   const start = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString().slice(0, 10);
-  const fredUrl = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=${series_id}&observation_start=${start}`;
-
-  function parseCsvText(txt) {
-    const lines = txt.trim().split('\n').filter(l => !l.startsWith('observation_date') && !l.endsWith(','));
-    if (lines.length < 2) return null;
-    const lastParts = lines[lines.length - 1].split(',');
-    const prevParts = lines[lines.length - 2].split(',');
-    const last = parseFloat(lastParts[1]);
-    const prev = parseFloat(prevParts[1]);
-    if (isNaN(last)) return null;
-    const change = !isNaN(prev) ? pointsChange(last, prev) : null;
-    const pct = !isNaN(prev) ? pctChange(last, prev) : null;
-    return attachFreshness(
-      { price: last, change, pct, asOfUtc: fredDateToUtc(lastParts[0]) },
-      'daily',
-    );
-  }
 
   try {
-    const txt = await fetchRemote(fredUrl, { asJson: false });
-    const result = txt ? parseCsvText(txt) : null;
+    const rows = await fetchFredSeriesRows(series_id, start);
+    const result = rows?.length ? fredDailyQuoteFromRows(rows) : null;
     if (result) cacheSet(key, result);
     return result;
   } catch {
@@ -6794,23 +6804,23 @@ async function fetchValuationHistory(metricId, days) {
     const ratios = buildBuffettRatios(fred[BUFFETT_CAP_SERIES], fred.GDP);
     series = ratios?.map(r => ({ t: r.t, v: r.ratio })) ?? null;
   } else if (metricId === 'us-gdp') {
-    series = fred.GDP?.map(r => ({ t: new Date(r.date).getTime(), v: r.v })) ?? null;
+    series = sortedFredRows(fred.GDP).map(r => ({ t: new Date(r.date).getTime(), v: r.v })) ?? null;
   } else if (metricId === 'public-debt') {
-    series = fred.GFDEGDQ188S?.map(r => ({ t: new Date(r.date).getTime(), v: r.v })) ?? null;
+    series = sortedFredRows(fred.GFDEGDQ188S).map(r => ({ t: new Date(r.date).getTime(), v: r.v })) ?? null;
   } else if (metricId === 'private-debt') {
     const ratios = buildPrivateDebtRatios(fred.TCMDO, fred.FGSDODNS, fred.GDP);
     series = ratios?.map(r => ({ t: r.t, v: r.ratio })) ?? null;
   } else if (metricId === 'au-gdp') {
     series = buildAuGdpAnnualSeries(fred);
   } else if (metricId === 'margin-debt') {
-    series = fred[FRED_MARGIN_DEBT_SERIES]?.map(r => ({
+    series = sortedFredRows(fred[FRED_MARGIN_DEBT_SERIES]).map(r => ({
       t: new Date(r.date).getTime(),
       v: r.v / 1000,
     })) ?? null;
   } else if (metricId === 'au-public-debt') {
-    series = fred[FRED_AU_PUBLIC_DEBT_SERIES]?.map(r => ({ t: new Date(r.date).getTime(), v: r.v })) ?? null;
+    series = sortedFredRows(fred[FRED_AU_PUBLIC_DEBT_SERIES]).map(r => ({ t: new Date(r.date).getTime(), v: r.v })) ?? null;
   } else if (metricId === 'au-private-debt') {
-    series = fred[FRED_AU_PRIVATE_DEBT_SERIES]?.map(r => ({ t: new Date(r.date).getTime(), v: r.v })) ?? null;
+    series = sortedFredRows(fred[FRED_AU_PRIVATE_DEBT_SERIES]).map(r => ({ t: new Date(r.date).getTime(), v: r.v })) ?? null;
   }
 
   series = sliceSeriesForChart(series, days);
@@ -7494,6 +7504,7 @@ function wireUi() {
 }
 
 async function init() {
+  ensureValuationFredBatchVersion();
   renderSectionExplainers();
   wireUi();
   loadComparePrefs();
