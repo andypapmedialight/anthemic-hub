@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Consciousness map">
+  <rect width="32" height="32" rx="7" fill="#0B0F1C"/>
+  <path d="M8 23 C 12 7, 20 7, 24 23" fill="none" stroke="#D9B15E" stroke-width="2.4" stroke-linecap="round"/>
+  <circle cx="8" cy="23" r="3.7" fill="#A987F5" stroke="#0B0F1C" stroke-width="1"/>
+  <circle cx="24" cy="23" r="3.7" fill="#3BC1D6" stroke="#0B0F1C" stroke-width="1"/>
+</svg>

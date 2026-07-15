@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verdicts on the Conscious Machine — a map of consciousness theories</title>
+<meta name="description" content="A quadrant map of fifteen theories of consciousness — from Descartes and Turing to Penrose, Chalmers, panpsychism and eliminativism — plotted by whether the mind is computable and whether the hard problem remains.">
+<meta name="color-scheme" content="light dark">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Verdicts on the Conscious Machine">
+<meta property="og:description" content="A map of fifteen theories of consciousness, plotted by computability and the hard problem.">
+<!-- Update these absolute URLs to match where you host the files -->
+<meta property="og:url" content="https://anthemic-developments.com/consciousness-map.html">
+<meta property="og:image" content="https://anthemic-developments.com/consciousness-map-preview.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A quadrant map of fifteen theories of consciousness, plotted by computability and the hard problem.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://anthemic-developments.com/consciousness-map-preview.png">
+<link rel="icon" type="image/svg+xml" href="consciousness-map-favicon.svg">
+<link rel="canonical" href="https://anthemic-developments.com/consciousness-map.html">
+<style>
+  /* standalone page scaffolding (the editor's reset, replicated) */
+  html { background: #0b0f1c; }
+  @media (prefers-color-scheme: light) { html { background: #edf0f4; } }
+  img { max-width: 100%; }
+  /* card theses are our editorial summaries, not verbatim quotations — drop the quote marks */
+  .card .thesis .q { display: none; }
+</style>
+<style>
+  :root {
+    --ground: #EDF0F4;
+    --panel: #F7F9FC;
+    --panel-2: #EEF2F7;
+    --ink: #161C28;
+    --muted: #58627A;
+    --faint: #8B94A8;
+    --line: rgba(20,28,48,0.14);
+    --grid: rgba(20,28,48,0.07);
+    --cross: rgba(20,28,48,0.16);
+    --cyan: #0E7F94;
+    --cyan-soft: rgba(14,127,148,0.12);
+    --violet: #6B46C1;
+    --violet-soft: rgba(107,70,193,0.12);
+    --gold: #9C6F1C;
+    --shadow: 0 1px 2px rgba(20,28,48,0.06), 0 8px 30px rgba(20,28,48,0.07);
+    --serif: "Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,"Times New Roman",serif;
+    --sans: system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono: ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #0B0F1C;
+      --panel: #121829;
+      --panel-2: #0E1424;
+      --ink: #D8DFEC;
+      --muted: #8A96AE;
+      --faint: #626E88;
+      --line: rgba(255,255,255,0.13);
+      --grid: rgba(255,255,255,0.06);
+      --cross: rgba(255,255,255,0.16);
+      --cyan: #3BC1D6;
+      --cyan-soft: rgba(59,193,214,0.14);
+      --violet: #A987F5;
+      --violet-soft: rgba(169,135,245,0.15);
+      --gold: #D9B15E;
+      --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 12px 40px rgba(0,0,0,0.45);
+    }
+  }
+  :root[data-theme="light"] {
+    --ground: #EDF0F4; --panel: #F7F9FC; --panel-2: #EEF2F7; --ink: #161C28;
+    --muted: #58627A; --faint: #8B94A8; --line: rgba(20,28,48,0.14); --grid: rgba(20,28,48,0.07);
+    --cross: rgba(20,28,48,0.16); --cyan: #0E7F94; --cyan-soft: rgba(14,127,148,0.12);
+    --violet: #6B46C1; --violet-soft: rgba(107,70,193,0.12); --gold: #9C6F1C;
+    --shadow: 0 1px 2px rgba(20,28,48,0.06), 0 8px 30px rgba(20,28,48,0.07);
+  }
+  :root[data-theme="dark"] {
+    --ground: #0B0F1C; --panel: #121829; --panel-2: #0E1424; --ink: #D8DFEC;
+    --muted: #8A96AE; --faint: #626E88; --line: rgba(255,255,255,0.13); --grid: rgba(255,255,255,0.06);
+    --cross: rgba(255,255,255,0.16); --cyan: #3BC1D6; --cyan-soft: rgba(59,193,214,0.14);
+    --violet: #A987F5; --violet-soft: rgba(169,135,245,0.15); --gold: #D9B15E;
+    --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 12px 40px rgba(0,0,0,0.45);
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  .wrap {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.55;
+    padding: clamp(20px, 5vw, 64px) clamp(16px, 5vw, 56px) 72px;
+  }
+  .inner { max-width: 1120px; margin: 0 auto; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin: 0 0 18px;
+  }
+  h1 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: clamp(2.1rem, 5.4vw, 3.5rem);
+    line-height: 1.04;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+    margin: 0 0 18px;
+  }
+  h1 em { font-style: italic; color: var(--muted); }
+  .lede {
+    max-width: 62ch;
+    font-size: clamp(1rem, 1.6vw, 1.16rem);
+    color: var(--muted);
+    margin: 0;
+  }
+  .lede b { color: var(--ink); font-weight: 600; }
+
+  .rule {
+    height: 1px; background: var(--line); border: 0;
+    margin: clamp(28px, 4vw, 44px) 0;
+  }
+
+  /* ---- Map ---- */
+  .mapwrap { overflow-x: auto; padding-bottom: 6px; }
+  .map {
+    display: block; width: 100%; min-width: 540px; height: auto;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+  }
+  .grid-line { stroke: var(--grid); stroke-width: 1; }
+  .cross-line { stroke: var(--cross); stroke-width: 1; stroke-dasharray: 2 6; }
+  .frame { fill: none; stroke: var(--line); stroke-width: 1; }
+  .axlab {
+    font-family: var(--mono); font-size: 12.5px; letter-spacing: 0.12em;
+    text-transform: uppercase; fill: var(--faint);
+  }
+  .axlab.strong { fill: var(--muted); }
+  .quad {
+    font-family: var(--serif); font-style: italic; font-size: 15px; fill: var(--faint);
+  }
+  .godel-arc { fill: none; stroke: var(--gold); stroke-width: 2.4; stroke-dasharray: 7 6; opacity: 0.9; }
+  .godel-lab { font-family: var(--mono); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; fill: var(--gold); }
+  .bind-line { stroke: var(--muted); stroke-width: 1.4; stroke-dasharray: 1.5 6; stroke-linecap: round; opacity: 0.6; }
+  .bind-lab { font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.1em; fill: var(--muted); }
+
+  .node circle { stroke: var(--panel); stroke-width: 3; transition: r .18s ease; }
+  .node .halo { fill: none; stroke-width: 1.5; opacity: 0; transition: opacity .18s ease; }
+  .node text { font-family: var(--mono); font-size: 15px; fill: var(--ink); font-weight: 500; }
+  .node.cyan circle { fill: var(--cyan); }
+  .node.cyan .halo { stroke: var(--cyan); }
+  .node.violet circle { fill: var(--violet); }
+  .node.violet .halo { stroke: var(--violet); }
+  .node { cursor: default; }
+  .node.lit circle { r: 12; }
+  .node.lit .halo { opacity: 1; }
+
+  /* ---- Legend ---- */
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 10px 26px;
+    margin-top: 20px; font-family: var(--mono); font-size: 0.76rem;
+    color: var(--muted); letter-spacing: 0.02em;
+  }
+  .legend .key { display: inline-flex; align-items: center; gap: 9px; }
+  .swatch { width: 13px; height: 13px; border-radius: 50%; flex: none; }
+  .swatch.cyan { background: var(--cyan); }
+  .swatch.violet { background: var(--violet); }
+  .swatch.god { width: 22px; height: 0; border-top: 2.4px dashed var(--gold); border-radius: 0; }
+  .swatch.bind { width: 22px; height: 0; border-top: 2px dotted var(--muted); border-radius: 0; }
+
+  /* ---- How-to-read caption ---- */
+  .caption { margin-top: 22px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel-2); padding: 20px 24px 18px; }
+  .cap-title { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--cyan); margin: 0 0 16px; }
+  .caption-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 44px; }
+  .cap-col h5 { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); margin: 0 0 11px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+  .cap-row { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 9px; }
+  .cap-row .swatch { margin-top: 6px; }
+  .cap-mark { font-family: var(--mono); font-size: 0.86rem; color: var(--muted); min-width: 26px; margin-top: 1px; flex: none; text-align: center; }
+  .cap-txt { font-size: 0.86rem; color: var(--muted); line-height: 1.45; }
+  .cap-txt b { color: var(--ink); font-weight: 600; }
+  .cap-corners { margin: 15px 0 0; padding-top: 14px; border-top: 1px solid var(--line); font-size: 0.86rem; color: var(--muted); line-height: 1.5; }
+  .cap-corners b { color: var(--ink); font-weight: 600; }
+  .cap-hint { margin: 11px 0 0; font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.02em; color: var(--faint); }
+  @media (max-width: 680px) { .caption-grid { grid-template-columns: 1fr; gap: 6px; } }
+
+  /* ---- Dossier ---- */
+  .dossier {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px; margin-top: 8px;
+  }
+  .card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 22px 22px 20px; box-shadow: var(--shadow);
+    position: relative; overflow: hidden;
+    transition: border-color .18s ease, transform .18s ease;
+  }
+  .card::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: var(--accent);
+  }
+  .card.cyan { --accent: var(--cyan); }
+  .card.violet { --accent: var(--violet); }
+  .card.lit { border-color: var(--accent); transform: translateY(-2px); }
+  .card .who { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .card h3 { font-family: var(--serif); font-weight: 600; font-size: 1.28rem; margin: 0; letter-spacing: -0.01em; }
+  .card .work { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.06em; color: var(--faint); text-transform: uppercase; white-space: nowrap; }
+  .card .anchor-tag { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); border: 1px solid var(--accent); border-radius: 999px; padding: 2px 7px; opacity: 0.85; }
+  .card .thesis { font-size: 0.95rem; color: var(--ink); margin: 13px 0 16px; }
+  .card .thesis .q { color: var(--accent); font-family: var(--serif); font-size: 1.1em; }
+  .chips { display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--line); padding-top: 13px; }
+  .chip { display: flex; align-items: baseline; gap: 8px; font-size: 0.83rem; }
+  .chip .lbl { font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); flex: none; width: 92px; }
+  .chip .val { color: var(--ink); }
+  .chip .val.yes { color: var(--cyan); font-weight: 600; }
+  .chip .val.no { color: var(--violet); font-weight: 600; }
+
+  /* ---- Hover tooltip (pops the dossier beside the node) ---- */
+  .tooltip {
+    position: fixed; z-index: 60; width: 340px; max-width: 84vw;
+    pointer-events: none; opacity: 0; visibility: hidden;
+    transform: translateY(5px); transition: opacity .14s ease, transform .14s ease;
+  }
+  .tooltip.show { opacity: 1; visibility: visible; transform: translateY(0); }
+  .tooltip.card::before { width: 4px; }
+  .tooltip .thesis { margin-bottom: 14px; }
+  .node { cursor: pointer; }
+
+  /* ---- Synthesis ---- */
+  .synth { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 22px 34px; }
+  .synth .col h4 {
+    font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.14em; text-transform: uppercase;
+    margin: 0 0 10px; padding-bottom: 10px; border-bottom: 1px solid var(--line);
+  }
+  .synth .col:nth-child(1) h4 { color: var(--cyan); }
+  .synth .col:nth-child(2) h4 { color: var(--gold); }
+  .synth .col:nth-child(3) h4 { color: var(--violet); }
+  .synth .col p { margin: 0; font-size: 0.94rem; color: var(--muted); }
+  .synth .col p b { color: var(--ink); font-weight: 600; }
+
+  .foot { margin-top: 40px; font-size: 0.84rem; color: var(--muted); max-width: 74ch; }
+  .foot .maplegend { font-family: var(--mono); font-size: 0.78rem; color: var(--faint); }
+  .foot .arrow { color: var(--ink); }
+  .foot .src { margin-top: 14px; font-family: var(--mono); font-size: 0.68rem; color: var(--faint); letter-spacing: 0.03em; }
+
+  .section-label {
+    font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--faint); margin: 0 0 18px;
+  }
+
+  a { color: var(--cyan); text-decoration: none; border-bottom: 1px solid transparent; }
+  a:hover { border-bottom-color: currentColor; }
+  :focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; border-radius: 3px; }
+
+  .site-bar {
+    display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: baseline;
+    margin: 0 0 28px; padding: 0 0 14px; border-bottom: 1px solid var(--line);
+    font-family: var(--sans); font-size: 0.85rem;
+  }
+  .site-bar a { color: var(--muted); font-weight: 500; border-bottom: none; }
+  .site-bar a:hover { color: var(--ink); }
+  .site-bar .sep { color: var(--faint); user-select: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+  @media (max-width: 560px) {
+    .chip .lbl { width: 78px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<div class="inner">
+
+  <nav class="site-bar" aria-label="Site">
+    <a href="/">← Anthemic hub</a>
+    <span class="sep" aria-hidden="true">·</span>
+    <a href="/brain/">Brain map</a>
+  </nav>
+
+  <p class="eyebrow">Philosophy of mind · a map</p>
+  <h1>Verdicts on the <em>conscious machine</em></h1>
+  <p class="lede">Every theory of consciousness answers two questions. <b>Is the mind computable</b> — could a program, on the right substrate or any substrate, be one? And once you've mapped the mechanism, <b>does anything remain unexplained?</b> Plot those two axes and three centuries of the debate fall into place — Descartes's non-physical mind and Turing's imitation game at opposite corners, the hard problem strung across the top, and a single Gödel theorem read in two opposite ways.</p>
+
+  <hr class="rule" />
+
+  <div class="mapwrap">
+  <svg class="map" viewBox="0 0 1000 792" role="img" aria-label="A quadrant map of consciousness theories. Horizontal axis: non-computable and substrate-bound on the left, computable and substrate-independent on the right. Vertical axis: mechanism suffices at the bottom, hard problem remains at the top. Along the top sit the hard-problem theorists: Descartes and Panpsychism upper-left, Nagel top-centre, Chalmers top-right. Lower-left, the simulation-sceptics Penrose, Searle, Block and IIT. Across the bottom-right, the computationalists Turing, Crick, Global Workspace, Hofstadter, Dennett, Ryle and the Churchlands. A gold arc marks the Gödel inversion between Penrose and Hofstadter; a dotted line marks the binding problem between Crick and Penrose.">
+    <defs>
+      <linearGradient id="poleWash" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="var(--violet)" stop-opacity="0.11" />
+        <stop offset="0.5" stop-color="var(--violet)" stop-opacity="0" />
+        <stop offset="0.62" stop-color="var(--cyan)" stop-opacity="0" />
+        <stop offset="1" stop-color="var(--cyan)" stop-opacity="0.12" />
+      </linearGradient>
+    </defs>
+
+    <!-- plot area 60,40 -> 960,680 -->
+    <rect x="60" y="40" width="900" height="640" rx="6" fill="url(#poleWash)" />
+
+    <!-- quarter grid -->
+    <line class="grid-line" x1="285" y1="40" x2="285" y2="680" />
+    <line class="grid-line" x1="735" y1="40" x2="735" y2="680" />
+    <line class="grid-line" x1="60" y1="200" x2="960" y2="200" />
+    <line class="grid-line" x1="60" y1="520" x2="960" y2="520" />
+    <!-- central cross -->
+    <line class="cross-line" x1="510" y1="40" x2="510" y2="680" />
+    <line class="cross-line" x1="60" y1="360" x2="960" y2="360" />
+    <rect class="frame" x="60" y="40" width="900" height="640" rx="6" />
+
+    <!-- quadrant descriptors -->
+    <text class="quad" x="76" y="66">irreducible mystery</text>
+    <text class="quad" x="944" y="66" text-anchor="end">buildable, unexplained</text>
+    <text class="quad" x="76" y="668">new physics dissolves it</text>
+    <text class="quad" x="944" y="668" text-anchor="end">mind is mechanism / pattern</text>
+
+    <!-- axis labels -->
+    <text class="axlab strong" x="60" y="712" text-anchor="start">◄ Non-computable · substrate-bound</text>
+    <text class="axlab strong" x="960" y="712" text-anchor="end">Computable · substrate-free ►</text>
+    <text class="axlab" transform="rotate(-90 30 190)" x="30" y="190" text-anchor="middle">Hard problem remains ▲</text>
+    <text class="axlab" transform="rotate(-90 30 540)" x="30" y="540" text-anchor="middle">▼ Mechanism suffices</text>
+
+    <!-- binding-problem thread: Crick <-> Penrose (gamma vs. quantum) -->
+    <line class="bind-line" x1="626" y1="536" x2="146" y2="404" />
+    <text class="bind-lab" x="256" y="426" text-anchor="middle">binding problem</text>
+
+    <!-- Gödel inversion arc: Penrose -> Hofstadter, bowing high -->
+    <path class="godel-arc" d="M 132 398 C 340 70, 762 70, 900 516" />
+    <text class="godel-lab" x="428" y="92" text-anchor="end">Gödel inversion</text>
+
+    <!-- nodes -->
+    <g class="node violet" data-key="penrose">
+      <circle class="halo" cx="132" cy="398" r="17" />
+      <circle cx="132" cy="398" r="9" />
+      <text x="148" y="402">Penrose</text>
+    </g>
+    <g class="node violet" data-key="searle">
+      <circle class="halo" cx="240" cy="486" r="17" />
+      <circle cx="240" cy="486" r="9" />
+      <text x="256" y="490">Searle</text>
+    </g>
+    <g class="node violet" data-key="iit">
+      <circle class="halo" cx="330" cy="424" r="17" />
+      <circle cx="330" cy="424" r="9" />
+      <text x="346" y="428">IIT · Tononi–Koch</text>
+    </g>
+    <g class="node violet" data-key="nagel">
+      <circle class="halo" cx="492" cy="116" r="17" />
+      <circle cx="492" cy="116" r="9" />
+      <text x="478" y="120" text-anchor="end">Nagel</text>
+    </g>
+    <g class="node cyan" data-key="chalmers">
+      <circle class="halo" cx="672" cy="130" r="17" />
+      <circle cx="672" cy="130" r="9" />
+      <text x="690" y="134" text-anchor="start">Chalmers</text>
+    </g>
+    <g class="node cyan" data-key="gwt">
+      <circle class="halo" cx="528" cy="492" r="17" />
+      <circle cx="528" cy="492" r="9" />
+      <text x="528" y="474" text-anchor="middle">Global Workspace</text>
+    </g>
+    <g class="node cyan" data-key="crick">
+      <circle class="halo" cx="636" cy="558" r="17" />
+      <circle cx="636" cy="558" r="9" />
+      <text x="636" y="581" text-anchor="middle">Crick</text>
+    </g>
+    <g class="node cyan" data-key="ryle">
+      <circle class="halo" cx="760" cy="646" r="17" />
+      <circle cx="760" cy="646" r="9" />
+      <text x="760" y="628" text-anchor="middle">Ryle</text>
+    </g>
+    <g class="node cyan" data-key="dennett">
+      <circle class="halo" cx="872" cy="600" r="17" />
+      <circle cx="872" cy="600" r="9" />
+      <text x="872" y="623" text-anchor="middle">Dennett</text>
+    </g>
+    <g class="node cyan" data-key="hofstadter">
+      <circle class="halo" cx="902" cy="514" r="17" />
+      <circle cx="902" cy="514" r="9" />
+      <text x="886" y="518" text-anchor="end">Hofstadter</text>
+    </g>
+    <g class="node violet" data-key="descartes">
+      <circle class="halo" cx="150" cy="104" r="17" />
+      <circle cx="150" cy="104" r="9" />
+      <text x="166" y="108">Descartes</text>
+    </g>
+    <g class="node violet" data-key="goff">
+      <circle class="halo" cx="300" cy="190" r="17" />
+      <circle cx="300" cy="190" r="9" />
+      <text x="300" y="170" text-anchor="middle">Panpsychism</text>
+    </g>
+    <g class="node violet" data-key="block">
+      <circle class="halo" cx="438" cy="334" r="17" />
+      <circle cx="438" cy="334" r="9" />
+      <text x="454" y="338">Block</text>
+    </g>
+    <g class="node cyan" data-key="turing">
+      <circle class="halo" cx="690" cy="450" r="17" />
+      <circle cx="690" cy="450" r="9" />
+      <text x="706" y="454">Turing</text>
+    </g>
+    <g class="node cyan" data-key="churchland">
+      <circle class="halo" cx="600" cy="661" r="17" />
+      <circle cx="600" cy="661" r="9" />
+      <text x="600" y="642" text-anchor="middle">Churchlands</text>
+    </g>
+  </svg>
+  </div>
+
+  <div class="caption">
+    <p class="cap-title">How to read this map</p>
+    <div class="caption-grid">
+      <div class="cap-col">
+        <h5>Position · two questions</h5>
+        <div class="cap-row"><span class="cap-mark">←→</span><span class="cap-txt"><b>Left to right —</b> could a program be a mind? From non-computable &amp; substrate-bound, to computable &amp; substrate-free.</span></div>
+        <div class="cap-row"><span class="cap-mark">↑</span><span class="cap-txt"><b>Bottom to top —</b> once the mechanism is known, does anything remain? From “mechanism suffices” up to “the hard problem remains.”</span></div>
+      </div>
+      <div class="cap-col">
+        <h5>The marks</h5>
+        <div class="cap-row"><span class="swatch cyan"></span><span class="cap-txt"><b>Cyan node —</b> a simulation would <b>be or capture</b> a mind.</span></div>
+        <div class="cap-row"><span class="swatch violet"></span><span class="cap-txt"><b>Violet node —</b> a simulation <b>isn't enough</b> (each for a different reason).</span></div>
+        <div class="cap-row"><span class="swatch god"></span><span class="cap-txt"><b>Gold arc —</b> the <b>Gödel inversion</b>: Penrose and Hofstadter read one theorem two opposite ways.</span></div>
+        <div class="cap-row"><span class="swatch bind"></span><span class="cap-txt"><b>Dotted line —</b> the <b>binding problem</b>: rival mechanisms (gamma synchrony vs quantum) for one unified experience.</span></div>
+      </div>
+    </div>
+    <p class="cap-corners">So the four corners read: <b>irreducible mystery</b> (top-left) · <b>buildable but unexplained</b> (top-right) · <b>new physics dissolves it</b> (bottom-left) · <b>mind is mechanism / pattern</b> (bottom-right).</p>
+    <p class="cap-hint">Hover any node to highlight its dossier below — or hover a dossier card to find its place on the map.</p>
+  </div>
+
+  <hr class="rule" />
+
+  <p class="section-label">The dossiers</p>
+  <p class="note" style="margin:-4px 0 20px;max-width:74ch">Each card distills the thinker's position <b style="color:var(--ink);font-weight:600">in our own words</b> — editorial characterizations, not verbatim quotations (aside from a few well-known published lines).</p>
+  <div class="dossier">
+
+    <div class="card violet" data-key="penrose">
+      <div class="who"><h3>Penrose &amp; Hameroff</h3><span class="work">Orch OR · 1994</span></div>
+      <p class="thesis"><span class="q">“</span>Mathematical understanding is non-algorithmic — Gödel shows the mind outruns any formal system. Consciousness is orchestrated, gravitationally-induced quantum collapse in neuronal microtubules: new physics, not computation.<span class="q">”</span></p>
+      <div class="chips">
+        <div class="chip"><span class="lbl">Simulate it?</span><span class="val no">No — by construction</span></div>
+        <div class="chip"><span class="lbl">Hard problem?</span><span class="val">Deferred to future physics</span></div>
+      </div>
+    </div>
+
+    <div class="card cyan" data-key="crick">
+      <div class="who"><h3>Francis Crick</h3><span class="work">The Astonishing Hypothesis · 1994</span></div>
+      <p class="thesis"><span class="q">“</span>‘You’ are no more than a vast assembly of nerve cells and their molecules. Map the neural correlates — gamma synchrony, the claustrum as conductor — and the soul dissolves into mechanism.<span class="q">”</span></p>
+      <div class="chips">
+        <div class="chip"><span class="lbl">Simulate it?</span><span class="val yes">Yes — once mechanism is mapped</span></div>
+        <div class="chip"><span class="lbl">Hard problem?</span><span class="val">Dissolved by neuroscience</span></div>
+      </div>
+    </div>
+
+    <div class="card cyan" data-key="hofstadter">
+      <div class="who"><h3>Douglas Hofstadter</h3><span class="work">GEB 1979 · Strange Loop 2007</span></div>
+      <p class="thesis"><span class="q">“</span>The self is a substrate-neutral <em>strange loop</em> — a symbol system that models itself. Gödelian self-reference doesn't defeat the machine; it's exactly what turns one into an ‘I’.<span class="q">”</span></p>
+      <div class="chips">
+        <div class="chip"><span class="lbl">Simulate it?</span><span class="val yes">Yes — the loop <em>is</em> the mind</span></div>
+        <div class="chip"><span class="lbl">Hard problem?</span><span class="val">No residue — qualia are the loop felt from inside</span></div>
+      </div>
+    </div>
+
+    <div class="card cyan" data-key="chalmers">
+      <div class="who"><h3>David Chalmers</h3><span class="work">The Conscious Mind · 1996</span></div>
+      <p class="thesis"><span class="q">“</span>Swap neurons for functional silicon and experience can't quietly fade or invert — organizational invariance. The copy <em>is</em> conscious. Yet no mechanism explains <em>why</em> there is experience at all: the hard problem.<span class="q">”</span></p>
+      <div class="chips">
+        <div class="chip"><span class="lbl">Simulate it?</span><span class="val yes">Yes — the copy is conscious…</span></div>
+        <div class="chip"><span class="lbl">Hard problem?</span><span class="val no">…but real and permanent</span></div>
+      </div>
+    </div>
+
+    <div class="card cyan" data-key="dennett">
+      <div class="who"><h3>Daniel Dennett</h3><span class="work">Consciousness Explained · 1991</span></div>
+      <p class="thesis"><span class="q">“</span>The felt ‘extra’ is a user illusion. Account for every function — discrimination, report, control — and there is simply nothing left over to explain.<span class="q">”</span></p>
+      <div class="chips">
+        <div class="chip"><span class="lbl">Simulate it?</span><span class="val yes">Yes — nothing else to capture</span></div>
+        <div class="chip"><span class="lbl">Hard problem?</span><span class="val">A conceptual mistake</span></div>
+      </div>
+    </div>
+
+    <div class="card violet" data-key="iit">
+      <div class="who"><h3>Integrated Information</h3><span class="work">Tononi &amp; Koch · IIT</span></div>
+      <p class="thesis"><span class="q">“</span>Consciousness is integrated information — Φ, a system's intrinsic cause-effect power. A feed-forward digital copy can match the behaviour with near-zero Φ, so it would <em>not</em> be conscious.<span class="q">”</span></p>
+      <div class="chips">
+        <div class="chip"><span class="lbl">Simulate it?</span><span class="val no">No — the copy has the wrong causal structure</span></div>
+        <div class="chip"><span class="lbl">Hard problem?</span><span class="val">Answered by identity: experience = Φ</span></div>
+      </div>
+    </div>
+
+    <div class="card violet" data-key="searle">
+      <div class="who"><h3>John Searle</h3><span class="work">Chinese Room · 1980</span></div>
+      <p class="thesis"><span class="q">“</span>A program shuffling symbols by rule has syntax but no semantics — the person in the Chinese Room follows every rule yet understands no Chinese. Software isn't understanding; consciousness is a real biological power of brains.<span class="q">”</span></p>
+      <div class="chips">
+        <div class="chip"><span class="lbl">Simulate it?</span><span class="val no">No — syntax isn't semantics</span></div>
+        <div class="chip"><span class="lbl">Hard problem?</span><span class="val">A biological effect, not computation</span></div>
+      </div>
+    </div>
+
+    <div class="card violet" data-key="nagel">
+      <div class="who"><h3>Thomas Nagel</h3><span class="work">Like to Be a Bat? · 1974</span></div>
+      <p class="thesis"><span class="q">“</span>There is something it is like to be a bat — a subjective point of view that no third-person, objective description reaches. Physical science leaves out the very feature that makes a state conscious.<span class="q">”</span></p>
+      <div class="chips">
+        <div class="chip"><span class="lbl">Simulate it?</span><span class="val">A copy still omits the point of view</span></div>
+        <div class="chip"><span class="lbl">Hard problem?</span><span class="val no">Its original statement</span></div>
+      </div>
+    </div>
+
+    <div class="card cyan" data-key="gwt">
+      <div class="who"><h3>Global Workspace</h3><span class="work">Baars &amp; Dehaene</span></div>
+      <p class="thesis"><span class="q">“</span>Content becomes conscious when a global workspace broadcasts it to the whole system — perception, memory, report. Consciousness is a specific, findable information-processing architecture.<span class="q">”</span></p>
+      <div class="chips">
+        <div class="chip"><span class="lbl">Simulate it?</span><span class="val yes">Yes — reproduce the broadcast</span></div>
+        <div class="chip"><span class="lbl">Hard problem?</span><span class="val">Folded into access; the rest dissolves</span></div>
+      </div>
+    </div>
+
+    <div class="card cyan" data-key="ryle">
+      <div class="who"><h3>Gilbert Ryle</h3><span class="work">The Concept of Mind · 1949</span></div>
+      <p class="thesis"><span class="q">“</span>The ‘ghost in the machine’ is a category mistake. Mind isn't an inner theatre behind behaviour — mental talk names dispositions to act. Hunt for an extra inner thing and you've misread the grammar.<span class="q">”</span></p>
+      <div class="chips">
+        <div class="chip"><span class="lbl">Simulate it?</span><span class="val yes">Yes — dispositions are all there is</span></div>
+        <div class="chip"><span class="lbl">Hard problem?</span><span class="val">A category mistake</span></div>
+      </div>
+    </div>
+
+    <div class="card cyan" data-key="turing">
+      <div class="who"><h3>Alan Turing</h3><span class="work">Computing Machinery &amp; Intelligence · 1950</span></div>
+      <p class="thesis"><span class="q">“</span>Don't ask whether a machine can think — ask whether it can play the imitation game so well you can't tell. If its behaviour is indistinguishable from a mind's, the only workable convention is to grant it one.<span class="q">”</span></p>
+      <div class="chips">
+        <div class="chip"><span class="lbl">Simulate it?</span><span class="val yes">Yes — indistinguishable behaviour is the test</span></div>
+        <div class="chip"><span class="lbl">Hard problem?</span><span class="val">Set aside — we can't get behind behaviour</span></div>
+      </div>
+    </div>
+
+    <div class="card violet" data-key="descartes">
+      <div class="who"><h3>René Descartes</h3><span class="work">Meditations · 1641</span></div>
+      <p class="thesis"><span class="q">“</span>Mind and body are distinct substances — a thinking thing that is not extended matter. The ‘I’ that doubts cannot itself be doubted, and no mere mechanism could ever be it.<span class="q">”</span></p>
+      <div class="chips">
+        <div class="chip"><span class="lbl">Simulate it?</span><span class="val no">No — mind is a non-physical substance</span></div>
+        <div class="chip"><span class="lbl">Hard problem?</span><span class="val">Its origin — the mind–body gap itself</span></div>
+      </div>
+    </div>
+
+    <div class="card violet" data-key="goff">
+      <div class="who"><h3>Panpsychism</h3><span class="work">Goff · Strawson</span></div>
+      <p class="thesis"><span class="q">“</span>Rather than conjure experience from dead matter, take it as fundamental — a basic feature of the physical, present in some form all the way down. The gap closes because there was never a leap.<span class="q">”</span></p>
+      <div class="chips">
+        <div class="chip"><span class="lbl">Simulate it?</span><span class="val">Only if its matter already carries experience</span></div>
+        <div class="chip"><span class="lbl">Hard problem?</span><span class="val no">Made fundamental — but now the combination problem</span></div>
+      </div>
+    </div>
+
+    <div class="card violet" data-key="block">
+      <div class="who"><h3>Ned Block</h3><span class="work">Access vs. Phenomenal · 1995</span></div>
+      <p class="thesis"><span class="q">“</span>Pull apart two things ‘conscious’ blurs: access-consciousness — information poised for use and report — and phenomenal-consciousness, what it is like. A system can have the first with none of the second.<span class="q">”</span></p>
+      <div class="chips">
+        <div class="chip"><span class="lbl">Simulate it?</span><span class="val">The access, yes; the phenomenal is a further question</span></div>
+        <div class="chip"><span class="lbl">Hard problem?</span><span class="val no">Real — it lives in the phenomenal remainder</span></div>
+      </div>
+    </div>
+
+    <div class="card cyan" data-key="churchland">
+      <div class="who"><h3>The Churchlands</h3><span class="work">Eliminative materialism</span></div>
+      <p class="thesis"><span class="q">“</span>The felt inner life is a theory — folk psychology — and a false one. There are no qualia to explain; as neuroscience matures, talk of them will follow phlogiston and caloric into disuse.<span class="q">”</span></p>
+      <div class="chips">
+        <div class="chip"><span class="lbl">Simulate it?</span><span class="val yes">Yes — there was never an extra thing to miss</span></div>
+        <div class="chip"><span class="lbl">Hard problem?</span><span class="val">A pseudo-problem about a non-existent thing</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <hr class="rule" />
+
+  <p class="section-label">Three through-lines</p>
+  <div class="synth">
+    <div class="col">
+      <h4>Binding unites</h4>
+      <p>The empirical programs meet on one puzzle: how scattered activity becomes a single field of experience. <b>Crick's gamma synchrony and claustrum</b> and <b>Orch OR's quantum entanglement</b> are rival mechanisms for the same unity — reductionist and quantum camps aiming at one target.</p>
+    </div>
+    <div class="col">
+      <h4>Gödel splits</h4>
+      <p>One theorem, two verdicts. <b>Penrose:</b> a mind sees truths no formal system can prove, so it can't be one. <b>Hofstadter:</b> a formal system rich enough to talk about itself is precisely what a mind is. The same self-reference is read as escape, and as origin.</p>
+    </div>
+    <div class="col">
+      <h4>The hard problem dissolves everything</h4>
+      <p><b>Chalmers' solvent:</b> neural, computational, or quantum — no mechanism <em>entails</em> why it should feel like anything. It's what lets him reject Penrose (“one mystery for another”) and the reductionists alike. Working ≠ understanding.</p>
+    </div>
+  </div>
+
+  <div class="foot">
+    <p>The one thing the extremes agree on: a program that <em>works</em> is not the same as an account of <em>why it's conscious</em> — Penrose because he thinks the working program is impossible, Chalmers because he thinks it would be insufficient. Everyone between them is a bet that mechanism, once found, is the whole story.</p>
+    <p class="src">Sources — Descartes, <em>Meditations</em> (1641) · Turing, ‘Computing Machinery &amp; Intelligence’ (1950) · Nagel, ‘What Is It Like to Be a Bat?’ (1974) · Searle, Chinese Room (1980) · Ryle, <em>The Concept of Mind</em> (1949) · Penrose &amp; Hameroff, Orch OR · Crick, <em>The Astonishing Hypothesis</em> (1994) &amp; Crick–Koch NCC / claustrum · Hofstadter, <em>GEB</em> (1979), <em>I Am a Strange Loop</em> (2007) · Chalmers, <em>Facing Up to the Problem of Consciousness</em> (1995) · Block, access/phenomenal (1995) · Tononi &amp; Koch, IIT · Baars &amp; Dehaene, Global Workspace · Goff &amp; Strawson, panpsychism · P. &amp; P. Churchland, eliminative materialism · Dennett, <em>Consciousness Explained</em> (1991).</p>
+    <p class="src" style="margin-top:12px">Published by <b style="color:var(--muted);font-weight:600">Anthemic Developments</b> · <a href="/">anthemic-developments.com</a> · also on the <a href="/brain/">brain map</a></p>
+  </div>
+
+</div>
+</div>
+
+<script src="/assets/js/consciousness-map.js" defer></script>
+</body>
+</html>

@@ -58,6 +58,19 @@
       font-size: 13px;
     }
     .topbar .back:hover { color: var(--fg); }
+    .topbar-links {
+      display: flex;
+      flex: 1;
+      justify-content: flex-end;
+      gap: 14px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .topbar-links a {
+      color: var(--fg-dim);
+      text-decoration: none;
+    }
+    .topbar-links a:hover { color: var(--fg); }
     .theme-group {
       display: inline-flex;
       border: 1px solid var(--border);
@@ -383,6 +396,9 @@
 <body>
   <div class="topbar">
     <a class="back" href="/">← Anthemic hub</a>
+    <nav class="topbar-links" aria-label="Related maps">
+      <a href="/consciousness-map.html">Consciousness map</a>
+    </nav>
     <div class="theme-group" role="group" aria-label="Colour theme">
       <button type="button" class="theme-btn" id="theme-dark" aria-pressed="false">Dark</button>
       <button type="button" class="theme-btn" id="theme-light" aria-pressed="false">Light</button>
@@ -480,6 +496,7 @@
           <ul>
             <li><a href="/">Anthemic hub</a> — Who's Andy?, skills, projects, music bio, and gallery</li>
             <li><a href="/#hub-section-reading">Reading list on the hub</a> — books finished and in progress, by topic</li>
+            <li><a href="/consciousness-map.html">Consciousness map</a> — fifteen theories of mind, plotted by computability and the hard problem</li>
             <li><a href="/personal/">Personal</a> — short index; <a href="/personal/writing/">writing</a> holding page</li>
           </ul>
         </section>
