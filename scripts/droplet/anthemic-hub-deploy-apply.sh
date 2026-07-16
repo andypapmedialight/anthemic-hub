@@ -7,6 +7,8 @@
 # Else read /home/${SUDO_USER}/.incoming-hub-path when present (manual).
 # Else default /home/deploy/incoming-hub.
 #   index.html        - the hub landing page
+#   consciousness-map.html (+ favicon/preview) - philosophy of mind map
+#   sitemap.xml / robots.txt - SEO files at site root
 #   assets/           - optional folder of static assets
 #   bass/             - bass coaching static site (e.g. bass/index.html)
 #   brain/            - 3D brain hub page (e.g. brain/index.html)
@@ -48,6 +50,12 @@ fi
 
 if [[ ! -f "${INCOMING}/index.html" ]]; then
   echo "anthemic-hub-deploy-apply: missing ${INCOMING}/index.html" >&2
+  exit 1
+fi
+if [[ ! -f "${INCOMING}/consciousness-map.html" ]] \
+  || [[ ! -f "${INCOMING}/consciousness-map-favicon.svg" ]] \
+  || [[ ! -f "${INCOMING}/consciousness-map-preview.png" ]]; then
+  echo "anthemic-hub-deploy-apply: missing consciousness-map.html (and favicon/preview) in ${INCOMING}" >&2
   exit 1
 fi
 if [[ ! -f "${INCOMING}/bass/index.html" ]]; then
@@ -93,6 +101,17 @@ CONTENT_BACKUP="$(preserve_backup "${CONTENT_LIVE}")"
 
 # Two-step rsync: multi-source rsync --delete has been observed to skip or clobber bass/ on the droplet.
 rsync -a "${INCOMING}/index.html" "${DEST}/"
+rsync -a \
+  "${INCOMING}/consciousness-map.html" \
+  "${INCOMING}/consciousness-map-favicon.svg" \
+  "${INCOMING}/consciousness-map-preview.png" \
+  "${DEST}/"
+if [[ -f "${INCOMING}/sitemap.xml" ]]; then
+  rsync -a "${INCOMING}/sitemap.xml" "${DEST}/"
+fi
+if [[ -f "${INCOMING}/robots.txt" ]]; then
+  rsync -a "${INCOMING}/robots.txt" "${DEST}/"
+fi
 rsync -a --delete "${INCOMING}/bass/" "${DEST}/bass/"
 rsync -a --delete "${INCOMING}/brain/" "${DEST}/brain/"
 rsync -a --delete "${INCOMING}/hire/" "${DEST}/hire/"

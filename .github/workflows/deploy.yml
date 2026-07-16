@@ -131,6 +131,14 @@ jobs:
           DEST="${DEPLOY_USER}@${DEPLOY_HOST}:incoming-hub/"
           # One rsync per tree: avoids multi-source quirks; trailing slash on ./bass/ copies directory contents into incoming-hub/bass/.
           rsync -avz -e "${RSYNC_SSH}" ./index.html "${DEST}"
+          # Root-level static pages (not covered by directory rsync trees below).
+          rsync -avz -e "${RSYNC_SSH}" \
+            ./consciousness-map.html \
+            ./consciousness-map-favicon.svg \
+            ./consciousness-map-preview.png \
+            ./sitemap.xml \
+            ./robots.txt \
+            "${DEST}"
           rsync -avz -e "${RSYNC_SSH}" ./bass/ "${DEST}bass/"
           rsync -avz -e "${RSYNC_SSH}" ./brain/ "${DEST}brain/"
           rsync -avz -e "${RSYNC_SSH}" ./hire/ "${DEST}hire/"
@@ -167,8 +175,8 @@ jobs:
         run: |
           HUB_IN="/home/${DEPLOY_USER}/incoming-hub"
           ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            "test -f ${HUB_IN}/index.html && test -f ${HUB_IN}/bass/index.html && test -f ${HUB_IN}/brain/index.html && test -f ${HUB_IN}/hire/index.html && test -f ${HUB_IN}/hire/pitch.js && test -f ${HUB_IN}/content/pitch.json && test -f ${HUB_IN}/gigs/index.html && test -f ${HUB_IN}/gigs/gigs.json && test -f ${HUB_IN}/content/hub.json && test -f ${HUB_IN}/content/reading-list.seed.json && test -f ${HUB_IN}/personal/index.html && test -f ${HUB_IN}/personal/writing/index.html && test -f ${HUB_IN}/personal/writing/writing-desk.png && test -f ${HUB_IN}/economics/index.html && test -f ${HUB_IN}/mmd/valuation_server.py && test -f ${HUB_IN}/mmd/valuation_fetch.py && test -f ${HUB_IN}/mmd/treasury_fetch.py && test -f ${HUB_IN}/mmd/aus_fetch.py" \
-            || { echo "incoming-hub missing hub, bass, brain, gigs, content, reading-list.seed, or personal/ files after upload (expected under ${HUB_IN})"; exit 1; }
+            "test -f ${HUB_IN}/index.html && test -f ${HUB_IN}/consciousness-map.html && test -f ${HUB_IN}/consciousness-map-favicon.svg && test -f ${HUB_IN}/consciousness-map-preview.png && test -f ${HUB_IN}/bass/index.html && test -f ${HUB_IN}/brain/index.html && test -f ${HUB_IN}/hire/index.html && test -f ${HUB_IN}/hire/pitch.js && test -f ${HUB_IN}/content/pitch.json && test -f ${HUB_IN}/gigs/index.html && test -f ${HUB_IN}/gigs/gigs.json && test -f ${HUB_IN}/content/hub.json && test -f ${HUB_IN}/content/reading-list.seed.json && test -f ${HUB_IN}/personal/index.html && test -f ${HUB_IN}/personal/writing/index.html && test -f ${HUB_IN}/personal/writing/writing-desk.png && test -f ${HUB_IN}/economics/index.html && test -f ${HUB_IN}/mmd/valuation_server.py && test -f ${HUB_IN}/mmd/valuation_fetch.py && test -f ${HUB_IN}/mmd/treasury_fetch.py && test -f ${HUB_IN}/mmd/aus_fetch.py" \
+            || { echo "incoming-hub missing hub, consciousness-map, bass, brain, gigs, content, reading-list.seed, or personal/ files after upload (expected under ${HUB_IN})"; exit 1; }
 
       - name: Apply on Droplet
         env:
@@ -208,6 +216,17 @@ jobs:
           curl -sS --retry 3 --retry-delay 2 "https://anthemic-developments.com/personal/writing/" -o /tmp/anthemic-smoke-writing.html
           grep -qF 'Writing — coming soon' /tmp/anthemic-smoke-writing.html \
             || { echo "Writing page missing expected <title> marker"; exit 1; }
+          code_cmap=$(curl -sS -o /dev/null -w "%{http_code}" --retry 3 --retry-delay 2 "https://anthemic-developments.com/consciousness-map.html")
+          [[ "${code_cmap}" == "200" ]] || { echo "/consciousness-map.html returned HTTP ${code_cmap}"; exit 1; }
+          curl -sS --retry 3 --retry-delay 2 "https://anthemic-developments.com/consciousness-map.html" -o /tmp/anthemic-smoke-cmap.html
+          if grep -qF 'id="hero-name"' /tmp/anthemic-smoke-cmap.html; then
+            echo "/consciousness-map.html is serving the hub index — apply script must copy consciousness-map.html to web root"
+            exit 1
+          fi
+          grep -qF 'Verdicts on the Conscious Machine' /tmp/anthemic-smoke-cmap.html \
+            || { echo "/consciousness-map.html missing expected title marker"; exit 1; }
+          code_cmap_png=$(curl -sS -o /dev/null -w "%{http_code}" --retry 2 "https://anthemic-developments.com/consciousness-map-preview.png")
+          [[ "${code_cmap_png}" == "200" ]] || { echo "/consciousness-map-preview.png returned HTTP ${code_cmap_png}"; exit 1; }
           code_hire=$(curl -sS -o /dev/null -w "%{http_code}" --retry 3 --retry-delay 2 "https://anthemic-developments.com/hire/")
           [[ "${code_hire}" == "200" ]] || { echo "/hire/ returned HTTP ${code_hire}"; exit 1; }
           code_pitch=$(curl -sS -o /dev/null -w "%{http_code}" --retry 3 --retry-delay 2 "https://anthemic-developments.com/content/pitch.json")
