@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grounding the Unconscious — psychoanalysis and its neural substrates</title>
+<meta name="description" content="Freud, Lacan, and Žižek's constructs mapped against candidate neural substrates, dream science, direct scientific rebuttals, and modern non-materialist dissent.">
+<meta name="color-scheme" content="light dark">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Grounding the Unconscious">
+<meta property="og:description" content="Can the id, the ego-ideal, or Lacan's objet a be grounded in brain structure — and where does that project run out?">
+<meta property="og:url" content="https://anthemic-developments.com/grounding-the-unconscious.html">
+<meta name="twitter:card" content="summary">
+<link rel="icon" type="image/svg+xml" href="grounding-the-unconscious-favicon.svg">
+<link rel="canonical" href="https://anthemic-developments.com/grounding-the-unconscious.html">
+<style>
+:root{
+  --bg:#e7e6df; --bg-raised:#f4f3ee; --text:#1e2023; --text-muted:#55585c;
+  --rule:#c9c7bd; --wine:#7c3341; --teal:#2f6e68;
+  --wine-soft:#f3e4e3; --teal-soft:#e2edea; --wine-line:#c98f96; --teal-line:#8fbcb5;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#15171b; --bg-raised:#1d2024; --text:#dfded6; --text-muted:#9b9c94;
+    --rule:#34373b; --wine:#dd97a1; --teal:#86c8bf;
+    --wine-soft:#2a1b1e; --teal-soft:#16221f; --wine-line:#4a3033; --teal-line:#2c433f;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15171b; --bg-raised:#1d2024; --text:#dfded6; --text-muted:#9b9c94;
+  --rule:#34373b; --wine:#dd97a1; --teal:#86c8bf;
+  --wine-soft:#2a1b1e; --teal-soft:#16221f; --wine-line:#4a3033; --teal-line:#2c433f;
+}
+:root[data-theme="light"]{
+  --bg:#e7e6df; --bg-raised:#f4f3ee; --text:#1e2023; --text-muted:#55585c;
+  --rule:#c9c7bd; --wine:#7c3341; --teal:#2f6e68;
+  --wine-soft:#f3e4e3; --teal-soft:#e2edea; --wine-line:#c98f96; --teal-line:#8fbcb5;
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--bg); color:var(--text);
+  font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Noto Serif",serif;
+  font-size:17px; line-height:1.65; text-rendering:optimizeLegibility;
+}
+.mono{ font-family:ui-monospace,"SF Mono","Cascadia Code","Roboto Mono",Menlo,Consolas,monospace; }
+
+.wrap{ max-width:920px; margin:0 auto; padding:4.5rem 1.5rem 6rem; }
+
+header.masthead{ margin-bottom:3.5rem; }
+.eyebrow{
+  font-family:ui-monospace,"SF Mono","Cascadia Code",monospace;
+  font-size:.72rem; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--text-muted); display:flex; gap:.6em; align-items:center;
+}
+.eyebrow .dot{ color:var(--wine); }
+.eyebrow .dot2{ color:var(--teal); }
+h1{
+  font-size:clamp(2.1rem,5vw,3.1rem); line-height:1.08; margin:.5rem 0 .8rem;
+  text-wrap:balance; font-weight:600; letter-spacing:-.01em;
+}
+.dek{
+  font-size:1.08rem; color:var(--text-muted); max-width:62ch; text-wrap:balance;
+  font-style:italic;
+}
+.frame-note{
+  margin-top:1.6rem; padding:.9rem 1.1rem; border-left:3px solid var(--rule);
+  font-family:ui-monospace,"SF Mono","Cascadia Code",monospace; font-size:.82rem;
+  color:var(--text-muted); line-height:1.55; background:var(--bg-raised);
+}
+
+section.thinker{
+  display:grid; grid-template-columns: minmax(0,1fr) 260px;
+  gap:0 2.2rem; padding:2.6rem 0; border-top:1px solid var(--rule);
+}
+section.thinker:first-of-type{ border-top:1px solid var(--rule); }
+.main-col{ min-width:0; }
+h2{ font-size:1.5rem; margin:0 0 .15rem; letter-spacing:-.01em; }
+h2 .years{ font-family:ui-monospace,monospace; font-size:.65em; color:var(--text-muted); font-weight:400; margin-left:.5em; }
+h3{
+  font-family:ui-monospace,"SF Mono","Cascadia Code",monospace; font-size:.92rem;
+  text-transform:uppercase; letter-spacing:.05em; color:var(--teal);
+  margin:1.8rem 0 .8rem; font-weight:600;
+}
+.tag-row{ margin-bottom:1.1rem; }
+.tag{
+  display:inline-block; font-family:ui-monospace,monospace; font-size:.68rem;
+  letter-spacing:.06em; text-transform:uppercase; padding:.18em .55em;
+  border-radius:2px; background:var(--wine-soft); color:var(--wine); margin-right:.4em;
+}
+.main-col p{ margin:0 0 1rem; max-width:64ch; }
+.main-col p:last-child{ margin-bottom:0; }
+strong.term{ font-style:italic; font-weight:600; }
+
+aside.margin{
+  font-family:ui-monospace,"SF Mono","Cascadia Code",monospace;
+  font-size:.76rem; line-height:1.55; color:var(--text-muted);
+  border-left:2px solid var(--teal-line); padding-left:1rem; align-self:start;
+}
+aside.margin .label{
+  color:var(--teal); text-transform:uppercase; letter-spacing:.08em; font-size:.68rem;
+  display:block; margin-bottom:.5rem;
+}
+aside.margin p{ margin:0 0 .8rem; }
+aside.margin p:last-child{ margin-bottom:0; }
+aside.margin .who{ color:var(--text); }
+
+@media (max-width:760px){
+  section.thinker{ grid-template-columns:1fr; }
+  aside.margin{
+    border-left:none; border-top:1px solid var(--teal-line); padding-left:0;
+    padding-top:.9rem; margin-top:1.2rem; background:var(--teal-soft);
+    padding:.9rem 1rem; border-radius:3px;
+  }
+}
+
+.synthesis{ padding-top:3rem; border-top:1px solid var(--rule); }
+.synthesis h2{ font-size:1.6rem; margin-bottom:.4rem; }
+.synthesis > p.lede{ color:var(--text-muted); max-width:64ch; margin-bottom:1.8rem; }
+
+.table-scroll{ overflow-x:auto; border:1px solid var(--rule); border-radius:4px; }
+table{ width:100%; border-collapse:collapse; font-size:.86rem; min-width:640px; }
+thead th{
+  text-align:left; font-family:ui-monospace,monospace; font-size:.68rem;
+  letter-spacing:.06em; text-transform:uppercase; color:var(--text-muted);
+  padding:.7rem .9rem; background:var(--bg-raised); border-bottom:1px solid var(--rule);
+}
+tbody td{ padding:.75rem .9rem; border-bottom:1px solid var(--rule); vertical-align:top; }
+tbody tr:last-child td{ border-bottom:none; }
+td.construct{ font-style:italic; white-space:nowrap; }
+td.status{ font-family:ui-monospace,monospace; font-size:.72rem; white-space:nowrap; }
+.status-solid{ color:var(--teal); }
+.status-mid{ color:var(--text-muted); }
+.status-thin{ color:var(--wine); }
+
+.stack{ margin-top:2.4rem; display:grid; gap:.9rem; }
+.tier{
+  display:grid; grid-template-columns:120px 1fr; gap:1rem; align-items:baseline;
+  padding:.9rem 1.1rem; background:var(--bg-raised); border-radius:4px; border:1px solid var(--rule);
+}
+.tier .tier-label{ font-family:ui-monospace,monospace; font-size:.72rem; color:var(--teal); text-transform:uppercase; letter-spacing:.06em; }
+.tier p{ margin:0; font-size:.92rem; }
+
+footer.close{
+  margin-top:3rem; padding-top:1.8rem; border-top:1px solid var(--rule);
+  color:var(--text-muted); font-size:.92rem; max-width:66ch;
+}
+footer.close p{ margin:0 0 .9rem; }
+
+.struct-badge{ display:flex; gap:.65rem; align-items:flex-start; margin:.6rem 0 1rem; }
+.struct-badge:last-child{ margin-bottom:0; }
+svg.brainmap{ flex:none; display:block; }
+.brainmap .bmap-outline{ fill:var(--bg); stroke:var(--text-muted); stroke-width:1.4; opacity:.6; }
+.brainmap .bmap-fissure{ fill:none; stroke:var(--text-muted); stroke-width:1; opacity:.4; }
+.brainmap .bmap-cc{ fill:none; stroke:var(--text-muted); stroke-width:1; opacity:.35; }
+.brainmap .bmap-marker{ fill:var(--teal); stroke:var(--bg); stroke-width:.6; }
+.brainmap .bmap-marker.deep{ fill:var(--wine); opacity:.9; }
+.brainmap .bmap-link{ fill:none; stroke:var(--teal); stroke-width:1.1; stroke-dasharray:2,2; opacity:.75; }
+.struct-meta{ font-size:.72rem; line-height:1.5; padding-top:.1rem; }
+.struct-meta .s-name{ color:var(--text); font-weight:600; display:block; }
+.struct-meta .s-when b{ color:var(--teal); font-weight:600; }
+.legend-note{
+  margin-top:1.1rem; font-family:ui-monospace,"SF Mono","Cascadia Code",monospace;
+  font-size:.72rem; color:var(--text-muted); line-height:1.6;
+}
+.legend-note .sw{ display:inline-block; width:.6em; height:.6em; border-radius:50%; margin-right:.35em; vertical-align:middle; }
+.legend-note .sw.teal{ background:var(--teal); }
+.legend-note .sw.wine{ background:var(--wine); }
+.site-bar{
+  font-family:ui-monospace,"SF Mono","Cascadia Code",monospace; font-size:.78rem;
+  color:var(--text-muted); margin-bottom:2rem; display:flex; gap:.6em; align-items:center;
+}
+.site-bar a{ color:var(--text-muted); }
+.site-bar a:hover{ color:var(--teal); }
+.site-bar .sep{ opacity:.5; }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <path id="bmap-lateral" d="M28,14 C50,4 88,4 108,16 C124,24 130,38 126,52 C123,64 114,70 106,76 C102,84 96,90 90,96 L84,96 C82,88 79,80 75,75 C64,80 50,81 40,76 C27,70 16,58 13,44 C10,32 15,20 28,14 Z"/>
+    <path id="bmap-medial" d="M28,14 C50,4 86,3 104,14 C118,22 122,34 118,46 C126,50 132,58 130,66 C128,74 118,78 108,76 C104,84 98,90 90,96 L84,96 C82,88 79,81 75,76 C62,80 48,80 38,74 C25,67 15,55 13,42 C10,30 16,20 28,14 Z"/>
+  </defs>
+</svg>
+
+<div class="wrap">
+
+<nav class="site-bar" aria-label="Site">
+  <a href="/">← Anthemic hub</a>
+  <span class="sep" aria-hidden="true">·</span>
+  <a href="/brain/">Brain map</a>
+  <span class="sep" aria-hidden="true">·</span>
+  <a href="/consciousness-map.html">Consciousness map</a>
+</nav>
+
+<header class="masthead">
+  <div class="eyebrow"><span class="dot">●</span> psychoanalysis <span class="dot2">●</span> neuroscience &amp; cognitive science</div>
+  <h1>Grounding the Unconscious</h1>
+  <p class="dek">Can the id, the ego-ideal, or Lacan's <em>objet a</em> be more than useful fictions — actual patterns in chemistry, circuitry, and the language a brain is soaked in during development? A survey of what maps, what doesn't, and who's actually done the work.</p>
+  <div class="frame-note">
+    NOTE — this is a live, contested research boundary. Some links below (Solms/Panksepp, Friston) are active empirical programs with real data. Others (Zizek/Johnston, Hofstadter) are philosophical analogies, useful for thinking, not measurements. The table at the end marks which is which. The year range beside each name is that thinker's theoretical span — founding text through death, or through today if still working — not a birth–death biography.
+  </div>
+  <p class="legend-note"><span class="sw teal"></span>solid dot — visible on the surface shown (lateral side-profile or medial sagittal cut). <span class="sw wine"></span>dashed dot — structure lies deeper than that surface, marker shows its approximate projection. Diagrams are schematic silhouettes for orientation, not to scale, not clinical imaging. Gestational weeks (wk) mark first anatomical differentiation, not functional maturity — the gap between the two is often the interesting part.</p>
+</header>
+
+<section class="thinker">
+  <div class="main-col">
+    <h2>Prehistory of the unconscious <span class="years">~380 BCE–1900, Plato to Freud's Vienna</span></h2>
+    <div class="tag-row"><span class="tag">Greek precursors</span><span class="tag">German idealism / Romanticism</span><span class="tag">Freud's actual contemporaries</span></div>
+    <p>Freud didn't invent the idea that people are moved by forces they can't see or control — he inherited a very long argument about it. Plato's tripartite soul (<em>The Republic</em>) already splits the psyche into reason, a spirited/assertive part, and appetite, with appetite an unruly, non-rational force reason has to govern rather than fully understand — not a dynamic unconscious with repression, but an early version of the same problem: something in you wants things your reasoning self doesn't endorse. <strong class="term">Akrasia</strong> — acting against your own better judgment, discussed at length by both Plato and Aristotle — is the same puzzle from another angle. And well before Freud made dreams his royal road, Artemidorus's <em>Oneirocritica</em> (2nd century CE) had already treated them as meaningful, coded messages requiring interpretation rather than noise — a genre Freud engages directly in the literature survey that opens <em>The Interpretation of Dreams</em>.</p>
+    <p>The specifically philosophical unconscious starts taking modern shape in the Enlightenment. Spinoza's <em>Ethics</em> (1677) argues people are conscious of their desires and ignorant of the causes that produce them — a mind that knows what it wants without knowing why is already most of the way to a Freudian claim. Leibniz went further in the <em>New Essays on Human Understanding</em> (c. 1704), proposing <strong class="term">petites perceptions</strong> — countless minute perceptions below the threshold of awareness that nonetheless shape conscious experience (his example: any single wave's sound is imperceptible, but the surf's roar, made of thousands of them, isn't) — arguably the first clean statement that unconscious mental activity is doing real work all the time, not just in special pathological cases.</p>
+    <p>The 19th century, especially in German-speaking Europe, is where this becomes unavoidable background for Freud specifically. Johann Friedrich Herbart's dynamic psychology (1820s), part of the Austrian school curriculum Freud grew up in, modeled ideas as competing for a limited store of consciousness, with weaker ideas pushed below a threshold of awareness by stronger, opposing ones — a direct conceptual ancestor of repression, in the vocabulary of forces and thresholds rather than persons and memories. Arthur Schopenhauer's <strong class="term">Will</strong> (<em>The World as Will and Representation</em>, 1818) is the blind, non-rational striving underlying all behavior, with intellect a secondary, often self-deceived servant of drives it doesn't control — probably the single most-cited philosophical ancestor of the id. And Eduard von Hartmann's <em>Philosophy of the Unconscious</em> (1869) was a genuine publishing phenomenon, running through many editions and making <em>das Unbewusste</em> a fashionable, widely discussed term in educated German culture two decades before Freud's own clinical work began — whatever Freud discovered clinically, he didn't discover the word, or the idea that there was something worth calling by it.</p>
+    <p>Nietzsche is the case Freud himself handled most awkwardly. <em>On the Genealogy of Morals</em> (1887) already has an account of conscience forming when outward-directed instinct gets turned back against the self and internalized — read next to Freud's superego, the overlap is hard to miss — and Nietzsche's drives (<em>Triebe</em>), his picture of the self as a contested multiplicity rather than a unified subject, and his insistence that conscious reasoning mostly rationalizes motives fixed elsewhere in the body, all anticipate specific Freudian claims closely enough that Freud's own students and biographers noted it directly. Freud's own response, by most biographical accounts, was to avoid reading Nietzsche closely for years, reportedly out of a wish to reach his own conclusions before risking finding them already written — a rare case where the anxiety of influence is part of the documented record rather than a later critic's inference.</p>
+    <p>Closer to Freud's own bench, the influence is clinical rather than literary. Jean-Martin Charcot, whose Paris lectures on hysteria Freud attended in 1885, demonstrated hysterical symptoms could be produced and removed by hypnotic suggestion — direct evidence hysteria was psychologically, not just organically, caused, and the single most important push toward Freud's own turn from neurology to psychology. Hypnosis itself, descending from Mesmer's animal magnetism through the Nancy School's Hippolyte Bernheim (with whom Freud also studied), supplied the working method — inducing an altered state to access material unavailable to ordinary waking recall — that Freud used with Breuer before replacing it with free association. Pierre Janet, a direct contemporary, was developing an overlapping theory of dissociation and split-off "fixed ideas" in traumatized patients at almost exactly the same time as Freud and Breuer's own hysteria work, and later, not without some justice, accused Freud of insufficient credit. Gustav Fechner's psychophysics gave Freud an explicit model for treating mental activity as a quantifiable, conserved economy — Freud names Fechner directly as the source of the constancy principle underneath the pleasure principle.</p>
+    <p>The standard scholarly account of all this is Henri Ellenberger's <em>The Discovery of the Unconscious</em> (1970), and its actual thesis is worth stating plainly: Freud didn't discover the unconscious so much as synthesize, systematize, and clinically operationalize an idea already thoroughly in the air of his intellectual world, then present the result as more of a solitary discovery than the record supports. That's a real complication to sit next to the rebuttals section elsewhere in this piece — not a charge of fraud like Crews's, but a challenge to originality rather than validity, and one Freud's own handling of Nietzsche suggests he was, at some level, aware of himself.</p>
+  </div>
+  <aside class="margin">
+    <span class="label">how this landed</span>
+    <p><span class="who">Ellenberger</span> — his synthesis thesis is now the mainstream historical consensus; the exact weight of any single influence (Herbart vs. Schopenhauer vs. von Hartmann) on Freud personally remains genuinely debated among historians.</p>
+    <p><span class="who">Nietzsche</span> — the parallels are widely acknowledged; whether Freud read enough of him early enough to have been directly shaped, rather than independently converging on similar ideas, is still argued over.</p>
+    <p><span class="who">Janet</span> — most historians now credit both men with largely independent, overlapping discovery, rather than treating either as derivative of the other.</p>
+    <p><span class="who">Herbart</span> — his direct personal influence on Freud is inferred from shared vocabulary and curriculum, not from any citation by Freud himself.</p>
+  </aside>
+</section>
+
+<section class="thinker">
+  <div class="main-col">
+    <h2>Freud <span class="years">1900–1939, <em>Dreams</em> to death</span></h2>
+    <div class="tag-row"><span class="tag">structural model</span><span class="tag">drive theory</span></div>
+    <p>The <strong class="term">topographical model</strong> (1900) splits mind into unconscious, preconscious, and conscious by accessibility. The later <strong class="term">structural model</strong> (1923, <em>The Ego and the Id</em>) splits it by function instead: the <strong class="term">id</strong> is the inherited reservoir of drives (Eros and the death drive), running on primary process — condensation, displacement, no contradiction, no time. The <strong class="term">ego</strong> is what forms at the interface with the external world, doing reality-testing and delaying gratification. The <strong class="term">superego</strong> is the internalized parental/social prohibition; its positive pole, aimed at rather than forbidding, is the <strong class="term">ego-ideal</strong> — the image of who one ought to become.</p>
+    <p>That split runs on two different emotional economies. The prohibitive superego ("thou shalt not") is modeled on the <em>feared</em> parent and punishes transgression with guilt — backward-looking, reacting to what's already been done. The ego-ideal ("thou shalt") is modeled on the <em>admired</em> parent, or, in Freud's earlier essay "On Narcissism" (1914), on the infant's own lost sense of being perfect — "His Majesty the Baby" — later displaced onto an external image to grow into. It's forward-looking: falling short produces shame, approximating it produces pride, not guilt. Freud never fully settled whether these are one agency or two; Lacan later re-splits the terminology again, relocating Freud's narcissistic ideal-image to what he calls the <em>ideal-ego</em>, and reserving <em>ego-ideal</em> for something else entirely (below) — so the same two words point to different things in the two authors.</p>
+    <p>Freud's own throwaway line matters more than it's usually given credit for: "the ego is first and foremost a bodily ego." He meant the ego starts as a projection of the surface of the body, not an abstract reasoning module bolted onto meat — which turns out to be a genuinely useful hook for the neuroscience below.</p>
+
+    <h3>A biographical footnote: cocaine</h3>
+    <p>Before any of this, Freud was a young neurologist chasing a breakthrough, and for a few years in the 1880s he thought he'd found one in cocaine. His 1884 monograph <em>Über Coca</em> promoted the drug enthusiastically — for depression, for fatigue, and, disastrously, as a cure for morphine addiction. He used it himself, sent some to his fiancée Martha Bernays, and pushed it on colleagues. One of them, his close friend Ernst von Fleischl-Marxow, was already dependent on morphine for nerve pain; Freud's cocaine "cure" left him addicted to both at once, in a decline most accounts say hastened his death in 1891 — an episode that cost Freud real professional standing at the time. The drug's one lasting medical contribution, local anesthesia, went to his colleague Carl Koller instead, a missed priority Freud reportedly regretted for years.</p>
+    <p>What's genuinely contested is how much this shaped the theory itself, rather than just the man. Freud's cocaine use overlapped with the self-analysis — largely conducted through his 1890s correspondence with Wilhelm Fliess — that produced the Oedipus complex and the dream-interpretation method, and the specimen dream <em>The Interpretation of Dreams</em> builds its entire wish-fulfillment theory around, "Irma's injection," is Freud's own anxious reworking of a real medical misjudgment with clear echoes of the Fleischl-Marxow affair. Independent researchers, most persistently Peter Swales, have argued cocaine played a larger and longer role in this period than the official histories acknowledge, and that its mood-elevating, confidence-inflating effects are worth weighing against the sweeping, ambitious character of the theorizing it accompanied. That's an interpretive claim about a life, not a testable one about a brain — but it belongs next to the rebuttals above: whatever else explains Freud's early scientific judgment, cocaine is a documented part of the record, not a rumor.</p>
+  </div>
+  <aside class="margin">
+    <span class="label">how contested</span>
+    <p><span class="who">Fleischl-Marxow, Koller</span> — not contested; well-documented medical history, independent of psychoanalysis entirely.</p>
+    <p><span class="who">Swales</span> — an independent, sometimes polemical researcher outside mainstream Freud scholarship; his facts are mostly accepted, his interpretive weighting of them is not.</p>
+    <span class="label" style="margin-top:1rem">substrate proposals</span>
+    <p><span class="who">Solms / Panksepp</span> — id-as-drive maps onto seven subcortical affect systems (SEEKING, RAGE, FEAR, LUST, CARE, PANIC/GRIEF, PLAY) in hypothalamus, PAG, extended amygdala.</p>
+    <div class="struct-badge">
+      <svg class="brainmap" viewBox="0 0 140 100" width="70" height="50">
+        <use href="#bmap-medial" class="bmap-outline"/>
+        <path class="bmap-cc" d="M40,30 C55,20 78,20 88,32 C90,38 88,42 82,44"/>
+        <circle class="bmap-marker" cx="62" cy="48" r="4"/>
+        <circle class="bmap-marker" cx="78" cy="54" r="4"/>
+      </svg>
+      <span class="struct-meta">
+        <span class="s-name">Hypothalamus + PAG</span>
+        <span class="s-when">diencephalon / mesencephalon derivatives — <b>appears</b> wk 5–7</span>
+      </span>
+    </div>
+    <div class="struct-badge">
+      <svg class="brainmap" viewBox="0 0 140 100" width="70" height="50">
+        <use href="#bmap-lateral" class="bmap-outline"/>
+        <path class="bmap-fissure" d="M33,46 C50,58 75,60 96,56"/>
+        <circle class="bmap-marker deep" cx="30" cy="64" r="4"/>
+      </svg>
+      <span class="struct-meta">
+        <span class="s-name">Extended amygdala</span>
+        <span class="s-when">telencephalon derivative, deep anteromedial temporal — <b>appears</b> wk 6–8, most nuclei by wk 15</span>
+      </span>
+    </div>
+    <p><span class="who">Damasio</span> — "bodily ego" as literal: core self built from brainstem/insular interoceptive maps, before any narrative self exists.</p>
+    <div class="struct-badge">
+      <svg class="brainmap" viewBox="0 0 140 100" width="70" height="50">
+        <use href="#bmap-medial" class="bmap-outline"/>
+        <path class="bmap-cc" d="M40,30 C55,20 78,20 88,32 C90,38 88,42 82,44"/>
+        <circle class="bmap-marker" cx="86" cy="72" r="4"/>
+      </svg>
+      <span class="struct-meta">
+        <span class="s-name">Brainstem (pons/medulla)</span>
+        <span class="s-when">mesencephalon + hindbrain derivatives — <b>appears</b> wk 5–7; reflex circuits functional ~wk 8–10</span>
+      </span>
+    </div>
+    <div class="struct-badge">
+      <svg class="brainmap" viewBox="0 0 140 100" width="70" height="50">
+        <use href="#bmap-lateral" class="bmap-outline"/>
+        <path class="bmap-fissure" d="M33,46 C50,58 75,60 96,56"/>
+        <circle class="bmap-marker deep" cx="60" cy="52" r="4"/>
+      </svg>
+      <span class="struct-meta">
+        <span class="s-name">Insula</span>
+        <span class="s-when">cortical plate ~wk 8; buried as opercula grow over it, wk 14–34</span>
+      </span>
+    </div>
+    <p><span class="who">superego (prohibition)</span> — guilt/norm-violation signal, tentatively anterior insula (above) + ACC below.</p>
+    <div class="struct-badge">
+      <svg class="brainmap" viewBox="0 0 140 100" width="70" height="50">
+        <use href="#bmap-medial" class="bmap-outline"/>
+        <path class="bmap-cc" d="M40,30 C55,20 78,20 88,32 C90,38 88,42 82,44"/>
+        <circle class="bmap-marker" cx="48" cy="22" r="4"/>
+      </svg>
+      <span class="struct-meta">
+        <span class="s-name">Anterior cingulate (ACC)</span>
+        <span class="s-when">cortical plate ~wk 8; cingulate sulcus — one of the earliest — visible wk 18–20</span>
+      </span>
+    </div>
+    <p><span class="who">ego-ideal (aspiration)</span> — weakest mapping of the three; self-evaluation network (medial PFC), implicated in both pride and shame, shaped by attachment timing.</p>
+    <div class="struct-badge">
+      <svg class="brainmap" viewBox="0 0 140 100" width="70" height="50">
+        <use href="#bmap-medial" class="bmap-outline"/>
+        <path class="bmap-cc" d="M40,30 C55,20 78,20 88,32 C90,38 88,42 82,44"/>
+        <circle class="bmap-marker" cx="30" cy="26" r="4"/>
+      </svg>
+      <span class="struct-meta">
+        <span class="s-name">Medial PFC</span>
+        <span class="s-when">cortical plate ~wk 8 like all neocortex — but the slowest-maturing region in the brain, still pruning/myelinating into the mid-20s</span>
+      </span>
+    </div>
+  </aside>
+</section>
+
+<section class="thinker">
+  <div class="main-col">
+    <h2>The direct rebuttals <span class="years">1927–2017, Malinowski to Crews</span></h2>
+    <div class="tag-row"><span class="tag">falsifiability</span><span class="tag">clinical validation</span><span class="tag">efficacy</span></div>
+    <p>Everything in the dissenters section, later in this piece, attacks whether any theory of subjectivity can be grounded in a physical substrate at all. This is a narrower and, for psychoanalysis specifically, more damaging line of attack: whether Freud's theory was ever good science on its own terms, independent of neuroscience entirely.</p>
+    <p><strong class="term">Karl Popper</strong>, developing his falsifiability criterion partly in direct reaction to psychoanalysis (alongside Marxism and Adlerian psychology) in 1920s Vienna, argued the theory's real problem wasn't being wrong but being unfalsifiable: it could accommodate any observation after the fact. His standard example contrasts a man who drowns a child and one who dies trying to save a child from drowning — Freudian theory, he said, could supply a confident explanation of either, from repression in one case to sublimation in the other, which is exactly the trouble: a theory that explains every possible outcome equally well explains none of them. On Popper's account, psychoanalysis isn't a false science — in the sense that matters, it isn't a science at all.</p>
+    <p><strong class="term">Adolf Grünbaum</strong>'s <em>The Foundations of Psychoanalysis</em> (1984) is the more technical, and for defenders of Freud more uncomfortable, version of the critique, because he rejects Popper's unfalsifiability charge outright — psychoanalytic claims are testable in principle — and argues the theory fails on its own terms anyway. Freud's actual evidence was clinical: a patient's symptom relief after accepting an interpretation was supposed to show the interpretation was correct, what Freud called the tally argument. Grünbaum's point is that this can't distinguish a correct interpretation from the effect of suggestion, the analyst's authority, or the patient's motivation to agree — so the clinical evidence Freud actually offered never could have supported the theory, independent of any question about falsifiability.</p>
+    <p><strong class="term">Frederick Crews</strong> pushes past methodology into the historical record itself. <em>Freud: The Making of an Illusion</em> (2017), building on decades of archival work, documents specific case histories where Freud's published account diverges sharply from what actually happened — Anna O., presented by Breuer and Freud as an early success, was institutionalized shortly after her supposed cure; the Wolf Man's claimed lifelong resolution didn't hold either. Crews's argument isn't just that the theory is weakly supported, it's that some of its founding evidence was retrospectively shaped, sometimes invented outright, to fit conclusions Freud had already reached.</p>
+    <p><strong class="term">Hans Eysenck</strong> asked a more practical question and got an unwelcome answer: does psychoanalytic therapy actually work? His 1952 survey argued patients in psychoanalysis recovered at rates no better than those given no treatment at all, spontaneous remission accounting for as much improvement as years on the couch. The finding has been contested and re-analyzed many times since, but it reframed the question from "is the theory true" to "does the practice built on it outperform doing nothing" — a much harder bar to clear than anyone in Freud's era assumed.</p>
+    <p>A narrower but sharp challenge came from anthropology. <strong class="term">Bronisław Malinowski</strong>'s fieldwork among the matrilineal Trobriand Islanders (<em>Sex and Repression in Savage Society</em>, 1927) found a father figure who wasn't the disciplinary authority Freud's Oedipal triangle requires — that role belonged to the mother's brother instead — and the rivalry and desire Freud predicted as universal didn't show up where the family structure it depends on wasn't there. If the Oedipus complex needs one particular kinship arrangement to arise at all, it's a claim about a culture's family structure, not a fact about the psyche as such.</p>
+  </div>
+  <aside class="margin">
+    <span class="label">how this landed</span>
+    <p><span class="who">Popper</span> — foundational in philosophy of science; most working psychologists would still cite falsifiability as the core problem with classical psychoanalytic claims.</p>
+    <p><span class="who">Grünbaum</span> — took Freud more seriously than most critics, which makes him harder to dismiss; widely regarded as the definitive technical critique.</p>
+    <p><span class="who">Crews</span> — some Freud scholars call it one-sided advocacy dressed as history, but its specific factual claims about individual cases have mostly held up under scrutiny.</p>
+    <p><span class="who">Eysenck</span> — his original numbers were disputed almost immediately; later meta-analyses (Smith &amp; Glass, 1977) found psychotherapy in general does outperform no treatment, though psychoanalysis specifically remains one of the weaker performers in head-to-head comparisons.</p>
+    <p><span class="who">Malinowski</span> — anthropology broadly accepts the Oedipus complex, if it exists at all, isn't culturally universal in Freud's strong sense.</p>
+  </aside>
+</section>
+
+<section class="thinker">
+  <div class="main-col">
+    <h2>Lacan <span class="years">1949–1981, Mirror Stage to death</span></h2>
+    <div class="tag-row"><span class="tag">Imaginary / Symbolic / Real</span><span class="tag">subject of language</span><span class="tag">Saussure / Jakobson / Lévi-Strauss</span><span class="tag">Benveniste / Kristeva</span></div>
+    <p>Lacan's starting point is Ferdinand de Saussure's <em>Course in General Linguistics</em> (1916). Saussure splits the sign into <strong class="term">signifier</strong> (sound-image) and <strong class="term">signified</strong> (concept), insists the pairing is arbitrary — nothing about the sound "tree" binds it to the concept — and, more radically, that a sign carries no meaning alone: it means what it means only differentially, by not being every other sign in the system (language as "a system of differences with no positive terms"). Lacan pushes this further than Saussure did: he splits the sign apart and puts the signifier on top, bar over signified (S/s), arguing meaning isn't fixed by a signifier attaching to its signified but produced by signifiers sliding along a chain, only ever retroactively pinned down at nodal points he calls <em>points de capiton</em> ("quilting points"). He also borrows Roman Jakobson's split of language into a metaphoric axis (substitution) and metonymic axis (combination) and maps it directly onto Freud's dream-work — condensation becomes a case of metaphor, displacement a case of metonymy — which is the actual technical spine underneath "the unconscious is structured like a language." Around the same time, <strong class="term">Émile Benveniste</strong>'s "Subjectivity in Language" (1958) argued personhood itself is a language-effect: pronouns like "I" are empty <strong class="term">shifters</strong> — grammatical slots with no fixed referent — that become "the subject" only when someone actually speaks and occupies one. That's a direct source for Lacan's own split between the subject of the enunciation (whoever is speaking) and the subject of the enounced (the "I" inside what gets said): one more argument for why the subject is an effect of the signifying chain, not something already there that merely borrows language to express itself. A third structuralist import, Claude Lévi-Strauss's structural anthropology — kinship systems as a language of exchange, the incest taboo as the one universal law beneath all particular laws — feeds directly into Lacan's Symbolic order and the "Name-of-the-Father": the law isn't any actual father's prohibition, but a structural position that precedes and outlasts whoever happens to occupy it.</p>
+    <p>Three registers do the work. The <strong class="term">Imaginary</strong> is the register of image and wholeness, inaugurated at the <strong class="term">mirror stage</strong> — an infant, still uncoordinated, recognizes a unified image in the mirror and identifies with it, a founding misrecognition (<em>méconnaissance</em>) that gives the <strong class="term">ideal-ego</strong>: the narcissistic image of a self one is not yet. The <strong class="term">Symbolic</strong> is the order of language, law, and kinship — the "big Other" — and it's here the <strong class="term">ego-ideal</strong> properly sits: not an image but a symbolic position, the point from which one imagines being watched and judged. The <strong class="term">Real</strong> is whatever resists symbolization entirely — trauma, the body's jouissance, what language can circle but never capture. <strong class="term">Objet a</strong> is the structural leftover produced the moment a speaking being enters language: not a thing you lost, but a gap language itself creates and desire chases.</p>
+    <p><strong class="term">Julia Kristeva</strong>, trained as a linguist before turning to psychoanalysis, pushes back on how purely linguistic this whole picture is. Her <em>Revolution in Poetic Language</em> (1974) proposes a <strong class="term">semiotic</strong> register underneath the Symbolic: a rhythmic, bodily, drive-charged organization of pre-verbal sound and movement, tied to the infant's early relation to the maternal body, that never disappears once language arrives but keeps erupting through it — in rhythm, tone, poetic excess, the texture of a voice under what it says. Where Lacan's Symbolic can sound like pure structure, all law and signifier, Kristeva's semiotic reinserts exactly the drive and the body this document keeps trying to locate physically — closer to Freud's primary process than to anything Saussure, Jakobson, or Benveniste describe on their own.</p>
+    <p>Two later linguists push back on how much of this is really arbitrary and built from exposure alone. <strong class="term">Noam Chomsky</strong>'s <strong class="term">Universal Grammar</strong> argues the deep syntactic engine is substantially innate — Saussure's arbitrariness covers vocabulary (which sound means "tree"), not the grammar wrapping around it, which on Chomsky's account the brain arrives already expecting. <strong class="term">George Lakoff</strong> pushes from the opposite direction: his conceptual metaphor theory (with Mark Johnson, later formalized with Jerome Feldman as an explicit "Neural Theory of Language") argues huge swaths of abstract language aren't arbitrary at all but systematically motivated by embodied, sensorimotor schemas — "argument is war," "more is up" — bodily patterns laid down before language arrives and later recruited to structure abstract thought, a concrete linguistics-side version of the same embodiment claim Damasio and the bodily-ego thread make elsewhere in this piece. Between the two of them, the perisylvian network isn't just passively built by exposure to arbitrary signs: it may arrive with real innate structure already expected (Chomsky), and it recruits pre-existing bodily circuitry to do abstract work (Lakoff) — exposure alone is doing less of the job than "arbitrariness" on its own suggests.</p>
+  </div>
+  <aside class="margin">
+    <span class="label">substrate proposals</span>
+    <p><span class="who">arbitrariness of the sign</span> — no innate wiring ties a phoneme to a meaning; the perisylvian network has to build that mapping entirely from exposure, which is exactly what Saussure's "arbitrary" is pointing at.</p>
+    <p><span class="who">mirror stage</span> — rests on a real developmental fact: infant visual system matures faster than the corticospinal tract, so the mirror really does show a coherence the body doesn't yet have.</p>
+    <div class="struct-badge">
+      <svg class="brainmap" viewBox="0 0 140 100" width="70" height="50">
+        <use href="#bmap-lateral" class="bmap-outline"/>
+        <path class="bmap-fissure" d="M33,46 C50,58 75,60 96,56"/>
+        <circle class="bmap-marker" cx="66" cy="18" r="4"/>
+      </svg>
+      <span class="struct-meta">
+        <span class="s-name">Motor cortex (precentral gyrus)</span>
+        <span class="s-when">cortical plate ~wk 8; corticospinal axons reach the cord by wk 17–29, but myelination isn't complete until ~age 2 — well after the mirror-stage window (6–18mo) closes</span>
+      </span>
+    </div>
+    <div class="struct-badge">
+      <svg class="brainmap" viewBox="0 0 140 100" width="70" height="50">
+        <use href="#bmap-medial" class="bmap-outline"/>
+        <path class="bmap-cc" d="M40,30 C55,20 78,20 88,32 C90,38 88,42 82,44"/>
+        <circle class="bmap-marker" cx="108" cy="40" r="4"/>
+      </svg>
+      <span class="struct-meta">
+        <span class="s-name">Visual cortex (calcarine/V1)</span>
+        <span class="s-when">calcarine sulcus visible ~wk 16, among the earliest; acuity nears adult levels by 6–12mo — far ahead of the motor tract above</span>
+      </span>
+    </div>
+    <p><span class="who">Symbolic order</span> — language acquisition physically remodels the left <strong class="term">perisylvian network</strong>: the ring of cortex around the Sylvian (lateral) fissure, comprising Broca's area (inferior frontal gyrus — syntax, production), Wernicke's area (posterior superior temporal gyrus — comprehension, semantics), and the arcuate fasciculus, the white-matter tract linking them that underwrites the phonological loop (holding a heard string of sound long enough to repeat or parse it). Left-lateralized in roughly 95% of right-handers, but that lateralization itself is built developmentally, not fixed at birth — late-first-language cases (congenitally deaf children denied early sign exposure, the "Genie" case) show the window genuinely closes, leaving permanent syntactic deficits even once exposure resumes. Same circuitry your <span class="who">developmental TNGS</span> notes track.</p>
+    <div class="struct-badge">
+      <svg class="brainmap" viewBox="0 0 140 100" width="70" height="50">
+        <use href="#bmap-lateral" class="bmap-outline"/>
+        <path class="bmap-fissure" d="M33,46 C50,58 75,60 96,56"/>
+        <path class="bmap-link" d="M44,50 C60,32 74,32 88,56"/>
+        <circle class="bmap-marker" cx="44" cy="50" r="4"/>
+        <circle class="bmap-marker" cx="88" cy="56" r="4"/>
+      </svg>
+      <span class="struct-meta">
+        <span class="s-name">Broca + Wernicke + arcuate fasciculus</span>
+        <span class="s-when">cortical plate ~wk 8; gyri recognizable ~wk 26–28; arcuate myelination protracted through adolescence, left side favored</span>
+      </span>
+    </div>
+    <p><span class="who">the Real</span> — candidate reading via Friston below: whatever prediction-error a generative model structurally cannot absorb.</p>
+    <span class="label" style="margin-top:1rem">linguistics, qualified</span>
+    <p><span class="who">Benveniste</span> — shifters (pronouns like "I") are a real, well-documented grammatical category; whether they're the <em>mechanism</em> of subjectivity or just its grammatical trace is the contestable part.</p>
+    <p><span class="who">Kristeva</span> — the semiotic/symbolic split is influential in literary theory, but "drive-charged rhythm" has no agreed neural signature; treat as clinical-phenomenological, not a measured claim.</p>
+    <p><span class="who">Chomsky</span> — Universal Grammar in its strong nativist form is a minority position among working linguists today, though some innate syntactic bias remains widely accepted; complicates, doesn't overturn, the exposure-built story above.</p>
+    <p><span class="who">Lakoff</span> — conceptual metaphor theory is well evidenced behaviorally; the Neural Theory of Language project's specific circuit claims are far more speculative than the behavioral core.</p>
+  </aside>
+</section>
+
+<section class="thinker">
+  <div class="main-col">
+    <h2>Žižek (and Johnston) <span class="years">1989–present, <em>Sublime Object</em> onward</span></h2>
+    <div class="tag-row"><span class="tag">Hegel + Lacan</span><span class="tag">transcendental materialism</span></div>
+    <p>Žižek folds Lacan back into Hegel: the subject isn't a positive thing but a self-relating negativity, a gap in nature rather than an addition to it — Hegel's "night of the world." <strong class="term">Ideology</strong>, in this reading, isn't false belief covering a real world; it's a fantasy that structures what counts as reality in the first place, organized around a traumatic Real it can never fully symbolize. The <strong class="term">parallax view</strong> pushes this further: the truth of an object is the irreducible shift between two incompatible perspectives on it, not a third view that reconciles them.</p>
+    <p>That last move is the interesting stress-test for this whole project. If first-person (analytic) and third-person (neuroscientific) descriptions of a subject are a genuine parallax gap, no amount of neuroscience closes it by adding detail — which would mean this entire exercise has a hard ceiling. Adrian Johnston takes the bet anyway.</p>
+
+    <h3>Johnston's transcendental materialism</h3>
+    <p>Johnston's own name for the project — laid out across the three-volume <em>Prolegomena to Any Future Materialism</em> (2013–2019) — borrows "transcendental" in Kant's sense: not <em>transcendent</em>, not something beyond nature, but the conditions that make a subject possible in the first place. His bet is that those conditions can be found entirely inside nature, provided nature is understood correctly — which for Johnston means nature is not the seamless, fully self-consistent totality both hard determinists and vulgar materialists assume it is. He calls this <strong class="term">weak nature</strong>: a nature riddled with genuine gaps, contingencies, and self-inconsistencies rather than one unified deterministic block — a materialist rewrite of Žižek's Hegelian claim that Substance is already, in itself, split. On this account a free, self-relating subject doesn't have to be smuggled in from outside physical reality; it can emerge from cracks already present in nature's own structure.</p>
+    <p>He backs this with actual biology rather than leaving it purely speculative: neural <strong class="term">plasticity</strong> (the brain's wiring is substantially built by experience, not fixed in advance — argued directly against Damasio, LeDoux, and Panksepp in <em>Self and Emotional Life</em>, his 2013 book co-written with Malabou), <strong class="term">degeneracy</strong> in neural systems (many different circuit configurations can produce the same output, so there's no single fixed hardware-to-function mapping to be determined by), and <strong class="term">epigenetics</strong> (gene expression is environmentally modulated, not a fixed blueprint). Together these give a technical, non-mystical version of Freud's old drive/instinct distinction: a drive, for Freud, is an instinct that's been denatured — rerouted, bent off its biological aim by language and the signifier. Johnston's claim is that the protracted window of human neural plasticity is literally what makes that denaturing possible: the same developmental immaturity that lets language remodel the perisylvian network (above) is also what lets culture and the signifier partially decouple drive from fixed biological instinct — nature, using only natural means, producing something that outruns pure natural determination.</p>
+  </div>
+  <aside class="margin">
+    <span class="label">substrate proposals</span>
+    <p><span class="who">Johnston</span> draws directly on Panksepp, LeDoux, and Damasio to argue the gap Žižek describes is a real property of a brain whose circuits get symbolically overwritten during development, not a metaphor.</p>
+    <p><span class="who">weak nature</span> — leans on neural degeneracy (many wirings, one function) and epigenetics (expression set by environment) as biology's own evidence against a fully closed, deterministic substrate.</p>
+    <p>Status: philosophical argument built <em>from</em> neuroscience, not a testable neuroscience claim in itself.</p>
+  </aside>
+</section>
+
+<section class="thinker">
+  <div class="main-col">
+    <h2>The cognitive-science side</h2>
+    <div class="tag-row"><span class="tag">what actually grounds what</span></div>
+    <p><strong class="term">Hofstadter</strong> treats the self as a <em>strange loop</em>: not a substance anywhere in the brain, but a pattern that appears when a system represents itself representing things, recursively, until a stable "I" seems to fall out of the swirl. It's a good account of the ego as representation — a something-from-nothing story compatible with Lacan's ego-as-misrecognition — but it's silent on drives, affect, or the id; Hofstadter's loop runs on symbols, not hunger or fear.</p>
+    <p>John Searle's <strong class="term">Chinese Room</strong> (1980) is the specific problem with leaving it at that. A person who speaks no Chinese sits in a room with a rulebook, receives Chinese characters through a slot, follows purely syntactic instructions for which characters to send back, and produces replies indistinguishable from a fluent speaker's — without understanding a single word. Searle's point: formal symbol manipulation, however complex or recursive, is syntax; understanding is semantics, and no amount of syntax on its own adds up to semantics. Run that against Hofstadter directly: a strange loop is exactly this kind of recursive symbol-shuffling, so the Chinese Room asks whether it gives you the pattern of a self without whatever it is that makes a self actually understand anything. Searle isn't a dualist about this — his own label is <strong class="term">biological naturalism</strong>: he thinks consciousness is caused by specific biological processes, just not by formal computation alone, wherever it runs — which makes him a third position in this document, distinct from both the grounding project above and the property-dualist dissent below.</p>
+    <p><strong class="term">Churchland</strong> (Paul and Patricia) is the deliberate skeptic to keep in the room. Eliminative materialism's core warning: folk-psychological categories sometimes don't get reduced to neuroscience, they get <em>replaced</em> by it — the way "caloric fluid" wasn't found in thermodynamics, it was discarded. Applied here: id/ego/superego might be pre-scientific placeholders a mature neuroscience eventually drops rather than locates. Patricia Churchland's own account of conscience — oxytocin/vasopressin circuits, mirror-neuron systems, prefrontal-limbic interaction shaped by attachment and culture — is a real alternative to Freud's internalized-parent story, arriving at a similar developmental timeline by a much more chemical route.</p>
+    <p><strong class="term">Damasio</strong> distinguishes a moment-to-moment <em>core self</em> (brainstem/insular homeostatic feeling) from a narrative <em>autobiographical self</em> built from memory — a fairly literal cashing-out of Freud's bodily-ego footnote.</p>
+    <p><strong class="term">Friston</strong>, often working directly with Solms, models the brain as a prediction machine minimizing surprise between top-down generative models and bottom-up sensory/interoceptive signal. This gives mechanistic readings of several constructs at once: repression as actively down-weighting certain prediction errors so they never reach awareness; ideology-as-fantasy as a generative model imposed from above that determines what will even register as "real"; the Real as the residue no revision of the model can absorb.</p>
+    <p><strong class="term">LeDoux</strong> gives the cleanest hard evidence for an unconscious in the weak sense: the amygdala's fast subcortical threat pathway processes and triggers action before, and without, conscious representation — though LeDoux himself resists stretching this circuit-level finding to cover the rich, meaning-laden Freudian unconscious. <strong class="term">Malabou</strong> pushes back on the static structuralism in Lacan by insisting the brain is <em>plastic</em> in the strong sense — capable of receiving form and exploding it — reframing subject-formation as continual, revisable sculpting rather than a fixed architecture laid down once in infancy.</p>
+    <p><strong class="term">Gerald Edelman</strong>'s <em>Neural Darwinism</em> (1987) — the <strong class="term">Theory of Neuronal Group Selection</strong> (TNGS) — gives a developmental mechanism underneath a lot of what's asserted above, rather than another endpoint description. Development doesn't wire the brain to a genetic blueprint; it overproduces wildly variable neuronal groups and connections (a primary repertoire), and experience then selects and strengthens some pathways over others through <strong class="term">reentry</strong> — massively parallel, recursive signaling between otherwise separate brain maps that binds them into one coherent scene with no central observer reading the result. Edelman later split consciousness itself into two kinds: <strong class="term">primary consciousness</strong>, a present-tense perceptual "remembered present" available to many animals, and <strong class="term">higher-order consciousness</strong>, which requires the semantic and linguistic capacity to model a self across past and future. That split lines up cleanly with Freud's primary/secondary process distinction above, and even better with this piece's own claim that language acquisition is what promotes a Symbolic-order self out of what was, until then, just felt in the present. It's also the most rigorous version of the plasticity argument Malabou gestures at — selection among an already-diverse repertoire, not sculpting of a blank slate — and gives Hofstadter's strange loop an actual candidate mechanism: reentry is recursive, self-referential signaling implemented in real neuroanatomy, not just a computational metaphor.</p>
+
+    <h3>Where Edelman, Malabou, and Johnston actually connect</h3>
+    <p>These three aren't just thematically similar — two of the links are citational, not just an analogy drawn for this piece. Johnston's <strong class="term">degeneracy</strong> argument for weak nature isn't borrowed loosely from biology in general; it's Edelman's own term. Edelman and immunologist Joseph Gally coined "degeneracy" in a 2001 paper to name something selectionist theories need and rigid-wiring theories don't: structurally different elements — different neuronal groups, different pathways — able to produce the same functional output. It's what makes selection possible as a matter of principle: a system with only one way to do each thing has nothing left for experience to select among. Johnston takes that degeneracy directly from Edelman's neuroscience (alongside plasticity and epigenetics) as one of his three empirical planks for weak nature — the same reentrant, selectionist architecture Edelman built to explain a unified conscious scene emerging from a brain with no fixed wiring diagram is, for Johnston, exactly the "underdetermination of brain by brain" that leaves room for a self-relating subject.</p>
+    <p>Malabou is where it gets contentious rather than cumulative. Johnston's own <em>Prolegomena</em> project stages its first volume explicitly against Malabou (alongside Badiou and Meillassoux), arguing her account of plasticity — the brain able to receive form, give form, and explode form — is necessary but not sufficient. A system that's merely plastic, endlessly reshaped by whatever experience impresses on it, is still just a very flexible natural mechanism; flexibility alone doesn't get you a subject in the Hegelian-Lacanian sense — something that relates <em>negatively</em> to itself, not just adaptively to its inputs. Johnston wants the gap Žižek describes layered on top of Malabou's plasticity and Edelman's degeneracy, not derived from them: the biology explains how the hardware could support a subject, not why a subject, rather than just a very adaptive nervous system, actually shows up.</p>
+    <p>The whole selectionist-plasticity family also has a more direct ancestor than any of the three credit enough: Freud's own abandoned <em>Project for a Scientific Psychology</em> (1895). Before he gave up on neurology for psychology, Freud modeled the mind as neurons passing a "quantity" of excitation through pathways of varying resistance — <strong class="term">facilitation</strong> (<em>Bahnung</em>) — where repeated passage lowers resistance and experience literally carves the network's future traffic, not by rewiring to a plan but by wearing some paths in over others. That's a plastic, selectionist model of learning built from almost nothing, decades before Edelman and roughly a century before Malabou — Freud simply didn't have the neuroscience to make it stick, and dropped it for the psychical apparatus instead.</p>
+    <p>Malabou, for her part, turns this back on Freud rather than just extending him. <em>The New Wounded</em> (2007) argues classical psychoanalysis — for all that it started in Freud's own neurology — built its theory of trauma entirely around repressed psychical conflict, with no real category for a purely organic wound: a stroke, a lesion, dementia, that produces an unrecognizable new person with no repressed content to interpret at all. Her "destructive plasticity" is explicitly a complaint that psychoanalysis undersells the brain's material capacity to just <em>break</em> a self rather than symbolize one — which cuts against Johnston's move to fold biological plasticity in as support for the Freudian drive story, rather than a challenge to it.</p>
+    <p>Put together, the throughline runs: Freud's drive is an instinct denatured, bent off its biological aim by something not itself biological. Lacan names the bending mechanism the signifier. Johnston wants to know how a physical nervous system could be bent that way at all without smuggling in magic, and reaches for exactly the resources this document needed for other reasons anyway — Edelman's degeneracy, generic neural plasticity — as the material precondition. Malabou supplies much of the same biology aimed in closer to the opposite direction, using it to show where Freud's framework runs out rather than where it gets confirmed. None of the three quite agree with each other, which is the useful part: it's a live disagreement about how much of "the subject" biology can actually carry, conducted by people who take both the biology and the subject seriously.</p>
+  </div>
+  <aside class="margin">
+    <span class="label">philosophical qualifier</span>
+    <p><span class="who">Chinese Room</span> — heavily contested; the standard rebuttal ("systems reply") argues the room-plus-rulebook-plus-operator as a whole understands Chinese even though the operator alone doesn't, which would make it a bad objection to Hofstadter's loop specifically, since a strange loop is a claim about the whole recursive system, not about any one part of it.</p>
+    <span class="label" style="margin-top:1rem">structures in play</span>
+    <div class="struct-badge">
+      <svg class="brainmap" viewBox="0 0 140 100" width="70" height="50">
+        <use href="#bmap-medial" class="bmap-outline"/>
+        <path class="bmap-cc" d="M40,30 C55,20 78,20 88,32 C90,38 88,42 82,44"/>
+        <circle class="bmap-marker" cx="62" cy="48" r="4"/>
+      </svg>
+      <span class="struct-meta">
+        <span class="s-name">Hypothalamus (oxytocin/vasopressin source)</span>
+        <span class="s-when">diencephalon derivative — <b>appears</b> wk 5–10</span>
+      </span>
+    </div>
+    <div class="struct-badge">
+      <svg class="brainmap" viewBox="0 0 140 100" width="70" height="50">
+        <use href="#bmap-lateral" class="bmap-outline"/>
+        <path class="bmap-fissure" d="M33,46 C50,58 75,60 96,56"/>
+        <circle class="bmap-marker" cx="56" cy="20" r="4"/>
+        <circle class="bmap-marker" cx="92" cy="30" r="4"/>
+      </svg>
+      <span class="struct-meta">
+        <span class="s-name">Premotor cortex + inferior parietal lobule</span>
+        <span class="s-when">cortical plate ~wk 8; intraparietal sulcus visible ~wk 26; mirror-matching behavior observed within the first year</span>
+      </span>
+    </div>
+    <div class="struct-badge">
+      <svg class="brainmap" viewBox="0 0 140 100" width="70" height="50">
+        <use href="#bmap-lateral" class="bmap-outline"/>
+        <path class="bmap-fissure" d="M33,46 C50,58 75,60 96,56"/>
+        <circle class="bmap-marker deep" cx="30" cy="64" r="4"/>
+      </svg>
+      <span class="struct-meta">
+        <span class="s-name">Amygdala (LeDoux's fast pathway)</span>
+        <span class="s-when">telencephalon derivative — <b>appears</b> wk 6–8</span>
+      </span>
+    </div>
+    <div class="struct-badge">
+      <svg class="brainmap" viewBox="0 0 140 100" width="70" height="50">
+        <use href="#bmap-medial" class="bmap-outline"/>
+        <path class="bmap-cc" d="M40,30 C55,20 78,20 88,32 C90,38 88,42 82,44"/>
+        <circle class="bmap-marker" cx="58" cy="38" r="4"/>
+      </svg>
+      <span class="struct-meta">
+        <span class="s-name">Thalamus (reentrant loop hub)</span>
+        <span class="s-when">diencephalon derivative — <b>appears</b> wk 5–10, same window as the hypothalamus below it</span>
+      </span>
+    </div>
+    <p><span class="who">Edelman + Tononi</span>'s 2000 "dynamic core" — thalamocortical activity that's simultaneously highly integrated and highly differentiated — is the direct forerunner of Tononi's later Integrated Information Theory (Φ), though Edelman himself resisted extending consciousness down to simple systems the way panpsychism does.</p>
+    <p>Same acronym as your <span class="who">developmental TNGS</span> track.</p>
+    <span class="label" style="margin-top:1rem">citation chain</span>
+    <p>Edelman + Gally coin "degeneracy" (2001) → Johnston imports it as one of three planks for weak nature → Malabou draws on the same plasticity literature but aims it at critiquing Freud's trauma theory, not defending his drive theory.</p>
+    <span class="label" style="margin-top:.4rem">closest to literal</span>
+    <p>Solms + Panksepp (id/affect), Friston + Solms (repression, fantasy, the Real), Damasio (bodily ego), Edelman (reentry, TNGS) — active empirical programs, real data.</p>
+    <span class="label" style="margin-top:1rem">loosest / analogical</span>
+    <p>Hofstadter (ego as loop), Johnston/Žižek (subject as gap), Malabou (plasticity as metaphor for revisability) — philosophy reasoning from neuroscience, not measuring it.</p>
+  </aside>
+</section>
+
+<section class="thinker">
+  <div class="main-col">
+    <h2>Dreams: a case study <span class="years">1977–present, activation-synthesis to today</span></h2>
+    <div class="tag-row"><span class="tag">activation-synthesis</span><span class="tag">SEEKING vs. brainstem noise</span><span class="tag">continuity hypothesis</span></div>
+    <p>Dreams are the one place Freud made a falsifiable, mechanism-level claim — that dreams are meaningful products of unconscious wish and drive, not noise — and it's the one place the fight over that claim has actually been had in public, with real data on both sides, instead of staying philosophical.</p>
+    <p><strong class="term">J. Allan Hobson</strong> and Robert McCarley's <strong class="term">activation-synthesis hypothesis</strong> (1977) was the direct neuroscientific rebuttal. During REM sleep the pons fires largely random bursts of activity — <strong class="term">PGO waves</strong> (ponto-geniculo-occipital, named for the path they take from pons to lateral geniculate nucleus to occipital cortex) — while the brain's aminergic systems (serotonin, norepinephrine) go quiet and cholinergic tone rises. On this account a dream is the forebrain's best-effort narrative synthesis, imposed after the fact on essentially meaningless bottom-up noise: a confabulation, not a disguised wish. Hobson spent much of his career as psychoanalytic dream theory's most public scientific critic on exactly this basis.</p>
+    <p><strong class="term">Mark Solms</strong>'s clinical data cuts the other way. Patients with lesions to the pontine brainstem structures Hobson's model treats as necessary for dreaming can still dream normally; patients with damage instead to the ventromesial frontal white matter carrying dopaminergic projections from the mesolimbic <strong class="term">SEEKING</strong> system — the same circuit already doing the id's work earlier in this piece — report a complete, selective loss of dreaming, with REM physiology otherwise intact. Dreaming also turns up in NREM sleep far more often than the classic REM-only picture allows. Solms's conclusion: dreaming isn't generated by the brainstem machinery Hobson pointed to at all — it's generated, or at least permitted, by the same appetitive system psychoanalysis already called the engine of desire. It's the closest thing in this whole document to a specifically Freudian claim winning a direct empirical fight, rather than just surviving one by analogy.</p>
+    <p><strong class="term">G. William Domhoff</strong>'s neurocognitive theory offers a third, more deflationary position: dreaming correlates most reliably with <strong class="term">default-mode network</strong> activity — the same medial-prefrontal/posterior-cingulate system already implicated in mentalizing and the ego-ideal — and its content mostly continues waking concerns (the <strong class="term">continuity hypothesis</strong>) rather than encoding a disguised wish or synthesizing random noise. On this view, dreaming is less a royal road to the unconscious than a side effect of a self-modeling network that never fully switches off.</p>
+  </div>
+  <aside class="margin">
+    <span class="label">substrate proposals</span>
+    <div class="struct-badge">
+      <svg class="brainmap" viewBox="0 0 140 100" width="70" height="50">
+        <use href="#bmap-medial" class="bmap-outline"/>
+        <path class="bmap-cc" d="M40,30 C55,20 78,20 88,32 C90,38 88,42 82,44"/>
+        <circle class="bmap-marker" cx="86" cy="72" r="4"/>
+      </svg>
+      <span class="struct-meta">
+        <span class="s-name">Pons (PGO waves)</span>
+        <span class="s-when">hindbrain derivative — <b>appears</b> wk 5–7; REM-related pontine activity present from early infancy</span>
+      </span>
+    </div>
+    <div class="struct-badge">
+      <svg class="brainmap" viewBox="0 0 140 100" width="70" height="50">
+        <use href="#bmap-medial" class="bmap-outline"/>
+        <path class="bmap-cc" d="M40,30 C55,20 78,20 88,32 C90,38 88,42 82,44"/>
+        <circle class="bmap-marker" cx="72" cy="50" r="4"/>
+      </svg>
+      <span class="struct-meta">
+        <span class="s-name">VTA / mesolimbic dopamine (SEEKING)</span>
+        <span class="s-when">mesencephalon derivative — dopaminergic neurons differentiate ~wk 5–7; projections keep maturing through adolescence</span>
+      </span>
+    </div>
+    <div class="struct-badge">
+      <svg class="brainmap" viewBox="0 0 140 100" width="70" height="50">
+        <use href="#bmap-medial" class="bmap-outline"/>
+        <path class="bmap-cc" d="M40,30 C55,20 78,20 88,32 C90,38 88,42 82,44"/>
+        <circle class="bmap-marker" cx="30" cy="26" r="4"/>
+        <circle class="bmap-marker" cx="92" cy="50" r="4"/>
+      </svg>
+      <span class="struct-meta">
+        <span class="s-name">Default-mode network (medial PFC + posterior cingulate)</span>
+        <span class="s-when">cortical plate ~wk 8 for both; the network's characteristic anti-correlated activity pattern doesn't consolidate until late childhood/adolescence</span>
+      </span>
+    </div>
+    <span class="label" style="margin-top:1rem">current standing</span>
+    <p>Hobson vs. Solms was an open, often heated dispute through the 1990s–2000s. Most current sleep researchers now favor Solms's forebrain/SEEKING account for what generates dreaming, while keeping Hobson's REM neurophysiology (PGO waves, the aminergic-cholinergic switch) as an accurate description of REM sleep itself — just not proof dreaming is meaningless. Domhoff's continuity/DMN account is a separate, currently mainstream research program, not a refutation of either side.</p>
+  </aside>
+</section>
+
+<section class="thinker">
+  <div class="main-col">
+    <h2>The dissenters <span class="years">1996–present, the hard-problem revival</span></h2>
+    <div class="tag-row"><span class="tag">hard problem</span><span class="tag">Mary's Room</span><span class="tag">panpsychism / idealism</span><span class="tag">anti-neuro Lacan</span></div>
+    <p>Everything above assumes the project is coherent — that a construct like the id or the ego-ideal, given enough neuroscience, either reduces to or at least correlates cleanly with something physical. That assumption has serious modern opponents on two fronts at once: philosophy of mind, arguing consciousness resists this kind of grounding no matter how detailed the science gets, and psychoanalysis's own orthodoxy, arguing the subject Lacan describes was never the kind of thing biology could find in the first place.</p>
+    <p><strong class="term">David Chalmers</strong> gave the modern version its name in <em>The Conscious Mind</em> (1996): the <strong class="term">hard problem</strong> of consciousness. Easy problems — how the brain discriminates stimuli, integrates information, reports its own states — are functional, and functional problems yield to mechanism, answerable in principle by more neuroscience. The hard problem is different in kind: why any of that functioning is accompanied by subjective experience at all, why there's something it is like to be the system doing it. His <strong class="term">zombie argument</strong> presses the point — a creature physically identical to you, matching every behavior and every brain state, but with no inner experience, is conceivable without contradiction, which means facts about experience aren't logically fixed by physical facts alone. His own conclusion is a form of <strong class="term">property dualism</strong>: phenomenal properties are additional, fundamental features of reality, not the kind of thing a sufficiently complete wiring diagram could ever entail. Run that against this whole document: even a perfect map of Panksepp's SEEKING circuit would give the full functional profile of wanting, and still leave open why wanting feels like anything.</p>
+    <p>Frank Jackson's <strong class="term">knowledge argument</strong> — <strong class="term">Mary's Room</strong> (1982) — makes a related but distinct case, from evidence rather than conceivability. Mary is a brilliant scientist who has lived her whole life in a black-and-white room and learned, from books and screens, every physical fact there is about color and color vision — every wavelength, every fact about cones and V1 and neural processing. Then she walks outside and sees a red tomato for the first time. Jackson's claim: she learns something, what red actually looks like, that no amount of physical information could have given her — which means the phenomenal facts aren't included in the complete physical facts after all, contra physicalism. Worth the honesty of noting Jackson himself later recanted, in "Mind and Illusion" (2003), and went back to physicalism, arguing Mary gains a new representational ability rather than new propositional knowledge — which makes the knowledge argument a rare case in this whole document where the original author no longer holds the dissenting position, though most of the field still treats it as live.</p>
+    <p><strong class="term">Thomas Nagel</strong> — already well known for asking what it is like to be a bat — pushed further in <em>Mind and Cosmos</em> (2012), arguing reductive neo-Darwinian materialism is very likely an incomplete picture of nature, because it can't account for consciousness, reason, or value without quietly assuming what it's meant to explain. His alternative gestures at nature having some as-yet-unspecified teleological tendency toward generating conscious, rational beings — a claim most working biologists reject outright, but one of the highest-profile "materialism doesn't cover everything" arguments from inside analytic philosophy rather than from religion or continental theory.</p>
+    <p><strong class="term">Galen Strawson</strong> and <strong class="term">Philip Goff</strong> take the opposite tack: instead of treating experience as a strange extra that emergent complexity somehow produces from wholly insentient matter, <strong class="term">panpsychism</strong> proposes some primitive form of experience is already a basic, ubiquitous feature of matter itself — physics was never in the business of ruling consciousness out, it just never described it. The cost is the "combination problem": how billions of micro-experiences compose into one unified subject is exactly as hard as the problem it was meant to dissolve. <strong class="term">Bernardo Kastrup</strong>'s <strong class="term">analytic idealism</strong> goes a step further and inverts the whole picture: mind is the only fundamental category, and what looks like a physical brain generating consciousness is actually consciousness appearing, from outside, as a physical brain — a metaphor he unpacks through dissociation (one mind appearing, from an outside view, as multiple separate things) and through altered states as evidence the brain filters or localizes experience rather than manufacturing it.</p>
+    <p>The sharpest rejection, though, comes from inside psychoanalysis. Orthodox Lacanians in the tradition of <strong class="term">Jacques-Alain Miller</strong> have argued explicitly against neuro-grounding projects like Solms's or Johnston's — not because the neuroscience is wrong, but because the subject Lacan describes is a logical and discursive entity, constituted entirely within the chain of signifiers, categorically different in kind from anything biology studies. On this view, looking for the unconscious in a brain scan is a category error on the order of looking for the rules of chess in the physics of the pieces: true at its own level, and answering a question nobody asked.</p>
+  </div>
+  <aside class="margin">
+    <span class="label">current standing</span>
+    <p><span class="who">Chalmers</span> — mainstream, widely taught, still the field's reference point; property dualism itself remains a minority position among working philosophers of mind.</p>
+    <p><span class="who">Mary's Room</span> — one of the most cited thought experiments in philosophy of mind; still actively debated, but its own author no longer defends the anti-physicalist reading.</p>
+    <p><span class="who">Nagel</span> — <em>Mind and Cosmos</em> was met with near-uniform rejection by biologists on publication; kept alive mostly as a provocation, not a research program.</p>
+    <p><span class="who">panpsychism / idealism</span> — a genuinely growing minority position in analytic philosophy over the last ~15 years; still fringe in neuroscience departments.</p>
+    <p><span class="who">Miller-school Lacan</span> — mainstream within orthodox Lacanian institutes; essentially unknown to, and unpersuasive for, cognitive science.</p>
+  </aside>
+</section>
+
+<section class="synthesis">
+  <h2>A rough three-tier stack</h2>
+  <p class="lede">If you force the whole survey into one developmental story, it sorts into three layers — from most physically settled to most language-mediated:</p>
+  <div class="stack">
+    <div class="tier">
+      <span class="tier-label">chemistry</span>
+      <p>Subcortical affect circuits (Panksepp systems), hypothalamic/brainstem homeostasis, neurotransmitter tone → the <strong>id</strong>. The best-evidenced link in the whole survey.</p>
+    </div>
+    <div class="tier">
+      <span class="tier-label">circuitry + environment</span>
+      <p>Prefrontal maturation regulating subcortical arousal, shaped by attachment and caregiver interaction (oxytocin, mirror-neuron social learning) → the <strong>ego</strong> and early conscience. Moderately grounded.</p>
+    </div>
+    <div class="tier">
+      <span class="tier-label">language + society</span>
+      <p>Perisylvian language network reorganized during acquisition, mentalizing/theory-of-mind networks (medial PFC, TPJ) internalizing a social narrative → the <strong>Symbolic order</strong>, <strong>superego</strong>, <strong>ego-ideal</strong>. Least directly measurable — mostly philosophical bridging (Lacan, Žižek/Johnston, Hofstadter).</p>
+    </div>
+  </div>
+
+  <div class="table-scroll" style="margin-top:2rem">
+    <table>
+      <thead>
+        <tr><th>Construct</th><th>Theorist(s)</th><th>Proposed substrate</th><th>Grounding</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="construct">Id / drives</td><td>Freud → Solms, Panksepp</td><td>Subcortical affect systems (PAG, hypothalamus, extended amygdala)</td><td class="status status-solid">empirical</td></tr>
+        <tr><td class="construct">Bodily / core ego</td><td>Freud, Damasio</td><td>Brainstem &amp; insular interoceptive maps</td><td class="status status-solid">empirical</td></tr>
+        <tr><td class="construct">Primary / secondary process</td><td>Freud, Edelman</td><td>Primary consciousness (present-tense) vs. reentrant thalamocortical + language-linked higher-order consciousness</td><td class="status status-solid">empirical</td></tr>
+        <tr><td class="construct">Dreams as wish/drive</td><td>Freud, Solms vs. Hobson</td><td>Mesolimbic dopamine/SEEKING (Solms) vs. pontine PGO noise (Hobson); DMN continuity (Domhoff)</td><td class="status status-mid">empirical, contested</td></tr>
+        <tr><td class="construct">Repression, the Real</td><td>Lacan, Friston + Solms</td><td>Precision-weighted prediction error in hierarchical inference</td><td class="status status-mid">mechanistic model</td></tr>
+        <tr><td class="construct">Mirror stage / ideal-ego</td><td>Lacan</td><td>Visual-motor maturational asymmetry in infancy</td><td class="status status-mid">developmental fact + interpretation</td></tr>
+        <tr><td class="construct">Conscience / superego</td><td>Freud, P. Churchland</td><td>Oxytocin/vasopressin, mirror-neuron systems, prefrontal-limbic loops</td><td class="status status-mid">empirical, contested mapping</td></tr>
+        <tr><td class="construct">Ego-ideal, big Other</td><td>Lacan, Žižek</td><td>Mentalizing network, internalized social narrative</td><td class="status status-thin">analogical</td></tr>
+        <tr><td class="construct">Subject as gap / negativity</td><td>Žižek, Johnston</td><td>Neural plasticity &amp; underdetermination reasoned from, not measured</td><td class="status status-thin">philosophical</td></tr>
+        <tr><td class="construct">Ego as strange loop</td><td>Hofstadter</td><td>Recursive self-representation, unspecified circuit</td><td class="status status-thin">computational analogy</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <footer class="close">
+    <p>The honest shape of this: the deeper a construct sits toward affect and homeostasis, the more literally it maps — Solms would say the id basically <em>is</em> Panksepp's circuits, not a metaphor for them. The deeper a construct sits toward language and social positioning — ego-ideal, the big Other, <em>objet a</em> — the more it stays a redescription at a different level, useful for clinical and phenomenological work, not yet (maybe not ever) a wiring diagram. Churchland's caution is the right one to keep: some of this vocabulary may get replaced rather than reduced once the neuroscience matures further. And that's the optimistic version — the dissenters above would say no amount of neuroscience closes the gap at all, because the thing being explained was never physical to begin with.</p>
+
+    <h3>A closing rumination: fiction's own register</h3>
+    <p>There's a register this whole survey has left out: fiction. Every entry above got graded by how well it maps onto tissue or holds up as philosophical argument, but a lot of what these concepts have actually been used for, clinically and culturally, has never waited on either. Freud built his own case histories — Dora, the Rat Man, the Wolf Man — as narratives, and was uneasy about it: he said as much, half-apologetically, in the Studies on Hysteria, admitting they read more like short stories than clinical papers. His 1907 essay on Jensen's novella <em>Gradiva</em> goes further still, treating a fictional character's delusion with the same clinical seriousness as an actual patient's — on the premise that imaginative writers had already, intuitively, mapped terrain psychoanalysis was only now describing systematically.</p>
+    <p>That has to be read next to the rebuttals section above, not around it. Crews's charge is specifically that some of that narrative quality in Freud's own case histories wasn't artful compression of real clinical material — Anna O.'s outcome misreported, the Wolf Man's cure overstated — it was invention presented as fact. That's a different and worse thing than literary borrowing, and this argument doesn't get to skip past it: reading like a story is only harmless when everyone already knows it's a story.</p>
+    <p>Where fiction is doing this work openly — a novel, a myth, a short story nobody mistakes for a case report — the picture is cleaner. Peter Brooks's <em>Reading for the Plot</em> (1984) treats narrative form itself as running on Freudian drive dynamics, using <em>Beyond the Pleasure Principle</em>'s account of tension, delay, and discharge as a working model for how a plot generates and manages suspense toward an ending. Nothing in that argument makes a claim about neurons, or pretends to be reporting a real patient; the payoff is that a Freudian concept illuminates how acknowledged stories work on readers, which is a different kind of confirmation than a brain scan and not obviously a weaker one. Lacan's own most famous piece of close reading, his seminar on Poe's <em>The Purloined Letter</em>, does something similar from the other direction: rather than applying psychoanalysis to a story, he uses the story — openly fictional throughout — to demonstrate the theory: the letter's position, changing hands but never opened or read by the reader, dictates each character's relation to it regardless of their individual psychology, which is Lacan's whole claim about the signifying chain's priority over the subject, made vivid in a way the bare formula isn't.</p>
+    <p>None of this needs a physical referent to do its work, and none of it rescues the clinical claims either — whether psychoanalytic therapy actually outperforms no treatment, Eysenck's question above, is a separate matter this register doesn't touch one way or the other. What survives is narrower, and probably more honest: a wiring diagram, however complete, was never going to answer why wanting feels like anything, and neither was a patient's recovery rate — but a story everyone agrees is a story can still gesture at what that's like from the inside, not by evidence or argument but by something closer to recognition. That's a third register alongside the empirical and the philosophical this document has been sorting by: not measured, not argued, just staged, on the condition that it's staged in the open. It may be the actual reason these categories have stayed useful in English departments and in how people narrate their own lives, whatever the state of the couch itself.</p>
+  </footer>
+</section>
+
+</div>
+</body>
+</html>
