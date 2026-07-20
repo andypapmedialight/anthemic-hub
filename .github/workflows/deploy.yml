@@ -140,6 +140,7 @@ jobs:
             ./grounding-the-unconscious-favicon.svg \
             ./genealogies-of-desire.html \
             ./genealogies-of-desire-favicon.svg \
+            ./the-boundary-play.html \
             ./sitemap.xml \
             ./robots.txt \
             "${DEST}"
@@ -179,8 +180,8 @@ jobs:
         run: |
           HUB_IN="/home/${DEPLOY_USER}/incoming-hub"
           ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            "test -f ${HUB_IN}/index.html && test -f ${HUB_IN}/consciousness-map.html && test -f ${HUB_IN}/consciousness-map-favicon.svg && test -f ${HUB_IN}/consciousness-map-preview.png && test -f ${HUB_IN}/grounding-the-unconscious.html && test -f ${HUB_IN}/grounding-the-unconscious-favicon.svg && test -f ${HUB_IN}/genealogies-of-desire.html && test -f ${HUB_IN}/genealogies-of-desire-favicon.svg && test -f ${HUB_IN}/bass/index.html && test -f ${HUB_IN}/brain/index.html && test -f ${HUB_IN}/hire/index.html && test -f ${HUB_IN}/hire/pitch.js && test -f ${HUB_IN}/content/pitch.json && test -f ${HUB_IN}/gigs/index.html && test -f ${HUB_IN}/gigs/gigs.json && test -f ${HUB_IN}/content/hub.json && test -f ${HUB_IN}/content/reading-list.seed.json && test -f ${HUB_IN}/personal/index.html && test -f ${HUB_IN}/personal/writing/index.html && test -f ${HUB_IN}/personal/writing/writing-desk.png && test -f ${HUB_IN}/economics/index.html && test -f ${HUB_IN}/mmd/valuation_server.py && test -f ${HUB_IN}/mmd/valuation_fetch.py && test -f ${HUB_IN}/mmd/treasury_fetch.py && test -f ${HUB_IN}/mmd/aus_fetch.py" \
-            || { echo "incoming-hub missing hub, consciousness-map, grounding-the-unconscious, genealogies-of-desire, bass, brain, gigs, content, reading-list.seed, or personal/ files after upload (expected under ${HUB_IN})"; exit 1; }
+            "test -f ${HUB_IN}/index.html && test -f ${HUB_IN}/consciousness-map.html && test -f ${HUB_IN}/consciousness-map-favicon.svg && test -f ${HUB_IN}/consciousness-map-preview.png && test -f ${HUB_IN}/grounding-the-unconscious.html && test -f ${HUB_IN}/grounding-the-unconscious-favicon.svg && test -f ${HUB_IN}/genealogies-of-desire.html && test -f ${HUB_IN}/genealogies-of-desire-favicon.svg && test -f ${HUB_IN}/the-boundary-play.html && test -f ${HUB_IN}/bass/index.html && test -f ${HUB_IN}/brain/index.html && test -f ${HUB_IN}/hire/index.html && test -f ${HUB_IN}/hire/pitch.js && test -f ${HUB_IN}/content/pitch.json && test -f ${HUB_IN}/gigs/index.html && test -f ${HUB_IN}/gigs/gigs.json && test -f ${HUB_IN}/content/hub.json && test -f ${HUB_IN}/content/reading-list.seed.json && test -f ${HUB_IN}/personal/index.html && test -f ${HUB_IN}/personal/writing/index.html && test -f ${HUB_IN}/personal/writing/writing-desk.png && test -f ${HUB_IN}/economics/index.html && test -f ${HUB_IN}/mmd/valuation_server.py && test -f ${HUB_IN}/mmd/valuation_fetch.py && test -f ${HUB_IN}/mmd/treasury_fetch.py && test -f ${HUB_IN}/mmd/aus_fetch.py" \
+            || { echo "incoming-hub missing hub, consciousness-map, grounding-the-unconscious, genealogies-of-desire, the-boundary-play, bass, brain, gigs, content, reading-list.seed, or personal/ files after upload (expected under ${HUB_IN})"; exit 1; }
 
       - name: Apply on Droplet
         env:
@@ -249,6 +250,15 @@ jobs:
           fi
           grep -qF 'Genealogies of Desire' /tmp/anthemic-smoke-gen.html \
             || { echo "/genealogies-of-desire.html missing expected title marker"; exit 1; }
+          code_bnd=$(curl -sS -o /dev/null -w "%{http_code}" --retry 3 --retry-delay 2 "https://anthemic-developments.com/the-boundary-play.html")
+          [[ "${code_bnd}" == "200" ]] || { echo "/the-boundary-play.html returned HTTP ${code_bnd}"; exit 1; }
+          curl -sS --retry 3 --retry-delay 2 "https://anthemic-developments.com/the-boundary-play.html" -o /tmp/anthemic-smoke-bnd.html
+          if grep -qF 'id="hero-name"' /tmp/anthemic-smoke-bnd.html; then
+            echo "/the-boundary-play.html is serving the hub index — apply script must copy the-boundary-play.html to web root"
+            exit 1
+          fi
+          grep -qF 'The Boundary' /tmp/anthemic-smoke-bnd.html \
+            || { echo "/the-boundary-play.html missing expected title marker"; exit 1; }
           code_hire=$(curl -sS -o /dev/null -w "%{http_code}" --retry 3 --retry-delay 2 "https://anthemic-developments.com/hire/")
           [[ "${code_hire}" == "200" ]] || { echo "/hire/ returned HTTP ${code_hire}"; exit 1; }
           code_pitch=$(curl -sS -o /dev/null -w "%{http_code}" --retry 3 --retry-delay 2 "https://anthemic-developments.com/content/pitch.json")
