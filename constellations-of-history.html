@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Constellations of History — Benjamin, Jameson, and Western Marxism's culture theory</title>
+<meta name="description" content="Lukács and Gramsci's founding break, Weimar Berlin's Benjamin, Bloch, Brecht, and Scholem, Frankfurt's critique of Benjamin and Debord's spectacle, British Cultural Studies, and Fredric Jameson's postmodernism — with a genealogy diagram of who read whom.">
+<meta name="color-scheme" content="light dark">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Constellations of History">
+<meta property="og:description" content="Benjamin's own term for how ideas relate to phenomena, turned on the tradition that produced it: Lukács and Gramsci to Weimar Berlin, the Frankfurt critique, Cultural Studies, and Jameson's postmodernism.">
+<meta property="og:url" content="https://anthemic-developments.com/constellations-of-history.html">
+<meta name="twitter:card" content="summary">
+<link rel="icon" type="image/svg+xml" href="constellations-of-history-favicon.svg">
+<link rel="canonical" href="https://anthemic-developments.com/constellations-of-history.html">
+<link rel="stylesheet" href="assets/css/philosophy-pages.css">
+<style>
+  .wrap.essay { max-width: 960px; margin: 0 auto; font-size: 17px; line-height: 1.65; }
+
+  header.masthead { margin-bottom: 3.5rem; }
+  .frame-note {
+    margin-top: 1.6rem; padding: 0.9rem 1.1rem;
+    border: 1px solid var(--line); border-left: 3px solid var(--cyan);
+    border-radius: 12px; font-family: var(--mono); font-size: 0.82rem;
+    color: var(--muted); line-height: 1.55; background: var(--panel-2);
+  }
+
+  section.thinker {
+    display: grid; grid-template-columns: minmax(0, 1fr) 260px;
+    gap: 0 2.2rem; padding: 2.6rem 0; border-top: 1px solid var(--line);
+  }
+  .main-col { min-width: 0; }
+  h2 {
+    font-family: var(--serif); font-size: 1.5rem; margin: 0 0 0.15rem;
+    letter-spacing: -0.01em; font-weight: 600;
+  }
+  h2 .years {
+    font-family: var(--mono); font-size: 0.65em; color: var(--muted);
+    font-weight: 400; margin-left: 0.5em;
+  }
+  h3 {
+    font-family: var(--mono); font-size: 0.92rem; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--cyan); margin: 1.8rem 0 0.8rem; font-weight: 600;
+  }
+  .tag-row { margin-bottom: 1.1rem; }
+  .tag {
+    display: inline-block; font-family: var(--mono); font-size: 0.68rem;
+    letter-spacing: 0.06em; text-transform: uppercase; padding: 0.18em 0.55em;
+    border-radius: 999px; background: var(--violet-soft); color: var(--violet); margin-right: 0.4em;
+  }
+  .main-col p { margin: 0 0 1rem; max-width: 66ch; }
+  .main-col p:last-child { margin-bottom: 0; }
+  strong.term { font-style: italic; font-weight: 600; }
+  .main-col a { color: var(--cyan); border-bottom-color: color-mix(in srgb, var(--cyan) 35%, transparent); }
+  .main-col a:hover { border-bottom-color: var(--cyan); }
+
+  aside.margin {
+    font-family: var(--mono); font-size: 0.76rem; line-height: 1.55;
+    color: var(--muted); border-left: 2px solid var(--cyan); padding-left: 1rem; align-self: start;
+  }
+  aside.margin .label {
+    color: var(--cyan); text-transform: uppercase; letter-spacing: 0.08em;
+    font-size: 0.68rem; display: block; margin-bottom: 0.5rem;
+  }
+  aside.margin p { margin: 0 0 0.8rem; }
+  aside.margin p:last-child { margin-bottom: 0; }
+  aside.margin .who { color: var(--ink); }
+
+  @media (max-width: 760px) {
+    section.thinker { grid-template-columns: 1fr; }
+    aside.margin {
+      border-left: none; border-top: 1px solid var(--line); padding-left: 0;
+      margin-top: 1.2rem; background: var(--cyan-soft);
+      padding: 0.9rem 1rem; border-radius: 12px;
+    }
+  }
+
+  .mapsec { padding-top: 3rem; border-top: 1px solid var(--line); }
+  .mapsec h2 { font-size: 1.6rem; margin-bottom: 0.4rem; }
+  .mapsec > p.lede { max-width: 66ch; margin-bottom: 1.6rem; }
+  .map-scroll {
+    overflow-x: auto; border: 1px solid var(--line); border-radius: 14px;
+    background: var(--panel); box-shadow: var(--shadow);
+  }
+  svg.genealogy { display: block; min-width: 760px; }
+  .gband-label {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em;
+    fill: var(--muted); text-transform: uppercase;
+  }
+  .gband-label tspan.lc { text-transform: none; }
+  .gband-rule { stroke: var(--line); stroke-width: 1; }
+  .gnode rect { fill: var(--ground); stroke: var(--line); stroke-width: 1.2; }
+  .gnode text { font-family: var(--serif); fill: var(--ink); font-size: 13px; }
+  .gnode .gsub { font-family: var(--mono); fill: var(--muted); font-size: 9.5px; }
+  .glink { fill: none; }
+  .glink.lineage { stroke: var(--muted); stroke-width: 1.4; }
+  .glink.critique { stroke: var(--violet); stroke-width: 1.3; stroke-dasharray: 5, 4; }
+  .glink.parallel { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 1, 3; opacity: 0.7; }
+  .glink.callback { stroke: var(--cyan); stroke-width: 2; }
+  .glabel { font-family: var(--mono); font-size: 9.5px; fill: var(--muted); }
+  .legend-note {
+    margin-top: 1rem; font-family: var(--mono); font-size: 0.72rem;
+    color: var(--muted); line-height: 1.8;
+  }
+  .legend-note .sw {
+    display: inline-block; width: 1.6em; height: 0; border-top: 2px solid;
+    margin-right: 0.4em; vertical-align: middle;
+  }
+  .legend-note .sw.lineage { border-color: var(--muted); }
+  .legend-note .sw.critique { border-color: var(--violet); border-top-style: dashed; }
+  .legend-note .sw.parallel { border-color: var(--muted); border-top-style: dotted; }
+  .legend-note .sw.callback { border-color: var(--cyan); border-top-width: 3px; }
+
+  footer.close {
+    margin-top: 3rem; padding-top: 1.8rem; border-top: 1px solid var(--line);
+    color: var(--muted); font-size: 0.92rem; max-width: 68ch;
+  }
+  footer.close p { margin: 0 0 0.9rem; }
+  footer.close a { color: var(--cyan); }
+
+  .glossary { padding-top: 3rem; border-top: 1px solid var(--line); }
+  .glossary h2 { font-size: 1.6rem; margin-bottom: 0.4rem; }
+  .glossary > p.lede { max-width: 66ch; margin-bottom: 2rem; }
+  .gloss-group { margin-bottom: 2.2rem; }
+  .gloss-group:last-child { margin-bottom: 0; }
+  .gloss-group h3 { margin-top: 0; }
+  .gloss-list { display: grid; grid-template-columns: 1fr; gap: 1.1rem 2rem; }
+  @media (min-width: 760px) { .gloss-list { grid-template-columns: 1fr 1fr; } }
+  .gloss-item dt { font-style: italic; font-weight: 600; color: var(--ink); margin: 0 0 0.2rem; }
+  .gloss-item dd { margin: 0; color: var(--muted); font-size: 0.92rem; line-height: 1.5; max-width: 44ch; }
+</style>
+</head>
+<body>
+
+<div class="wrap essay">
+
+<nav class="site-bar" aria-label="Site">
+  <a href="/">← Anthemic hub</a>
+  <span class="sep" aria-hidden="true">·</span>
+  <a href="/grounding-the-unconscious.html">Grounding the Unconscious</a>
+  <span class="sep" aria-hidden="true">·</span>
+  <a href="/genealogies-of-desire.html">Genealogies of Desire</a>
+  <span class="sep" aria-hidden="true">·</span>
+  <a href="/consciousness-map.html">Consciousness map</a>
+  <span class="sep" aria-hidden="true">·</span>
+  <a href="/the-boundary-play.html">The Line Between (play)</a>
+</nav>
+
+<header class="masthead">
+  <div class="eyebrow"><span class="dot">●</span> Western Marxism <span class="dot2">●</span> Weimar critical theory <span class="dot">●</span> British Cultural Studies <span class="dot2">●</span> postmodernism theory</div>
+  <h1>Constellations of History</h1>
+  <p class="dek">A constellation, for Walter Benjamin, is how an idea relates to the scattered particulars it doesn't quite subsume — not a concept swallowing examples, but a configuration that lets them light each other up. This page turns that method on the tradition that produced it: the break Lukács and Gramsci made with orthodox Marxism, the doomed and brilliant Weimar Berlin circle around Benjamin, the Frankfurt critique and the spectacle that followed it, British Cultural Studies, and Fredric Jameson's attempt to map postmodern capitalism whole.</p>
+  <div class="frame-note">
+    NOTE — this is the third branch off the same root as <a href="/genealogies-of-desire.html">Genealogies of Desire</a> and, further back, <a href="/grounding-the-unconscious.html">Grounding the Unconscious</a>: all three fork from Marx (and, in that first piece's case, Freud and Hegel too). Where the desire genealogy runs Freud-and-Marx through repression, French theory, and accelerationism, this one runs Marx-and-Hegel through culture, aesthetics, and ideology — Lukács and Benjamin's question wasn't "what does desire want," it was "what does a form — a novel, a film, a shopping arcade — actually do, politically, by existing." Same caveat as the sibling piece: this is intellectual history, not neuroscience. "How influential" and "what it broke from" are the load-bearing axes, not "how well-evidenced."
+  </div>
+</header>
+
+<section class="thinker" id="lukacs-gramsci">
+  <div class="main-col">
+    <h2>Lukács and Gramsci <span class="years">1917–1937, Western Marxism's founding break</span></h2>
+    <div class="tag-row"><span class="tag">reification</span><span class="tag">totality</span><span class="tag">hegemony</span><span class="tag">historical bloc</span></div>
+    <p>Everything below is downstream of a double failure: the Russian Revolution didn't spread west the way 1917's theorists expected, and by the 1920s independent Marxist theory was being crushed inside the USSR itself under Stalinism. Two theorists, working in prison and in isolation from each other, responded by turning Marxism's attention away from economic prediction and toward culture, consciousness, and the mechanisms that kept capitalism standing anyway. <strong class="term">Georg Lukács</strong>'s <em><a href="https://www.marxists.org/archive/lukacs/works/history/index.htm" target="_blank" rel="noopener noreferrer">History and Class Consciousness</a></em> (1923) names <strong class="term">reification</strong>: under capitalism, relations between people take on the "phantom objectivity" of relations between things, so a wage, a price, a schedule all present themselves as natural facts about the world rather than as frozen social relations that could be otherwise. Lukács's proposed exit runs through <strong class="term">totality</strong> — grasping the social whole rather than the fragmented, reified "facts" bourgeois thought treats as simply given — and through the proletariat's structural position as history's <strong class="term">identical subject-object</strong>: the one class whose own labor-power is itself a commodity, and who can therefore, uniquely, see reification from the inside as something made rather than natural.</p>
+    <p><strong class="term">Antonio Gramsci</strong> got there by a different route entirely — imprisoned by Mussolini's fascist regime from 1926, the prosecutor at his trial reportedly demanding the court "stop this brain from functioning for twenty years" — and wrote his <em><a href="https://www.marxists.org/archive/gramsci/index.htm" target="_blank" rel="noopener noreferrer">Prison Notebooks</a></em> (1929–1935) in fragments designed to slip past a censor, not published in full until decades after his 1937 death. His central term, <strong class="term">hegemony</strong>, answers the same puzzle Lukács's reification does from the other side: capitalist rule isn't secured mainly by force (police, courts — what Gramsci calls the repressive apparatus) but by winning active consent through schools, churches, media, and common sense itself, until the ruling class's own worldview simply feels like reality rather than one interested account of it. A <strong class="term">historical bloc</strong> is the alliance of social forces plus the ideological cement holding a given order together; overturning one, Gramsci argues, takes a patient <strong class="term">war of position</strong> — building counter-institutions and counter-common-sense — not only a <strong class="term">war of maneuver</strong>, a frontal assault on the state. <strong class="term">Organic intellectuals</strong>, who articulate a class's own worldview from within it, are Gramsci's answer to who actually does that work.</p>
+    <p>Neither man influenced the other directly, and it took a much later reader to name what they'd started as one tradition at all — that naming, and what it cost this whole lineage, is where this document ends, below. What they share is the deep root everything after them stands on: Marx's own <strong class="term">base and superstructure</strong> and <strong class="term">commodity fetishism</strong>, covered in full in the desire genealogy's <a href="/genealogies-of-desire.html">Freud and Marx section</a>, taken up here not as economics but as a theory of culture — the wager that ideology and aesthetic form are not decoration on top of the real class struggle, but part of how that struggle is actually won or lost.</p>
+  </div>
+  <aside class="margin">
+    <span class="label">how this landed</span>
+    <p><span class="who">Lukács</span> — <em>History and Class Consciousness</em> was condemned by the Comintern in 1924 for "idealist" over-emphasis on consciousness and dialectics over economic law; Lukács self-criticized under pressure (most sharply in 1933), a recantation most later scholars read as strategic survival rather than genuine reversal.</p>
+    <p><span class="who">Lukács and modernism</span> — his later literary-critical turn toward defending 19th-century realism against Kafka, Joyce, and Beckett as "decadent" set up the direct fight with Brecht, below.</p>
+    <p><span class="who">Gramsci</span> — died within weeks of his 1937 release, his health broken by over a decade in custody; the Notebooks survive only because his sister-in-law smuggled the notebooks out, and full critical editions took until the 1970s in English.</p>
+    <p><span class="who">Hegemony's afterlife</span> — the single most exported term in this document; picked up decades later by <a href="#cultural-studies">Stuart Hall, below</a>, and now used well beyond Marxist theory, sometimes more loosely than Gramsci's own carceral, closely argued version.</p>
+  </aside>
+</section>
+
+<section class="thinker" id="benjamin">
+  <div class="main-col">
+    <h2>Walter Benjamin <span class="years">1916–1940, allegory, aura, the dialectical image</span></h2>
+    <div class="tag-row"><span class="tag">allegory</span><span class="tag">constellation</span><span class="tag">aura</span><span class="tag">dialectical image</span><span class="tag">angel of history</span></div>
+    <p><strong class="term">Walter Benjamin</strong>'s academic career ended before it started: Frankfurt University rejected <em>The Origin of German Tragic Drama</em> (written 1925, published 1928) as his habilitation thesis, unable to classify it, and he spent the rest of his life as a freelance critic and essayist rather than a professor — a precarity that shapes everything that follows, including his dependence on Institute funding, below. The book's own argument favors <strong class="term">allegory</strong> over the Romantic <strong class="term">symbol</strong>: where the symbol claims sign and meaning fuse into an organic, timeless unity, allegory admits the relation is arbitrary and historical, fitting for a fallen world of ruin and catastrophe rather than one of harmonious presence — exactly the mode the Baroque mourning-play (<em>Trauerspiel</em>) works in. Its preface proposes the <strong class="term">constellation</strong> method this whole page borrows its title from: an idea doesn't subsume phenomena the way a concept subsumes examples, it configures scattered particulars so they illuminate each other, refusing both bare fact-collecting empiricism and idealist system-building alike.</p>
+    <p>"<a href="https://www.marxists.org/reference/subject/philosophy/works/ge/benjamin.htm" target="_blank" rel="noopener noreferrer">The Work of Art in the Age of Mechanical Reproduction</a>" (1935–36) names <strong class="term">aura</strong>: an artwork's unique presence in time and place, its embeddedness in ritual and tradition, which photography and film cause to wither by making the image endlessly, identically reproducible. Benjamin treats this as genuinely double-edged rather than simply a loss: aura's decay strips art of the cultic authority fascism depends on to aestheticize politics into spectacle, but it also opens genuinely new, potentially progressive modes of mass perception — film's montage and shock-effects turning the crowd from passive contemplators of a unique cult-object into active, distracted examiners, capable of critical response at a scale ritual art never allowed. His unfinished <em>Arcades Project</em> (assembled from decades of notes, published only in 1982) reads the 19th-century Parisian shopping arcade as industrial capitalism's own dreamworld, built from quotation and juxtaposition — literary montage — rather than linear argument, centered on the <strong class="term">flâneur</strong>, Baudelaire's idle strolling observer, whose leisurely gaze is at once produced by and half-resistant to commodity spectacle. Its method's real payload is the <strong class="term">dialectical image</strong>: a flash where past and present collide and become legible together, seized at a moment of danger rather than read off a smooth story of progress.</p>
+    <p>His last essay, "<a href="https://www.marxists.org/reference/archive/benjamin/1940/history.htm" target="_blank" rel="noopener noreferrer">Theses on the Philosophy of History</a>" (1940), written fleeing occupied France, turns that same refusal of progress into open polemic — aimed partly at the Social Democratic faith in automatic historical advance that had just failed catastrophically to stop fascism. Its ninth thesis gives the whole tradition its most quoted image: the <strong class="term">angel of history</strong>, modeled on a Paul Klee painting Benjamin owned, face turned backward toward a wreckage that keeps piling higher, wanting to stay and "make whole what has been smashed" while a storm called progress blows it irresistibly into the future it can't see. Against homogeneous, empty historical time, Benjamin proposes <strong class="term">Jetztzeit</strong> — now-time, a specific present moment that can be "blasted out" of history's continuum and charged with revolutionary, even messianic possibility, redeeming the defeated past rather than simply marching past it. That messianic register is a direct debt to his lifelong friendship with Scholem, below. Benjamin reached the Spanish border town of Portbou in September 1940 with a group of refugees; told, incorrectly as it turned out, that Spain would refuse them entry and hand the group back to the Gestapo, he took a fatal overdose that night. The manuscript he was carrying in a locked briefcase — widely rumored to be a final version of the Arcades material or the Theses themselves — was never recovered.</p>
+  </div>
+  <aside class="margin">
+    <span class="label">how this landed</span>
+    <p><span class="who">Habilitation rejection</span> — a well-documented institutional fact, not a later legend; it is a large part of why Benjamin's work stayed scattered essays and unfinished projects rather than a completed system.</p>
+    <p><span class="who">Aura</span> — still the standard reference point for arguments about mechanical and digital reproduction alike; whether its "loss" is straightforwardly progressive or straightforwardly a loss remains contested, including in Benjamin's own text.</p>
+    <p><span class="who">Which Benjamin</span> — Scholem, below, read the messianic-theological thread as primary and the Marxism as an overlay; Adorno, below, read the dialectical materialism as primary. Both were his literal posthumous editors, which is part of why the dispute never fully settled.</p>
+    <p><span class="who">Genealogies of Desire</span> — Benjamin gets one paragraph there, folded into the <a href="/genealogies-of-desire.html">Frankfurt School section</a>, as an affiliated rather than core member; this page is the fuller version of that footnote.</p>
+  </aside>
+</section>
+
+<section class="thinker" id="weimar-circle">
+  <div class="main-col">
+    <h2>The Weimar circle <span class="years">1918–1940, Bloch, Brecht, Scholem, Kracauer</span></h2>
+    <div class="tag-row"><span class="tag">non-synchronism</span><span class="tag">the not-yet-conscious</span><span class="tag">epic theater</span><span class="tag">mass ornament</span></div>
+    <p><strong class="term">Ernst Bloch</strong>, an early close friend of Lukács's before the two diverged sharply over modernism, spent the Nazi years in American exile writing <em>The Principle of Hope</em> (1938–47), which treats utopian longing — in daydream, fairy tale, art, religion, and political program alike — as objectively grounded in an unfinished, still-open reality, not mere wishful illusion: the <strong class="term">not-yet-conscious</strong>, a forward-tending dimension of hope Bloch argues runs through culture whether or not it's named as politics. His earlier <em>Heritage of Our Times</em> (1935) coins <strong class="term">non-synchronism</strong> — the observation that different classes live in genuinely different historical "times" within the same present, so that a peasantry's archaic longings and an industrial proletariat's modern consciousness coexist rather than one simply superseding the other. Bloch used this to explain something orthodox Marxism's linear stage-theory couldn't: fascism's ability to mobilize exactly those unsynchronized, archaic desires that a purely economic account had no room for.</p>
+    <p><strong class="term">Bertolt Brecht</strong> became Benjamin's closest friend in the 1930s, to Scholem's alarm and Adorno's open irritation — both worried Brecht's blunt, undialectical Marxism was pulling Benjamin away from proper theory. Brecht's <strong class="term">epic theater</strong> and its <strong class="term">Verfremdungseffekt</strong> (alienation or estrangement effect) deliberately break the audience's absorption — direct address, interrupting songs, visible stagehands — so a play is watched critically rather than felt cathartically; Benjamin's own essays on Brecht read this as a theatrical sibling of his dialectical image, art that shows its own construction rather than offering seamless illusion. It's also the direct fuel for open war with Lukács: Brecht defended modernist and avant-garde form as politically necessary where Lukács demanded the 19th-century realist novel's totalizing form specifically, a dispute historians call the <strong class="term">Expressionism debate</strong>, fought out partly in the journal <em>Das Wort</em> through the 1930s.</p>
+    <p><strong class="term">Gershom Scholem</strong> met Benjamin in Berlin as a teenager and stayed his closest friend until Benjamin's death, founding the modern academic study of Kabbalah after emigrating to Palestine in 1923 — an emigration he spent years unsuccessfully urging Benjamin to make himself. <strong class="term">Siegfried Kracauer</strong>, a Frankfurt feuilleton editor who'd read Kant's first Critique with Adorno as a teenager, gave the whole circle one of its sharpest working methods in "<strong class="term">The Mass Ornament</strong>" (1927): mass spectacles like the Tiller Girls dance troupes read as legible imprints of capitalist rationalization on the body itself, surface phenomena that reveal social truth more directly than a society's own official self-understanding — a method running parallel to, and probably feeding, Benjamin's own attention to the arcade's surface detail as historical evidence.</p>
+  </div>
+  <aside class="margin">
+    <span class="label">how this landed</span>
+    <p><span class="who">Brecht vs. Lukács</span> — usually read today as Brecht's side winning the argument in the humanities generally (form as politically contingent, not fixed to one 19th-century genre), though Lukács's totality concept, above, remains separately influential.</p>
+    <p><span class="who">Scholem vs. Adorno</span> — their rival framings of "the real Benjamin" shaped two different posthumous editions and two different scholarly traditions reading him; Scholem's own memoir, <em>Walter Benjamin: The Story of a Friendship</em> (1975), is the fullest first-hand account, understandably not a neutral one.</p>
+    <p><span class="who">Kracauer</span> — less famous today than his contemporaries here, despite arguably prefiguring both Benjamin's method and Adorno's culture-industry diagnosis; his <em>From Caligari to Hitler</em> (1947) read Weimar cinema as foreshadowing German fascism in hindsight, a reading some later film historians consider too neatly retrospective.</p>
+    <p><span class="who">Bloch</span> — his defense of expressionism and religious/utopian imagination against Lukács's realism made him, alongside Brecht, one of the Expressionism debate's other named targets.</p>
+  </aside>
+</section>
+
+<section class="thinker" id="adorno-debord">
+  <div class="main-col">
+    <h2>Adorno's critique, and Debord's spectacle <span class="years">1930s–1960s, what Frankfurt made of Benjamin, and after</span></h2>
+    <div class="tag-row"><span class="tag">mediation</span><span class="tag">the culture industry</span><span class="tag">spectacle</span><span class="tag">détournement</span></div>
+    <p><strong class="term">Theodor Adorno</strong>'s own diagnosis of mass culture — the <strong class="term">culture industry</strong>, standardizing desire into consumable sameness — is covered in full in the <a href="/genealogies-of-desire.html">desire genealogy's Freudo-Marxism section</a>; what belongs here instead is the real, materially loaded argument he had with Benjamin specifically. In a 1938 letter responding to a draft Arcades essay on Baudelaire, Adorno objected that Benjamin's method of simply juxtaposing images and quotations — "montage" without enough theoretical labor — lacked <strong class="term">mediation</strong>: without the dialectical work of connecting a phenomenon to the total social process that produced it, striking correspondences risk becoming a kind of magical thinking dressed as materialism. The critique carried real weight beyond argument, since Adorno and Horkheimer's Institute was, at the time, one of Benjamin's few sources of income in exile — an intellectual disagreement layered directly on top of a dependency relationship, which is part of why historians read the exchange as more fraught than a simple seminar dispute.</p>
+    <p><strong class="term">Guy Debord</strong> and the Situationist International (founded 1957) picked up the same lineage a generation later from the opposite direction — not more mediation, but the diagnosis pushed one stage further. <em>Society of the Spectacle</em> (1967) names the <strong class="term">spectacle</strong>: not a pile of images, but a social relation between people mediated by images, the terminal stage of Marx's commodity fetishism (cited directly) and Lukács's reification, above, where lived experience is displaced by contemplation of its own representation. Debord's practical answers — <strong class="term">détournement</strong> (hijacking and repurposing existing cultural artifacts against their own intended meaning) and the <strong class="term">dérive</strong> (an unplanned, collective drift through the city) — read as a radicalized, politicized descendant of Benjamin's solitary flâneur, above, turned from private observation into deliberate tactics against the spectacle he strolled through.</p>
+  </div>
+  <aside class="margin">
+    <span class="label">how this landed</span>
+    <p><span class="who">The Hornberg letter</span> — widely cited as the sharpest single document of Frankfurt School internal disagreement; most historians read it as a real theoretical objection, not merely institutional gatekeeping, even given the funding relationship underneath it.</p>
+    <p><span class="who">Debord</span> — took his own life in 1994, a fact usually noted alongside, not instead of, his continuing influence on media and spectacle theory; already briefly grouped with Baudrillard and Lyotard in the <a href="/genealogies-of-desire.html">desire genealogy's French theory section</a>.</p>
+    <p><span class="who">Spectacle today</span> — a term now used loosely across media criticism well beyond Debord's own precise argument; worth keeping his specific claim (a social relation, not just "too many images") distinct from the popularized shorthand.</p>
+  </aside>
+</section>
+
+<section class="thinker" id="cultural-studies">
+  <div class="main-col">
+    <h2>British Cultural Studies <span class="years">1950s–1970s, Williams and Hall</span></h2>
+    <div class="tag-row"><span class="tag">cultural materialism</span><span class="tag">structure of feeling</span><span class="tag">encoding / decoding</span><span class="tag">articulation</span></div>
+    <p><strong class="term">Raymond Williams</strong>'s <em>Culture and Society 1780–1950</em> (1958) and <em>The Long Revolution</em> (1961) found a third way past a stale argument: culture as neither a rarefied realm above ordinary life nor a mere reflection of the economic base underneath it, but itself a material practice — a "whole way of life," irreducibly part of how a society reproduces and contests itself. His term <strong class="term">structure of feeling</strong> names the lived, often not-yet-fully-articulated common sensibility of a generation or period, distinct from formal, nameable ideology — a term closer in spirit to Bloch's <strong class="term">non-synchronism</strong>, above, than to the Althusserian ideology-critique it sits beside; Williams's related picture of dominant, residual, and emergent cultural formations coexisting at once, rather than one simply replacing another, is the same insight in a different vocabulary.</p>
+    <p><strong class="term">Stuart Hall</strong>, director of Birmingham's Centre for Contemporary Cultural Studies from 1968, gave the field its most exported single essay: "Encoding/Decoding" (1973) argues a media message is actively encoded with a preferred meaning by its producers but can be decoded by an audience along a dominant, negotiated, or oppositional reading — a direct rebuttal of passive-audience media theory, and a direct extension of Gramsci's <strong class="term">hegemony</strong>, above, filtered through Althusser's ideology and interpellation, covered in full in the <a href="/genealogies-of-desire.html">desire genealogy's French structuralist section</a>: the same hailing mechanism Althusser describes, but one Hall insists the hailed subject can read differently, or talk back to, rather than simply being subjected by. His related concept of <strong class="term">articulation</strong> — that ideological elements like race, class, and nation aren't permanently welded to one political position by economic necessity, but are contingently linked together by active political and cultural work — is what let Hall and his Birmingham colleagues read Thatcherism, in his own later phrase, as an actively built "authoritarian populism" rather than an automatic reflex of economic crisis.</p>
+  </div>
+  <aside class="margin">
+    <span class="label">how this landed</span>
+    <p><span class="who">Williams</span> — stayed notably wary of the French structuralism and psychoanalysis his American and Birmingham contemporaries increasingly absorbed, preferring a more empirical, historical method; that caution is itself a recurring point of contrast historians draw between him and Hall.</p>
+    <p><span class="who">Hall</span> — went on to a wider public-intellectual career on race, multiculturalism, and Thatcherism well beyond the CCCS years covered here; "Encoding/Decoding" remains the single most cited entry point into the whole field.</p>
+    <p><span class="who">Interpellation, reread</span> — Althusser's own version, above, is more often read as leaving the hailed subject little room to resist; Hall's use of it is a genuine, debated modification, not a footnote to it.</p>
+  </aside>
+</section>
+
+<section class="thinker" id="jameson">
+  <div class="main-col">
+    <h2>Fredric Jameson <span class="years">1961–2024, the political unconscious and postmodernism</span></h2>
+    <div class="tag-row"><span class="tag">always historicize</span><span class="tag">the political unconscious</span><span class="tag">pastiche</span><span class="tag">cognitive mapping</span></div>
+    <p><strong class="term">Fredric Jameson</strong> did for Western Marxism in English what Kojève's seminar, covered in the <a href="/genealogies-of-desire.html">desire genealogy</a>, did for Hegel in French: transmitted a whole tradition into a language that had barely absorbed it. <em>Marxism and Form</em> (1971), following an early book on Sartre, introduced Anglophone readers to Adorno, Benjamin, Marcuse, Lukács, Bloch, and Sartre together as one dialectical current, largely for the first time in English. <em>The Political Unconscious</em> (1981) opens with its own imperative, "always historicize," and argues literary and cultural texts are neither purely autonomous art objects nor simple ideological reflections, but <strong class="term">socially symbolic acts</strong>: a text imaginatively — and necessarily incompletely — resolves a real, otherwise unresolvable social contradiction, doing genuine political work rather than just expressing a position. History itself, in this reading, is Althusser's <strong class="term">absent cause</strong>, above — never directly present, accessible only through its textual effects — which Jameson glosses, borrowing Lacan's Real, as: "history is what hurts." He borrows Greimas's <strong class="term">semiotic square</strong> as a formal tool for mapping the ideological oppositions structuring a given text, and reads texts through three nested "horizons" — political, social, and historical — each reframing the last.</p>
+    <p><em>Postmodernism, or, the Cultural Logic of Late Capitalism</em> (essay 1984, book 1991) periodizes postmodern culture using economist Ernest Mandel's three stages of capitalism (market, monopoly, and multinational/consumer "late" capitalism) — postmodernism isn't a style choice, on this account, it's what culture looks like once capital has penetrated regions, the unconscious, aesthetics itself, nature, that earlier capitalism hadn't yet reached. Its diagnostic vocabulary: <strong class="term">pastiche</strong>, blank imitation of styles with no stable norm left to satirize against, replacing modernist parody's still-critical mimicry; <strong class="term">depthlessness</strong>, a flattening of every depth-model — hermeneutic, dialectical, existential, Freudian alike — that once promised a hidden essence behind appearance; <strong class="term">waning of affect</strong>, where bounded subjective feeling gives way to a free-floating intensity no longer anchored in a coherent individual; and <strong class="term">schizophrenic temporality</strong>, borrowed from Lacan's account of a breakdown in the signifying chain, read onto a culture stuck in a rush of disconnected, vivid present tenses with no experienced continuity of past or future. Against the disorientation this produces, Jameson proposes <strong class="term">cognitive mapping</strong> — art's task of giving individuals some symbolic purchase on their own real position inside an otherwise unrepresentable totality of global capital, borrowing the term from urban planner Kevin Lynch's work on legible and illegible city space and reworking Althusser's own definition of ideology into a positive aesthetic project rather than only a diagnosis.</p>
+  </div>
+  <aside class="margin">
+    <span class="label">how this landed</span>
+    <p><span class="who">"Easier to imagine the end of the world"</span> — the line Fisher opens <em>Capitalist Realism</em> with, in the <a href="/genealogies-of-desire.html">desire genealogy's Warwick/CCRU section</a>, attributing it to Jameson, though Žižek used a version of it too and its exact wording and origin are disputed; the underlying diagnosis is unambiguously Jameson's regardless of who said it first.</p>
+    <p><span class="who">Jameson and Žižek</span> — close, overlapping figures, both fusing Lacan, Hegel, and Marx, each citing the other approvingly across decades; <a href="/grounding-the-unconscious.html">Žižek's own psychoanalytic apparatus is covered separately</a>.</p>
+    <p><span class="who">Mandel's staging</span> — some economists and Marxist theorists dispute "late capitalism" as a clean, universally applicable period, a caveat Jameson's own framework inherits rather than resolves.</p>
+    <p><span class="who">Jameson</span> — died 22 September 2024; <em>The Political Unconscious</em> and the postmodernism book remain standard graduate reading in literary and cultural theory well beyond Marxist circles specifically.</p>
+  </aside>
+</section>
+
+<section class="thinker" id="anderson-harvey-eagleton">
+  <div class="main-col">
+    <h2>Naming the tradition, and its parallel heirs <span class="years">1976–present, Anderson, Harvey, Eagleton</span></h2>
+    <div class="tag-row"><span class="tag">Western Marxism (named)</span><span class="tag">time-space compression</span><span class="tag">transmission</span></div>
+    <p><strong class="term">Perry Anderson</strong>, longtime editor of <em>New Left Review</em>, is the one who closes the loop this whole page has been implicitly drawing: <em>Considerations on Western Marxism</em> (1976) names and diagnoses everyone above — Lukács, Gramsci, then the Frankfurt School, Sartre, Althusser — as a single tradition, retrospectively, decades after most of them were dead. His diagnosis wasn't only celebratory: Western Marxism, on his reading, was a body of theory that grew ever more sophisticated in inverse proportion to its distance from any actual working-class political practice, a retreat into philosophy and aesthetics forced by the historical defeat this whole document opened with. It's a genealogy that only becomes visible as one thing from far enough downstream — which is exactly the position Anderson himself is writing from, and exactly the position this page is written from too.</p>
+    <p><strong class="term">David Harvey</strong>'s <em>The Condition of Postmodernity</em> (1989) reaches close to Jameson's own diagnosis, above, from geography rather than literary theory: <strong class="term">time-space compression</strong>, capitalism's recurrent crises driving it to annihilate space through ever-faster transport, communication, and financial circulation, producing the same fragmented, accelerated culture Jameson reads through literature and film. Harvey dates the relevant shift — from Fordist mass production to flexible, post-Fordist accumulation — to around 1973, the same year Fisher's later work, in the <a href="/genealogies-of-desire.html">desire genealogy</a>, traces capitalist realism's real origin to: Pinochet's US-backed coup against Chile's elected socialist government, later exported as neoliberalism's template to Thatcher and Reagan. <strong class="term">Terry Eagleton</strong>, Williams's own student at Cambridge, did more than almost anyone to carry this entire tradition — Benjamin, Althusser, Williams's cultural materialism — into the ordinary university literature classroom, through widely used books like <em>Marxism and Literary Criticism</em> (1976) and <em>Literary Theory: An Introduction</em> (1983), the transmission-belt role Urbanomic and Robin Mackay later played for CCRU, in the same sibling genealogy.</p>
+  </div>
+  <aside class="margin">
+    <span class="label">how this landed</span>
+    <p><span class="who">Anderson</span> — revisited his own thesis more pessimistically in <em>In the Tracks of Historical Materialism</em> (1983), arguing the retreat into theory had, if anything, deepened; "Western Marxism" is now the standard historiographical name for exactly this lineage.</p>
+    <p><span class="who">Harvey and Jameson</span> — genuine mutual citation, not parallel invention arrived at independently; both books are usually taught as a pair.</p>
+    <p><span class="who">Eagleton</span> — a popularizer and teacher more than an original theorist by his own account, which is precisely the role that made this whole tradition legible to generations of students who never read Lukács or Benjamin directly.</p>
+  </aside>
+</section>
+
+<section class="mapsec">
+  <h2>Visual mapping</h2>
+  <p class="lede">The line starts with a double failure — revolution stalled in the West, independent theory crushed in the East — that pushed Lukács and Gramsci toward culture instead of economics. From Weimar Berlin's brief, doomed constellation around Benjamin, the lineage splits and re-converges: Frankfurt critiques Benjamin's method even as Debord radicalizes his flâneur into tactics; British Cultural Studies takes Gramsci's hegemony somewhere Gramsci never went; Jameson imports the whole current into English and maps postmodern capitalism with it; and Anderson, decades later, is the one who looks back down the line and gives it a name. Solid lines build on; dashed lines critique or break from; dotted lines are parallel dialogue, not lineage; the thick cyan line is the one long-range callback this genealogy turns on.</p>
+
+  <div class="map-scroll">
+    <svg class="genealogy" viewBox="0 0 1000 900" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Genealogy diagram from Lukács and Gramsci through Benjamin's Weimar circle, the Frankfurt critique and Debord's spectacle, British Cultural Studies, and Fredric Jameson, to Perry Anderson naming the tradition Western Marxism.">
+      <defs>
+        <marker id="arrow2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="context-stroke"/>
+        </marker>
+      </defs>
+
+      <line class="gband-rule" x1="20" y1="190" x2="980" y2="190"/>
+      <line class="gband-rule" x1="20" y1="350" x2="980" y2="350"/>
+      <line class="gband-rule" x1="20" y1="510" x2="980" y2="510"/>
+      <line class="gband-rule" x1="20" y1="670" x2="980" y2="670"/>
+      <text class="gband-label" x="20" y="16">Lukács · Gramsci · 1917–1937</text>
+      <text class="gband-label" x="20" y="200">Weimar circle · 1918<tspan class="lc">s</tspan>–1940</text>
+      <text class="gband-label" x="20" y="360">Frankfurt critique &amp; spectacle · 1930<tspan class="lc">s</tspan>–60<tspan class="lc">s</tspan></text>
+      <text class="gband-label" x="20" y="520">British Cultural Studies · 1950<tspan class="lc">s</tspan>–70<tspan class="lc">s</tspan></text>
+      <text class="gband-label" x="20" y="680">Jameson and after · 1961–present</text>
+
+      <!-- connectors (drawn first, under nodes) -->
+      <path class="glink parallel" d="M350,117 Q455,117 560,117"/>
+      <text class="glabel" x="365" y="80">both later named "Western Marxism"</text>
+
+      <path class="glink critique" d="M320,144 Q500,175 615,246" marker-end="url(#arrow2)"/>
+      <text class="glabel" x="380" y="205">realism vs. modernism, fought openly</text>
+
+      <path class="glink lineage" d="M260,144 C 260,175 260,180 300,180 L 560,180 C 570,180 575,220 575,300 C 575,370 630,400 688,403" marker-end="url(#arrow2)"/>
+      <text class="glabel" x="160" y="205">reification, one stage further</text>
+
+      <path class="glink lineage" d="M650,144 C 900,150 970,160 970,300 C 970,450 970,550 970,600 C 970,650 750,650 600,635 Q 500,625 466,619" marker-end="url(#arrow2)"/>
+      <text class="glabel" x="850" y="470">hegemony, decades later</text>
+
+      <path class="glink parallel" d="M150,270 Q225,270 300,270"/>
+      <path class="glink parallel" d="M745,270 Q752,270 760,270"/>
+      <path class="glink parallel" d="M160,178 Q235,205 300,232"/>
+
+      <path class="glink lineage" d="M460,296 Q460,350 460,403" marker-end="url(#arrow2)"/>
+      <text class="glabel" x="325" y="320">not enough mediation</text>
+
+      <path class="glink lineage" d="M500,296 Q640,340 655,403" marker-end="url(#arrow2)"/>
+      <text class="glabel" x="560" y="358">aura's decay, then the spectacle</text>
+
+      <path class="glink lineage" d="M85,296 Q100,420 173,563" marker-end="url(#arrow2)"/>
+      <text class="glabel" x="20" y="440">structure of feeling, echoed</text>
+
+      <path class="glink parallel" d="M550,590 Q625,590 700,590"/>
+      <text class="glabel" x="800" y="500">ideology, one that can talk back</text>
+
+      <path class="glink lineage" d="M465,619 Q470,635 475,655" marker-end="url(#arrow2)"/>
+      <text class="glabel" x="480" y="640">cultural studies, imported</text>
+
+      <path class="glink lineage" d="M350,296 C 310,350 310,500 310,600 Q 340,635 400,655" marker-end="url(#arrow2)"/>
+      <text class="glabel" x="180" y="560">Marxism and Form imports the whole current</text>
+
+      <path class="glink callback" d="M100,750 C 100,725 300,730 350,730 L 900,730 C 950,730 960,650 960,600 C 960,450 960,300 960,160 C 960,120 850,110 772,117" marker-end="url(#arrow2)"/>
+      <text class="glabel" x="640" y="195">coins "Western Marxism" for this lineage</text>
+
+      <path class="glink parallel" d="M280,780 Q400,780 447,755"/>
+      <text class="glabel" x="270" y="815">same diagnosis, from geography</text>
+
+      <path class="glink lineage" d="M255,619 C 200,670 200,730 280,740 L 355,742 Q 375,752 392,760"/>
+      <text class="glabel" x="150" y="700">taught it to a generation</text>
+
+      <path class="glink parallel" d="M610,715 Q580,745 545,762"/>
+      <text class="glabel" x="440" y="735">the shared line: end of the world</text>
+
+      <path class="glink parallel" d="M610,715 Q720,740 800,762"/>
+      <text class="glabel" x="740" y="735">Lacan and Marx, both</text>
+
+      <!-- nodes -->
+      <g class="gnode"><rect x="180" y="90" width="170" height="54" rx="6"/><text x="265" y="122" text-anchor="middle">Georg Lukács</text></g>
+      <g class="gnode"><rect x="560" y="90" width="210" height="54" rx="6"/><text x="665" y="122" text-anchor="middle">Antonio Gramsci</text></g>
+
+      <g class="gnode"><rect x="20" y="245" width="130" height="50" rx="6"/><text x="85" y="275" text-anchor="middle">Ernst Bloch</text></g>
+      <g class="gnode"><rect x="300" y="230" width="240" height="66" rx="6"/><text x="420" y="260" text-anchor="middle">Walter Benjamin</text><text class="gsub" x="420" y="278" text-anchor="middle">aura · dialectical image</text></g>
+      <g class="gnode"><rect x="610" y="245" width="135" height="50" rx="6"/><text x="677" y="275" text-anchor="middle">Bertolt Brecht</text></g>
+      <g class="gnode"><rect x="760" y="245" width="140" height="50" rx="6"/><text x="830" y="275" text-anchor="middle">Kracauer</text></g>
+      <g class="gnode"><rect x="30" y="145" width="130" height="46" rx="6"/><text x="95" y="173" text-anchor="middle">Scholem</text></g>
+
+      <g class="gnode"><rect x="355" y="405" width="210" height="50" rx="6"/><text x="460" y="435" text-anchor="middle">Adorno</text></g>
+      <g class="gnode"><rect x="600" y="405" width="180" height="50" rx="6"/><text x="690" y="435" text-anchor="middle">Guy Debord</text></g>
+
+      <g class="gnode"><rect x="110" y="565" width="170" height="54" rx="6"/><text x="195" y="597" text-anchor="middle">Raymond Williams</text></g>
+      <g class="gnode"><rect x="380" y="565" width="170" height="54" rx="6"/><text x="465" y="597" text-anchor="middle">Stuart Hall</text></g>
+      <g class="gnode"><rect x="700" y="565" width="230" height="54" rx="6"/><text x="815" y="592" text-anchor="middle">Althusser</text><text class="gsub" x="815" y="608" text-anchor="middle">interpellation · see Genealogies</text></g>
+
+      <g class="gnode"><rect x="350" y="655" width="260" height="60" rx="6"/><text x="480" y="690" text-anchor="middle">Fredric Jameson</text></g>
+
+      <g class="gnode"><rect x="20" y="750" width="160" height="50" rx="6"/><text x="100" y="780" text-anchor="middle">Perry Anderson</text></g>
+      <g class="gnode"><rect x="200" y="750" width="150" height="50" rx="6"/><text x="275" y="780" text-anchor="middle">David Harvey</text></g>
+      <g class="gnode"><rect x="370" y="750" width="150" height="50" rx="6"/><text x="445" y="780" text-anchor="middle">Terry Eagleton</text></g>
+      <g class="gnode"><rect x="540" y="750" width="190" height="50" rx="6"/><text x="635" y="774" text-anchor="middle">Mark Fisher</text><text class="gsub" x="635" y="789" text-anchor="middle">see Genealogies</text></g>
+      <g class="gnode"><rect x="750" y="750" width="180" height="50" rx="6"/><text x="840" y="774" text-anchor="middle">Žižek</text><text class="gsub" x="840" y="789" text-anchor="middle">see Grounding</text></g>
+    </svg>
+  </div>
+
+  <p class="legend-note">
+    <span class="sw lineage"></span>builds on / develops directly<br>
+    <span class="sw critique"></span>explicitly critiques, rejects, or breaks from<br>
+    <span class="sw parallel"></span>parallel dialogue, not a lineage claim<br>
+    <span class="sw callback"></span>the one long-range callback this genealogy turns on
+  </p>
+
+  <footer class="close">
+    <p>The desire genealogy this page sits beside was asking what happens when Freud and Marx get fused, blown apart, and remixed. This one asks a quieter question: what does a cultural form — a shopping arcade, a Tiller Girls routine, a Duke University seminar on Greimas — actually do politically, just by existing and being read a certain way. Lukács's answer was reification; Benjamin's was the dialectical image; Gramsci's was hegemony; Jameson's was cognitive mapping. Different tools, same underlying bet: that culture is not a reflection of the real fight but part of where it actually happens.</p>
+    <p>What's striking read end to end is how much of this argument is also a fight about method itself. Lukács wants totality and realist form; Brecht and Benjamin want montage and interruption instead; Adorno wants more mediation than Benjamin gives him; Debord wants the whole apparatus turned into tactics; Hall wants Gramsci's hegemony to leave room for a subject who talks back; Jameson wants one map big enough to hold late capitalism whole. Anderson, writing last, is the one who steps back and notices that everyone above him had been getting more sophisticated about theory in almost exact proportion to how far history had pushed them from any actual lever of power. Whether that's the tradition's tragedy or its only honest response to the century it was handed is not a question this page resolves — only one it can, in Benjamin's own sense, arrange into a constellation.</p>
+  </footer>
+</section>
+
+<section class="glossary">
+  <h2>Glossary</h2>
+  <p class="lede">The key terms from each current, grouped the way the sections above are — a place to look one up without re-reading the paragraph it came from.</p>
+
+  <div class="gloss-group">
+    <h3>Lukács &amp; Gramsci</h3>
+    <dl class="gloss-list">
+      <div class="gloss-item"><dt>Reification</dt><dd>Lukács's term for capitalism making relations between people appear as relations between things — a wage or a price presenting itself as a natural fact rather than a frozen social relation.</dd></div>
+      <div class="gloss-item"><dt>Totality</dt><dd>Lukács's proposed exit from reification: grasping the social whole rather than the fragmented, seemingly self-evident "facts" reified thought treats as simply given.</dd></div>
+      <div class="gloss-item"><dt>Hegemony</dt><dd>Gramsci's term for rule secured mainly through won consent — schools, churches, media, common sense — rather than force alone, until the ruling class's worldview simply feels like reality.</dd></div>
+      <div class="gloss-item"><dt>Historical bloc</dt><dd>Gramsci's term for the alliance of social forces plus the ideological cement holding a given social order together.</dd></div>
+      <div class="gloss-item"><dt>War of position / war of maneuver</dt><dd>Gramsci's distinction between a patient struggle to build counter-institutions and counter-common-sense, versus a frontal assault on the state.</dd></div>
+    </dl>
+  </div>
+
+  <div class="gloss-group">
+    <h3>Walter Benjamin</h3>
+    <dl class="gloss-list">
+      <div class="gloss-item"><dt>Allegory / symbol</dt><dd>Benjamin's preferred allegory admits sign and meaning are arbitrarily, historically related; the Romantic symbol claims a false organic unity between them.</dd></div>
+      <div class="gloss-item"><dt>Constellation (method)</dt><dd>An idea that configures scattered particulars so they illuminate each other, rather than subsuming them the way a concept subsumes examples.</dd></div>
+      <div class="gloss-item"><dt>Aura</dt><dd>An artwork's unique presence in time and place and its embeddedness in ritual and tradition, which mechanical reproduction causes to wither.</dd></div>
+      <div class="gloss-item"><dt>Dialectical image</dt><dd>A flash in which past and present collide and become legible together, seized at a moment of danger rather than read off a story of continuous progress.</dd></div>
+      <div class="gloss-item"><dt>Angel of history / Jetztzeit</dt><dd>Benjamin's image (after Klee) of an angel blown backward into the future by a storm called progress, facing a wreckage it cannot mend; Jetztzeit, "now-time," is the present moment that can be blasted out of history's continuum instead.</dd></div>
+    </dl>
+  </div>
+
+  <div class="gloss-group">
+    <h3>The Weimar circle</h3>
+    <dl class="gloss-list">
+      <div class="gloss-item"><dt>Non-synchronism</dt><dd>Bloch's term for different classes living in genuinely different historical "times" within the same present — used to explain fascism's pull on archaic longings orthodox Marxism's stage-theory couldn't account for.</dd></div>
+      <div class="gloss-item"><dt>The not-yet-conscious</dt><dd>Bloch's forward-tending dimension of hope, running through daydream, art, religion, and political utopia alike, treated as objectively grounded rather than mere illusion.</dd></div>
+      <div class="gloss-item"><dt>Verfremdungseffekt (epic theater)</dt><dd>Brecht's alienation or estrangement effect: deliberately breaking theatrical illusion so an audience watches critically rather than empathizing passively.</dd></div>
+      <div class="gloss-item"><dt>Mass ornament</dt><dd>Kracauer's reading of mass spectacle (like dance-troupe routines) as a legible imprint of capitalist rationalization on the body, revealing social truth more directly than official self-understanding does.</dd></div>
+    </dl>
+  </div>
+
+  <div class="gloss-group">
+    <h3>Frankfurt critique &amp; spectacle</h3>
+    <dl class="gloss-list">
+      <div class="gloss-item"><dt>Mediation</dt><dd>Adorno's demand that a phenomenon be dialectically connected to the total social process producing it, rather than simply juxtaposed as a striking image.</dd></div>
+      <div class="gloss-item"><dt>Spectacle</dt><dd>Debord's term for a social relation between people mediated by images — the terminal stage of commodity fetishism and reification, where lived experience is displaced by contemplation of its own representation.</dd></div>
+      <div class="gloss-item"><dt>Détournement / dérive</dt><dd>Situationist tactics: hijacking existing cultural artifacts against their intended meaning, and an unplanned collective drift through the city — a radicalized descendant of Benjamin's flâneur.</dd></div>
+    </dl>
+  </div>
+
+  <div class="gloss-group">
+    <h3>British Cultural Studies</h3>
+    <dl class="gloss-list">
+      <div class="gloss-item"><dt>Cultural materialism</dt><dd>Williams's view of culture as itself a material practice — a "whole way of life" — rather than a reflection of the economic base or a rarefied realm above it.</dd></div>
+      <div class="gloss-item"><dt>Structure of feeling</dt><dd>Williams's term for the lived, not-yet-fully-articulated common sensibility of a generation, distinct from formal, nameable ideology.</dd></div>
+      <div class="gloss-item"><dt>Encoding / decoding</dt><dd>Hall's model of media messages encoded with a preferred meaning by producers but decoded by audiences along dominant, negotiated, or oppositional readings.</dd></div>
+      <div class="gloss-item"><dt>Articulation</dt><dd>Hall's term for ideological elements (race, class, nation) being contingently linked together by political and cultural work, rather than welded to one position by economic necessity — and therefore also open to being linked differently.</dd></div>
+    </dl>
+  </div>
+
+  <div class="gloss-group">
+    <h3>Fredric Jameson</h3>
+    <dl class="gloss-list">
+      <div class="gloss-item"><dt>The political unconscious</dt><dd>Jameson's claim that texts are socially symbolic acts, imaginatively and incompletely resolving a real social contradiction rather than merely reflecting or expressing it.</dd></div>
+      <div class="gloss-item"><dt>Absent cause</dt><dd>Althusser's term, borrowed by Jameson, for history as never directly present, accessible only through its textual effects — glossed by Jameson via Lacan's Real as "history is what hurts."</dd></div>
+      <div class="gloss-item"><dt>Pastiche</dt><dd>Blank imitation of styles with no stable norm left to satirize against, replacing modernist parody's still-critical mimicry.</dd></div>
+      <div class="gloss-item"><dt>Depthlessness / waning of affect</dt><dd>Postmodern culture's flattening of every depth-model (hermeneutic, dialectical, Freudian) and its replacement of bounded subjective feeling with free-floating intensity.</dd></div>
+      <div class="gloss-item"><dt>Schizophrenic temporality</dt><dd>Jameson's borrowing of Lacan's account of a breakdown in the signifying chain, read onto a culture stuck in disconnected, vivid present tenses with no felt continuity of past or future.</dd></div>
+      <div class="gloss-item"><dt>Cognitive mapping</dt><dd>Jameson's proposed task for art: giving individuals symbolic purchase on their own real position inside an otherwise unrepresentable totality of global capital.</dd></div>
+    </dl>
+  </div>
+
+  <div class="gloss-group">
+    <h3>Naming the tradition</h3>
+    <dl class="gloss-list">
+      <div class="gloss-item"><dt>Western Marxism</dt><dd>Perry Anderson's retrospective name for the entire lineage above — theory growing more sophisticated in proportion to its distance from any actual working-class political practice.</dd></div>
+      <div class="gloss-item"><dt>Time-space compression</dt><dd>David Harvey's term for capitalism's crises driving it to annihilate space through ever-faster transport, communication, and finance — his geographic parallel to Jameson's postmodernism.</dd></div>
+    </dl>
+  </div>
+</section>
+
+</div>
+</body>
+</html>

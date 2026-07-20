@@ -10,6 +10,7 @@
 #   consciousness-map.html (+ favicon/preview) - philosophy of mind map
 #   grounding-the-unconscious.html (+ favicon) - psychoanalysis / neuroscience map
 #   genealogies-of-desire.html (+ favicon) - Freudo-Marxism / accelerationism map
+#   constellations-of-history.html (+ favicon) - Western Marxism / Benjamin / Jameson map
 #   the-boundary-play.html - Kant–Hegel one-act + genealogy rewrites
 #   sitemap.xml / robots.txt - SEO files at site root
 #   assets/           - optional folder of static assets
@@ -71,6 +72,11 @@ if [[ ! -f "${INCOMING}/genealogies-of-desire.html" ]] \
   echo "anthemic-hub-deploy-apply: missing genealogies-of-desire.html (and favicon) in ${INCOMING}" >&2
   exit 1
 fi
+if [[ ! -f "${INCOMING}/constellations-of-history.html" ]] \
+  || [[ ! -f "${INCOMING}/constellations-of-history-favicon.svg" ]]; then
+  echo "anthemic-hub-deploy-apply: missing constellations-of-history.html (and favicon) in ${INCOMING}" >&2
+  exit 1
+fi
 if [[ ! -f "${INCOMING}/the-boundary-play.html" ]]; then
   echo "anthemic-hub-deploy-apply: missing the-boundary-play.html in ${INCOMING}" >&2
   exit 1
@@ -126,6 +132,8 @@ rsync -a \
   "${INCOMING}/grounding-the-unconscious-favicon.svg" \
   "${INCOMING}/genealogies-of-desire.html" \
   "${INCOMING}/genealogies-of-desire-favicon.svg" \
+  "${INCOMING}/constellations-of-history.html" \
+  "${INCOMING}/constellations-of-history-favicon.svg" \
   "${INCOMING}/the-boundary-play.html" \
   "${DEST}/"
 if [[ -f "${INCOMING}/sitemap.xml" ]]; then
