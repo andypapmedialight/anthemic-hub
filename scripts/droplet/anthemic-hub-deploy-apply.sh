@@ -9,6 +9,7 @@
 #   index.html        - the hub landing page
 #   consciousness-map.html (+ favicon/preview) - philosophy of mind map
 #   grounding-the-unconscious.html (+ favicon) - psychoanalysis / neuroscience map
+#   genealogies-of-desire.html (+ favicon) - Freudo-Marxism / accelerationism map
 #   sitemap.xml / robots.txt - SEO files at site root
 #   assets/           - optional folder of static assets
 #   bass/             - bass coaching static site (e.g. bass/index.html)
@@ -64,6 +65,11 @@ if [[ ! -f "${INCOMING}/grounding-the-unconscious.html" ]] \
   echo "anthemic-hub-deploy-apply: missing grounding-the-unconscious.html (and favicon) in ${INCOMING}" >&2
   exit 1
 fi
+if [[ ! -f "${INCOMING}/genealogies-of-desire.html" ]] \
+  || [[ ! -f "${INCOMING}/genealogies-of-desire-favicon.svg" ]]; then
+  echo "anthemic-hub-deploy-apply: missing genealogies-of-desire.html (and favicon) in ${INCOMING}" >&2
+  exit 1
+fi
 if [[ ! -f "${INCOMING}/bass/index.html" ]]; then
   echo "anthemic-hub-deploy-apply: missing ${INCOMING}/bass/index.html (rsync must ship bass/ from repo)" >&2
   exit 1
@@ -113,6 +119,8 @@ rsync -a \
   "${INCOMING}/consciousness-map-preview.png" \
   "${INCOMING}/grounding-the-unconscious.html" \
   "${INCOMING}/grounding-the-unconscious-favicon.svg" \
+  "${INCOMING}/genealogies-of-desire.html" \
+  "${INCOMING}/genealogies-of-desire-favicon.svg" \
   "${DEST}/"
 if [[ -f "${INCOMING}/sitemap.xml" ]]; then
   rsync -a "${INCOMING}/sitemap.xml" "${DEST}/"

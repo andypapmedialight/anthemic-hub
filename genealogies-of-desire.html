@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Genealogies of Desire — Freudo-Marxism to accelerationism</title>
+<meta name="description" content="Kant, Hegel, Bergson, and Kojève's Hegel seminar through Freudo-Marxism, French post-structuralism, and Warwick/CCRU accelerationism, to its contemporary heirs — with a genealogy diagram of who broke from whom.">
+<meta name="color-scheme" content="light dark">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Genealogies of Desire">
+<meta property="og:description" content="Freud and Marx were fused, blown apart by French theory, remixed into cyberpunk philosophy at Warwick, and split again — one branch communist, one branch neoreactionary.">
+<meta property="og:url" content="https://anthemic-developments.com/genealogies-of-desire.html">
+<meta name="twitter:card" content="summary">
+<link rel="icon" type="image/svg+xml" href="genealogies-of-desire-favicon.svg">
+<link rel="canonical" href="https://anthemic-developments.com/genealogies-of-desire.html">
+<style>
+:root{
+  --bg:#e7e6df; --bg-raised:#f4f3ee; --text:#1e2023; --text-muted:#55585c;
+  --rule:#c9c7bd; --wine:#7c3341; --teal:#2f6e68;
+  --wine-soft:#f3e4e3; --teal-soft:#e2edea; --wine-line:#c98f96; --teal-line:#8fbcb5;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#15171b; --bg-raised:#1d2024; --text:#dfded6; --text-muted:#9b9c94;
+    --rule:#34373b; --wine:#dd97a1; --teal:#86c8bf;
+    --wine-soft:#2a1b1e; --teal-soft:#16221f; --wine-line:#4a3033; --teal-line:#2c433f;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15171b; --bg-raised:#1d2024; --text:#dfded6; --text-muted:#9b9c94;
+  --rule:#34373b; --wine:#dd97a1; --teal:#86c8bf;
+  --wine-soft:#2a1b1e; --teal-soft:#16221f; --wine-line:#4a3033; --teal-line:#2c433f;
+}
+:root[data-theme="light"]{
+  --bg:#e7e6df; --bg-raised:#f4f3ee; --text:#1e2023; --text-muted:#55585c;
+  --rule:#c9c7bd; --wine:#7c3341; --teal:#2f6e68;
+  --wine-soft:#f3e4e3; --teal-soft:#e2edea; --wine-line:#c98f96; --teal-line:#8fbcb5;
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--bg); color:var(--text);
+  font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Noto Serif",serif;
+  font-size:17px; line-height:1.65; text-rendering:optimizeLegibility;
+}
+.wrap{ max-width:960px; margin:0 auto; padding:4.5rem 1.5rem 6rem; }
+
+.site-bar{
+  font-family:ui-monospace,"SF Mono","Cascadia Code",monospace; font-size:.78rem;
+  color:var(--text-muted); margin-bottom:2rem; display:flex; gap:.6em; align-items:center;
+}
+.site-bar a{ color:var(--text-muted); }
+.site-bar a:hover{ color:var(--teal); }
+.site-bar .sep{ opacity:.5; }
+
+header.masthead{ margin-bottom:3.5rem; }
+.eyebrow{
+  font-family:ui-monospace,"SF Mono","Cascadia Code",monospace;
+  font-size:.72rem; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--text-muted); display:flex; gap:.6em; align-items:center; flex-wrap:wrap;
+}
+.eyebrow .dot{ color:var(--wine); }
+.eyebrow .dot2{ color:var(--teal); }
+h1{
+  font-size:clamp(2.1rem,5vw,3.1rem); line-height:1.08; margin:.5rem 0 .8rem;
+  text-wrap:balance; font-weight:600; letter-spacing:-.01em;
+}
+.dek{
+  font-size:1.08rem; color:var(--text-muted); max-width:64ch; text-wrap:balance;
+  font-style:italic;
+}
+.frame-note{
+  margin-top:1.6rem; padding:.9rem 1.1rem; border-left:3px solid var(--rule);
+  font-family:ui-monospace,"SF Mono","Cascadia Code",monospace; font-size:.82rem;
+  color:var(--text-muted); line-height:1.55; background:var(--bg-raised);
+}
+
+section.thinker{
+  display:grid; grid-template-columns: minmax(0,1fr) 260px;
+  gap:0 2.2rem; padding:2.6rem 0; border-top:1px solid var(--rule);
+}
+.main-col{ min-width:0; }
+h2{ font-size:1.5rem; margin:0 0 .15rem; letter-spacing:-.01em; }
+h2 .years{ font-family:ui-monospace,monospace; font-size:.65em; color:var(--text-muted); font-weight:400; margin-left:.5em; }
+h3{
+  font-family:ui-monospace,"SF Mono","Cascadia Code",monospace; font-size:.92rem;
+  text-transform:uppercase; letter-spacing:.05em; color:var(--teal);
+  margin:1.8rem 0 .8rem; font-weight:600;
+}
+.tag-row{ margin-bottom:1.1rem; }
+.tag{
+  display:inline-block; font-family:ui-monospace,monospace; font-size:.68rem;
+  letter-spacing:.06em; text-transform:uppercase; padding:.18em .55em;
+  border-radius:2px; background:var(--wine-soft); color:var(--wine); margin-right:.4em;
+}
+.main-col p{ margin:0 0 1rem; max-width:66ch; }
+.main-col p:last-child{ margin-bottom:0; }
+strong.term{ font-style:italic; font-weight:600; }
+
+aside.margin{
+  font-family:ui-monospace,"SF Mono","Cascadia Code",monospace;
+  font-size:.76rem; line-height:1.55; color:var(--text-muted);
+  border-left:2px solid var(--teal-line); padding-left:1rem; align-self:start;
+}
+aside.margin .label{
+  color:var(--teal); text-transform:uppercase; letter-spacing:.08em; font-size:.68rem;
+  display:block; margin-bottom:.5rem;
+}
+aside.margin p{ margin:0 0 .8rem; }
+aside.margin p:last-child{ margin-bottom:0; }
+aside.margin .who{ color:var(--text); }
+
+@media (max-width:760px){
+  section.thinker{ grid-template-columns:1fr; }
+  aside.margin{
+    border-left:none; border-top:1px solid var(--teal-line); padding-left:0;
+    padding-top:.9rem; margin-top:1.2rem; background:var(--teal-soft);
+    padding:.9rem 1rem; border-radius:3px;
+  }
+}
+
+.mapsec{ padding-top:3rem; border-top:1px solid var(--rule); }
+.mapsec h2{ font-size:1.6rem; margin-bottom:.4rem; }
+.mapsec > p.lede{ color:var(--text-muted); max-width:66ch; margin-bottom:1.6rem; }
+.map-scroll{ overflow-x:auto; border:1px solid var(--rule); border-radius:6px; background:var(--bg-raised); }
+svg.genealogy{ display:block; min-width:760px; }
+.gband-label{ font-family:ui-monospace,monospace; font-size:11px; letter-spacing:.06em; fill:var(--text-muted); text-transform:uppercase; }
+.gband-label tspan.lc{ text-transform:none; }
+.gband-rule{ stroke:var(--rule); stroke-width:1; }
+.gnode rect{ fill:var(--bg); stroke:var(--rule); stroke-width:1.2; }
+.gnode text{ font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif; fill:var(--text); font-size:13px; }
+.gnode .gsub{ font-family:ui-monospace,monospace; fill:var(--text-muted); font-size:9.5px; }
+.glink{ fill:none; }
+.glink.lineage{ stroke:var(--text-muted); stroke-width:1.4; }
+.glink.critique{ stroke:var(--wine); stroke-width:1.3; stroke-dasharray:5,4; }
+.glink.parallel{ stroke:var(--text-muted); stroke-width:1; stroke-dasharray:1,3; opacity:.7; }
+.glink.callback{ stroke:var(--teal); stroke-width:2; }
+.glabel{ font-family:ui-monospace,monospace; font-size:9.5px; fill:var(--text-muted); }
+.legend-note{
+  margin-top:1rem; font-family:ui-monospace,"SF Mono","Cascadia Code",monospace;
+  font-size:.72rem; color:var(--text-muted); line-height:1.8;
+}
+.legend-note .sw{ display:inline-block; width:1.6em; height:0; border-top:2px solid; margin-right:.4em; vertical-align:middle; }
+.legend-note .sw.lineage{ border-color:var(--text-muted); }
+.legend-note .sw.critique{ border-color:var(--wine); border-top-style:dashed; }
+.legend-note .sw.parallel{ border-color:var(--text-muted); border-top-style:dotted; }
+.legend-note .sw.callback{ border-color:var(--teal); border-top-width:3px; }
+
+footer.close{
+  margin-top:3rem; padding-top:1.8rem; border-top:1px solid var(--rule);
+  color:var(--text-muted); font-size:.92rem; max-width:68ch;
+}
+footer.close p{ margin:0 0 .9rem; }
+footer.close a{ color:var(--teal); }
+.main-col a{ color:var(--teal); text-decoration-color:var(--teal-line); text-underline-offset:2px; }
+.main-col a:hover{ text-decoration-color:var(--teal); }
+
+.glossary{ padding-top:3rem; border-top:1px solid var(--rule); }
+.glossary h2{ font-size:1.6rem; margin-bottom:.4rem; }
+.glossary > p.lede{ color:var(--text-muted); max-width:66ch; margin-bottom:2rem; }
+.gloss-group{ margin-bottom:2.2rem; }
+.gloss-group:last-child{ margin-bottom:0; }
+.gloss-group h3{ margin-top:0; }
+.gloss-list{ display:grid; grid-template-columns:1fr; gap:1.1rem 2rem; }
+@media (min-width:760px){ .gloss-list{ grid-template-columns:1fr 1fr; } }
+.gloss-item dt{ font-style:italic; font-weight:600; color:var(--text); margin:0 0 .2rem; }
+.gloss-item dd{ margin:0; color:var(--text-muted); font-size:.92rem; line-height:1.5; max-width:44ch; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<nav class="site-bar" aria-label="Site">
+  <a href="/">← Anthemic hub</a>
+  <span class="sep" aria-hidden="true">·</span>
+  <a href="/grounding-the-unconscious.html">Grounding the Unconscious</a>
+  <span class="sep" aria-hidden="true">·</span>
+  <a href="/consciousness-map.html">Consciousness map</a>
+</nav>
+
+<header class="masthead">
+  <div class="eyebrow"><span class="dot">●</span> Freudo-Marxism <span class="dot2">●</span> French post-structuralism <span class="dot">●</span> Warwick / CCRU <span class="dot2">●</span> accelerationism</div>
+  <h1>Genealogies of Desire</h1>
+  <p class="dek">Freud and Marx were fused in the 1920s, blown apart by French theory in the 1970s, remixed into cyberpunk philosophy at a UK university philosophy department in the 1990s, and split again — one branch communist, one branch neoreactionary. The other lineage this project's Freud could have gone down.</p>
+  <div class="frame-note">
+    NOTE — this branch is intellectual history and political theory, not an empirical grounding project like the neuroscience piece it forks from. "How well-evidenced" isn't really the right axis here; "how influential" and "what it was reacting against" are. Read the margin notes accordingly — they track reception and controversy, not experimental support.
+  </div>
+</header>
+
+<section class="thinker">
+  <div class="main-col">
+    <h2>Kant and Hegel <span class="years">1780s–1830s, the deep root</span></h2>
+    <div class="tag-row"><span class="tag">transcendental unity of apperception</span><span class="tag">lordship and bondage</span><span class="tag">German Idealism</span></div>
+    <p>Everything in this document is downstream of a fight that starts even earlier than Kojève's room. <strong class="term">Kant</strong>'s <em>Critique of Pure Reason</em> (<a href="https://www.gutenberg.org/ebooks/4280" target="_blank" rel="noopener noreferrer">1781</a>) splits reality into <strong class="term">phenomena</strong> (things as the mind's own categories — space, time, causality — necessarily structure them) and <strong class="term">noumena</strong> (things as they are in themselves, permanently unreachable by that structuring). Buried in the same book is a quieter, equally consequential move: the "I think" that must be able to accompany all of a person's representations — the <strong class="term">transcendental unity of apperception</strong> — is a formal, functional precondition for having unified experience at all, not a persisting soul-substance Descartes' rational psychology assumed it must be. Kant spends the Paralogisms chapter explicitly arguing that inference is illegitimate. That's the same move this whole document keeps running into under different names: a subject as something a system does, not something a system has.</p>
+    <p><strong class="term">Hegel</strong>'s <em>Phenomenology of Spirit</em> (<a href="https://www.marxists.org/reference/archive/hegel/phindex.htm" target="_blank" rel="noopener noreferrer">1807</a>) treats Kant's phenomena/noumena wall as an artifact of not yet being dialectical enough, and replaces the static split with a developmental one: consciousness passes through and overcomes its own successive, self-undermining shapes — sense-certainty, perception, understanding, self-consciousness, reason — on the way to a fuller self-knowledge. Its most consequential single passage for everything that follows is <strong class="term">lordship and bondage</strong> (the master-slave dialectic): self-consciousness only becomes genuinely self-conscious through a life-and-death struggle for recognition with another self-consciousness, producing an unequal master/slave relation that then dialectically inverts, since the slave's formative labor on the object gives the slave a more genuine self-relation than the master ever gets from simply being obeyed. This is the actual text Kojève reads, four chapters into a much longer book, as fundamentally a theory of desire. A separate, stranger Hegel passage — the 1805–06 Jena manuscripts' "night of the world," consciousness as an abyss where disconnected images surface and vanish — becomes, over a century later, Žižek's source for the self-relating negativity <a href="/grounding-the-unconscious.html">covered in the neuroscience piece's Žižek section</a>, and Adrian Johnston's "transcendental materialism" there borrows its name directly from the Kantian sense above: conditions of possibility, not something beyond nature.</p>
+  </div>
+  <aside class="margin">
+    <span class="label">how this landed</span>
+    <p><span class="who">Kant's Paralogisms</span> — still the standard reference point for "the subject as function, not substance" arguments; both Lacan's and Hofstadter's versions of that claim, in the sibling piece, sit in this lineage whether or not either cites Kant directly.</p>
+    <p><span class="who">Lordship and bondage</span> — a small fraction of a very long book that became, largely through Kojève, wildly disproportionate to its own space in the <em>Phenomenology</em>; most Hegel scholars read it as one moment in a longer argument, not the book's real point.</p>
+    <p><span class="who">"Night of the world"</span> — a pre-<em>Phenomenology</em> text Hegel never published this way; Žižek's heavy reliance on it is itself contested by some Hegel scholars as reading a mature system back into discarded early drafts.</p>
+  </aside>
+</section>
+
+<section class="thinker">
+  <div class="main-col">
+    <h2>Kojève's Hegel <span class="years">1933–1939, the seminar before all this</span></h2>
+    <div class="tag-row"><span class="tag">master-slave dialectic</span><span class="tag">desire for recognition</span><span class="tag">the seminar everyone attended</span></div>
+    <p>Before any of the above, there's a room in Paris. <strong class="term">Alexandre Kojève</strong> — Russian-born, eventually a French civil servant, an idiosyncratic reader of Hegel who folded in Marx and Heidegger along the way — ran a seminar on Hegel's <em>Phenomenology of Spirit</em> at the École Pratique des Hautes Études from 1933 to 1939 that turned out to be one of the highest-leverage rooms in twentieth-century French thought. The attendance list alone explains a lot of what follows: <strong class="term">Jacques Lacan</strong>, <strong class="term">Georges Bataille</strong>, <strong class="term">Maurice Merleau-Ponty</strong>, Raymond Aron, and Raymond Queneau, who later edited the seminar transcripts into the book most people actually read. Kojève's central move was reading Hegel's <strong class="term">master-slave dialectic</strong> as a theory of desire itself: desire isn't for objects, it's for recognition by another desiring consciousness, which makes human desire structurally social and reciprocal from the outset, driving a historical dialectic Kojève argued had, in his own reading, effectively reached its end.</p>
+    <p>Lacan is the direct line to everything this document already covers: his claim that desire is always the desire of the Other is Kojève's recognition-structure translated into psychoanalytic terms, and it's covered properly in the <a href="/grounding-the-unconscious.html">neuroscience piece this one branches from</a>. Deleuze and Guattari went the opposite direction — <em>Anti-Oedipus</em>'s whole <strong class="term">desiring-production</strong> apparatus, below, is built explicitly against this Hegelian picture of desire as lack chasing recognition, insisting desire is positive and productive from the start, not a structural absence waiting to be filled. Bataille took the seminar somewhere stranger still: his economy of transgression, expenditure, and sovereignty was in large part a refusal of Kojève's own "end of history" — a search for whatever the closed, fully satisfied post-historical subject couldn't contain — and that refusal runs downstream into Baudrillard's symbolic exchange and the Situationist critique of spectacle, below. Merleau-Ponty took a third route entirely, into phenomenology proper, a tributary this piece doesn't follow further.</p>
+  </div>
+  <aside class="margin">
+    <span class="label">how this landed</span>
+    <p><span class="who">Kojève</span> — historians of philosophy generally treat this reading as more Kojève than Hegel: brilliant and hugely generative, but a real departure from the text, not a neutral commentary.</p>
+    <p><span class="who">Attendance list</span> — well documented, since the seminar was recorded and later edited by Queneau; how directly each attendee was actually shaped by it, versus absorbing it secondhand, is debated case by case.</p>
+    <p><span class="who">"End of history"</span> — Kojève's own version predates, and differs substantially from, Francis Fukuyama's much later and more famous use of the same phrase; worth not conflating the two.</p>
+  </aside>
+</section>
+
+<section class="thinker">
+  <div class="main-col">
+    <h2>Freudo-Marxism <span class="years">1920s–1960s, Reich to Marcuse</span></h2>
+    <div class="tag-row"><span class="tag">Reich</span><span class="tag">Marcuse</span><span class="tag">Fromm</span><span class="tag">Frankfurt School</span></div>
+    <p><strong class="term">Wilhelm Reich</strong> was the first to try to fuse Freud and Marx literally, not metaphorically. Through his Sex-Pol clinics in 1920s–30s Vienna and Berlin — free contraception, sex education, adolescent counseling, run as an explicitly political project — he argued the causal arrow ran: capitalism needs a compliant workforce, the patriarchal nuclear family produces that compliance by repressing children's sexuality, and repression's psychic residue is <strong class="term">character armor</strong> — chronic muscular and psychic rigidity that later makes adults susceptible to authoritarian submission. <em>The Mass Psychology of Fascism</em> (<a href="https://archive.org/details/MassPsychologyOfFascism-WilhelmReich" target="_blank" rel="noopener noreferrer">1933</a>) reads Nazism as the political payoff of that repression, not a rational response to economic crisis. The psychoanalytic establishment expelled him in 1934 over the politics; his later turn to "orgone energy" — a claimed measurable life-force he built accumulator boxes to concentrate — cost him the rest of his scientific credibility, and got him prosecuted by the FDA for fraud. He died in a US federal prison in 1957, serving a contempt sentence for defying an injunction against orgone claims.</p>
+    <p><strong class="term">Herbert Marcuse</strong>, from inside the Frankfurt School proper, made the more durable version — and arrived at Freud by way of Hegel, not the other way around: his doctoral and early work was straight Hegel scholarship (<em>Hegel's Ontology and the Theory of Historicity</em>, 1932; <em>Reason and Revolution: Hegel and the Rise of Social Theory</em>, 1941), and the dialectical structure of <em>Eros and Civilization</em> below — repression negated, then negated again into something richer, not simply removed — is a Hegelian argument wearing Freudian vocabulary. <em>Eros and Civilization</em> (<a href="https://www.marxists.org/reference/archive/marcuse/works/eros-civilisation/" target="_blank" rel="noopener noreferrer">1955</a>) splits Freud's repression into <strong class="term">basic repression</strong> (whatever any workable civilization requires) and <strong class="term">surplus-repression</strong> (the extra repression a specific social order — capitalism — imposes beyond that, organizing life around what Marcuse calls the <strong class="term">performance principle</strong>, a capitalist-specific version of the reality principle built around productive labor). Strip the surplus and, in principle, a "non-repressive civilization" organized around play and Eros becomes thinkable — not a return to infantile gratification, but eroticized, non-alienated work and time. <em>One-Dimensional Man</em> (1964) is the pessimistic sequel: advanced capitalism, he argues, learned to neutralize this by <strong class="term">repressive desublimation</strong> — real sexual liberalization that functions as a release valve and a consumer good rather than a threat, keeping the system's "one-dimensionality" intact. Marcuse became the closest thing the New Left had to a house philosopher — 1968 slogans reportedly ran "Marx, Mao, Marcuse."</p>
+    <p><strong class="term">Erich Fromm</strong> broke further from orthodox Freud than either — dropping drive theory for a social-character psychology, arguing in <em>Escape from Freedom</em> (1941) that modern freedom itself produces an anxious isolation people resolve by fleeing into authoritarian submission, a milder version of Reich's fascism argument without the sexual-economic mechanics. Fromm and Marcuse fought openly about this in the mid-1950s, in an exchange in <em>Dissent</em> magazine (1955–56): Marcuse accused Fromm's revisionism of quietly adapting psychoanalysis to conformist American culture rather than confronting it. The wider Frankfurt School backed the diagnosis empirically — Adorno's co-authored <em>The Authoritarian Personality</em> (1950) used psychoanalytic categories (rigid ego-defense, projection) to profile fascism-prone character types, and <em>Dialectic of Enlightenment</em> (1944, with Horkheimer) reads instinctual renunciation as the buried price of Enlightenment rationality itself.</p>
+  </div>
+  <aside class="margin">
+    <span class="label">how this landed</span>
+    <p><span class="who">Reich</span> — the sexual-political diagnosis remained influential (echoes in 1960s counterculture, later in Fisher below); the orgone science is universally regarded as pseudoscience, even by sympathetic readers.</p>
+    <p><span class="who">Marcuse</span> — surplus-repression and repressive desublimation are still live terms in critical theory; the "non-repressive civilization" it points toward remains speculative, not a program anyone implemented.</p>
+    <p><span class="who">Fromm vs. Marcuse</span> — historians of the Frankfurt School mostly treat this as a real, substantive disagreement about the politics of psychoanalytic revisionism, not a personal feud.</p>
+  </aside>
+</section>
+
+<section class="thinker">
+  <div class="main-col">
+    <h2>The French (Post-)Structuralist Turn <span class="years">1960s–1980s, Althusser to Deleuze &amp; Guattari</span></h2>
+    <div class="tag-row"><span class="tag">ideology &amp; interpellation</span><span class="tag">durée &amp; the virtual</span><span class="tag">Anti-Oedipus</span><span class="tag">the repressive hypothesis</span></div>
+    <p><strong class="term">Louis Althusser</strong> gave the next generation its vocabulary. His essay "<a href="https://www.marxists.org/reference/archive/althusser/1970/ideology.htm" target="_blank" rel="noopener noreferrer">Ideology and Ideological State Apparatuses</a>" (1970) argues ideology doesn't reproduce capitalism mainly through force (police, army — the repressive state apparatus) but through <strong class="term">ideological state apparatuses</strong> — school, church, family, media — which work by <strong class="term">interpellation</strong>: a policeman shouts "Hey, you there!" and the moment you turn around, you've already recognized yourself as the one being addressed, becoming a subject in exactly the sense the term implies — subjected. Althusser cites Lacan's mirror stage directly as his model: ideology, like the Imaginary, works through a founding misrecognition, not a lie you could simply see through. This is the direct hinge between Marx and Lacan that everything after him has to answer to, including the two students he taught and the movement that reacted against him. Althusser framed his own project explicitly against "Hegelian Marxism" — the humanist reading of the young Marx as continuous with Hegelian dialectics that he saw as sentimental and untheorized — insisting on a properly structural, anti-humanist Marx instead; the irony is that his own machinery for explaining the subject leans on Hegel's dialectic of recognition anyway, just imported through Lacan's Kojève-inflected version of it rather than cited directly.</p>
+    <p>Behind Deleuze's whole vocabulary sits <strong class="term">Henri Bergson</strong> (1859–1941) — awarded the 1927 Nobel Prize in Literature, in the committee's words, "in recognition of his rich and vitalizing ideas," for a philosophy written with enough literary force to reach well past the academy. Bergson's <strong class="term">durée</strong> — lived, qualitative time as a continuous, heterogeneous flow, irreducible to the discrete, spatialized instants clock-time and classical science reduce it to — and his <strong class="term">élan vital</strong> in <em>Creative Evolution</em> (1907), an unpredictable creative impetus driving life's differentiation against any purely mechanistic account of evolution, gave Deleuze two of his most load-bearing tools: the distinction between the <strong class="term">virtual</strong> (real but not yet actual, a whole field of potential) and the actual, and a notion of <strong class="term">multiplicity</strong> that is qualitative and continuous rather than a mere count of discrete things. Deleuze's own book-length engagement, <em>Bergsonism</em> (1966), works this out directly — four years after <em>Nietzsche and Philosophy</em> and six before <em>Anti-Oedipus</em> — closer to a full excavation than a citation, and arguably the deepest philosophical foundation under everything that follows.</p>
+    <p>Deleuze had already fired the opening shot alone, in <em>Nietzsche and Philosophy</em> (1962), an openly anti-Hegelian book that uses Nietzsche's affirmative difference against what Deleuze reads as Hegelian negation's whole sour economy: desire defined by lack, value defined by opposition, difference only ever mediated through conflict and recognition. That's the direct philosophical root of the "desire as lack, rejected" arrow running from Kojève's Hegel to the pair below, a full decade before he and Guattari made the same argument politically.</p>
+    <p><strong class="term">Gilles Deleuze</strong> and <strong class="term">Félix Guattari</strong> answered together with an explosion. <em>Anti-Oedipus: Capitalism and Schizophrenia</em> (1972) attacks Freud, orthodox Lacanianism, <em>and</em> Freudo-Marxism together for the same sin: reducing desire to a private family drama — mommy-daddy-me — when desire is actually a directly social and economic force. Their alternative, <strong class="term">desiring-production</strong>, treats desire as productive rather than lack-driven (a direct break from both Freud's drive-discharge model and Lacan's desire-as-structural-gap) — a factory, not a wish. Capitalism, on their reading, is itself a desire-machine: it <strong class="term">decodes</strong> older social codes (kinship, religion, tradition) into free-floating, exploitable flows, then <strong class="term">reterritorializes</strong> them just enough to keep extracting value, never letting the decoding run all the way. Their proposed alternative to psychoanalysis, <strong class="term">schizoanalysis</strong>, traces where desire is actually invested in history and society instead of interpreting it back onto Oedipus. Buried in the book is a single, endlessly debated rhetorical question — whether to retreat from capitalism's decoding or go the other way and "accelerate the process" — that later became, more or less by accident, the founding gesture of an entire movement two decades later.</p>
+    <p><em>A Thousand Plateaus</em> (1980) supplies that movement's working vocabulary: the <strong class="term">rhizome</strong> (a horizontal, non-hierarchical network model of thought and organization, against the hierarchical "tree"), the <strong class="term">body without organs</strong> (a limit-concept for a field of pure intensity prior to being organized into fixed functions, borrowed from Antonin Artaud), and the <strong class="term">war machine</strong> versus the State apparatus. Every one of these terms resurfaces, mostly unchanged, in the Warwick material below.</p>
+    <p><strong class="term">Michel Foucault</strong> answered from a different angle, and directly against Reich and Marcuse specifically. <em>The History of Sexuality, Volume 1</em> (1976) names and rejects the <strong class="term">repressive hypothesis</strong> — the shared Freudo-Marxist assumption that power has simply repressed sexuality and liberation means removing the repression. Foucault's counter-claim: the modern era didn't silence sex, it produced an enormous, unprecedented proliferation of discourse <em>about</em> it — medical, psychiatric, pedagogical, confessional — deploying sexuality as a technology of <strong class="term">biopower</strong>, a way of managing populations and bodies that operates by inciting and classifying desire, not suppressing it. If Foucault is right, Reich's entire mechanism — repression in, revolution out — has the relationship backward.</p>
+    <p>Adjacent to both currents, and worth naming briefly: <strong class="term">Jean Baudrillard</strong> broke with Marxism outright in <em>The Mirror of Production</em> (1973), arguing its own productivist logic was secretly complicit with capitalism, before moving on to simulacra and hyperreality; <strong class="term">Jean-François Lyotard</strong> wrote an even more extreme attempt to think economy in openly libidinal terms, <em>Libidinal Economy</em> (1974) — later disowned by Lyotard himself as his "evil book"; and Guy Debord's Situationist <em>Society of the Spectacle</em> (1967) pre-dates and parallels all of it with a diagnosis of domination gone image-based rather than direct.</p>
+  </div>
+  <aside class="margin">
+    <span class="label">how this landed</span>
+    <p><span class="who">Bergson</span> — immensely popular in his lifetime (his 1913 Columbia lectures reportedly caused New York's first Broadway traffic jam), then eclipsed for decades by structuralism and analytic philosophy alike; his current standing in philosophy owes a great deal specifically to Deleuze's own engagement bringing him back into view.</p>
+    <p><span class="who">Althusser</span> — interpellation remains a standard tool in ideology critique; Althusser's own biography is complicated by his 1980 killing of his wife during a psychiatric episode, a fact most intellectual histories now note rather than omit.</p>
+    <p><span class="who">Anti-Oedipus's "accelerate" line</span> — genuinely disputed among Deleuze scholars whether it's a program, a diagnostic question, or closer to irony; the accelerationists below read it as the former.</p>
+    <p><span class="who">Foucault vs. Reich/Marcuse</span> — widely regarded as the stronger argument today within the humanities, though Reich/Marcuse's political diagnosis (repression → authoritarianism) and Foucault's (power produces, doesn't just suppress) aren't strictly incompatible so much as answering different questions.</p>
+    <p><span class="who">Lyotard</span> — his own later repudiation of <em>Libidinal Economy</em> is well documented and usually taken at face value by historians of the period.</p>
+  </aside>
+</section>
+
+<section class="thinker">
+  <div class="main-col">
+    <h2>Warwick / CCRU <span class="years">1990s–2017, CCRU to Fisher's death</span></h2>
+    <div class="tag-row"><span class="tag">accelerationism</span><span class="tag">hauntology</span><span class="tag">zombie neoliberalism</span><span class="tag">Acid Communism</span></div>
+    <p>The <a href="http://www.ccru.net/archive.htm" target="_blank" rel="noopener noreferrer"><strong class="term">Cybernetic Culture Research Unit</strong></a> was a loosely organized, unofficial research collective inside the University of Warwick's philosophy department through the mid-to-late 1990s — founded around Sadie Plant, joined by Nick Land, and staffed largely by Land's graduate students: Mark Fisher, Robin Mackay, Kodwo Eshun, Iain Hamilton Grant, and others. Its working method mixed dense Deleuze &amp; Guattari exegesis with cyberpunk fiction, jungle and techno music, numerology, and — by most later accounts, including participants' own — genuinely reckless drug experimentation, all folded into a self-consciously "theory-fiction" house style that made truth-claims and horror fiction hard to tell apart on purpose. Much of CCRU's own mythology was subsequently amplified by its former members; treat the group's later reputation as partly self-authored.</p>
+    <p><strong class="term">Nick Land</strong> took Deleuze and Guattari's "accelerate the process" question and answered it without irony — arriving there by way of his own early academic work on Kant and Bataille, including <em>The Thirst for Annihilation</em> (1992). The title <em>Fanged Noumena</em> (2011, his collected CCRU-era writing — "Meltdown" above all) is a direct play on Kant's unreachable thing-in-itself: Land's capital is a literal noumenon, an alien, self-organizing cybernetic intelligence arriving backward through time and using human institutions as a temporary vehicle, dissolving every social code (deterritorialization) with no possible "way out" except further and faster dissolution, not resistance to it — this is <strong class="term">accelerationism</strong>'s actual coinage moment, and it treats the wall Kant put up between phenomena and the thing-in-itself as something capitalism is actively, mechanically breaking through. Land left Warwick and academia by the end of the 1990s amid what most accounts, including Fisher's and Mackay's later reflections, describe as a serious mental health crisis. He resurfaced in Shanghai in the 2000s and, from around 2012, as the author of "<a href="https://en.wikipedia.org/wiki/Dark_Enlightenment" target="_blank" rel="noopener noreferrer">The Dark Enlightenment</a>" — a founding text of the online <strong class="term">neoreactionary</strong> movement, arguing against democracy toward techno-monarchist and explicitly anti-egalitarian politics. It's a hard turn from where the Deleuzoguattarian left assumed this trajectory was heading, and it's one of the most-discussed facts about his career for exactly that reason.</p>
+    <p><strong class="term">Mark Fisher</strong> stayed in the CCRU orbit as a student, then broke from Land's direction entirely. <em>Capitalist Realism: Is There No Alternative?</em> (2009) opens with a line he attributes to Fredric Jameson (and which Slavoj Žižek also used) — that it's easier to imagine the end of the world than the end of capitalism — and diagnoses a specific mood: not active belief that capitalism is good, but the felt impossibility of picturing any coherent alternative, including in the bureaucratic and mental-health fallout of neoliberal work culture, where Fisher argues what looks like a private chemical imbalance is often better read as a political condition. Two of the book's sharper terms for that mood: <strong class="term">reflexive impotence</strong>, the specifically self-fulfilling despair of young people who already know conditions are dire and have already concluded nothing can change, and a <strong class="term">hedonic depression</strong> distinct from classical anhedonia — not an inability to feel pleasure, but a subject locked into tightly controlled, commodified loops of pleasure-seeking that never actually discharge into anything. The 2009 book also partly blamed 1960s counterculture's drift into consumerist individualism for helping enable neoliberalism — a reading Fisher later reversed outright, which matters, because Acid Communism, below, is exactly that same counterculture reclaimed rather than indicted. <em>Ghosts of My Life</em> (2014) develops <strong class="term">hauntology</strong> (a term repurposed from Derrida's play on Marx's specter) into a diagnosis of cultural stagnation — the sense that 20th-century modernism's promised futures got cancelled, leaving culture haunted by lost futures rather than producing new ones.</p>
+    <p>A 2013 talk at a University of York conference, published as "<strong class="term">How to Kill a Zombie</strong>: Strategizing the End of Neoliberalism," pushes the diagnosis into strategy. Neoliberalism survived the 2008 crash, Fisher argues, not because anyone was newly convinced by it but because — capitalist realism again — no alternative looked credible enough to replace it with; it persists as a shambling corpse rather than a living conviction. He reads capitalist realism itself as an expression of <strong class="term">class decomposition</strong>: neoliberalism's real ideological trick was making "competition" look like a natural condition rather than a deliberately engineered fracture of collective solidarity. His proposed correctives cut against reflexive left orthodoxy on two fronts — a critique of anti-hierarchical "horizontalism" as a form fetish that leaves movements easy for organized capital to outmaneuver (an argument Srnicek and Williams later formalize, below, as the case against "folk politics"), and a call for the kind of disciplined, goal-directed strategic thinking the post-1968 left had learned to treat as itself suspect. Underneath both sits a claim that runs through this whole document in one phrasing or another: desire, he says, is always composed, never simply natural, which makes a counter-hegemonic desire something to be actively built rather than discovered — the same wager Reich, Marcuse, and Deleuze and Guattari each made, decades earlier, in their own idiom.</p>
+    <p>His final, unfinished project — published posthumously from notes as <a href="https://my-blackout.com/2019/04/25/mark-fisher-acid-communism-unfinished-introduction/" target="_blank" rel="noopener noreferrer"><strong class="term">Acid Communism</strong></a> in the <a href="http://k-punk.abstractdynamics.org/" target="_blank" rel="noopener noreferrer"><em>k-punk</em></a> essay collection (2018) — tried to reclaim exactly the Reich/Marcuse-style politicized, consciousness-raising libidinal utopianism of the 1960s–70s counterculture against both capitalist realism's foreclosure of alternatives and Land's nihilist accelerationism: "acid" as both psychedelic and corrosive, a collective rather than individualist repurposing of consciousness-expansion, with Marcuse's <em>Eros and Civilization</em> named directly as a touchstone. His own gloss on the project braided together three strands at once — class consciousness, socialist-feminist consciousness-raising, and psychedelic consciousness — treating the categories people live by as plastic and mutable rather than fixed, with culture itself as the contested site where a post-capitalist subjectivity could actually be cultivated. The same late turn relocated capitalist realism's own origin point: rather than a Cold War, East-versus-West story, his later work traced it to Pinochet's 1973 US-backed coup against Salvador Allende's democratically elected socialist government in Chile — a real, non-Soviet alternative violently ended and rebuilt as neoliberalism's own testing ground, later exported wholesale to Thatcher and Reagan. Fisher died by suicide in January 2017, before completing any of it — a fact his own writing on depression and capitalism makes it impossible to leave out of any honest account of the project.</p>
+    <p>Briefer but real threads from the same milieu: <strong class="term">Sadie Plant</strong>'s <em>Zeros + Ones</em> (1997) built a cyberfeminist history connecting weaving, Ada Lovelace, and computing before she left Warwick in the late 1990s; <strong class="term">Kodwo Eshun</strong>'s <em>More Brilliant Than the Sun</em> (1998) applied CCRU-style theory-fiction to Afrofuturist sonic culture; and <strong class="term">Robin Mackay</strong>, through the publisher Urbanomic, co-edited both <em>Fanged Noumena</em> and, with Armen Avanessian, <em>#Accelerate: The Accelerationist Reader</em> (2014) — the anthology that formally canonized "accelerationism" as a named tendency, Land's dark version and the left version below side by side.</p>
+  </div>
+  <aside class="margin">
+    <span class="label">how this landed</span>
+    <p><span class="who">CCRU</span> — never an official university unit; its influence is real but its own internal history is partly legend, retold inconsistently by different former members.</p>
+    <p><span class="who">Land's later politics</span> — widely and heavily criticized outside neoreactionary circles; almost universally treated as a rupture from, not a continuation of, his CCRU-era Deleuzoguattarian left-adjacent work.</p>
+    <p><span class="who">Fisher</span> — <em>Capitalist Realism</em> is now a standard reference well beyond academic theory; <em>Acid Communism</em> exists only as an introduction and notes, so its full argument is necessarily reconstructed by readers, not delivered complete.</p>
+    <p><span class="who">"How to Kill a Zombie"</span> — talk given at the "Neoliberalism, Crisis and the World System" conference, University of York, July 2013; its critique of horizontalism was contested by parts of the anarchist and autonomist left it was aimed at.</p>
+    <p><span class="who">Chile as capitalist realism's origin</span> — a reading of Fisher's later work, not a single named essay with a page number; secondary commentary (e.g. the <em>Acid Horizon</em> podcast's account) traces the argument across scattered late writing and talks rather than one canonical text.</p>
+  </aside>
+</section>
+
+<section class="thinker">
+  <div class="main-col">
+    <h2>Other connected strains <span class="years">2009–present</span></h2>
+    <div class="tag-row"><span class="tag">left-accelerationism</span><span class="tag">xenofeminism</span><span class="tag">semiocapitalism</span></div>
+    <p><strong class="term">Nick Srnicek</strong> and <strong class="term">Alex Williams</strong>'s "<a href="https://criticallegalthinking.com/2013/05/14/accelerate-manifesto-for-an-accelerationist-politics/" target="_blank" rel="noopener noreferrer">#Accelerate: Manifesto for an Accelerationist Politics</a>" (2013) is the explicit attempt to take acceleration back from Land: rather than rejecting modernity and technology (their target is as much what they call "folk politics" — the nostalgic, localist, anti-strategic left already targeted in Fisher's own zombie-neoliberalism talk, above — as it is capitalism itself), the left should seize and redirect the technical and infrastructural capacities capitalism has already built. <em>Inventing the Future</em> (2015) turns this into a concrete program — automation, full employment's abolition rather than its defense, universal basic income — a fairly direct descendant of the Fisher-era wish to reclaim a future capitalist realism had foreclosed.</p>
+    <p>The collective <strong class="term">Laboria Cuboniks</strong>'s "<a href="https://archive.org/details/xenofeminism-manifesto-by-laboria-cuboniks." target="_blank" rel="noopener noreferrer">Xenofeminism: A Politics for Alienation</a>" (2015) pushes the same accelerationist-adjacent, tech-affirmative stance through an explicitly feminist lens — embracing artificiality and alienation from any given "nature" rather than defending it, a lineage that runs back through Plant's cyberfeminism as much as through Land or Srnicek and Williams.</p>
+    <p><strong class="term">Franco "Bifo" Berardi</strong> arrives from a different national tradition entirely — Italian autonomism/<em>operaismo</em>, not French post-structuralism or Warwick — but converges on close to the same diagnosis. <em>The Soul at Work</em> and <em>Heroes: Mass Murder and Suicide</em> theorize <strong class="term">semiocapitalism</strong>: a capitalism that has moved from exploiting labor-time to exploiting attention and nervous systems directly, producing burnout, panic, and depression as its characteristic pathologies. Berardi and Fisher were friends and interlocutors — Fisher leans directly on Berardi's own reading of the failed 2010–11 uprisings in the "How to Kill a Zombie" talk, above — and the kinship here is real dialogue between parallel traditions, not one descending from the other.</p>
+    <p><strong class="term">Jodi Dean</strong>'s <strong class="term">communicative capitalism</strong> (from essays collected across <em>Democracy and Other Neoliberal Fantasies</em>, 2009, and <em>Blog Theory</em>, 2010) makes a related but distinct claim: digital communication technology doesn't enable the democratic participation it promises, it captures political energy as circulating content — messages, shares, drive without discharge — which functions to neutralize rather than build collective action. Dean writes in explicit dialogue with both Žižek's drive theory and the post-Fisher accelerationist debates.</p>
+  </div>
+  <aside class="margin">
+    <span class="label">how this landed</span>
+    <p><span class="who">Left-accelerationism</span> — remains a live, debated position on the Marxist left; critics on the same side argue it underestimates ecological limits and overestimates technology's neutrality.</p>
+    <p><span class="who">Xenofeminism</span> — influential in academic feminist theory and art/design circles; less discussed in mainstream political theory than Srnicek and Williams's version.</p>
+    <p><span class="who">Berardi / Dean</span> — both are treated as serious, independent contemporary critical theorists, not derivative of the Warwick lineage, despite the thematic overlap.</p>
+  </aside>
+</section>
+
+<section class="mapsec">
+  <h2>Visual mapping</h2>
+  <p class="lede">The line starts further back than Freud or Marx: Kant splits the subject from the thing-in-itself and the "I think" from any soul-substance; Hegel dialecticizes that split into a struggle for recognition; Kojève reads that struggle as a theory of desire, which Freudo-Marxism sits beside rather than descends from, and which Deleuze &amp; Guattari later reject outright. From there — Freudo-Marxism gets rejected by French theory for reducing desire to family drama; French theory's own Deleuze &amp; Guattari get radicalized at Warwick into accelerationism; Warwick then splits into a communist return to Marcuse (Fisher) and a neoreactionary exit (Land) — Land's own version, fittingly, put back in explicitly Kantian terms. Solid lines build on; dashed lines critique or break from; the thick teal line is the single explicit callback across the whole genealogy.</p>
+
+  <div class="map-scroll">
+    <svg class="genealogy" viewBox="0 0 1000 830" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Genealogy diagram from Kant, Hegel, and Bergson through Kojève's Hegel seminar, Freudo-Marxism, French post-structuralism, and Warwick CCRU, to contemporary accelerationism, left and right.">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="context-stroke"/>
+        </marker>
+      </defs>
+
+      <line class="gband-rule" x1="20" y1="190" x2="980" y2="190"/>
+      <line class="gband-rule" x1="20" y1="330" x2="980" y2="330"/>
+      <line class="gband-rule" x1="20" y1="490" x2="980" y2="490"/>
+      <line class="gband-rule" x1="20" y1="650" x2="980" y2="650"/>
+      <text class="gband-label" x="20" y="16">Kant · Hegel · Bergson · Kojève's seminar · 1780<tspan class="lc">s</tspan>–1941</text>
+      <text class="gband-label" x="20" y="200">Freudo-Marxism · 1920<tspan class="lc">s</tspan>–60<tspan class="lc">s</tspan></text>
+      <text class="gband-label" x="20" y="360">French theory · 1960<tspan class="lc">s</tspan>–80<tspan class="lc">s</tspan></text>
+      <text class="gband-label" x="20" y="520">Warwick / CCRU · 1990<tspan class="lc">s</tspan>–2010<tspan class="lc">s</tspan></text>
+      <text class="gband-label" x="20" y="680">Contemporary · 2009–</text>
+
+      <!-- connectors (drawn first, under nodes) -->
+      <path class="glink lineage" d="M340,45 Q495,20 650,45" marker-end="url(#arrow)"/>
+      <text class="glabel" x="440" y="24">German Idealism</text>
+
+      <path class="glink lineage" d="M660,66 Q590,80 515,90" marker-end="url(#arrow)"/>
+      <text class="glabel" x="555" y="72">his actual text</text>
+
+      <path class="glink critique" d="M430,144 Q430,275 430,405" marker-end="url(#arrow)"/>
+      <text class="glabel" x="250" y="360">desire as lack, rejected</text>
+
+      <path class="glink lineage" d="M500,144 Q750,250 870,405" marker-end="url(#arrow)"/>
+      <text class="glabel" x="800" y="365">via Bataille</text>
+
+      <path class="glink lineage" d="M887,64 C 900,220 650,330 490,405" marker-end="url(#arrow)"/>
+      <text class="glabel" x="150" y="185">duration, multiplicity, the virtual</text>
+
+      <path class="glink critique" d="M200,295 Q320,350 430,405" marker-end="url(#arrow)"/>
+      <text class="glabel" x="30" y="325">rejects Oedipal reduction</text>
+
+      <path class="glink lineage" d="M255,430 Q340,430 375,430" marker-end="url(#arrow)"/>
+      <text class="glabel" x="265" y="420">shared milieu</text>
+
+      <path class="glink parallel" d="M505,430 Q545,430 585,430"/>
+
+      <path class="glink critique" d="M660,405 Q560,230 460,280" marker-end="url(#arrow)"/>
+      <text class="glabel" x="30" y="225">rebuts the repression hypothesis</text>
+
+      <path class="glink lineage" d="M430,455 Q410,510 400,565" marker-end="url(#arrow)"/>
+      <text class="glabel" x="360" y="515">radicalizes deterritorialization</text>
+
+      <path class="glink lineage" d="M460,455 Q540,510 590,565" marker-end="url(#arrow)"/>
+
+      <path class="glink callback" d="M430,295 C 300,430 380,510 600,565" marker-end="url(#arrow)"/>
+      <text class="glabel" x="300" y="400">Acid Communism reclaims</text>
+
+      <path class="glink lineage" d="M450,590 Q505,590 545,590" marker-end="url(#arrow)"/>
+      <text class="glabel" x="110" y="490">CCRU, then splits</text>
+
+      <path class="glink critique" d="M395,615 Q290,680 210,735" marker-end="url(#arrow)"/>
+      <text class="glabel" x="240" y="680">later turn</text>
+
+      <path class="glink lineage" d="M600,615 Q510,680 440,735" marker-end="url(#arrow)"/>
+
+      <path class="glink lineage" d="M635,615 Q650,675 655,735" marker-end="url(#arrow)"/>
+
+      <path class="glink lineage" d="M200,615 Q420,690 620,735" marker-end="url(#arrow)"/>
+      <text class="glabel" x="330" y="700">cyberfeminist lineage</text>
+
+      <path class="glink lineage" d="M810,615 Q650,680 460,735" marker-end="url(#arrow)"/>
+      <text class="glabel" x="680" y="685">Urbanomic, the Reader</text>
+
+      <path class="glink parallel" d="M655,615 Q760,680 855,735"/>
+      <text class="glabel" x="720" y="700">kinship, not lineage</text>
+
+      <!-- nodes -->
+      <g class="gnode"><rect x="210" y="26" width="130" height="38" rx="6"/><text x="275" y="50" text-anchor="middle">Kant</text></g>
+      <g class="gnode"><rect x="650" y="26" width="130" height="38" rx="6"/><text x="715" y="50" text-anchor="middle">Hegel</text></g>
+      <g class="gnode"><rect x="815" y="26" width="145" height="38" rx="6"/><text x="887" y="50" text-anchor="middle">Bergson</text></g>
+      <g class="gnode"><rect x="310" y="88" width="240" height="54" rx="6"/><text x="430" y="120" text-anchor="middle">Alexandre Kojève</text></g>
+
+      <g class="gnode"><rect x="130" y="245" width="140" height="50" rx="6"/><text x="200" y="275" text-anchor="middle">Reich</text></g>
+      <g class="gnode"><rect x="360" y="245" width="140" height="50" rx="6"/><text x="430" y="275" text-anchor="middle">Marcuse</text></g>
+      <g class="gnode"><rect x="590" y="245" width="140" height="50" rx="6"/><text x="660" y="275" text-anchor="middle">Fromm</text></g>
+
+      <g class="gnode"><rect x="110" y="405" width="140" height="50" rx="6"/><text x="180" y="435" text-anchor="middle">Althusser</text></g>
+      <g class="gnode"><rect x="350" y="405" width="160" height="50" rx="6"/><text x="430" y="430" text-anchor="middle">Deleuze &amp;</text><text x="430" y="446" text-anchor="middle">Guattari</text></g>
+      <g class="gnode"><rect x="590" y="405" width="140" height="50" rx="6"/><text x="660" y="435" text-anchor="middle">Foucault</text></g>
+      <g class="gnode"><rect x="780" y="405" width="180" height="50" rx="6"/><text x="870" y="427" text-anchor="middle">Baudrillard ·</text><text x="870" y="443" text-anchor="middle">Lyotard · Debord</text></g>
+
+      <g class="gnode"><rect x="110" y="565" width="140" height="50" rx="6"/><text x="180" y="595" text-anchor="middle">Sadie Plant</text></g>
+      <g class="gnode"><rect x="330" y="565" width="140" height="50" rx="6"/><text x="400" y="595" text-anchor="middle">Nick Land</text></g>
+      <g class="gnode"><rect x="550" y="565" width="140" height="50" rx="6"/><text x="620" y="595" text-anchor="middle">Mark Fisher</text></g>
+      <g class="gnode"><rect x="760" y="565" width="180" height="50" rx="6"/><text x="850" y="587" text-anchor="middle">Eshun · Mackay ·</text><text x="850" y="603" text-anchor="middle">Grant</text></g>
+
+      <g class="gnode"><rect x="105" y="725" width="150" height="50" rx="6"/><text x="180" y="747" text-anchor="middle">Neoreaction /</text><text x="180" y="763" text-anchor="middle">Dark Enlightenment</text></g>
+      <g class="gnode"><rect x="325" y="725" width="190" height="50" rx="6"/><text x="420" y="747" text-anchor="middle">Left-accelerationism</text><text x="420" y="763" text-anchor="middle">(Srnicek &amp; Williams)</text></g>
+      <g class="gnode"><rect x="565" y="725" width="190" height="50" rx="6"/><text x="660" y="747" text-anchor="middle">Acid Communism /</text><text x="660" y="763" text-anchor="middle">Xenofeminism</text></g>
+      <g class="gnode"><rect x="790" y="725" width="170" height="50" rx="6"/><text x="875" y="747" text-anchor="middle">Bifo Berardi ·</text><text x="875" y="763" text-anchor="middle">Jodi Dean</text></g>
+    </svg>
+  </div>
+
+  <p class="legend-note">
+    <span class="sw lineage"></span>builds on / develops directly<br>
+    <span class="sw critique"></span>explicitly critiques, rejects, or breaks from<br>
+    <span class="sw parallel"></span>parallel dialogue, not a lineage claim<br>
+    <span class="sw callback"></span>the one long-range callback this genealogy turns on
+  </p>
+
+  <footer class="close">
+    <p>The neuroscience piece this branches from was asking one question about Freud: is any of this actually in the brain. This branch asks a completely different one: whose interests does the unconscious serve, and can it be organized — toward liberation, as Reich and Marcuse and Fisher each tried in their own idiom, or toward whatever Land thinks he's accelerating toward. Neither question settles the other. A construct like the id can be a reasonably well-evidenced claim about the SEEKING system <a href="/grounding-the-unconscious.html">(see the neuroscience map)</a> and, completely independently, a live political stake in an argument that's been running for a century and hasn't stopped.</p>
+    <p>What's striking in hindsight is how much of the running argument is the same argument: Kant says the subject is a function, not a substance, Hegel says that function only completes itself through another's recognition, Kojève says that's a theory of desire, Deleuze and Guattari say no, desire is production, not lack, Reich says repression produces fascism, Foucault says power doesn't repress it produces, Land says accelerate anyway — in Kant's own vocabulary, chasing the noumenon — and Fisher says no, go back to Marcuse and mean it this time. Every generation in this lineage thought it was correcting the one before. Read end to end, it looks more like the same unresolved argument about desire and recognition that started in Königsberg and Jena, worked over by people who kept disagreeing about which direction "liberation" points.</p>
+  </footer>
+</section>
+
+<section class="glossary">
+  <h2>Glossary</h2>
+  <p class="lede">The key terms from each current, grouped the way the sections above are — a place to look one up without re-reading the paragraph it came from.</p>
+
+  <div class="gloss-group">
+    <h3>Kant &amp; Hegel</h3>
+    <dl class="gloss-list">
+      <div class="gloss-item"><dt>Phenomena / noumena</dt><dd>Kant's split between things as a structuring mind necessarily experiences them (phenomena) and things as they are in themselves, permanently unreachable (noumena).</dd></div>
+      <div class="gloss-item"><dt>Transcendental unity of apperception</dt><dd>Kant's "I think" that must be able to accompany all of a subject's representations — a formal precondition for unified experience, not a persisting soul-substance.</dd></div>
+      <div class="gloss-item"><dt>Lordship and bondage</dt><dd>Hegel's master-slave dialectic: self-consciousness achieves itself only through a struggle for recognition with another self-consciousness, producing an unequal relation that then dialectically inverts.</dd></div>
+    </dl>
+  </div>
+
+  <div class="gloss-group">
+    <h3>Kojève's Hegel</h3>
+    <dl class="gloss-list">
+      <div class="gloss-item"><dt>Desire for recognition</dt><dd>Kojève's reading of Hegelian desire: not desire for objects, but desire to be desired and acknowledged by another desiring consciousness.</dd></div>
+      <div class="gloss-item"><dt>End of history</dt><dd>Kojève's claim that the historical dialectic of recognition had, on his reading, effectively resolved itself — not to be confused with Francis Fukuyama's later, unrelated use of the same phrase.</dd></div>
+    </dl>
+  </div>
+
+  <div class="gloss-group">
+    <h3>Freudo-Marxism</h3>
+    <dl class="gloss-list">
+      <div class="gloss-item"><dt>Character armor</dt><dd>Reich's term for chronic muscular and psychic rigidity built up to defend against anxiety, later making a person susceptible to authoritarian submission.</dd></div>
+      <div class="gloss-item"><dt>Basic repression / surplus-repression</dt><dd>Marcuse's split between the repression any workable civilization requires (basic) and the extra repression a specific social order imposes beyond that (surplus).</dd></div>
+      <div class="gloss-item"><dt>Performance principle</dt><dd>Marcuse's term for capitalism's specific organization of the reality principle around productive labor.</dd></div>
+      <div class="gloss-item"><dt>Repressive desublimation</dt><dd>Marcuse's term for liberalized sexuality that functions as a release valve and consumer good rather than a genuine threat to the system.</dd></div>
+    </dl>
+  </div>
+
+  <div class="gloss-group">
+    <h3>French (Post-)Structuralism</h3>
+    <dl class="gloss-list">
+      <div class="gloss-item"><dt>Durée</dt><dd>Bergson's term for lived, qualitative time — a continuous, heterogeneous flow, irreducible to the discrete instants clock-time reduces it to.</dd></div>
+      <div class="gloss-item"><dt>Élan vital</dt><dd>Bergson's "vital impetus": an unpredictable, creative force driving life's differentiation, against any purely mechanistic account of evolution.</dd></div>
+      <div class="gloss-item"><dt>Virtual / actual</dt><dd>Bergson's distinction, inherited directly by Deleuze: the virtual is real but not yet actualized, a whole field of potential rather than a merely possible thing.</dd></div>
+      <div class="gloss-item"><dt>Interpellation</dt><dd>Althusser's term for how ideology constitutes individuals as subjects by "hailing" them — the moment of recognizing oneself as the one being addressed.</dd></div>
+      <div class="gloss-item"><dt>Ideological state apparatuses</dt><dd>Althusser's term for the diffuse institutions — school, church, family, media — that reproduce capitalist relations through ideology rather than force.</dd></div>
+      <div class="gloss-item"><dt>Desiring-production</dt><dd>Deleuze and Guattari's model of desire as inherently productive, not structured by lack — a direct rejection of both the Freudian and Lacanian pictures.</dd></div>
+      <div class="gloss-item"><dt>Deterritorialization / reterritorialization</dt><dd>D&amp;G's term for capitalism dissolving old social codes (deterritorialization) while reimposing just enough new coding to keep extracting value (reterritorialization).</dd></div>
+      <div class="gloss-item"><dt>Schizoanalysis</dt><dd>D&amp;G's proposed alternative to psychoanalysis: tracing where desire is actually invested in history and society, instead of interpreting it back onto the Oedipal family.</dd></div>
+      <div class="gloss-item"><dt>Repressive hypothesis</dt><dd>The assumption, which Foucault rejects, that power has simply repressed sexuality and that liberation just means removing the repression.</dd></div>
+      <div class="gloss-item"><dt>Biopower</dt><dd>Foucault's term for power exercised by managing populations and bodies through incitement and classification, not only prohibition.</dd></div>
+    </dl>
+  </div>
+
+  <div class="gloss-group">
+    <h3>Warwick / CCRU</h3>
+    <dl class="gloss-list">
+      <div class="gloss-item"><dt>Accelerationism</dt><dd>The position, following a disputed line in <em>Anti-Oedipus</em>, that capitalism's dissolving of social codes should be pushed further and faster rather than resisted.</dd></div>
+      <div class="gloss-item"><dt>Theory-fiction</dt><dd>CCRU's house style, blending philosophical argument with speculative and horror fiction until the two become hard to tell apart on purpose.</dd></div>
+      <div class="gloss-item"><dt>Hauntology</dt><dd>Fisher's term (via Derrida) for a culture haunted by futures that were promised but never arrived.</dd></div>
+      <div class="gloss-item"><dt>Reflexive impotence</dt><dd>Fisher's term for a self-fulfilling despair: knowing conditions are dire while already having concluded nothing can change.</dd></div>
+      <div class="gloss-item"><dt>Zombie neoliberalism</dt><dd>Fisher's term for neoliberalism after 2008: discredited as a conviction, but persisting as a shambling system with no credible alternative yet in place.</dd></div>
+      <div class="gloss-item"><dt>Class decomposition</dt><dd>Fisher's reading of capitalist realism as neoliberalism's deliberate fracturing of collective working-class solidarity, repackaged as natural "competition."</dd></div>
+      <div class="gloss-item"><dt>Hedonic depression</dt><dd>Fisher's term for a depression distinct from classical anhedonia — not an inability to feel pleasure, but pleasure-seeking locked into tightly controlled, commodified loops.</dd></div>
+      <div class="gloss-item"><dt>Neoreaction / Dark Enlightenment</dt><dd>The anti-democratic, techno-monarchist politics Land moved toward after leaving Warwick — a rupture from, not a continuation of, his CCRU-era work.</dd></div>
+    </dl>
+  </div>
+
+  <div class="gloss-group">
+    <h3>Contemporary</h3>
+    <dl class="gloss-list">
+      <div class="gloss-item"><dt>Folk politics</dt><dd>Srnicek and Williams's term for horizontalist, localist, anti-strategic left tactics they argue are outmatched by organized capital — echoing Fisher's own critique.</dd></div>
+      <div class="gloss-item"><dt>Semiocapitalism</dt><dd>Bifo Berardi's term for a capitalism that exploits attention and nervous systems directly, rather than labor-time.</dd></div>
+      <div class="gloss-item"><dt>Communicative capitalism</dt><dd>Jodi Dean's term for digital communication technology capturing political energy as circulating content rather than enabling democratic action.</dd></div>
+      <div class="gloss-item"><dt>Xenofeminism</dt><dd>Laboria Cuboniks's tech-affirmative, artificiality-embracing feminist politics — descended as much from Plant's cyberfeminism as from accelerationism proper.</dd></div>
+    </dl>
+  </div>
+</section>
+
+</div>
+</body>
+</html>
