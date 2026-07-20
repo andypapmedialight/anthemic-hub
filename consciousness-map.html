@@ -19,111 +19,10 @@
 <meta name="twitter:image" content="https://anthemic-developments.com/consciousness-map-preview.png">
 <link rel="icon" type="image/svg+xml" href="consciousness-map-favicon.svg">
 <link rel="canonical" href="https://anthemic-developments.com/consciousness-map.html">
+<link rel="stylesheet" href="assets/css/philosophy-pages.css">
 <style>
-  /* standalone page scaffolding (the editor's reset, replicated) */
-  html { background: #0b0f1c; }
-  @media (prefers-color-scheme: light) { html { background: #edf0f4; } }
-  img { max-width: 100%; }
   /* card theses are our editorial summaries, not verbatim quotations — drop the quote marks */
   .card .thesis .q { display: none; }
-</style>
-<style>
-  :root {
-    --ground: #EDF0F4;
-    --panel: #F7F9FC;
-    --panel-2: #EEF2F7;
-    --ink: #161C28;
-    --muted: #58627A;
-    --faint: #8B94A8;
-    --line: rgba(20,28,48,0.14);
-    --grid: rgba(20,28,48,0.07);
-    --cross: rgba(20,28,48,0.16);
-    --cyan: #0E7F94;
-    --cyan-soft: rgba(14,127,148,0.12);
-    --violet: #6B46C1;
-    --violet-soft: rgba(107,70,193,0.12);
-    --gold: #9C6F1C;
-    --shadow: 0 1px 2px rgba(20,28,48,0.06), 0 8px 30px rgba(20,28,48,0.07);
-    --serif: "Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,"Times New Roman",serif;
-    --sans: system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    --mono: ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --ground: #0B0F1C;
-      --panel: #121829;
-      --panel-2: #0E1424;
-      --ink: #D8DFEC;
-      --muted: #8A96AE;
-      --faint: #626E88;
-      --line: rgba(255,255,255,0.13);
-      --grid: rgba(255,255,255,0.06);
-      --cross: rgba(255,255,255,0.16);
-      --cyan: #3BC1D6;
-      --cyan-soft: rgba(59,193,214,0.14);
-      --violet: #A987F5;
-      --violet-soft: rgba(169,135,245,0.15);
-      --gold: #D9B15E;
-      --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 12px 40px rgba(0,0,0,0.45);
-    }
-  }
-  :root[data-theme="light"] {
-    --ground: #EDF0F4; --panel: #F7F9FC; --panel-2: #EEF2F7; --ink: #161C28;
-    --muted: #58627A; --faint: #8B94A8; --line: rgba(20,28,48,0.14); --grid: rgba(20,28,48,0.07);
-    --cross: rgba(20,28,48,0.16); --cyan: #0E7F94; --cyan-soft: rgba(14,127,148,0.12);
-    --violet: #6B46C1; --violet-soft: rgba(107,70,193,0.12); --gold: #9C6F1C;
-    --shadow: 0 1px 2px rgba(20,28,48,0.06), 0 8px 30px rgba(20,28,48,0.07);
-  }
-  :root[data-theme="dark"] {
-    --ground: #0B0F1C; --panel: #121829; --panel-2: #0E1424; --ink: #D8DFEC;
-    --muted: #8A96AE; --faint: #626E88; --line: rgba(255,255,255,0.13); --grid: rgba(255,255,255,0.06);
-    --cross: rgba(255,255,255,0.16); --cyan: #3BC1D6; --cyan-soft: rgba(59,193,214,0.14);
-    --violet: #A987F5; --violet-soft: rgba(169,135,245,0.15); --gold: #D9B15E;
-    --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 12px 40px rgba(0,0,0,0.45);
-  }
-
-  * { box-sizing: border-box; }
-  body { margin: 0; }
-  .wrap {
-    background: var(--ground);
-    color: var(--ink);
-    font-family: var(--sans);
-    -webkit-font-smoothing: antialiased;
-    line-height: 1.55;
-    padding: clamp(20px, 5vw, 64px) clamp(16px, 5vw, 56px) 72px;
-  }
-  .inner { max-width: 1120px; margin: 0 auto; }
-
-  .eyebrow {
-    font-family: var(--mono);
-    font-size: 0.72rem;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--cyan);
-    margin: 0 0 18px;
-  }
-  h1 {
-    font-family: var(--serif);
-    font-weight: 600;
-    font-size: clamp(2.1rem, 5.4vw, 3.5rem);
-    line-height: 1.04;
-    letter-spacing: -0.015em;
-    text-wrap: balance;
-    margin: 0 0 18px;
-  }
-  h1 em { font-style: italic; color: var(--muted); }
-  .lede {
-    max-width: 62ch;
-    font-size: clamp(1rem, 1.6vw, 1.16rem);
-    color: var(--muted);
-    margin: 0;
-  }
-  .lede b { color: var(--ink); font-weight: 600; }
-
-  .rule {
-    height: 1px; background: var(--line); border: 0;
-    margin: clamp(28px, 4vw, 44px) 0;
-  }
 
   /* ---- Map ---- */
   .mapwrap { overflow-x: auto; padding-bottom: 6px; }
@@ -253,22 +152,6 @@
     color: var(--faint); margin: 0 0 18px;
   }
 
-  a { color: var(--cyan); text-decoration: none; border-bottom: 1px solid transparent; }
-  a:hover { border-bottom-color: currentColor; }
-  :focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; border-radius: 3px; }
-
-  .site-bar {
-    display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: baseline;
-    margin: 0 0 28px; padding: 0 0 14px; border-bottom: 1px solid var(--line);
-    font-family: var(--sans); font-size: 0.85rem;
-  }
-  .site-bar a { color: var(--muted); font-weight: 500; border-bottom: none; }
-  .site-bar a:hover { color: var(--ink); }
-  .site-bar .sep { color: var(--faint); user-select: none; }
-
-  @media (prefers-reduced-motion: reduce) {
-    * { transition: none !important; }
-  }
   @media (max-width: 560px) {
     .chip .lbl { width: 78px; }
   }

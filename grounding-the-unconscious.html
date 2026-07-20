@@ -13,166 +13,128 @@
 <meta name="twitter:card" content="summary">
 <link rel="icon" type="image/svg+xml" href="grounding-the-unconscious-favicon.svg">
 <link rel="canonical" href="https://anthemic-developments.com/grounding-the-unconscious.html">
+<link rel="stylesheet" href="assets/css/philosophy-pages.css">
 <style>
-:root{
-  --bg:#e7e6df; --bg-raised:#f4f3ee; --text:#1e2023; --text-muted:#55585c;
-  --rule:#c9c7bd; --wine:#7c3341; --teal:#2f6e68;
-  --wine-soft:#f3e4e3; --teal-soft:#e2edea; --wine-line:#c98f96; --teal-line:#8fbcb5;
-}
-@media (prefers-color-scheme: dark){
-  :root{
-    --bg:#15171b; --bg-raised:#1d2024; --text:#dfded6; --text-muted:#9b9c94;
-    --rule:#34373b; --wine:#dd97a1; --teal:#86c8bf;
-    --wine-soft:#2a1b1e; --teal-soft:#16221f; --wine-line:#4a3033; --teal-line:#2c433f;
+  .wrap.essay { max-width: 920px; margin: 0 auto; font-size: 17px; line-height: 1.65; }
+
+  header.masthead { margin-bottom: 3.5rem; }
+  .frame-note {
+    margin-top: 1.6rem; padding: 0.9rem 1.1rem;
+    border: 1px solid var(--line); border-left: 3px solid var(--cyan);
+    border-radius: 12px; font-family: var(--mono); font-size: 0.82rem;
+    color: var(--muted); line-height: 1.55; background: var(--panel-2);
   }
-}
-:root[data-theme="dark"]{
-  --bg:#15171b; --bg-raised:#1d2024; --text:#dfded6; --text-muted:#9b9c94;
-  --rule:#34373b; --wine:#dd97a1; --teal:#86c8bf;
-  --wine-soft:#2a1b1e; --teal-soft:#16221f; --wine-line:#4a3033; --teal-line:#2c433f;
-}
-:root[data-theme="light"]{
-  --bg:#e7e6df; --bg-raised:#f4f3ee; --text:#1e2023; --text-muted:#55585c;
-  --rule:#c9c7bd; --wine:#7c3341; --teal:#2f6e68;
-  --wine-soft:#f3e4e3; --teal-soft:#e2edea; --wine-line:#c98f96; --teal-line:#8fbcb5;
-}
 
-*{box-sizing:border-box}
-body{
-  background:var(--bg); color:var(--text);
-  font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Noto Serif",serif;
-  font-size:17px; line-height:1.65; text-rendering:optimizeLegibility;
-}
-.mono{ font-family:ui-monospace,"SF Mono","Cascadia Code","Roboto Mono",Menlo,Consolas,monospace; }
-
-.wrap{ max-width:920px; margin:0 auto; padding:4.5rem 1.5rem 6rem; }
-
-header.masthead{ margin-bottom:3.5rem; }
-.eyebrow{
-  font-family:ui-monospace,"SF Mono","Cascadia Code",monospace;
-  font-size:.72rem; letter-spacing:.14em; text-transform:uppercase;
-  color:var(--text-muted); display:flex; gap:.6em; align-items:center;
-}
-.eyebrow .dot{ color:var(--wine); }
-.eyebrow .dot2{ color:var(--teal); }
-h1{
-  font-size:clamp(2.1rem,5vw,3.1rem); line-height:1.08; margin:.5rem 0 .8rem;
-  text-wrap:balance; font-weight:600; letter-spacing:-.01em;
-}
-.dek{
-  font-size:1.08rem; color:var(--text-muted); max-width:62ch; text-wrap:balance;
-  font-style:italic;
-}
-.frame-note{
-  margin-top:1.6rem; padding:.9rem 1.1rem; border-left:3px solid var(--rule);
-  font-family:ui-monospace,"SF Mono","Cascadia Code",monospace; font-size:.82rem;
-  color:var(--text-muted); line-height:1.55; background:var(--bg-raised);
-}
-
-section.thinker{
-  display:grid; grid-template-columns: minmax(0,1fr) 260px;
-  gap:0 2.2rem; padding:2.6rem 0; border-top:1px solid var(--rule);
-}
-section.thinker:first-of-type{ border-top:1px solid var(--rule); }
-.main-col{ min-width:0; }
-h2{ font-size:1.5rem; margin:0 0 .15rem; letter-spacing:-.01em; }
-h2 .years{ font-family:ui-monospace,monospace; font-size:.65em; color:var(--text-muted); font-weight:400; margin-left:.5em; }
-h3{
-  font-family:ui-monospace,"SF Mono","Cascadia Code",monospace; font-size:.92rem;
-  text-transform:uppercase; letter-spacing:.05em; color:var(--teal);
-  margin:1.8rem 0 .8rem; font-weight:600;
-}
-.tag-row{ margin-bottom:1.1rem; }
-.tag{
-  display:inline-block; font-family:ui-monospace,monospace; font-size:.68rem;
-  letter-spacing:.06em; text-transform:uppercase; padding:.18em .55em;
-  border-radius:2px; background:var(--wine-soft); color:var(--wine); margin-right:.4em;
-}
-.main-col p{ margin:0 0 1rem; max-width:64ch; }
-.main-col p:last-child{ margin-bottom:0; }
-strong.term{ font-style:italic; font-weight:600; }
-
-aside.margin{
-  font-family:ui-monospace,"SF Mono","Cascadia Code",monospace;
-  font-size:.76rem; line-height:1.55; color:var(--text-muted);
-  border-left:2px solid var(--teal-line); padding-left:1rem; align-self:start;
-}
-aside.margin .label{
-  color:var(--teal); text-transform:uppercase; letter-spacing:.08em; font-size:.68rem;
-  display:block; margin-bottom:.5rem;
-}
-aside.margin p{ margin:0 0 .8rem; }
-aside.margin p:last-child{ margin-bottom:0; }
-aside.margin .who{ color:var(--text); }
-
-@media (max-width:760px){
-  section.thinker{ grid-template-columns:1fr; }
-  aside.margin{
-    border-left:none; border-top:1px solid var(--teal-line); padding-left:0;
-    padding-top:.9rem; margin-top:1.2rem; background:var(--teal-soft);
-    padding:.9rem 1rem; border-radius:3px;
+  section.thinker {
+    display: grid; grid-template-columns: minmax(0, 1fr) 260px;
+    gap: 0 2.2rem; padding: 2.6rem 0; border-top: 1px solid var(--line);
   }
-}
+  .main-col { min-width: 0; }
+  h2 {
+    font-family: var(--serif); font-size: 1.5rem; margin: 0 0 0.15rem;
+    letter-spacing: -0.01em; font-weight: 600;
+  }
+  h2 .years {
+    font-family: var(--mono); font-size: 0.65em; color: var(--muted);
+    font-weight: 400; margin-left: 0.5em;
+  }
+  h3 {
+    font-family: var(--mono); font-size: 0.92rem; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--cyan); margin: 1.8rem 0 0.8rem; font-weight: 600;
+  }
+  .tag-row { margin-bottom: 1.1rem; }
+  .tag {
+    display: inline-block; font-family: var(--mono); font-size: 0.68rem;
+    letter-spacing: 0.06em; text-transform: uppercase; padding: 0.18em 0.55em;
+    border-radius: 999px; background: var(--violet-soft); color: var(--violet); margin-right: 0.4em;
+  }
+  .main-col p { margin: 0 0 1rem; max-width: 64ch; }
+  .main-col p:last-child { margin-bottom: 0; }
+  strong.term { font-style: italic; font-weight: 600; }
 
-.synthesis{ padding-top:3rem; border-top:1px solid var(--rule); }
-.synthesis h2{ font-size:1.6rem; margin-bottom:.4rem; }
-.synthesis > p.lede{ color:var(--text-muted); max-width:64ch; margin-bottom:1.8rem; }
+  aside.margin {
+    font-family: var(--mono); font-size: 0.76rem; line-height: 1.55;
+    color: var(--muted); border-left: 2px solid var(--cyan); padding-left: 1rem; align-self: start;
+  }
+  aside.margin .label {
+    color: var(--cyan); text-transform: uppercase; letter-spacing: 0.08em;
+    font-size: 0.68rem; display: block; margin-bottom: 0.5rem;
+  }
+  aside.margin p { margin: 0 0 0.8rem; }
+  aside.margin p:last-child { margin-bottom: 0; }
+  aside.margin .who { color: var(--ink); }
 
-.table-scroll{ overflow-x:auto; border:1px solid var(--rule); border-radius:4px; }
-table{ width:100%; border-collapse:collapse; font-size:.86rem; min-width:640px; }
-thead th{
-  text-align:left; font-family:ui-monospace,monospace; font-size:.68rem;
-  letter-spacing:.06em; text-transform:uppercase; color:var(--text-muted);
-  padding:.7rem .9rem; background:var(--bg-raised); border-bottom:1px solid var(--rule);
-}
-tbody td{ padding:.75rem .9rem; border-bottom:1px solid var(--rule); vertical-align:top; }
-tbody tr:last-child td{ border-bottom:none; }
-td.construct{ font-style:italic; white-space:nowrap; }
-td.status{ font-family:ui-monospace,monospace; font-size:.72rem; white-space:nowrap; }
-.status-solid{ color:var(--teal); }
-.status-mid{ color:var(--text-muted); }
-.status-thin{ color:var(--wine); }
+  @media (max-width: 760px) {
+    section.thinker { grid-template-columns: 1fr; }
+    aside.margin {
+      border-left: none; border-top: 1px solid var(--line); padding-left: 0;
+      margin-top: 1.2rem; background: var(--cyan-soft);
+      padding: 0.9rem 1rem; border-radius: 12px;
+    }
+  }
 
-.stack{ margin-top:2.4rem; display:grid; gap:.9rem; }
-.tier{
-  display:grid; grid-template-columns:120px 1fr; gap:1rem; align-items:baseline;
-  padding:.9rem 1.1rem; background:var(--bg-raised); border-radius:4px; border:1px solid var(--rule);
-}
-.tier .tier-label{ font-family:ui-monospace,monospace; font-size:.72rem; color:var(--teal); text-transform:uppercase; letter-spacing:.06em; }
-.tier p{ margin:0; font-size:.92rem; }
+  .synthesis { padding-top: 3rem; border-top: 1px solid var(--line); }
+  .synthesis h2 { font-size: 1.6rem; margin-bottom: 0.4rem; }
+  .synthesis > p.lede { margin-bottom: 1.8rem; }
 
-footer.close{
-  margin-top:3rem; padding-top:1.8rem; border-top:1px solid var(--rule);
-  color:var(--text-muted); font-size:.92rem; max-width:66ch;
-}
-footer.close p{ margin:0 0 .9rem; }
+  .table-scroll {
+    overflow-x: auto; border: 1px solid var(--line); border-radius: 12px;
+    background: var(--panel); box-shadow: var(--shadow);
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 0.86rem; min-width: 640px; }
+  thead th {
+    text-align: left; font-family: var(--mono); font-size: 0.68rem;
+    letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted);
+    padding: 0.7rem 0.9rem; background: var(--panel-2); border-bottom: 1px solid var(--line);
+  }
+  tbody td { padding: 0.75rem 0.9rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: none; }
+  td.construct { font-style: italic; white-space: nowrap; }
+  td.status { font-family: var(--mono); font-size: 0.72rem; white-space: nowrap; }
+  .status-solid { color: var(--cyan); }
+  .status-mid { color: var(--muted); }
+  .status-thin { color: var(--violet); }
 
-.struct-badge{ display:flex; gap:.65rem; align-items:flex-start; margin:.6rem 0 1rem; }
-.struct-badge:last-child{ margin-bottom:0; }
-svg.brainmap{ flex:none; display:block; }
-.brainmap .bmap-outline{ fill:var(--bg); stroke:var(--text-muted); stroke-width:1.4; opacity:.6; }
-.brainmap .bmap-fissure{ fill:none; stroke:var(--text-muted); stroke-width:1; opacity:.4; }
-.brainmap .bmap-cc{ fill:none; stroke:var(--text-muted); stroke-width:1; opacity:.35; }
-.brainmap .bmap-marker{ fill:var(--teal); stroke:var(--bg); stroke-width:.6; }
-.brainmap .bmap-marker.deep{ fill:var(--wine); opacity:.9; }
-.brainmap .bmap-link{ fill:none; stroke:var(--teal); stroke-width:1.1; stroke-dasharray:2,2; opacity:.75; }
-.struct-meta{ font-size:.72rem; line-height:1.5; padding-top:.1rem; }
-.struct-meta .s-name{ color:var(--text); font-weight:600; display:block; }
-.struct-meta .s-when b{ color:var(--teal); font-weight:600; }
-.legend-note{
-  margin-top:1.1rem; font-family:ui-monospace,"SF Mono","Cascadia Code",monospace;
-  font-size:.72rem; color:var(--text-muted); line-height:1.6;
-}
-.legend-note .sw{ display:inline-block; width:.6em; height:.6em; border-radius:50%; margin-right:.35em; vertical-align:middle; }
-.legend-note .sw.teal{ background:var(--teal); }
-.legend-note .sw.wine{ background:var(--wine); }
-.site-bar{
-  font-family:ui-monospace,"SF Mono","Cascadia Code",monospace; font-size:.78rem;
-  color:var(--text-muted); margin-bottom:2rem; display:flex; gap:.6em; align-items:center;
-}
-.site-bar a{ color:var(--text-muted); }
-.site-bar a:hover{ color:var(--teal); }
-.site-bar .sep{ opacity:.5; }
+  .stack { margin-top: 2.4rem; display: grid; gap: 0.9rem; }
+  .tier {
+    display: grid; grid-template-columns: 120px 1fr; gap: 1rem; align-items: baseline;
+    padding: 0.9rem 1.1rem; background: var(--panel); border-radius: 12px;
+    border: 1px solid var(--line); box-shadow: var(--shadow);
+  }
+  .tier .tier-label {
+    font-family: var(--mono); font-size: 0.72rem; color: var(--cyan);
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .tier p { margin: 0; font-size: 0.92rem; }
+
+  footer.close {
+    margin-top: 3rem; padding-top: 1.8rem; border-top: 1px solid var(--line);
+    color: var(--muted); font-size: 0.92rem; max-width: 66ch;
+  }
+  footer.close p { margin: 0 0 0.9rem; }
+
+  .struct-badge { display: flex; gap: 0.65rem; align-items: flex-start; margin: 0.6rem 0 1rem; }
+  .struct-badge:last-child { margin-bottom: 0; }
+  svg.brainmap { flex: none; display: block; }
+  .brainmap .bmap-outline { fill: var(--panel); stroke: var(--muted); stroke-width: 1.4; opacity: 0.6; }
+  .brainmap .bmap-fissure { fill: none; stroke: var(--muted); stroke-width: 1; opacity: 0.4; }
+  .brainmap .bmap-cc { fill: none; stroke: var(--muted); stroke-width: 1; opacity: 0.35; }
+  .brainmap .bmap-marker { fill: var(--cyan); stroke: var(--panel); stroke-width: 0.6; }
+  .brainmap .bmap-marker.deep { fill: var(--violet); opacity: 0.9; }
+  .brainmap .bmap-link { fill: none; stroke: var(--cyan); stroke-width: 1.1; stroke-dasharray: 2, 2; opacity: 0.75; }
+  .struct-meta { font-size: 0.72rem; line-height: 1.5; padding-top: 0.1rem; }
+  .struct-meta .s-name { color: var(--ink); font-weight: 600; display: block; }
+  .struct-meta .s-when b { color: var(--cyan); font-weight: 600; }
+  .legend-note {
+    margin-top: 1.1rem; font-family: var(--mono); font-size: 0.72rem;
+    color: var(--muted); line-height: 1.6;
+  }
+  .legend-note .sw {
+    display: inline-block; width: 0.6em; height: 0.6em; border-radius: 50%;
+    margin-right: 0.35em; vertical-align: middle;
+  }
+  .legend-note .sw.cyan { background: var(--cyan); }
+  .legend-note .sw.violet { background: var(--violet); }
 </style>
 </head>
 <body>
@@ -184,7 +146,7 @@ svg.brainmap{ flex:none; display:block; }
   </defs>
 </svg>
 
-<div class="wrap">
+<div class="wrap essay">
 
 <nav class="site-bar" aria-label="Site">
   <a href="/">← Anthemic hub</a>
@@ -203,7 +165,7 @@ svg.brainmap{ flex:none; display:block; }
   <div class="frame-note">
     NOTE — this is a live, contested research boundary. Some links below (Solms/Panksepp, Friston) are active empirical programs with real data. Others (Zizek/Johnston, Hofstadter) are philosophical analogies, useful for thinking, not measurements. The table at the end marks which is which. The year range beside each name is that thinker's theoretical span — founding text through death, or through today if still working — not a birth–death biography.
   </div>
-  <p class="legend-note"><span class="sw teal"></span>solid dot — visible on the surface shown (lateral side-profile or medial sagittal cut). <span class="sw wine"></span>dashed dot — structure lies deeper than that surface, marker shows its approximate projection. Diagrams are schematic silhouettes for orientation, not to scale, not clinical imaging. Gestational weeks (wk) mark first anatomical differentiation, not functional maturity — the gap between the two is often the interesting part.</p>
+  <p class="legend-note"><span class="sw cyan"></span>solid dot — visible on the surface shown (lateral side-profile or medial sagittal cut). <span class="sw violet"></span>dashed dot — structure lies deeper than that surface, marker shows its approximate projection. Diagrams are schematic silhouettes for orientation, not to scale, not clinical imaging. Gestational weeks (wk) mark first anatomical differentiation, not functional maturity — the gap between the two is often the interesting part.</p>
 </header>
 
 <section class="thinker">

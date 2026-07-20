@@ -13,163 +13,126 @@
 <meta name="twitter:card" content="summary">
 <link rel="icon" type="image/svg+xml" href="genealogies-of-desire-favicon.svg">
 <link rel="canonical" href="https://anthemic-developments.com/genealogies-of-desire.html">
+<link rel="stylesheet" href="assets/css/philosophy-pages.css">
 <style>
-:root{
-  --bg:#e7e6df; --bg-raised:#f4f3ee; --text:#1e2023; --text-muted:#55585c;
-  --rule:#c9c7bd; --wine:#7c3341; --teal:#2f6e68;
-  --wine-soft:#f3e4e3; --teal-soft:#e2edea; --wine-line:#c98f96; --teal-line:#8fbcb5;
-}
-@media (prefers-color-scheme: dark){
-  :root{
-    --bg:#15171b; --bg-raised:#1d2024; --text:#dfded6; --text-muted:#9b9c94;
-    --rule:#34373b; --wine:#dd97a1; --teal:#86c8bf;
-    --wine-soft:#2a1b1e; --teal-soft:#16221f; --wine-line:#4a3033; --teal-line:#2c433f;
+  .wrap.essay { max-width: 960px; margin: 0 auto; font-size: 17px; line-height: 1.65; }
+
+  header.masthead { margin-bottom: 3.5rem; }
+  .frame-note {
+    margin-top: 1.6rem; padding: 0.9rem 1.1rem;
+    border: 1px solid var(--line); border-left: 3px solid var(--cyan);
+    border-radius: 12px; font-family: var(--mono); font-size: 0.82rem;
+    color: var(--muted); line-height: 1.55; background: var(--panel-2);
   }
-}
-:root[data-theme="dark"]{
-  --bg:#15171b; --bg-raised:#1d2024; --text:#dfded6; --text-muted:#9b9c94;
-  --rule:#34373b; --wine:#dd97a1; --teal:#86c8bf;
-  --wine-soft:#2a1b1e; --teal-soft:#16221f; --wine-line:#4a3033; --teal-line:#2c433f;
-}
-:root[data-theme="light"]{
-  --bg:#e7e6df; --bg-raised:#f4f3ee; --text:#1e2023; --text-muted:#55585c;
-  --rule:#c9c7bd; --wine:#7c3341; --teal:#2f6e68;
-  --wine-soft:#f3e4e3; --teal-soft:#e2edea; --wine-line:#c98f96; --teal-line:#8fbcb5;
-}
 
-*{box-sizing:border-box}
-body{
-  background:var(--bg); color:var(--text);
-  font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Noto Serif",serif;
-  font-size:17px; line-height:1.65; text-rendering:optimizeLegibility;
-}
-.wrap{ max-width:960px; margin:0 auto; padding:4.5rem 1.5rem 6rem; }
-
-.site-bar{
-  font-family:ui-monospace,"SF Mono","Cascadia Code",monospace; font-size:.78rem;
-  color:var(--text-muted); margin-bottom:2rem; display:flex; gap:.6em; align-items:center;
-}
-.site-bar a{ color:var(--text-muted); }
-.site-bar a:hover{ color:var(--teal); }
-.site-bar .sep{ opacity:.5; }
-
-header.masthead{ margin-bottom:3.5rem; }
-.eyebrow{
-  font-family:ui-monospace,"SF Mono","Cascadia Code",monospace;
-  font-size:.72rem; letter-spacing:.14em; text-transform:uppercase;
-  color:var(--text-muted); display:flex; gap:.6em; align-items:center; flex-wrap:wrap;
-}
-.eyebrow .dot{ color:var(--wine); }
-.eyebrow .dot2{ color:var(--teal); }
-h1{
-  font-size:clamp(2.1rem,5vw,3.1rem); line-height:1.08; margin:.5rem 0 .8rem;
-  text-wrap:balance; font-weight:600; letter-spacing:-.01em;
-}
-.dek{
-  font-size:1.08rem; color:var(--text-muted); max-width:64ch; text-wrap:balance;
-  font-style:italic;
-}
-.frame-note{
-  margin-top:1.6rem; padding:.9rem 1.1rem; border-left:3px solid var(--rule);
-  font-family:ui-monospace,"SF Mono","Cascadia Code",monospace; font-size:.82rem;
-  color:var(--text-muted); line-height:1.55; background:var(--bg-raised);
-}
-
-section.thinker{
-  display:grid; grid-template-columns: minmax(0,1fr) 260px;
-  gap:0 2.2rem; padding:2.6rem 0; border-top:1px solid var(--rule);
-}
-.main-col{ min-width:0; }
-h2{ font-size:1.5rem; margin:0 0 .15rem; letter-spacing:-.01em; }
-h2 .years{ font-family:ui-monospace,monospace; font-size:.65em; color:var(--text-muted); font-weight:400; margin-left:.5em; }
-h3{
-  font-family:ui-monospace,"SF Mono","Cascadia Code",monospace; font-size:.92rem;
-  text-transform:uppercase; letter-spacing:.05em; color:var(--teal);
-  margin:1.8rem 0 .8rem; font-weight:600;
-}
-.tag-row{ margin-bottom:1.1rem; }
-.tag{
-  display:inline-block; font-family:ui-monospace,monospace; font-size:.68rem;
-  letter-spacing:.06em; text-transform:uppercase; padding:.18em .55em;
-  border-radius:2px; background:var(--wine-soft); color:var(--wine); margin-right:.4em;
-}
-.main-col p{ margin:0 0 1rem; max-width:66ch; }
-.main-col p:last-child{ margin-bottom:0; }
-strong.term{ font-style:italic; font-weight:600; }
-
-aside.margin{
-  font-family:ui-monospace,"SF Mono","Cascadia Code",monospace;
-  font-size:.76rem; line-height:1.55; color:var(--text-muted);
-  border-left:2px solid var(--teal-line); padding-left:1rem; align-self:start;
-}
-aside.margin .label{
-  color:var(--teal); text-transform:uppercase; letter-spacing:.08em; font-size:.68rem;
-  display:block; margin-bottom:.5rem;
-}
-aside.margin p{ margin:0 0 .8rem; }
-aside.margin p:last-child{ margin-bottom:0; }
-aside.margin .who{ color:var(--text); }
-
-@media (max-width:760px){
-  section.thinker{ grid-template-columns:1fr; }
-  aside.margin{
-    border-left:none; border-top:1px solid var(--teal-line); padding-left:0;
-    padding-top:.9rem; margin-top:1.2rem; background:var(--teal-soft);
-    padding:.9rem 1rem; border-radius:3px;
+  section.thinker {
+    display: grid; grid-template-columns: minmax(0, 1fr) 260px;
+    gap: 0 2.2rem; padding: 2.6rem 0; border-top: 1px solid var(--line);
   }
-}
+  .main-col { min-width: 0; }
+  h2 {
+    font-family: var(--serif); font-size: 1.5rem; margin: 0 0 0.15rem;
+    letter-spacing: -0.01em; font-weight: 600;
+  }
+  h2 .years {
+    font-family: var(--mono); font-size: 0.65em; color: var(--muted);
+    font-weight: 400; margin-left: 0.5em;
+  }
+  h3 {
+    font-family: var(--mono); font-size: 0.92rem; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--cyan); margin: 1.8rem 0 0.8rem; font-weight: 600;
+  }
+  .tag-row { margin-bottom: 1.1rem; }
+  .tag {
+    display: inline-block; font-family: var(--mono); font-size: 0.68rem;
+    letter-spacing: 0.06em; text-transform: uppercase; padding: 0.18em 0.55em;
+    border-radius: 999px; background: var(--violet-soft); color: var(--violet); margin-right: 0.4em;
+  }
+  .main-col p { margin: 0 0 1rem; max-width: 66ch; }
+  .main-col p:last-child { margin-bottom: 0; }
+  strong.term { font-style: italic; font-weight: 600; }
+  .main-col a { color: var(--cyan); border-bottom-color: color-mix(in srgb, var(--cyan) 35%, transparent); }
+  .main-col a:hover { border-bottom-color: var(--cyan); }
 
-.mapsec{ padding-top:3rem; border-top:1px solid var(--rule); }
-.mapsec h2{ font-size:1.6rem; margin-bottom:.4rem; }
-.mapsec > p.lede{ color:var(--text-muted); max-width:66ch; margin-bottom:1.6rem; }
-.map-scroll{ overflow-x:auto; border:1px solid var(--rule); border-radius:6px; background:var(--bg-raised); }
-svg.genealogy{ display:block; min-width:760px; }
-.gband-label{ font-family:ui-monospace,monospace; font-size:11px; letter-spacing:.06em; fill:var(--text-muted); text-transform:uppercase; }
-.gband-label tspan.lc{ text-transform:none; }
-.gband-rule{ stroke:var(--rule); stroke-width:1; }
-.gnode rect{ fill:var(--bg); stroke:var(--rule); stroke-width:1.2; }
-.gnode text{ font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif; fill:var(--text); font-size:13px; }
-.gnode .gsub{ font-family:ui-monospace,monospace; fill:var(--text-muted); font-size:9.5px; }
-.glink{ fill:none; }
-.glink.lineage{ stroke:var(--text-muted); stroke-width:1.4; }
-.glink.critique{ stroke:var(--wine); stroke-width:1.3; stroke-dasharray:5,4; }
-.glink.parallel{ stroke:var(--text-muted); stroke-width:1; stroke-dasharray:1,3; opacity:.7; }
-.glink.callback{ stroke:var(--teal); stroke-width:2; }
-.glabel{ font-family:ui-monospace,monospace; font-size:9.5px; fill:var(--text-muted); }
-.legend-note{
-  margin-top:1rem; font-family:ui-monospace,"SF Mono","Cascadia Code",monospace;
-  font-size:.72rem; color:var(--text-muted); line-height:1.8;
-}
-.legend-note .sw{ display:inline-block; width:1.6em; height:0; border-top:2px solid; margin-right:.4em; vertical-align:middle; }
-.legend-note .sw.lineage{ border-color:var(--text-muted); }
-.legend-note .sw.critique{ border-color:var(--wine); border-top-style:dashed; }
-.legend-note .sw.parallel{ border-color:var(--text-muted); border-top-style:dotted; }
-.legend-note .sw.callback{ border-color:var(--teal); border-top-width:3px; }
+  aside.margin {
+    font-family: var(--mono); font-size: 0.76rem; line-height: 1.55;
+    color: var(--muted); border-left: 2px solid var(--cyan); padding-left: 1rem; align-self: start;
+  }
+  aside.margin .label {
+    color: var(--cyan); text-transform: uppercase; letter-spacing: 0.08em;
+    font-size: 0.68rem; display: block; margin-bottom: 0.5rem;
+  }
+  aside.margin p { margin: 0 0 0.8rem; }
+  aside.margin p:last-child { margin-bottom: 0; }
+  aside.margin .who { color: var(--ink); }
 
-footer.close{
-  margin-top:3rem; padding-top:1.8rem; border-top:1px solid var(--rule);
-  color:var(--text-muted); font-size:.92rem; max-width:68ch;
-}
-footer.close p{ margin:0 0 .9rem; }
-footer.close a{ color:var(--teal); }
-.main-col a{ color:var(--teal); text-decoration-color:var(--teal-line); text-underline-offset:2px; }
-.main-col a:hover{ text-decoration-color:var(--teal); }
+  @media (max-width: 760px) {
+    section.thinker { grid-template-columns: 1fr; }
+    aside.margin {
+      border-left: none; border-top: 1px solid var(--line); padding-left: 0;
+      margin-top: 1.2rem; background: var(--cyan-soft);
+      padding: 0.9rem 1rem; border-radius: 12px;
+    }
+  }
 
-.glossary{ padding-top:3rem; border-top:1px solid var(--rule); }
-.glossary h2{ font-size:1.6rem; margin-bottom:.4rem; }
-.glossary > p.lede{ color:var(--text-muted); max-width:66ch; margin-bottom:2rem; }
-.gloss-group{ margin-bottom:2.2rem; }
-.gloss-group:last-child{ margin-bottom:0; }
-.gloss-group h3{ margin-top:0; }
-.gloss-list{ display:grid; grid-template-columns:1fr; gap:1.1rem 2rem; }
-@media (min-width:760px){ .gloss-list{ grid-template-columns:1fr 1fr; } }
-.gloss-item dt{ font-style:italic; font-weight:600; color:var(--text); margin:0 0 .2rem; }
-.gloss-item dd{ margin:0; color:var(--text-muted); font-size:.92rem; line-height:1.5; max-width:44ch; }
+  .mapsec { padding-top: 3rem; border-top: 1px solid var(--line); }
+  .mapsec h2 { font-size: 1.6rem; margin-bottom: 0.4rem; }
+  .mapsec > p.lede { max-width: 66ch; margin-bottom: 1.6rem; }
+  .map-scroll {
+    overflow-x: auto; border: 1px solid var(--line); border-radius: 14px;
+    background: var(--panel); box-shadow: var(--shadow);
+  }
+  svg.genealogy { display: block; min-width: 760px; }
+  .gband-label {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em;
+    fill: var(--muted); text-transform: uppercase;
+  }
+  .gband-label tspan.lc { text-transform: none; }
+  .gband-rule { stroke: var(--line); stroke-width: 1; }
+  .gnode rect { fill: var(--ground); stroke: var(--line); stroke-width: 1.2; }
+  .gnode text { font-family: var(--serif); fill: var(--ink); font-size: 13px; }
+  .gnode .gsub { font-family: var(--mono); fill: var(--muted); font-size: 9.5px; }
+  .glink { fill: none; }
+  .glink.lineage { stroke: var(--muted); stroke-width: 1.4; }
+  .glink.critique { stroke: var(--violet); stroke-width: 1.3; stroke-dasharray: 5, 4; }
+  .glink.parallel { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 1, 3; opacity: 0.7; }
+  .glink.callback { stroke: var(--cyan); stroke-width: 2; }
+  .glabel { font-family: var(--mono); font-size: 9.5px; fill: var(--muted); }
+  .legend-note {
+    margin-top: 1rem; font-family: var(--mono); font-size: 0.72rem;
+    color: var(--muted); line-height: 1.8;
+  }
+  .legend-note .sw {
+    display: inline-block; width: 1.6em; height: 0; border-top: 2px solid;
+    margin-right: 0.4em; vertical-align: middle;
+  }
+  .legend-note .sw.lineage { border-color: var(--muted); }
+  .legend-note .sw.critique { border-color: var(--violet); border-top-style: dashed; }
+  .legend-note .sw.parallel { border-color: var(--muted); border-top-style: dotted; }
+  .legend-note .sw.callback { border-color: var(--cyan); border-top-width: 3px; }
+
+  footer.close {
+    margin-top: 3rem; padding-top: 1.8rem; border-top: 1px solid var(--line);
+    color: var(--muted); font-size: 0.92rem; max-width: 68ch;
+  }
+  footer.close p { margin: 0 0 0.9rem; }
+  footer.close a { color: var(--cyan); }
+
+  .glossary { padding-top: 3rem; border-top: 1px solid var(--line); }
+  .glossary h2 { font-size: 1.6rem; margin-bottom: 0.4rem; }
+  .glossary > p.lede { max-width: 66ch; margin-bottom: 2rem; }
+  .gloss-group { margin-bottom: 2.2rem; }
+  .gloss-group:last-child { margin-bottom: 0; }
+  .gloss-group h3 { margin-top: 0; }
+  .gloss-list { display: grid; grid-template-columns: 1fr; gap: 1.1rem 2rem; }
+  @media (min-width: 760px) { .gloss-list { grid-template-columns: 1fr 1fr; } }
+  .gloss-item dt { font-style: italic; font-weight: 600; color: var(--ink); margin: 0 0 0.2rem; }
+  .gloss-item dd { margin: 0; color: var(--muted); font-size: 0.92rem; line-height: 1.5; max-width: 44ch; }
 </style>
 </head>
 <body>
 
-<div class="wrap">
+<div class="wrap essay">
 
 <nav class="site-bar" aria-label="Site">
   <a href="/">← Anthemic hub</a>
@@ -296,7 +259,7 @@ footer.close a{ color:var(--teal); }
 
 <section class="mapsec">
   <h2>Visual mapping</h2>
-  <p class="lede">The line starts further back than Freud or Marx: Kant splits the subject from the thing-in-itself and the "I think" from any soul-substance; Hegel dialecticizes that split into a struggle for recognition; Kojève reads that struggle as a theory of desire, which Freudo-Marxism sits beside rather than descends from, and which Deleuze &amp; Guattari later reject outright. From there — Freudo-Marxism gets rejected by French theory for reducing desire to family drama; French theory's own Deleuze &amp; Guattari get radicalized at Warwick into accelerationism; Warwick then splits into a communist return to Marcuse (Fisher) and a neoreactionary exit (Land) — Land's own version, fittingly, put back in explicitly Kantian terms. Solid lines build on; dashed lines critique or break from; the thick teal line is the single explicit callback across the whole genealogy.</p>
+  <p class="lede">The line starts further back than Freud or Marx: Kant splits the subject from the thing-in-itself and the "I think" from any soul-substance; Hegel dialecticizes that split into a struggle for recognition; Kojève reads that struggle as a theory of desire, which Freudo-Marxism sits beside rather than descends from, and which Deleuze &amp; Guattari later reject outright. From there — Freudo-Marxism gets rejected by French theory for reducing desire to family drama; French theory's own Deleuze &amp; Guattari get radicalized at Warwick into accelerationism; Warwick then splits into a communist return to Marcuse (Fisher) and a neoreactionary exit (Land) — Land's own version, fittingly, put back in explicitly Kantian terms. Solid lines build on; dashed lines critique or break from; the thick cyan line is the single explicit callback across the whole genealogy.</p>
 
   <div class="map-scroll">
     <svg class="genealogy" viewBox="0 0 1000 830" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Genealogy diagram from Kant, Hegel, and Bergson through Kojève's Hegel seminar, Freudo-Marxism, French post-structuralism, and Warwick CCRU, to contemporary accelerationism, left and right.">
@@ -444,6 +407,8 @@ footer.close a{ color:var(--teal); }
   <div class="gloss-group">
     <h3>French (Post-)Structuralism</h3>
     <dl class="gloss-list">
+      <div class="gloss-item"><dt>Structuralism</dt><dd>The mid-century approach, descending from Saussure's linguistics via Lévi-Strauss, Lacan, and Althusser, that treats culture, kinship, the psyche, and ideology as systems of relations — differences with no positive terms — rather than as expressions of a prior, self-present subject or meaning.</dd></div>
+      <div class="gloss-item"><dt>Post-structuralism</dt><dd>The cluster of responses (Foucault, Derrida, Deleuze &amp; Guattari, and others) that keep structuralism's anti-humanism and relational method, but refuse the idea of a closed, stable system: structures are historically contingent, riven by power, desire, and play, and never finally determine what they organize.</dd></div>
       <div class="gloss-item"><dt>Durée</dt><dd>Bergson's term for lived, qualitative time — a continuous, heterogeneous flow, irreducible to the discrete instants clock-time reduces it to.</dd></div>
       <div class="gloss-item"><dt>Élan vital</dt><dd>Bergson's "vital impetus": an unpredictable, creative force driving life's differentiation, against any purely mechanistic account of evolution.</dd></div>
       <div class="gloss-item"><dt>Virtual / actual</dt><dd>Bergson's distinction, inherited directly by Deleuze: the virtual is real but not yet actualized, a whole field of potential rather than a merely possible thing.</dd></div>
