@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="The Map of Maps">
+  <rect width="32" height="32" rx="7" fill="#15171b"/>
+  <path d="M9 10 L23 8 M9 10 L16 22 M23 8 L16 22 M9 10 L9 23 M9 23 L16 22" fill="none" stroke="#8aa0c8" stroke-width="1.1"/>
+  <circle cx="9" cy="10" r="2.6" fill="#86c8bf"/>
+  <circle cx="23" cy="8" r="2.6" fill="#dd97a1"/>
+  <circle cx="16" cy="22" r="2.6" fill="#86c8bf"/>
+  <circle cx="9" cy="23" r="2.6" fill="#e3b24d"/>
+</svg>
