@@ -159,13 +159,13 @@ end
 
 subgraph sgConcepts["SHARED CONCEPTS, ACROSS ALL THREE"]
 direction LR
-cUnconscious(["the unconscious /<br/>repression"])
-cIdeology(["ideology"])
-cRecog(["desire &amp; recognition"])
-cReif(["reification /<br/>commodity fetishism"])
-cHardProb(["the hard problem /<br/>subject as gap"])
-cGenMethod(["genealogy as method"])
-cHegemony(["hegemony"])
+cUnconscious("the unconscious /<br/>repression")
+cIdeology("ideology")
+cRecog("desire &amp; recognition")
+cReif("reification /<br/>commodity fetishism")
+cHardProb("the hard problem /<br/>subject as gap")
+cGenMethod("genealogy as method")
+cHegemony("hegemony")
 end
 
 spinoza --> freud
@@ -482,9 +482,33 @@ const target = document.getElementById("mmd-target");
 const sidebarList = document.getElementById("mapSidebarList");
 const searchInput = document.getElementById("mapSearch");
 
-mermaid.initialize({ startOnLoad: false, securityLevel: "loose", flowchart: { htmlLabels: true, curve: "basis" }, theme: "base", themeVariables: { background: "transparent", primaryColor: "transparent", primaryBorderColor: pal.line, primaryTextColor: pal.ink, lineColor: pal.muted, clusterBkg: "transparent", clusterBorder: pal.line, fontFamily: "inherit" } });
+// Explicit sans stack — fontFamily:"inherit" makes Mermaid measure labels against a
+// different font than the page, so foreignObject widths come out ~10–30px too narrow.
+const mapFont = 'system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+mermaid.initialize({ startOnLoad: false, securityLevel: "loose", flowchart: { htmlLabels: true, curve: "basis" }, theme: "base", themeVariables: { background: "transparent", primaryColor: "transparent", primaryBorderColor: pal.line, primaryTextColor: pal.ink, lineColor: pal.muted, clusterBkg: "transparent", clusterBorder: pal.line, fontFamily: mapFont } });
 
 let panZoomInstance = null;
+
+/** Mermaid htmlLabels still undersize foreignObject vs scrollWidth; widen FO + shape. */
+function fixClippedHtmlLabels(svg) {
+  svg.querySelectorAll(".node").forEach((node) => {
+    const fo = node.querySelector("foreignObject");
+    const div = fo && fo.querySelector("div");
+    if (!fo || !div) return;
+    const needed = Math.ceil(div.scrollWidth);
+    const have = parseFloat(fo.getAttribute("width")) || 0;
+    if (needed <= have + 0.5) return;
+    const grow = needed - have;
+    fo.setAttribute("width", String(needed));
+    const rect = node.querySelector("rect.label-container, rect.basic");
+    if (rect) {
+      const rw = parseFloat(rect.getAttribute("width")) || 0;
+      const rx = parseFloat(rect.getAttribute("x")) || 0;
+      rect.setAttribute("width", String(rw + grow));
+      rect.setAttribute("x", String(rx - grow / 2));
+    }
+  });
+}
 
 function buildSidebar() {
   const frag = document.createDocumentFragment();
@@ -543,6 +567,7 @@ mermaid.render("mmdGraph", graphSrc).then(({ svg }) => {
   svgEl.removeAttribute("height");
   svgEl.style.width = "100%";
   svgEl.style.height = "100%";
+  fixClippedHtmlLabels(svgEl);
 
   panZoomInstance = window.svgPanZoom(svgEl, {
     zoomEnabled: true, panEnabled: true, controlIconsEnabled: false,

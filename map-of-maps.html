@@ -76,6 +76,8 @@
   .map-viewport { position: relative; flex: 1; height: 72vh; overflow: hidden; background: var(--panel); }
   #mmd-target { width: 100%; height: 100%; }
   .map-viewport svg { width: 100%; height: 100%; display: block; }
+  /* Belt-and-suspenders for Mermaid htmlLabels FO undersize */
+  .map-viewport .node foreignObject { overflow: visible; }
   .map-status { padding: 0.6rem 0.9rem; font-family: var(--mono); font-size: 0.76rem; color: var(--muted); border-top: 1px solid var(--line); }
   @media (max-width: 760px) {
     .map-body { flex-direction: column; }
