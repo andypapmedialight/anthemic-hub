@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>The Map of Maps — every thinker, every concept, one diagram</title>
-<meta name="description" content="A single Mermaid diagram indexing every thinker and key concept across Grounding the Unconscious, Genealogies of Desire, and Constellations of History — click any node to jump to its source.">
+<title>The Map of Maps — every thinker, every concept, one timeline</title>
+<meta name="description" content="A chronological timeline indexing every thinker and key concept across Grounding the Unconscious, Genealogies of Desire, and Constellations of History — click any node to jump to its source.">
 <meta name="color-scheme" content="light dark">
 <meta property="og:type" content="website">
 <meta property="og:title" content="The Map of Maps">
-<meta property="og:description" content="Every thinker and concept from the three genealogy pieces, in one clickable diagram.">
+<meta property="og:description" content="Every thinker and concept from the three genealogy pieces, on one chronological timeline.">
 <meta property="og:url" content="https://anthemic-developments.com/map-of-maps.html">
 <meta name="twitter:card" content="summary">
 <link rel="icon" type="image/svg+xml" href="map-of-maps-favicon.svg">
@@ -76,8 +76,13 @@
   .map-viewport { position: relative; flex: 1; height: 72vh; overflow: hidden; background: var(--panel); }
   #mmd-target { width: 100%; height: 100%; }
   .map-viewport svg { width: 100%; height: 100%; display: block; }
-  /* Belt-and-suspenders for Mermaid htmlLabels FO undersize */
-  .map-viewport .node foreignObject { overflow: visible; }
+  .map-viewport .node { cursor: pointer; }
+  .map-viewport .node .node-box { transition: stroke-width 160ms ease, filter 160ms ease; }
+  .map-viewport .node:hover .node-box,
+  .map-viewport .node.is-focus .node-box {
+    stroke-width: 2.4px;
+    filter: drop-shadow(0 0 0.35rem color-mix(in oklab, var(--cyan) 55%, transparent));
+  }
   .map-status { padding: 0.6rem 0.9rem; font-family: var(--mono); font-size: 0.76rem; color: var(--muted); border-top: 1px solid var(--line); }
   @media (max-width: 760px) {
     .map-body { flex-direction: column; }
@@ -115,9 +120,9 @@
 <header class="masthead">
   <div class="eyebrow"><span class="dot">●</span> psychoanalysis &amp; neuroscience <span class="dot2">●</span> Freudo-Marxism &amp; accelerationism <span class="dot">●</span> Western Marxism &amp; culture theory</div>
   <h1>The Map of Maps</h1>
-  <p class="dek">Roughly eighty thinkers and a couple of dozen concepts from <a href="/grounding-the-unconscious.html">Grounding the Unconscious</a>, <a href="/genealogies-of-desire.html">Genealogies of Desire</a>, and <a href="/constellations-of-history.html">Constellations of History</a>, on one clickable diagram. Click any box to jump to where it's actually argued out — this page is an index, not a fourth essay.</p>
+  <p class="dek">Roughly eighty thinkers and a handful of shared concepts from <a href="/grounding-the-unconscious.html">Grounding the Unconscious</a>, <a href="/genealogies-of-desire.html">Genealogies of Desire</a>, and <a href="/constellations-of-history.html">Constellations of History</a>, laid out as one vertical chronological timeline. Top is earlier; bottom is later. Click any box to jump to where it's actually argued out — this page is an index, not a fourth essay.</p>
   <div class="frame-note">
-    NOTE — this is a curated overview, not an exhaustive re-index: it keeps the same "who gets a box" judgment calls the three source diagrams already made, groups tightly-coupled co-authors the way they do (Deleuze &amp; Guattari, Adorno &amp; Horkheimer), and quietly drops pure biographical asides (Freud's cocaine-addicted friend, the colleague who got the cocaine patent) that never functioned as their own node even on the source pages. Edges here are illustrative of the through-line, not a rebuild of the two hand-drawn genealogy diagrams at full resolution — for the precise, collision-checked version of any single lineage, follow the click-through to its source page.
+    NOTE — years are approximate floruit / key-work anchors for layout, not birth dates or a claim of precision. The timeline keeps the same "who gets a box" judgment calls the three source diagrams already made, groups tightly-coupled co-authors the way they do (Deleuze &amp; Guattari, Adorno &amp; Horkheimer), and quietly drops pure biographical asides. Edges are illustrative of the through-line — for the precise, collision-checked version of any single lineage, follow the click-through to its source page.
   </div>
 </header>
 
@@ -136,7 +141,7 @@
   <div class="map-toolbar">
     <button type="button" id="zoomOut">− zoom out</button>
     <button type="button" id="zoomIn">+ zoom in</button>
-    <button type="button" id="zoomFit">fit to screen</button>
+    <button type="button" id="zoomFit">fit width</button>
     <button type="button" id="zoomReset">reset</button>
     <span class="hint">scroll/pinch to zoom · drag to pan · click a box to open its page</span>
   </div>
@@ -158,7 +163,6 @@
 
 </div>
 
-<script src="/assets/js/mermaid.min.js"></script>
 <script src="/assets/js/svg-pan-zoom.min.js"></script>
 <script src="/assets/js/map-of-maps.js"></script>
 

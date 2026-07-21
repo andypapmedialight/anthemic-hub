@@ -1,477 +1,512 @@
+/* Map of Maps — single chronological timeline with lineage edges.
+   year ≈ floruit / key work (illustrative, not biographical precision). */
+
 const dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
 const pal = dark
-  ? { ink:"#D8DFEC", muted:"#8A96AE", cyan:"#3BC1D6", violet:"#A987F5", gold:"#D9B15E", line:"rgba(255,255,255,0.35)" }
-  : { ink:"#161C28", muted:"#58627A", cyan:"#0E7F94", violet:"#6B46C1", gold:"#9C6F1C", line:"rgba(20,28,48,0.35)" };
+  ? { ink: "#D8DFEC", muted: "#8A96AE", cyan: "#3BC1D6", violet: "#A987F5", gold: "#D9B15E", line: "rgba(255,255,255,0.28)", panel: "rgba(20,28,48,0.92)", softG: "#3BC1D629", softV: "#A987F529", softGo: "#D9B15E2E" }
+  : { ink: "#161C28", muted: "#58627A", cyan: "#0E7F94", violet: "#6B46C1", gold: "#9C6F1C", line: "rgba(20,28,48,0.28)", panel: "rgba(255,255,255,0.94)", softG: "#0E7F941F", softV: "#6B46C11F", softGo: "#9C6F1C24" };
 
-const graphSrc = `flowchart TD
+const HREF = {
+  grounding: "/grounding-the-unconscious.html",
+  genealogies: "/genealogies-of-desire.html",
+  constellations: "/constellations-of-history.html",
+  concept: null
+};
 
-subgraph sgGround["GROUNDING THE UNCONSCIOUS"]
-direction TB
-subgraph sgPre["Prehistory of the unconscious"]
-direction LR
-platoAr["Plato · Aristotle<br/><small>akrasia</small>"]
-artemid["Artemidorus<br/><small>dream interpretation</small>"]
-spinoza["Spinoza<br/><small>desire w/o knowing why</small>"]
-leibniz["Leibniz<br/><small>petites perceptions</small>"]
-herbart["Herbart<br/><small>dynamic psychology</small>"]
-schopen["Schopenhauer<br/><small>the Will</small>"]
-vonHart["von Hartmann<br/><small>Philosophy of the Unconscious</small>"]
-charJan["Charcot · Janet<br/><small>hysteria, dissociation</small>"]
-fechner["Fechner<br/><small>constancy principle</small>"]
-ellenb["Ellenberger<br/><small>synthesis thesis</small>"]
-end
-subgraph sgFreudSec["Freud"]
-direction LR
-freud["Freud<br/><small>id · ego · superego</small>"]
-end
-subgraph sgRebut["The direct rebuttals"]
-direction LR
-popper["Popper<br/><small>falsifiability</small>"]
-grunbaum["Grünbaum<br/><small>the tally argument</small>"]
-crews["Crews<br/><small>historical fraud</small>"]
-eysenck["Eysenck<br/><small>efficacy</small>"]
-malinowski["Malinowski<br/><small>Trobriand fieldwork</small>"]
-end
-subgraph sgLacanSec["Lacan"]
-direction LR
-lacan["Lacan<br/><small>Real · Symbolic · Imaginary</small>"]
-structImp["Saussure · Jakobson ·<br/>Lévi-Strauss · Benveniste<br/><small>structuralist imports</small>"]
-kristeva["Kristeva<br/><small>the semiotic</small>"]
-chomLak["Chomsky · Lakoff<br/><small>innate / embodied pushback</small>"]
-end
-subgraph sgZizJoh["Žižek and Johnston"]
-direction LR
-zizek["Žižek<br/><small>parallax view</small>"]
-johnston["Johnston<br/><small>transcendental materialism</small>"]
-end
-subgraph sgCog["The cognitive-science side"]
-direction LR
-hofstadter["Hofstadter<br/><small>strange loop</small>"]
-searle["Searle<br/><small>Chinese Room</small>"]
-churchland["P. &amp; P. Churchland<br/><small>eliminative materialism</small>"]
-damasio["Damasio<br/><small>core / autobiographical self</small>"]
-friston["Friston<br/><small>predictive processing</small>"]
-ledoux["LeDoux<br/><small>fast threat pathway</small>"]
-malabou["Malabou<br/><small>destructive plasticity</small>"]
-edelman["Edelman<br/><small>TNGS · reentry</small>"]
-end
-subgraph sgDreams["Dreams: a case study"]
-direction LR
-hobsonMc["Hobson · McCarley<br/><small>activation-synthesis</small>"]
-solms["Solms<br/><small>SEEKING drives dreaming</small>"]
-domhoff["Domhoff<br/><small>continuity hypothesis</small>"]
-end
-subgraph sgDissent["The dissenters"]
-direction LR
-chalmers["Chalmers<br/><small>hard problem</small>"]
-jackson["Jackson<br/><small>Mary's Room</small>"]
-nagel["Nagel<br/><small>Mind and Cosmos</small>"]
-strawGoff["Strawson · Goff<br/><small>panpsychism</small>"]
-kastrup["Kastrup<br/><small>analytic idealism</small>"]
-miller["Miller-school<br/><small>anti-neuro Lacan</small>"]
-end
-end
+const GROUP_LABELS = {
+  grounding: "Grounding the Unconscious",
+  genealogies: "Genealogies of Desire",
+  constellations: "Constellations of History",
+  concept: "Shared concepts"
+};
 
-subgraph sgGen["GENEALOGIES OF DESIRE"]
-direction TB
-subgraph sgKH["Kant and Hegel"]
-direction LR
-kant["Kant<br/><small>phenomena / noumena</small>"]
-hegel["Hegel<br/><small>lordship and bondage</small>"]
-end
-subgraph sgNie["Nietzsche"]
-direction LR
-nietzsche["Nietzsche<br/><small>genealogy as method</small>"]
-end
-subgraph sgKoj["Kojève's Hegel"]
-direction LR
-kojeve["Kojève<br/><small>desire for recognition</small>"]
-end
-subgraph sgFM["Freud and Marx"]
-direction LR
-marx["Marx<br/><small>base &amp; superstructure</small>"]
-end
-subgraph sgFrM["Freudo-Marxism"]
-direction LR
-reich["Reich<br/><small>character armor</small>"]
-adorno["Adorno · Horkheimer<br/><small>culture industry</small>"]
-marcuse["Marcuse<br/><small>surplus-repression</small>"]
-fromm["Fromm<br/><small>escape from freedom</small>"]
-end
-subgraph sgFrench["French (Post-)Structuralism"]
-direction LR
-bergson["Bergson<br/><small>durée · élan vital</small>"]
-althusser["Althusser<br/><small>interpellation</small>"]
-dg["Deleuze &amp; Guattari<br/><small>desiring-production</small>"]
-foucault["Foucault<br/><small>biopower</small>"]
-baudLyo["Baudrillard · Lyotard<br/><small>simulacra · libidinal economy</small>"]
-end
-subgraph sgWarwick["Warwick / CCRU"]
-direction LR
-plant["Sadie Plant<br/><small>cyberfeminism</small>"]
-land["Nick Land<br/><small>accelerationism</small>"]
-fisher["Mark Fisher<br/><small>capitalist realism</small>"]
-ccruTrio["Eshun · Mackay · Grant<br/><small>theory-fiction</small>"]
-end
-subgraph sgContemp["Contemporary strains"]
-direction LR
-leftAccel["Left-accelerationism<br/><small>Srnicek &amp; Williams</small>"]
-acidXeno["Acid Communism /<br/>Xenofeminism"]
-berardiDean["Berardi · Dean<br/><small>semiocapitalism</small>"]
-end
-end
-
-subgraph sgCon["CONSTELLATIONS OF HISTORY"]
-direction TB
-subgraph sgLG["Lukács and Gramsci"]
-direction LR
-lukacs["Lukács<br/><small>reification</small>"]
-gramsci["Gramsci<br/><small>hegemony</small>"]
-end
-subgraph sgWeimar["The Weimar circle"]
-direction LR
-benjamin["Benjamin<br/><small>aura · dialectical image</small>"]
-bloch["Bloch<br/><small>non-synchronism</small>"]
-brecht["Brecht<br/><small>epic theater</small>"]
-scholem["Scholem<br/><small>Kabbalah · messianism</small>"]
-kracauer["Kracauer<br/><small>mass ornament</small>"]
-end
-subgraph sgAdDeb["Adorno's critique, Debord's spectacle"]
-direction LR
-debord["Debord<br/><small>society of the spectacle</small>"]
-end
-subgraph sgCultStud["British Cultural Studies"]
-direction LR
-williamsR["Raymond Williams<br/><small>structure of feeling</small>"]
-hall["Stuart Hall<br/><small>encoding / decoding</small>"]
-end
-subgraph sgJameson["Fredric Jameson"]
-direction LR
-jameson["Jameson<br/><small>cognitive mapping</small>"]
-end
-subgraph sgNaming["Naming the tradition"]
-direction LR
-anderson["Perry Anderson<br/><small>coins Western Marxism</small>"]
-harvey["David Harvey<br/><small>time-space compression</small>"]
-eagleton["Terry Eagleton<br/><small>popularizer</small>"]
-end
-end
-
-subgraph sgConcepts["SHARED CONCEPTS, ACROSS ALL THREE"]
-direction LR
-cUnconscious("the unconscious /<br/>repression")
-cIdeology("ideology")
-cRecog("desire &amp; recognition")
-cReif("reification /<br/>commodity fetishism")
-cHardProb("the hard problem /<br/>subject as gap")
-cGenMethod("genealogy as method")
-cHegemony("hegemony")
-end
-
-spinoza --> freud
-leibniz --> freud
-herbart --> freud
-schopen --> freud
-vonHart --> freud
-platoAr --> freud
-artemid --> freud
-charJan --> freud
-fechner --> freud
-ellenb -.-> freud
-nietzsche --> freud
-popper -.-> freud
-grunbaum -.-> freud
-crews -.-> freud
-eysenck -.-> freud
-malinowski -.-> freud
-freud --> lacan
-structImp --> lacan
-kristeva -.-> lacan
-chomLak -.-> structImp
-hegel --> zizek
-lacan --> zizek
-zizek --> johnston
-johnston --> edelman
-johnston -.-> malabou
-edelman -.- malabou
-freud --> edelman
-freud --> damasio
-friston --> freud
-ledoux --> freud
-churchland -.-> freud
-hofstadter -.- zizek
-searle -.-> hofstadter
-freud ==> hobsonMc
-hobsonMc -.-> solms
-solms -.- domhoff
-hobsonMc -.- domhoff
-zizek -.- chalmers
-chalmers -.- jackson
-chalmers -.- nagel
-chalmers -.-> strawGoff
-strawGoff --> kastrup
-lacan -.-> miller
-miller -.-> johnston
-
-kant --> hegel
-hegel --> kojeve
-nietzsche --> foucault
-freud --> reich
-marx --> adorno
-kojeve -.-> dg
-kojeve --> baudLyo
-bergson --> dg
-althusser --> dg
-foucault -.-> reich
-foucault -.-> marcuse
-dg --> land
-land --> fisher
-marcuse ==> fisher
-reich -.- adorno
-adorno -.- marcuse
-marcuse -.- fromm
-plant --> acidXeno
-land --> leftAccel
-ccruTrio --> leftAccel
-ccruTrio -.- berardiDean
-fisher -.- berardiDean
-
-fisher ==> jameson
-zizek --> jameson
-adorno -.-> benjamin
-benjamin --> debord
-lukacs --> debord
-althusser --> hall
-lukacs -.-> brecht
-gramsci --> hall
-benjamin -.- bloch
-benjamin -.- brecht
-benjamin -.- scholem
-benjamin -.- kracauer
-bloch --> williamsR
-benjamin --> jameson
-hall --> jameson
-anderson ==> lukacs
-anderson ==> gramsci
-harvey -.- jameson
-williamsR --> eagleton
-
-spinoza --> cUnconscious
-leibniz --> cUnconscious
-herbart --> cUnconscious
-schopen --> cUnconscious
-vonHart --> cUnconscious
-freud --> cUnconscious
-reich --> cUnconscious
-marcuse --> cUnconscious
-friston --> cUnconscious
-foucault -.-> cUnconscious
-
-marx --> cIdeology
-althusser --> cIdeology
-zizek --> cIdeology
-hall --> cIdeology
-jameson --> cIdeology
-
-hegel --> cRecog
-kojeve --> cRecog
-lacan --> cRecog
-dg -.-> cRecog
-
-marx --> cReif
-lukacs --> cReif
-jameson --> cReif
-debord --> cReif
-
-chalmers --> cHardProb
-zizek --> cHardProb
-johnston --> cHardProb
-nagel --> cHardProb
-strawGoff --> cHardProb
-kastrup --> cHardProb
-jackson --> cHardProb
-miller -.-> cHardProb
-
-nietzsche --> cGenMethod
-foucault --> cGenMethod
-fisher --> cGenMethod
-
-gramsci --> cHegemony
-hall --> cHegemony
-
-classDef grounding fill:${dark ? "#3BC1D629" : "#0E7F941F"},stroke:${pal.cyan},color:${pal.ink};
-classDef genealogies fill:${dark ? "#A987F529" : "#6B46C11F"},stroke:${pal.violet},color:${pal.ink};
-classDef constellations fill:${dark ? "#D9B15E2E" : "#9C6F1C24"},stroke:${pal.gold},color:${pal.ink};
-classDef concept fill:transparent,stroke:${pal.muted},stroke-dasharray:4 3,color:${pal.ink};
-
-class platoAr,artemid,spinoza,leibniz,herbart,schopen,vonHart,charJan,fechner,ellenb,freud,popper,grunbaum,crews,eysenck,malinowski,lacan,structImp,kristeva,chomLak,zizek,johnston,hofstadter,searle,churchland,damasio,friston,ledoux,malabou,edelman,hobsonMc,solms,domhoff,chalmers,jackson,nagel,strawGoff,kastrup,miller grounding
-class kant,hegel,nietzsche,kojeve,marx,reich,adorno,marcuse,fromm,bergson,althusser,dg,foucault,baudLyo,plant,land,fisher,ccruTrio,leftAccel,acidXeno,berardiDean genealogies
-class lukacs,gramsci,benjamin,bloch,brecht,scholem,kracauer,debord,williamsR,hall,jameson,anderson,harvey,eagleton constellations
-class cUnconscious,cIdeology,cRecog,cReif,cHardProb,cGenMethod,cHegemony concept
-
-click platoAr "/grounding-the-unconscious.html" "Open Grounding the Unconscious" _blank
-click artemid "/grounding-the-unconscious.html" "Open Grounding the Unconscious" _blank
-click spinoza "/grounding-the-unconscious.html" "Open Grounding the Unconscious" _blank
-click leibniz "/grounding-the-unconscious.html" "Open Grounding the Unconscious" _blank
-click herbart "/grounding-the-unconscious.html" "Open Grounding the Unconscious" _blank
-click schopen "/grounding-the-unconscious.html" "Open Grounding the Unconscious" _blank
-click vonHart "/grounding-the-unconscious.html" "Open Grounding the Unconscious" _blank
-click charJan "/grounding-the-unconscious.html" "Open Grounding the Unconscious" _blank
-click fechner "/grounding-the-unconscious.html" "Open Grounding the Unconscious" _blank
-click ellenb "/grounding-the-unconscious.html" "Open Grounding the Unconscious" _blank
-click freud "/grounding-the-unconscious.html" "Open Grounding the Unconscious" _blank
-click popper "/grounding-the-unconscious.html" "Open Grounding the Unconscious" _blank
-click grunbaum "/grounding-the-unconscious.html" "Open Grounding the Unconscious" _blank
-click crews "/grounding-the-unconscious.html" "Open Grounding the Unconscious" _blank
-click eysenck "/grounding-the-unconscious.html" "Open Grounding the Unconscious" _blank
-click malinowski "/grounding-the-unconscious.html" "Open Grounding the Unconscious" _blank
-click lacan "/grounding-the-unconscious.html" "Open Grounding the Unconscious" _blank
-click structImp "/grounding-the-unconscious.html" "Open Grounding the Unconscious" _blank
-click kristeva "/grounding-the-unconscious.html" "Open Grounding the Unconscious" _blank
-click chomLak "/grounding-the-unconscious.html" "Open Grounding the Unconscious" _blank
-click zizek "/grounding-the-unconscious.html" "Open Grounding the Unconscious" _blank
-click johnston "/grounding-the-unconscious.html" "Open Grounding the Unconscious" _blank
-click hofstadter "/grounding-the-unconscious.html" "Open Grounding the Unconscious" _blank
-click searle "/grounding-the-unconscious.html" "Open Grounding the Unconscious" _blank
-click churchland "/grounding-the-unconscious.html" "Open Grounding the Unconscious" _blank
-click damasio "/grounding-the-unconscious.html" "Open Grounding the Unconscious" _blank
-click friston "/grounding-the-unconscious.html" "Open Grounding the Unconscious" _blank
-click ledoux "/grounding-the-unconscious.html" "Open Grounding the Unconscious" _blank
-click malabou "/grounding-the-unconscious.html" "Open Grounding the Unconscious" _blank
-click edelman "/grounding-the-unconscious.html" "Open Grounding the Unconscious" _blank
-click hobsonMc "/grounding-the-unconscious.html" "Open Grounding the Unconscious" _blank
-click solms "/grounding-the-unconscious.html" "Open Grounding the Unconscious" _blank
-click domhoff "/grounding-the-unconscious.html" "Open Grounding the Unconscious" _blank
-click chalmers "/grounding-the-unconscious.html" "Open Grounding the Unconscious" _blank
-click jackson "/grounding-the-unconscious.html" "Open Grounding the Unconscious" _blank
-click nagel "/grounding-the-unconscious.html" "Open Grounding the Unconscious" _blank
-click strawGoff "/grounding-the-unconscious.html" "Open Grounding the Unconscious" _blank
-click kastrup "/grounding-the-unconscious.html" "Open Grounding the Unconscious" _blank
-click miller "/grounding-the-unconscious.html" "Open Grounding the Unconscious" _blank
-
-click kant "/genealogies-of-desire.html" "Open Genealogies of Desire" _blank
-click hegel "/genealogies-of-desire.html" "Open Genealogies of Desire" _blank
-click nietzsche "/genealogies-of-desire.html" "Open Genealogies of Desire" _blank
-click kojeve "/genealogies-of-desire.html" "Open Genealogies of Desire" _blank
-click marx "/genealogies-of-desire.html" "Open Genealogies of Desire" _blank
-click reich "/genealogies-of-desire.html" "Open Genealogies of Desire" _blank
-click adorno "/genealogies-of-desire.html" "Open Genealogies of Desire" _blank
-click marcuse "/genealogies-of-desire.html" "Open Genealogies of Desire" _blank
-click fromm "/genealogies-of-desire.html" "Open Genealogies of Desire" _blank
-click bergson "/genealogies-of-desire.html" "Open Genealogies of Desire" _blank
-click althusser "/genealogies-of-desire.html" "Open Genealogies of Desire" _blank
-click dg "/genealogies-of-desire.html" "Open Genealogies of Desire" _blank
-click foucault "/genealogies-of-desire.html" "Open Genealogies of Desire" _blank
-click baudLyo "/genealogies-of-desire.html" "Open Genealogies of Desire" _blank
-click plant "/genealogies-of-desire.html" "Open Genealogies of Desire" _blank
-click land "/genealogies-of-desire.html" "Open Genealogies of Desire" _blank
-click fisher "/genealogies-of-desire.html" "Open Genealogies of Desire" _blank
-click ccruTrio "/genealogies-of-desire.html" "Open Genealogies of Desire" _blank
-click leftAccel "/genealogies-of-desire.html" "Open Genealogies of Desire" _blank
-click acidXeno "/genealogies-of-desire.html" "Open Genealogies of Desire" _blank
-click berardiDean "/genealogies-of-desire.html" "Open Genealogies of Desire" _blank
-
-click lukacs "/constellations-of-history.html#lukacs-gramsci" "Open Constellations of History" _blank
-click gramsci "/constellations-of-history.html#lukacs-gramsci" "Open Constellations of History" _blank
-click benjamin "/constellations-of-history.html#benjamin" "Open Constellations of History" _blank
-click bloch "/constellations-of-history.html#weimar-circle" "Open Constellations of History" _blank
-click brecht "/constellations-of-history.html#weimar-circle" "Open Constellations of History" _blank
-click scholem "/constellations-of-history.html#weimar-circle" "Open Constellations of History" _blank
-click kracauer "/constellations-of-history.html#weimar-circle" "Open Constellations of History" _blank
-click debord "/constellations-of-history.html#adorno-debord" "Open Constellations of History" _blank
-click williamsR "/constellations-of-history.html#cultural-studies" "Open Constellations of History" _blank
-click hall "/constellations-of-history.html#cultural-studies" "Open Constellations of History" _blank
-click jameson "/constellations-of-history.html#jameson" "Open Constellations of History" _blank
-click anderson "/constellations-of-history.html#anderson-harvey-eagleton" "Open Constellations of History" _blank
-click harvey "/constellations-of-history.html#anderson-harvey-eagleton" "Open Constellations of History" _blank
-click eagleton "/constellations-of-history.html#anderson-harvey-eagleton" "Open Constellations of History" _blank
-`;
-
-const NODE_INDEX = [
-  {id:"platoAr", name:"Plato · Aristotle", sub:"akrasia", group:"grounding"},
-  {id:"artemid", name:"Artemidorus", sub:"dream interpretation", group:"grounding"},
-  {id:"spinoza", name:"Spinoza", sub:"desire w/o knowing why", group:"grounding"},
-  {id:"leibniz", name:"Leibniz", sub:"petites perceptions", group:"grounding"},
-  {id:"herbart", name:"Herbart", sub:"dynamic psychology", group:"grounding"},
-  {id:"schopen", name:"Schopenhauer", sub:"the Will", group:"grounding"},
-  {id:"vonHart", name:"von Hartmann", sub:"Philosophy of the Unconscious", group:"grounding"},
-  {id:"charJan", name:"Charcot · Janet", sub:"hysteria, dissociation", group:"grounding"},
-  {id:"fechner", name:"Fechner", sub:"constancy principle", group:"grounding"},
-  {id:"ellenb", name:"Ellenberger", sub:"synthesis thesis", group:"grounding"},
-  {id:"freud", name:"Freud", sub:"id · ego · superego", group:"grounding"},
-  {id:"popper", name:"Popper", sub:"falsifiability", group:"grounding"},
-  {id:"grunbaum", name:"Grünbaum", sub:"the tally argument", group:"grounding"},
-  {id:"crews", name:"Crews", sub:"historical fraud", group:"grounding"},
-  {id:"eysenck", name:"Eysenck", sub:"efficacy", group:"grounding"},
-  {id:"malinowski", name:"Malinowski", sub:"Trobriand fieldwork", group:"grounding"},
-  {id:"lacan", name:"Lacan", sub:"Real · Symbolic · Imaginary", group:"grounding"},
-  {id:"structImp", name:"Saussure · Jakobson · Lévi-Strauss · Benveniste", sub:"structuralist imports", group:"grounding"},
-  {id:"kristeva", name:"Kristeva", sub:"the semiotic", group:"grounding"},
-  {id:"chomLak", name:"Chomsky · Lakoff", sub:"innate / embodied pushback", group:"grounding"},
-  {id:"zizek", name:"Žižek", sub:"parallax view", group:"grounding"},
-  {id:"johnston", name:"Johnston", sub:"transcendental materialism", group:"grounding"},
-  {id:"hofstadter", name:"Hofstadter", sub:"strange loop", group:"grounding"},
-  {id:"searle", name:"Searle", sub:"Chinese Room", group:"grounding"},
-  {id:"churchland", name:"P. & P. Churchland", sub:"eliminative materialism", group:"grounding"},
-  {id:"damasio", name:"Damasio", sub:"core / autobiographical self", group:"grounding"},
-  {id:"friston", name:"Friston", sub:"predictive processing", group:"grounding"},
-  {id:"ledoux", name:"LeDoux", sub:"fast threat pathway", group:"grounding"},
-  {id:"malabou", name:"Malabou", sub:"destructive plasticity", group:"grounding"},
-  {id:"edelman", name:"Edelman", sub:"TNGS · reentry", group:"grounding"},
-  {id:"hobsonMc", name:"Hobson · McCarley", sub:"activation-synthesis", group:"grounding"},
-  {id:"solms", name:"Solms", sub:"SEEKING drives dreaming", group:"grounding"},
-  {id:"domhoff", name:"Domhoff", sub:"continuity hypothesis", group:"grounding"},
-  {id:"chalmers", name:"Chalmers", sub:"hard problem", group:"grounding"},
-  {id:"jackson", name:"Jackson", sub:"Mary's Room", group:"grounding"},
-  {id:"nagel", name:"Nagel", sub:"Mind and Cosmos", group:"grounding"},
-  {id:"strawGoff", name:"Strawson · Goff", sub:"panpsychism", group:"grounding"},
-  {id:"kastrup", name:"Kastrup", sub:"analytic idealism", group:"grounding"},
-  {id:"miller", name:"Miller-school", sub:"anti-neuro Lacan", group:"grounding"},
-  {id:"kant", name:"Kant", sub:"phenomena / noumena", group:"genealogies"},
-  {id:"hegel", name:"Hegel", sub:"lordship and bondage", group:"genealogies"},
-  {id:"nietzsche", name:"Nietzsche", sub:"genealogy as method", group:"genealogies"},
-  {id:"kojeve", name:"Kojève", sub:"desire for recognition", group:"genealogies"},
-  {id:"marx", name:"Marx", sub:"base & superstructure", group:"genealogies"},
-  {id:"reich", name:"Reich", sub:"character armor", group:"genealogies"},
-  {id:"adorno", name:"Adorno · Horkheimer", sub:"culture industry", group:"genealogies"},
-  {id:"marcuse", name:"Marcuse", sub:"surplus-repression", group:"genealogies"},
-  {id:"fromm", name:"Fromm", sub:"escape from freedom", group:"genealogies"},
-  {id:"bergson", name:"Bergson", sub:"durée · élan vital", group:"genealogies"},
-  {id:"althusser", name:"Althusser", sub:"interpellation", group:"genealogies"},
-  {id:"dg", name:"Deleuze & Guattari", sub:"desiring-production", group:"genealogies"},
-  {id:"foucault", name:"Foucault", sub:"biopower", group:"genealogies"},
-  {id:"baudLyo", name:"Baudrillard · Lyotard", sub:"simulacra · libidinal economy", group:"genealogies"},
-  {id:"plant", name:"Sadie Plant", sub:"cyberfeminism", group:"genealogies"},
-  {id:"land", name:"Nick Land", sub:"accelerationism", group:"genealogies"},
-  {id:"fisher", name:"Mark Fisher", sub:"capitalist realism", group:"genealogies"},
-  {id:"ccruTrio", name:"Eshun · Mackay · Grant", sub:"theory-fiction", group:"genealogies"},
-  {id:"leftAccel", name:"Left-accelerationism", sub:"Srnicek & Williams", group:"genealogies"},
-  {id:"acidXeno", name:"Acid Communism / Xenofeminism", sub:"", group:"genealogies"},
-  {id:"berardiDean", name:"Berardi · Dean", sub:"semiocapitalism", group:"genealogies"},
-  {id:"lukacs", name:"Lukács", sub:"reification", group:"constellations"},
-  {id:"gramsci", name:"Gramsci", sub:"hegemony", group:"constellations"},
-  {id:"benjamin", name:"Benjamin", sub:"aura · dialectical image", group:"constellations"},
-  {id:"bloch", name:"Bloch", sub:"non-synchronism", group:"constellations"},
-  {id:"brecht", name:"Brecht", sub:"epic theater", group:"constellations"},
-  {id:"scholem", name:"Scholem", sub:"Kabbalah · messianism", group:"constellations"},
-  {id:"kracauer", name:"Kracauer", sub:"mass ornament", group:"constellations"},
-  {id:"debord", name:"Debord", sub:"society of the spectacle", group:"constellations"},
-  {id:"williamsR", name:"Raymond Williams", sub:"structure of feeling", group:"constellations"},
-  {id:"hall", name:"Stuart Hall", sub:"encoding / decoding", group:"constellations"},
-  {id:"jameson", name:"Jameson", sub:"cognitive mapping", group:"constellations"},
-  {id:"anderson", name:"Perry Anderson", sub:"coins Western Marxism", group:"constellations"},
-  {id:"harvey", name:"David Harvey", sub:"time-space compression", group:"constellations"},
-  {id:"eagleton", name:"Terry Eagleton", sub:"popularizer", group:"constellations"},
-  {id:"cUnconscious", name:"the unconscious / repression", sub:"", group:"concept"},
-  {id:"cIdeology", name:"ideology", sub:"", group:"concept"},
-  {id:"cRecog", name:"desire & recognition", sub:"", group:"concept"},
-  {id:"cReif", name:"reification / commodity fetishism", sub:"", group:"concept"},
-  {id:"cHardProb", name:"the hard problem / subject as gap", sub:"", group:"concept"},
-  {id:"cGenMethod", name:"genealogy as method", sub:"", group:"concept"},
-  {id:"cHegemony", name:"hegemony", sub:"", group:"concept"}
+/** @type {{id:string,name:string,sub:string,group:string,year:number,href?:string}[]} */
+const NODES = [
+  { id: "platoAr", name: "Plato · Aristotle", sub: "akrasia", group: "grounding", year: -380 },
+  { id: "artemid", name: "Artemidorus", sub: "dream interpretation", group: "grounding", year: 150 },
+  { id: "spinoza", name: "Spinoza", sub: "desire w/o knowing why", group: "grounding", year: 1677 },
+  { id: "leibniz", name: "Leibniz", sub: "petites perceptions", group: "grounding", year: 1704 },
+  { id: "kant", name: "Kant", sub: "phenomena / noumena", group: "genealogies", year: 1781 },
+  { id: "hegel", name: "Hegel", sub: "lordship and bondage", group: "genealogies", year: 1807 },
+  { id: "cRecog", name: "desire & recognition", sub: "", group: "concept", year: 1807 },
+  { id: "schopen", name: "Schopenhauer", sub: "the Will", group: "grounding", year: 1819 },
+  { id: "herbart", name: "Herbart", sub: "dynamic psychology", group: "grounding", year: 1824 },
+  { id: "cIdeology", name: "ideology", sub: "", group: "concept", year: 1846 },
+  { id: "fechner", name: "Fechner", sub: "constancy principle", group: "grounding", year: 1860 },
+  { id: "marx", name: "Marx", sub: "base & superstructure", group: "genealogies", year: 1867 },
+  { id: "vonHart", name: "von Hartmann", sub: "Philosophy of the Unconscious", group: "grounding", year: 1869 },
+  { id: "nietzsche", name: "Nietzsche", sub: "genealogy as method", group: "genealogies", year: 1887 },
+  { id: "cGenMethod", name: "genealogy as method", sub: "", group: "concept", year: 1887 },
+  { id: "charJan", name: "Charcot · Janet", sub: "hysteria, dissociation", group: "grounding", year: 1890 },
+  { id: "freud", name: "Freud", sub: "id · ego · superego", group: "grounding", year: 1900 },
+  { id: "cUnconscious", name: "the unconscious / repression", sub: "", group: "concept", year: 1900 },
+  { id: "bergson", name: "Bergson", sub: "durée · élan vital", group: "genealogies", year: 1907 },
+  { id: "structImp", name: "Saussure · Jakobson · Lévi-Strauss · Benveniste", sub: "structuralist imports", group: "grounding", year: 1916 },
+  { id: "lukacs", name: "Lukács", sub: "reification", group: "constellations", year: 1923, href: "/constellations-of-history.html#lukacs-gramsci" },
+  { id: "cReif", name: "reification / commodity fetishism", sub: "", group: "concept", year: 1923 },
+  { id: "kracauer", name: "Kracauer", sub: "mass ornament", group: "constellations", year: 1927, href: "/constellations-of-history.html#weimar-circle" },
+  { id: "malinowski", name: "Malinowski", sub: "Trobriand fieldwork", group: "grounding", year: 1927 },
+  { id: "gramsci", name: "Gramsci", sub: "hegemony", group: "constellations", year: 1930, href: "/constellations-of-history.html#lukacs-gramsci" },
+  { id: "cHegemony", name: "hegemony", sub: "", group: "concept", year: 1930 },
+  { id: "brecht", name: "Brecht", sub: "epic theater", group: "constellations", year: 1930, href: "/constellations-of-history.html#weimar-circle" },
+  { id: "reich", name: "Reich", sub: "character armor", group: "genealogies", year: 1933 },
+  { id: "bloch", name: "Bloch", sub: "non-synchronism", group: "constellations", year: 1935, href: "/constellations-of-history.html#weimar-circle" },
+  { id: "benjamin", name: "Benjamin", sub: "aura · dialectical image", group: "constellations", year: 1936, href: "/constellations-of-history.html#benjamin" },
+  { id: "kojeve", name: "Kojève", sub: "desire for recognition", group: "genealogies", year: 1939 },
+  { id: "fromm", name: "Fromm", sub: "escape from freedom", group: "genealogies", year: 1941 },
+  { id: "scholem", name: "Scholem", sub: "Kabbalah · messianism", group: "constellations", year: 1941, href: "/constellations-of-history.html#weimar-circle" },
+  { id: "adorno", name: "Adorno · Horkheimer", sub: "culture industry", group: "genealogies", year: 1947 },
+  { id: "eysenck", name: "Eysenck", sub: "efficacy", group: "grounding", year: 1952 },
+  { id: "lacan", name: "Lacan", sub: "Real · Symbolic · Imaginary", group: "grounding", year: 1953 },
+  { id: "marcuse", name: "Marcuse", sub: "surplus-repression", group: "genealogies", year: 1955 },
+  { id: "williamsR", name: "Raymond Williams", sub: "structure of feeling", group: "constellations", year: 1958, href: "/constellations-of-history.html#cultural-studies" },
+  { id: "popper", name: "Popper", sub: "falsifiability", group: "grounding", year: 1963 },
+  { id: "mcluhan", name: "Marshall McLuhan", sub: "the medium is the message", group: "constellations", year: 1964, href: "/constellations-of-history.html#mcluhan" },
+  { id: "chomLak", name: "Chomsky · Lakoff", sub: "innate / embodied pushback", group: "grounding", year: 1965 },
+  { id: "debord", name: "Debord", sub: "society of the spectacle", group: "constellations", year: 1967, href: "/constellations-of-history.html#adorno-debord" },
+  { id: "ellenb", name: "Ellenberger", sub: "synthesis thesis", group: "grounding", year: 1970 },
+  { id: "althusser", name: "Althusser", sub: "interpellation", group: "genealogies", year: 1970 },
+  { id: "dg", name: "Deleuze & Guattari", sub: "desiring-production", group: "genealogies", year: 1972 },
+  { id: "kristeva", name: "Kristeva", sub: "the semiotic", group: "grounding", year: 1974 },
+  { id: "baudLyo", name: "Baudrillard · Lyotard", sub: "simulacra · libidinal economy", group: "genealogies", year: 1974 },
+  { id: "anderson", name: "Perry Anderson", sub: "coins Western Marxism", group: "constellations", year: 1976, href: "/constellations-of-history.html#anderson-harvey-eagleton" },
+  { id: "eagleton", name: "Terry Eagleton", sub: "popularizer", group: "constellations", year: 1976, href: "/constellations-of-history.html#anderson-harvey-eagleton" },
+  { id: "foucault", name: "Foucault", sub: "biopower", group: "genealogies", year: 1976 },
+  { id: "hobsonMc", name: "Hobson · McCarley", sub: "activation-synthesis", group: "grounding", year: 1977 },
+  { id: "hofstadter", name: "Hofstadter", sub: "strange loop", group: "grounding", year: 1979 },
+  { id: "searle", name: "Searle", sub: "Chinese Room", group: "grounding", year: 1980 },
+  { id: "hall", name: "Stuart Hall", sub: "encoding / decoding", group: "constellations", year: 1980, href: "/constellations-of-history.html#cultural-studies" },
+  { id: "jackson", name: "Jackson", sub: "Mary's Room", group: "grounding", year: 1982 },
+  { id: "grunbaum", name: "Grünbaum", sub: "the tally argument", group: "grounding", year: 1984 },
+  { id: "churchland", name: "P. & P. Churchland", sub: "eliminative materialism", group: "grounding", year: 1986 },
+  { id: "edelman", name: "Edelman", sub: "TNGS · reentry", group: "grounding", year: 1987 },
+  { id: "harvey", name: "David Harvey", sub: "time-space compression", group: "constellations", year: 1989, href: "/constellations-of-history.html#anderson-harvey-eagleton" },
+  { id: "zizek", name: "Žižek", sub: "parallax view", group: "grounding", year: 1989 },
+  { id: "jameson", name: "Jameson", sub: "cognitive mapping", group: "constellations", year: 1991, href: "/constellations-of-history.html#jameson" },
+  { id: "land", name: "Nick Land", sub: "accelerationism", group: "genealogies", year: 1992 },
+  { id: "damasio", name: "Damasio", sub: "core / autobiographical self", group: "grounding", year: 1994 },
+  { id: "crews", name: "Crews", sub: "historical fraud", group: "grounding", year: 1995 },
+  { id: "chalmers", name: "Chalmers", sub: "hard problem", group: "grounding", year: 1995 },
+  { id: "cHardProb", name: "the hard problem / subject as gap", sub: "", group: "concept", year: 1995 },
+  { id: "ccruTrio", name: "Eshun · Mackay · Grant", sub: "theory-fiction", group: "genealogies", year: 1995 },
+  { id: "ledoux", name: "LeDoux", sub: "fast threat pathway", group: "grounding", year: 1996 },
+  { id: "plant", name: "Sadie Plant", sub: "cyberfeminism", group: "genealogies", year: 1997 },
+  { id: "solms", name: "Solms", sub: "SEEKING drives dreaming", group: "grounding", year: 2000 },
+  { id: "miller", name: "Miller-school", sub: "anti-neuro Lacan", group: "grounding", year: 2000 },
+  { id: "domhoff", name: "Domhoff", sub: "continuity hypothesis", group: "grounding", year: 2003 },
+  { id: "malabou", name: "Malabou", sub: "destructive plasticity", group: "grounding", year: 2004 },
+  { id: "strawGoff", name: "Strawson · Goff", sub: "panpsychism", group: "grounding", year: 2006 },
+  { id: "johnston", name: "Johnston", sub: "transcendental materialism", group: "grounding", year: 2008 },
+  { id: "fisher", name: "Mark Fisher", sub: "capitalist realism", group: "genealogies", year: 2009 },
+  { id: "friston", name: "Friston", sub: "predictive processing", group: "grounding", year: 2010 },
+  { id: "nagel", name: "Nagel", sub: "Mind and Cosmos", group: "grounding", year: 2012 },
+  { id: "berardiDean", name: "Berardi · Dean", sub: "semiocapitalism", group: "genealogies", year: 2012 },
+  { id: "leftAccel", name: "Left-accelerationism", sub: "Srnicek & Williams", group: "genealogies", year: 2013 },
+  { id: "kastrup", name: "Kastrup", sub: "analytic idealism", group: "grounding", year: 2014 },
+  { id: "acidXeno", name: "Acid Communism / Xenofeminism", sub: "", group: "genealogies", year: 2015 }
 ];
 
-const GROUP_LABELS = { grounding: "Grounding the Unconscious", genealogies: "Genealogies of Desire", constellations: "Constellations of History", concept: "Shared concepts" };
+/** kind: build | critique | parallel | callback */
+const EDGES = [
+  { from: "spinoza", to: "freud", kind: "build" },
+  { from: "leibniz", to: "freud", kind: "build" },
+  { from: "herbart", to: "freud", kind: "build" },
+  { from: "schopen", to: "freud", kind: "build" },
+  { from: "vonHart", to: "freud", kind: "build" },
+  { from: "platoAr", to: "freud", kind: "build" },
+  { from: "artemid", to: "freud", kind: "build" },
+  { from: "charJan", to: "freud", kind: "build" },
+  { from: "fechner", to: "freud", kind: "build" },
+  { from: "ellenb", to: "freud", kind: "critique" },
+  { from: "nietzsche", to: "freud", kind: "build" },
+  { from: "popper", to: "freud", kind: "critique" },
+  { from: "grunbaum", to: "freud", kind: "critique" },
+  { from: "crews", to: "freud", kind: "critique" },
+  { from: "eysenck", to: "freud", kind: "critique" },
+  { from: "malinowski", to: "freud", kind: "critique" },
+  { from: "freud", to: "lacan", kind: "build" },
+  { from: "structImp", to: "lacan", kind: "build" },
+  { from: "kristeva", to: "lacan", kind: "critique" },
+  { from: "chomLak", to: "structImp", kind: "critique" },
+  { from: "hegel", to: "zizek", kind: "build" },
+  { from: "lacan", to: "zizek", kind: "build" },
+  { from: "zizek", to: "johnston", kind: "build" },
+  { from: "johnston", to: "edelman", kind: "build" },
+  { from: "johnston", to: "malabou", kind: "critique" },
+  { from: "edelman", to: "malabou", kind: "parallel" },
+  { from: "freud", to: "edelman", kind: "build" },
+  { from: "freud", to: "damasio", kind: "build" },
+  { from: "friston", to: "freud", kind: "build" },
+  { from: "ledoux", to: "freud", kind: "build" },
+  { from: "churchland", to: "freud", kind: "critique" },
+  { from: "hofstadter", to: "zizek", kind: "parallel" },
+  { from: "searle", to: "hofstadter", kind: "critique" },
+  { from: "freud", to: "hobsonMc", kind: "callback" },
+  { from: "hobsonMc", to: "solms", kind: "critique" },
+  { from: "solms", to: "domhoff", kind: "parallel" },
+  { from: "hobsonMc", to: "domhoff", kind: "parallel" },
+  { from: "zizek", to: "chalmers", kind: "parallel" },
+  { from: "chalmers", to: "jackson", kind: "parallel" },
+  { from: "chalmers", to: "nagel", kind: "parallel" },
+  { from: "chalmers", to: "strawGoff", kind: "critique" },
+  { from: "strawGoff", to: "kastrup", kind: "build" },
+  { from: "lacan", to: "miller", kind: "critique" },
+  { from: "miller", to: "johnston", kind: "critique" },
+  { from: "kant", to: "hegel", kind: "build" },
+  { from: "hegel", to: "kojeve", kind: "build" },
+  { from: "nietzsche", to: "foucault", kind: "build" },
+  { from: "freud", to: "reich", kind: "build" },
+  { from: "marx", to: "adorno", kind: "build" },
+  { from: "kojeve", to: "dg", kind: "critique" },
+  { from: "kojeve", to: "baudLyo", kind: "build" },
+  { from: "bergson", to: "dg", kind: "build" },
+  { from: "althusser", to: "dg", kind: "build" },
+  { from: "foucault", to: "reich", kind: "critique" },
+  { from: "foucault", to: "marcuse", kind: "critique" },
+  { from: "dg", to: "land", kind: "build" },
+  { from: "land", to: "fisher", kind: "build" },
+  { from: "marcuse", to: "fisher", kind: "callback" },
+  { from: "reich", to: "adorno", kind: "parallel" },
+  { from: "adorno", to: "marcuse", kind: "parallel" },
+  { from: "marcuse", to: "fromm", kind: "parallel" },
+  { from: "plant", to: "acidXeno", kind: "build" },
+  { from: "land", to: "leftAccel", kind: "build" },
+  { from: "ccruTrio", to: "leftAccel", kind: "build" },
+  { from: "ccruTrio", to: "berardiDean", kind: "parallel" },
+  { from: "fisher", to: "berardiDean", kind: "parallel" },
+  { from: "fisher", to: "jameson", kind: "callback" },
+  { from: "zizek", to: "jameson", kind: "build" },
+  { from: "adorno", to: "benjamin", kind: "critique" },
+  { from: "benjamin", to: "debord", kind: "build" },
+  { from: "benjamin", to: "mcluhan", kind: "build" },
+  { from: "debord", to: "mcluhan", kind: "parallel" },
+  { from: "hall", to: "mcluhan", kind: "critique" },
+  { from: "lukacs", to: "debord", kind: "build" },
+  { from: "althusser", to: "hall", kind: "build" },
+  { from: "lukacs", to: "brecht", kind: "critique" },
+  { from: "gramsci", to: "hall", kind: "build" },
+  { from: "benjamin", to: "bloch", kind: "parallel" },
+  { from: "benjamin", to: "brecht", kind: "parallel" },
+  { from: "benjamin", to: "scholem", kind: "parallel" },
+  { from: "benjamin", to: "kracauer", kind: "parallel" },
+  { from: "bloch", to: "williamsR", kind: "build" },
+  { from: "benjamin", to: "jameson", kind: "build" },
+  { from: "hall", to: "jameson", kind: "build" },
+  { from: "anderson", to: "lukacs", kind: "callback" },
+  { from: "anderson", to: "gramsci", kind: "callback" },
+  { from: "harvey", to: "jameson", kind: "parallel" },
+  { from: "williamsR", to: "eagleton", kind: "build" },
+  { from: "spinoza", to: "cUnconscious", kind: "build" },
+  { from: "leibniz", to: "cUnconscious", kind: "build" },
+  { from: "herbart", to: "cUnconscious", kind: "build" },
+  { from: "schopen", to: "cUnconscious", kind: "build" },
+  { from: "vonHart", to: "cUnconscious", kind: "build" },
+  { from: "freud", to: "cUnconscious", kind: "build" },
+  { from: "reich", to: "cUnconscious", kind: "build" },
+  { from: "marcuse", to: "cUnconscious", kind: "build" },
+  { from: "friston", to: "cUnconscious", kind: "build" },
+  { from: "foucault", to: "cUnconscious", kind: "critique" },
+  { from: "marx", to: "cIdeology", kind: "build" },
+  { from: "althusser", to: "cIdeology", kind: "build" },
+  { from: "zizek", to: "cIdeology", kind: "build" },
+  { from: "hall", to: "cIdeology", kind: "build" },
+  { from: "jameson", to: "cIdeology", kind: "build" },
+  { from: "hegel", to: "cRecog", kind: "build" },
+  { from: "kojeve", to: "cRecog", kind: "build" },
+  { from: "lacan", to: "cRecog", kind: "build" },
+  { from: "dg", to: "cRecog", kind: "critique" },
+  { from: "marx", to: "cReif", kind: "build" },
+  { from: "lukacs", to: "cReif", kind: "build" },
+  { from: "jameson", to: "cReif", kind: "build" },
+  { from: "debord", to: "cReif", kind: "build" },
+  { from: "chalmers", to: "cHardProb", kind: "build" },
+  { from: "zizek", to: "cHardProb", kind: "build" },
+  { from: "johnston", to: "cHardProb", kind: "build" },
+  { from: "nagel", to: "cHardProb", kind: "build" },
+  { from: "strawGoff", to: "cHardProb", kind: "build" },
+  { from: "kastrup", to: "cHardProb", kind: "build" },
+  { from: "jackson", to: "cHardProb", kind: "build" },
+  { from: "miller", to: "cHardProb", kind: "critique" },
+  { from: "nietzsche", to: "cGenMethod", kind: "build" },
+  { from: "foucault", to: "cGenMethod", kind: "build" },
+  { from: "fisher", to: "cGenMethod", kind: "build" },
+  { from: "gramsci", to: "cHegemony", kind: "build" },
+  { from: "hall", to: "cHegemony", kind: "build" }
+];
+
+const NODE_W = 168;
+const NODE_H = 56;
+const CONCEPT_H = 48;
+const COL_W = 200;
+const LANE_GAP = 18;
+const V_GAP = 18;
+const PAD_L = 92;
+const PAD_T = 56;
+const PAD_R = 40;
+const PAD_B = 56;
+const AXIS_W = 8;
+
+/** Essay tracks keep the diagram wide; collisions stack downward inside a track. */
+const GROUP_TRACK = { grounding: 0, genealogies: 1, constellations: 2, concept: 3 };
+const TRACK_COUNT = 4;
+
+/** Relative lengths along the time axis (sum = 1). */
+const YEAR_WEIGHTS = [
+  { y0: -400, y1: 1600, w: 0.10 },
+  { y0: 1600, y1: 1850, w: 0.12 },
+  { y0: 1850, y1: 1950, w: 0.30 },
+  { y0: 1950, y1: 2025, w: 0.48 }
+];
+
+const TICKS = [-400, 0, 500, 1000, 1600, 1700, 1800, 1850, 1900, 1925, 1950, 1975, 2000, 2015];
+
+function contentWidth() {
+  return PAD_L + AXIS_W + 28 + TRACK_COUNT * (COL_W + LANE_GAP) + PAD_R;
+}
+
+/** Time-axis length: at least tall enough to separate dense years; also aims to fill viewport width. */
+function yearSegmentsForViewport(vpW, vpH) {
+  const cW = contentWidth();
+  const fillWidthH = (vpH * cW) / Math.max(vpW, 1) - PAD_T - PAD_B;
+  // ~one node row per ~3 years in the densest modern band, across 4 tracks
+  const readableH = 3200;
+  const targetH = Math.max(fillWidthH, readableH);
+  let t = 0;
+  return YEAR_WEIGHTS.map((seg) => {
+    const span = targetH * seg.w;
+    const out = { y0: seg.y0, y1: seg.y1, t0: t, t1: t + span };
+    t += span;
+    return out;
+  });
+}
+
+let YEAR_SEGMENTS = yearSegmentsForViewport(1100, 650);
+
+function yearToY(year) {
+  for (const s of YEAR_SEGMENTS) {
+    if (year <= s.y1) {
+      const t = (year - s.y0) / (s.y1 - s.y0);
+      return s.t0 + Math.max(0, Math.min(1, t)) * (s.t1 - s.t0);
+    }
+  }
+  return YEAR_SEGMENTS[YEAR_SEGMENTS.length - 1].t1;
+}
+
+function formatYear(y) {
+  if (y < 0) return Math.abs(y) + " BCE";
+  return String(y);
+}
+
+function escapeXml(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function groupStroke(group) {
+  if (group === "grounding") return pal.cyan;
+  if (group === "genealogies") return pal.violet;
+  if (group === "constellations") return pal.gold;
+  return pal.muted;
+}
+
+function groupFill(group) {
+  if (group === "grounding") return pal.softG;
+  if (group === "genealogies") return pal.softV;
+  if (group === "constellations") return pal.softGo;
+  return "transparent";
+}
+
+function layoutNodes(nodes) {
+  const byTrack = [[], [], [], []];
+  for (const n of nodes) {
+    const w = nodeWidth(n);
+    const lines = nameLines(n, n.group === "concept" ? 26 : 24);
+    const lineCount = lines.length + (n.sub ? 1 : 0);
+    const h = Math.min(70, Math.max(n.group === "concept" ? CONCEPT_H : NODE_H, 18 + lineCount * 14));
+    const idealY = Math.max(PAD_T * 0.35, PAD_T + yearToY(n.year) - h / 2);
+    const track = GROUP_TRACK[n.group] ?? 0;
+    byTrack[track].push({ ...n, w, h, lines, idealY });
+  }
+
+  const placed = [];
+  let maxBottom = 0;
+  for (let t = 0; t < TRACK_COUNT; t++) {
+    const list = byTrack[t].slice().sort((a, b) => a.idealY - b.idealY || a.year - b.year || a.name.localeCompare(b.name));
+    let prevBottom = -Infinity;
+    const trackX = PAD_L + AXIS_W + 28 + t * (COL_W + LANE_GAP);
+    for (const n of list) {
+      const y = Math.max(n.idealY, prevBottom + V_GAP);
+      prevBottom = y + n.h;
+      maxBottom = Math.max(maxBottom, prevBottom);
+      placed.push({
+        ...n,
+        x: trackX,
+        y,
+        cx: trackX + n.w / 2,
+        cy: y + n.h / 2,
+        lane: t
+      });
+    }
+  }
+
+  const width = contentWidth();
+  const height = Math.max(maxBottom + PAD_B, PAD_T + YEAR_SEGMENTS[YEAR_SEGMENTS.length - 1].t1 + PAD_B);
+  return { placed, width, height, laneCount: TRACK_COUNT };
+}
+
+function nodeWidth(n) {
+  const len = (n.name || "").length + (n.sub ? 4 : 0);
+  if (n.group === "concept") return Math.min(200, Math.max(150, len * 6.2));
+  return Math.min(210, Math.max(148, len * 5.8));
+}
+
+function nameLines(n, maxChars) {
+  const name = n.name;
+  if (name.length <= maxChars) return [name];
+  if (name.includes(" · ")) {
+    const parts = name.split(" · ");
+    const lines = [];
+    let cur = "";
+    for (const p of parts) {
+      const next = cur ? cur + " · " + p : p;
+      if (next.length > maxChars && cur) {
+        lines.push(cur);
+        cur = p;
+      } else cur = next;
+    }
+    if (cur) lines.push(cur);
+    if (lines.length <= 3) return lines;
+  }
+  if (name.includes(" / ")) {
+    return name.split(" / ").slice(0, 2);
+  }
+  const mid = Math.ceil(name.length / 2);
+  const sp = name.lastIndexOf(" ", mid);
+  const cut = sp > 8 ? sp : mid;
+  return [name.slice(0, cut).trim(), name.slice(cut).trim()];
+}
+
+function edgePath(a, b) {
+  const dx = b.cx - a.cx;
+  const dy = b.cy - a.cy;
+  const dist = Math.hypot(dx, dy) || 1;
+  const shortenA = Math.min(a.w, a.h) * 0.42;
+  const shortenB = Math.min(b.w, b.h) * 0.42;
+  const x1 = a.cx + (dx / dist) * shortenA;
+  const y1 = a.cy + (dy / dist) * shortenA;
+  const x2 = b.cx - (dx / dist) * shortenB;
+  const y2 = b.cy - (dy / dist) * shortenB;
+  const mx = (x1 + x2) / 2;
+  const my = (y1 + y2) / 2;
+  // Bow sideways so vertical time-flows don't stack into one line
+  const bend = Math.min(90, Math.abs(dy) * 0.1 + 20) * (dx >= 0 ? 1 : -1);
+  return `M ${x1} ${y1} Q ${mx + bend} ${my} ${x2} ${y2}`;
+}
+
+function edgeStyle(kind) {
+  if (kind === "critique") return { dash: "6 4", width: 1.4, color: pal.violet, marker: "url(#arrowCritique)" };
+  if (kind === "parallel") return { dash: "2 4", width: 1.3, color: pal.muted, marker: "url(#arrowParallel)" };
+  if (kind === "callback") return { dash: null, width: 2.6, color: pal.cyan, marker: "url(#arrowCallback)" };
+  return { dash: null, width: 1.5, color: pal.muted, marker: "url(#arrowBuild)" };
+}
+
+function buildSvg() {
+  const { placed, width, height } = layoutNodes(NODES);
+  const byId = Object.fromEntries(placed.map((n) => [n.id, n]));
+
+  const tickMarks = TICKS.map((yr) => {
+    const y = PAD_T + yearToY(yr);
+    return `<g class="tick">
+      <line x1="${PAD_L}" y1="${y}" x2="${width - PAD_R}" y2="${y}" stroke="${pal.line}" stroke-width="1" stroke-dasharray="2 6"/>
+      <text x="${PAD_L - 10}" y="${y + 4}" text-anchor="end" fill="${pal.muted}" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11">${escapeXml(formatYear(yr))}</text>
+    </g>`;
+  }).join("");
+
+  const axis = `<line x1="${PAD_L}" y1="${PAD_T}" x2="${PAD_L}" y2="${height - PAD_B}" stroke="${pal.line}" stroke-width="1.5"/>
+    <text x="${PAD_L}" y="${PAD_T - 20}" text-anchor="middle" fill="${pal.muted}" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" letter-spacing="0.06em">TIME ↓</text>`;
+
+  const trackLabels = [
+    { i: 0, label: "Grounding" },
+    { i: 1, label: "Genealogies" },
+    { i: 2, label: "Constellations" },
+    { i: 3, label: "Concepts" }
+  ].map(({ i, label }) => {
+    const x = PAD_L + AXIS_W + 28 + i * (COL_W + LANE_GAP) + COL_W / 2;
+    return `<text x="${x}" y="${PAD_T - 20}" text-anchor="middle" fill="${pal.muted}" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="10" letter-spacing="0.04em">${label}</text>`;
+  }).join("");
+
+  const edgeEls = EDGES.map((e) => {
+    const a = byId[e.from];
+    const b = byId[e.to];
+    if (!a || !b) return "";
+    const st = edgeStyle(e.kind);
+    return `<path class="edge edge-${e.kind}" d="${edgePath(a, b)}" fill="none" stroke="${st.color}" stroke-width="${st.width}" ${st.dash ? `stroke-dasharray="${st.dash}"` : ""} marker-end="${st.marker}" opacity="0.75"/>`;
+  }).join("");
+
+  const nodeEls = placed.map((n) => {
+    const isConcept = n.group === "concept";
+    const href = n.href || HREF[n.group];
+    const stroke = groupStroke(n.group);
+    const fill = groupFill(n.group);
+    const dash = isConcept ? `stroke-dasharray="4 3"` : "";
+    const lines = n.lines || nameLines(n, isConcept ? 26 : 24);
+    const hasSub = Boolean(n.sub);
+    const lineH = 13;
+    const blockH = lines.length * lineH + (hasSub ? lineH : 0);
+    const startY = n.cy - blockH / 2 + 10;
+    const nameTs = lines.map((ln, i) => {
+      const y = startY + i * lineH;
+      return `<tspan x="${n.cx}" y="${y}">${escapeXml(ln)}</tspan>`;
+    }).join("");
+    const subTs = hasSub
+      ? `<tspan x="${n.cx}" y="${startY + lines.length * lineH}" fill="${pal.muted}" font-size="10">${escapeXml(n.sub)}</tspan>`
+      : "";
+    const yearLabel = `<text x="${n.x + 8}" y="${n.y + 12}" fill="${pal.muted}" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9">${escapeXml(formatYear(n.year))}</text>`;
+    const body = `
+      <rect class="node-box" x="${n.x}" y="${n.y}" width="${n.w}" height="${n.h}" rx="${isConcept ? 14 : 8}" ry="${isConcept ? 14 : 8}"
+        fill="${fill}" stroke="${stroke}" stroke-width="1.6" ${dash}/>
+      ${yearLabel}
+      <text class="node-label" text-anchor="middle" fill="${pal.ink}"
+        font-family="system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="${isConcept ? 11 : 12}" font-weight="${isConcept ? 500 : 600}">${nameTs}${subTs}</text>`;
+    const tip = `${escapeXml(n.name)}${n.sub ? " — " + escapeXml(n.sub) : ""} · ${escapeXml(formatYear(n.year))}`;
+    if (href) {
+      return `<a class="node" id="node-${n.id}" data-id="${n.id}" href="${escapeXml(href)}" target="_blank" rel="noopener">
+        <title>${tip}</title>${body}</a>`;
+    }
+    return `<g class="node concept" id="node-${n.id}" data-id="${n.id}">
+      <title>${tip}</title>${body}</g>`;
+  }).join("");
+
+  const markers = `
+    <defs>
+      <marker id="arrowBuild" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="${pal.muted}"/>
+      </marker>
+      <marker id="arrowCritique" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="${pal.violet}"/>
+      </marker>
+      <marker id="arrowParallel" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="${pal.muted}"/>
+      </marker>
+      <marker id="arrowCallback" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="${pal.cyan}"/>
+      </marker>
+    </defs>`;
+
+  return {
+    svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" role="img" aria-label="Vertical chronological map of thinkers and concepts">
+      ${markers}
+      <rect width="${width}" height="${height}" fill="transparent"/>
+      ${tickMarks}
+      ${axis}
+      ${trackLabels}
+      <g class="edges">${edgeEls}</g>
+      <g class="nodes">${nodeEls}</g>
+    </svg>`,
+    placed,
+    width,
+    height
+  };
+}
 
 function normalizeSearch(str) {
   return str.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
@@ -482,50 +517,38 @@ const target = document.getElementById("mmd-target");
 const sidebarList = document.getElementById("mapSidebarList");
 const searchInput = document.getElementById("mapSearch");
 
-// Explicit sans stack — fontFamily:"inherit" makes Mermaid measure labels against a
-// different font than the page, so foreignObject widths come out ~10–30px too narrow.
-const mapFont = 'system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
-mermaid.initialize({ startOnLoad: false, securityLevel: "loose", flowchart: { htmlLabels: true, curve: "basis" }, theme: "base", themeVariables: { background: "transparent", primaryColor: "transparent", primaryBorderColor: pal.line, primaryTextColor: pal.ink, lineColor: pal.muted, clusterBkg: "transparent", clusterBorder: pal.line, fontFamily: mapFont } });
-
 let panZoomInstance = null;
+let layoutPlaced = [];
 
-/** Mermaid htmlLabels still undersize foreignObject vs scrollWidth; widen FO + shape. */
-function fixClippedHtmlLabels(svg) {
-  svg.querySelectorAll(".node").forEach((node) => {
-    const fo = node.querySelector("foreignObject");
-    const div = fo && fo.querySelector("div");
-    if (!fo || !div) return;
-    const needed = Math.ceil(div.scrollWidth);
-    const have = parseFloat(fo.getAttribute("width")) || 0;
-    if (needed <= have + 0.5) return;
-    const grow = needed - have;
-    fo.setAttribute("width", String(needed));
-    const rect = node.querySelector("rect.label-container, rect.basic");
-    if (rect) {
-      const rw = parseFloat(rect.getAttribute("width")) || 0;
-      const rx = parseFloat(rect.getAttribute("x")) || 0;
-      rect.setAttribute("width", String(rw + grow));
-      rect.setAttribute("x", String(rx - grow / 2));
-    }
-  });
+function centuryBucket(year) {
+  if (year < 0) return "Antiquity";
+  if (year < 1600) return "To 1600";
+  if (year < 1800) return "1600s–1700s";
+  if (year < 1900) return "1800s";
+  if (year < 1950) return "1900–1949";
+  if (year < 1980) return "1950–1979";
+  if (year < 2000) return "1980–1999";
+  return "2000–";
 }
 
 function buildSidebar() {
   const frag = document.createDocumentFragment();
-  let lastGroup = null;
-  for (const n of NODE_INDEX) {
-    if (n.group !== lastGroup) {
+  let lastBucket = null;
+  for (const n of NODES) {
+    const bucket = centuryBucket(n.year);
+    if (bucket !== lastBucket) {
       const label = document.createElement("div");
       label.className = "grp-label";
-      label.textContent = GROUP_LABELS[n.group] || n.group;
+      label.textContent = bucket;
       frag.appendChild(label);
-      lastGroup = n.group;
+      lastBucket = bucket;
     }
     const btn = document.createElement("button");
     btn.type = "button";
     btn.dataset.id = n.id;
-    btn.dataset.filter = normalizeSearch(n.name + " " + n.sub);
-    btn.textContent = n.sub ? `${n.name} — ${n.sub}` : n.name;
+    btn.dataset.filter = normalizeSearch(n.name + " " + n.sub + " " + formatYear(n.year) + " " + (GROUP_LABELS[n.group] || ""));
+    const yearBit = formatYear(n.year);
+    btn.textContent = n.sub ? `${yearBit} · ${n.name} — ${n.sub}` : `${yearBit} · ${n.name}`;
     btn.addEventListener("click", () => centerOnNode(n.id));
     frag.appendChild(btn);
   }
@@ -534,17 +557,33 @@ function buildSidebar() {
 
 function centerOnNode(id) {
   if (!panZoomInstance) return;
-  const svg = target.querySelector("svg");
-  const marker = `-${id}-`;
-  const nodeEl = [...svg.querySelectorAll(".node")].find((el) => el.id.includes(marker));
+  const nodeEl = document.getElementById("node-" + id);
   if (!nodeEl) return;
-  const bbox = nodeEl.getBBox();
-  const cx = bbox.x + bbox.width / 2;
-  const cy = bbox.y + bbox.height / 2;
-  const sizes = panZoomInstance.getSizes();
-  const z = Math.max(sizes.realZoom, 1.4);
+
+  const svg = target.querySelector("svg");
+  const sizes0 = panZoomInstance.getSizes();
+  const pan0 = panZoomInstance.getPan();
+  const real0 = sizes0.realZoom;
+  const svgRect = svg.getBoundingClientRect();
+  const nb = nodeEl.getBoundingClientRect();
+  const cx = (nb.left + nb.width / 2 - svgRect.left - pan0.x) / real0;
+  const cy = (nb.top + nb.height / 2 - svgRect.top - pan0.y) / real0;
+  const nodeSpan = Math.max(nb.width / real0, nb.height / real0, 1);
+
+  const rel = panZoomInstance.getZoom() || 1;
+  const fitScale = real0 / rel;
+  const targetPx = Math.min(sizes0.width, sizes0.height) * 0.5;
+  const z = Math.min(Math.max(targetPx / (nodeSpan * fitScale), 3.2), 14);
+
   panZoomInstance.zoom(z);
-  panZoomInstance.pan({ x: sizes.width / 2 - cx * z, y: sizes.height / 2 - cy * z });
+  const s = panZoomInstance.getSizes();
+  panZoomInstance.pan({
+    x: s.width / 2 - cx * s.realZoom,
+    y: s.height / 2 - cy * s.realZoom
+  });
+
+  nodeEl.classList.add("is-focus");
+  setTimeout(() => nodeEl.classList.remove("is-focus"), 1200);
 }
 
 searchInput.addEventListener("input", () => {
@@ -555,35 +594,98 @@ searchInput.addEventListener("input", () => {
   labels.forEach((l) => {
     let sib = l.nextElementSibling;
     let anyVisible = false;
-    while (sib && sib.tagName === "BUTTON") { if (!sib.hidden) anyVisible = true; sib = sib.nextElementSibling; }
+    while (sib && sib.tagName === "BUTTON") {
+      if (!sib.hidden) anyVisible = true;
+      sib = sib.nextElementSibling;
+    }
     l.hidden = q.length > 0 && !anyVisible;
   });
 });
 
-mermaid.render("mmdGraph", graphSrc).then(({ svg }) => {
+/** Zoom so diagram width fills the viewport; pan to top (time scrolls vertically). */
+function fitWidth() {
+  if (!panZoomInstance) return;
+  panZoomInstance.resize();
+  const sizes = panZoomInstance.getSizes();
+  const vbW = sizes.viewBox.width;
+  if (!vbW) return;
+  const rel = panZoomInstance.getZoom() || 1;
+  const unitReal = sizes.realZoom / rel;
+  const z = (sizes.width / vbW) / unitReal;
+  panZoomInstance.zoom(z);
+  const s = panZoomInstance.getSizes();
+  panZoomInstance.pan({
+    x: (s.width - vbW * s.realZoom) / 2,
+    y: 12
+  });
+}
+
+let wheelScrollHandler = null;
+
+function bindWheelScroll(svgEl) {
+  if (wheelScrollHandler) {
+    target.removeEventListener("wheel", wheelScrollHandler);
+    wheelScrollHandler = null;
+  }
+  wheelScrollHandler = (e) => {
+    if (!panZoomInstance) return;
+    e.preventDefault();
+    // Prefer vertical scroll; shift+wheel or dominant deltaX pans sideways.
+    const dx = e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX || e.deltaY : 0;
+    const dy = e.shiftKey ? 0 : e.deltaY;
+    panZoomInstance.panBy({ x: -dx, y: -dy });
+  };
+  target.addEventListener("wheel", wheelScrollHandler, { passive: false });
+}
+
+function renderMap() {
+  const vp = document.getElementById("mapViewport").getBoundingClientRect();
+  YEAR_SEGMENTS = yearSegmentsForViewport(Math.max(vp.width, 640), Math.max(vp.height, 420));
+
+  if (panZoomInstance) {
+    panZoomInstance.destroy();
+    panZoomInstance = null;
+  }
+
+  const { svg, placed, width, height } = buildSvg();
+  layoutPlaced = placed;
   target.innerHTML = svg;
   const svgEl = target.querySelector("svg");
+  svgEl.setAttribute("viewBox", `0 0 ${width} ${height}`);
   svgEl.removeAttribute("width");
   svgEl.removeAttribute("height");
   svgEl.style.width = "100%";
   svgEl.style.height = "100%";
-  fixClippedHtmlLabels(svgEl);
 
   panZoomInstance = window.svgPanZoom(svgEl, {
-    zoomEnabled: true, panEnabled: true, controlIconsEnabled: false,
-    fit: true, center: true, minZoom: 0.2, maxZoom: 20, zoomScaleSensitivity: 0.35
+    zoomEnabled: true,
+    panEnabled: true,
+    controlIconsEnabled: false,
+    mouseWheelZoomEnabled: false,
+    fit: false,
+    center: false,
+    minZoom: 0.05,
+    maxZoom: 20,
+    zoomScaleSensitivity: 0.35
   });
+  bindWheelScroll(svgEl);
+  fitWidth();
+  statusEl.textContent = `${NODES.length} nodes, ${EDGES.length} edges · chronological top→bottom · scroll or drag to move · buttons zoom.`;
+}
 
+function init() {
   buildSidebar();
-  statusEl.textContent = "81 nodes, 121 edges · scroll/pinch to zoom, drag to pan, or use the index on the left.";
-}).catch((err) => {
-  statusEl.textContent = "Diagram failed to render: " + err.message;
-  console.error(err);
-});
+  renderMap();
+}
+
+init();
 
 document.getElementById("zoomIn").addEventListener("click", () => panZoomInstance && panZoomInstance.zoomIn());
 document.getElementById("zoomOut").addEventListener("click", () => panZoomInstance && panZoomInstance.zoomOut());
-document.getElementById("zoomFit").addEventListener("click", () => { if (panZoomInstance) { panZoomInstance.fit(); panZoomInstance.center(); } });
-document.getElementById("zoomReset").addEventListener("click", () => { if (panZoomInstance) { panZoomInstance.reset(); panZoomInstance.fit(); panZoomInstance.center(); } });
-
-window.addEventListener("resize", () => { if (panZoomInstance) { panZoomInstance.resize(); panZoomInstance.fit(); panZoomInstance.center(); } });
+document.getElementById("zoomFit").addEventListener("click", () => fitWidth());
+document.getElementById("zoomReset").addEventListener("click", () => renderMap());
+let resizeTimer = 0;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(renderMap, 160);
+});
