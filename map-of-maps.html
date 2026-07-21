@@ -15,7 +15,7 @@
 <link rel="canonical" href="https://anthemic-developments.com/map-of-maps.html">
 <link rel="stylesheet" href="assets/css/philosophy-pages.css">
 <style>
-  .wrap.essay { max-width: 1100px; margin: 0 auto; font-size: 17px; line-height: 1.65; }
+  .wrap.essay { max-width: 1320px; margin: 0 auto; font-size: 17px; line-height: 1.65; }
   header.masthead { margin-bottom: 2.4rem; }
   .frame-note {
     margin-top: 1.6rem; padding: 0.9rem 1.1rem;
@@ -43,18 +43,46 @@
     box-shadow: var(--shadow); position: relative;
   }
   .map-toolbar {
-    display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 0.9rem;
+    display: flex; align-items: center; gap: 0.6rem; padding: 0.6rem 0.9rem; flex-wrap: wrap;
     border-bottom: 1px solid var(--line); font-family: var(--mono); font-size: 0.78rem; color: var(--muted);
   }
   .map-toolbar button {
     font-family: var(--mono); font-size: 0.78rem; border: 1px solid var(--line); background: var(--panel-2);
-    color: var(--ink); border-radius: 8px; padding: 0.25em 0.7em; cursor: pointer;
+    color: var(--ink); border-radius: 8px; padding: 0.3em 0.8em; cursor: pointer;
   }
   .map-toolbar button:hover { border-color: var(--cyan); color: var(--cyan); }
-  .map-scroll2 { overflow: auto; max-height: 78vh; padding: 1.2rem; }
-  #mmd-target { transform-origin: top left; transition: transform 0.15s ease; width: max-content; }
-  #mmd-target svg { display: block; }
+  .map-toolbar .hint { margin-left: auto; }
+  .map-body { display: flex; align-items: stretch; }
+  .map-sidebar {
+    width: 240px; flex: none; border-right: 1px solid var(--line);
+    display: flex; flex-direction: column;
+  }
+  .map-sidebar input[type="search"] {
+    margin: 0.7rem; padding: 0.4em 0.6em; font-family: var(--mono); font-size: 0.8rem;
+    border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2); color: var(--ink);
+  }
+  .map-sidebar-list { overflow-y: auto; flex: 1; padding: 0 0.4rem 0.7rem; max-height: 72vh; }
+  .map-sidebar-list .grp-label {
+    font-family: var(--mono); font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--muted); padding: 0.6rem 0.5rem 0.2rem;
+  }
+  .map-sidebar-list button {
+    display: block; width: 100%; text-align: left; background: none; border: none;
+    color: var(--ink); font-family: var(--sans); font-size: 0.85rem; padding: 0.3em 0.5rem;
+    border-radius: 6px; cursor: pointer; line-height: 1.3;
+  }
+  .map-sidebar-list button:hover { background: var(--cyan-soft); color: var(--cyan); }
+  .map-sidebar-list button[hidden] { display: none; }
+  .map-viewport { position: relative; flex: 1; height: 72vh; overflow: hidden; background: var(--panel); }
+  #mmd-target { width: 100%; height: 100%; }
+  .map-viewport svg { width: 100%; height: 100%; display: block; }
   .map-status { padding: 0.6rem 0.9rem; font-family: var(--mono); font-size: 0.76rem; color: var(--muted); border-top: 1px solid var(--line); }
+  @media (max-width: 760px) {
+    .map-body { flex-direction: column; }
+    .map-sidebar { width: auto; border-right: none; border-bottom: 1px solid var(--line); }
+    .map-sidebar-list { max-height: 30vh; }
+    .map-viewport { height: 60vh; }
+  }
 
   footer.close {
     margin-top: 2.4rem; padding-top: 1.8rem; border-top: 1px solid var(--line);
@@ -105,12 +133,19 @@
 <div class="map-shell">
   <div class="map-toolbar">
     <button type="button" id="zoomOut">− zoom out</button>
-    <button type="button" id="zoomReset">reset</button>
     <button type="button" id="zoomIn">+ zoom in</button>
-    <span>scroll to pan · click a box to open its page</span>
+    <button type="button" id="zoomFit">fit to screen</button>
+    <button type="button" id="zoomReset">reset</button>
+    <span class="hint">scroll/pinch to zoom · drag to pan · click a box to open its page</span>
   </div>
-  <div class="map-scroll2">
-    <div id="mmd-target">Loading diagram…</div>
+  <div class="map-body">
+    <div class="map-sidebar">
+      <input type="search" id="mapSearch" placeholder="jump to a thinker or concept…" autocomplete="off">
+      <div class="map-sidebar-list" id="mapSidebarList"></div>
+    </div>
+    <div class="map-viewport" id="mapViewport">
+      <div id="mmd-target">Loading diagram…</div>
+    </div>
   </div>
   <div class="map-status" id="mapStatus">Rendering…</div>
 </div>
@@ -122,6 +157,7 @@
 </div>
 
 <script src="/assets/js/mermaid.min.js"></script>
+<script src="/assets/js/svg-pan-zoom.min.js"></script>
 <script src="/assets/js/map-of-maps.js"></script>
 
 </body>

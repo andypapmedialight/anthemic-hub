@@ -387,21 +387,178 @@ click harvey "/constellations-of-history.html#anderson-harvey-eagleton" "Open Co
 click eagleton "/constellations-of-history.html#anderson-harvey-eagleton" "Open Constellations of History" _blank
 `;
 
+const NODE_INDEX = [
+  {id:"platoAr", name:"Plato · Aristotle", sub:"akrasia", group:"grounding"},
+  {id:"artemid", name:"Artemidorus", sub:"dream interpretation", group:"grounding"},
+  {id:"spinoza", name:"Spinoza", sub:"desire w/o knowing why", group:"grounding"},
+  {id:"leibniz", name:"Leibniz", sub:"petites perceptions", group:"grounding"},
+  {id:"herbart", name:"Herbart", sub:"dynamic psychology", group:"grounding"},
+  {id:"schopen", name:"Schopenhauer", sub:"the Will", group:"grounding"},
+  {id:"vonHart", name:"von Hartmann", sub:"Philosophy of the Unconscious", group:"grounding"},
+  {id:"charJan", name:"Charcot · Janet", sub:"hysteria, dissociation", group:"grounding"},
+  {id:"fechner", name:"Fechner", sub:"constancy principle", group:"grounding"},
+  {id:"ellenb", name:"Ellenberger", sub:"synthesis thesis", group:"grounding"},
+  {id:"freud", name:"Freud", sub:"id · ego · superego", group:"grounding"},
+  {id:"popper", name:"Popper", sub:"falsifiability", group:"grounding"},
+  {id:"grunbaum", name:"Grünbaum", sub:"the tally argument", group:"grounding"},
+  {id:"crews", name:"Crews", sub:"historical fraud", group:"grounding"},
+  {id:"eysenck", name:"Eysenck", sub:"efficacy", group:"grounding"},
+  {id:"malinowski", name:"Malinowski", sub:"Trobriand fieldwork", group:"grounding"},
+  {id:"lacan", name:"Lacan", sub:"Real · Symbolic · Imaginary", group:"grounding"},
+  {id:"structImp", name:"Saussure · Jakobson · Lévi-Strauss · Benveniste", sub:"structuralist imports", group:"grounding"},
+  {id:"kristeva", name:"Kristeva", sub:"the semiotic", group:"grounding"},
+  {id:"chomLak", name:"Chomsky · Lakoff", sub:"innate / embodied pushback", group:"grounding"},
+  {id:"zizek", name:"Žižek", sub:"parallax view", group:"grounding"},
+  {id:"johnston", name:"Johnston", sub:"transcendental materialism", group:"grounding"},
+  {id:"hofstadter", name:"Hofstadter", sub:"strange loop", group:"grounding"},
+  {id:"searle", name:"Searle", sub:"Chinese Room", group:"grounding"},
+  {id:"churchland", name:"P. & P. Churchland", sub:"eliminative materialism", group:"grounding"},
+  {id:"damasio", name:"Damasio", sub:"core / autobiographical self", group:"grounding"},
+  {id:"friston", name:"Friston", sub:"predictive processing", group:"grounding"},
+  {id:"ledoux", name:"LeDoux", sub:"fast threat pathway", group:"grounding"},
+  {id:"malabou", name:"Malabou", sub:"destructive plasticity", group:"grounding"},
+  {id:"edelman", name:"Edelman", sub:"TNGS · reentry", group:"grounding"},
+  {id:"hobsonMc", name:"Hobson · McCarley", sub:"activation-synthesis", group:"grounding"},
+  {id:"solms", name:"Solms", sub:"SEEKING drives dreaming", group:"grounding"},
+  {id:"domhoff", name:"Domhoff", sub:"continuity hypothesis", group:"grounding"},
+  {id:"chalmers", name:"Chalmers", sub:"hard problem", group:"grounding"},
+  {id:"jackson", name:"Jackson", sub:"Mary's Room", group:"grounding"},
+  {id:"nagel", name:"Nagel", sub:"Mind and Cosmos", group:"grounding"},
+  {id:"strawGoff", name:"Strawson · Goff", sub:"panpsychism", group:"grounding"},
+  {id:"kastrup", name:"Kastrup", sub:"analytic idealism", group:"grounding"},
+  {id:"miller", name:"Miller-school", sub:"anti-neuro Lacan", group:"grounding"},
+  {id:"kant", name:"Kant", sub:"phenomena / noumena", group:"genealogies"},
+  {id:"hegel", name:"Hegel", sub:"lordship and bondage", group:"genealogies"},
+  {id:"nietzsche", name:"Nietzsche", sub:"genealogy as method", group:"genealogies"},
+  {id:"kojeve", name:"Kojève", sub:"desire for recognition", group:"genealogies"},
+  {id:"marx", name:"Marx", sub:"base & superstructure", group:"genealogies"},
+  {id:"reich", name:"Reich", sub:"character armor", group:"genealogies"},
+  {id:"adorno", name:"Adorno · Horkheimer", sub:"culture industry", group:"genealogies"},
+  {id:"marcuse", name:"Marcuse", sub:"surplus-repression", group:"genealogies"},
+  {id:"fromm", name:"Fromm", sub:"escape from freedom", group:"genealogies"},
+  {id:"bergson", name:"Bergson", sub:"durée · élan vital", group:"genealogies"},
+  {id:"althusser", name:"Althusser", sub:"interpellation", group:"genealogies"},
+  {id:"dg", name:"Deleuze & Guattari", sub:"desiring-production", group:"genealogies"},
+  {id:"foucault", name:"Foucault", sub:"biopower", group:"genealogies"},
+  {id:"baudLyo", name:"Baudrillard · Lyotard", sub:"simulacra · libidinal economy", group:"genealogies"},
+  {id:"plant", name:"Sadie Plant", sub:"cyberfeminism", group:"genealogies"},
+  {id:"land", name:"Nick Land", sub:"accelerationism", group:"genealogies"},
+  {id:"fisher", name:"Mark Fisher", sub:"capitalist realism", group:"genealogies"},
+  {id:"ccruTrio", name:"Eshun · Mackay · Grant", sub:"theory-fiction", group:"genealogies"},
+  {id:"leftAccel", name:"Left-accelerationism", sub:"Srnicek & Williams", group:"genealogies"},
+  {id:"acidXeno", name:"Acid Communism / Xenofeminism", sub:"", group:"genealogies"},
+  {id:"berardiDean", name:"Berardi · Dean", sub:"semiocapitalism", group:"genealogies"},
+  {id:"lukacs", name:"Lukács", sub:"reification", group:"constellations"},
+  {id:"gramsci", name:"Gramsci", sub:"hegemony", group:"constellations"},
+  {id:"benjamin", name:"Benjamin", sub:"aura · dialectical image", group:"constellations"},
+  {id:"bloch", name:"Bloch", sub:"non-synchronism", group:"constellations"},
+  {id:"brecht", name:"Brecht", sub:"epic theater", group:"constellations"},
+  {id:"scholem", name:"Scholem", sub:"Kabbalah · messianism", group:"constellations"},
+  {id:"kracauer", name:"Kracauer", sub:"mass ornament", group:"constellations"},
+  {id:"debord", name:"Debord", sub:"society of the spectacle", group:"constellations"},
+  {id:"williamsR", name:"Raymond Williams", sub:"structure of feeling", group:"constellations"},
+  {id:"hall", name:"Stuart Hall", sub:"encoding / decoding", group:"constellations"},
+  {id:"jameson", name:"Jameson", sub:"cognitive mapping", group:"constellations"},
+  {id:"anderson", name:"Perry Anderson", sub:"coins Western Marxism", group:"constellations"},
+  {id:"harvey", name:"David Harvey", sub:"time-space compression", group:"constellations"},
+  {id:"eagleton", name:"Terry Eagleton", sub:"popularizer", group:"constellations"},
+  {id:"cUnconscious", name:"the unconscious / repression", sub:"", group:"concept"},
+  {id:"cIdeology", name:"ideology", sub:"", group:"concept"},
+  {id:"cRecog", name:"desire & recognition", sub:"", group:"concept"},
+  {id:"cReif", name:"reification / commodity fetishism", sub:"", group:"concept"},
+  {id:"cHardProb", name:"the hard problem / subject as gap", sub:"", group:"concept"},
+  {id:"cGenMethod", name:"genealogy as method", sub:"", group:"concept"},
+  {id:"cHegemony", name:"hegemony", sub:"", group:"concept"}
+];
+
+const GROUP_LABELS = { grounding: "Grounding the Unconscious", genealogies: "Genealogies of Desire", constellations: "Constellations of History", concept: "Shared concepts" };
+
+function normalizeSearch(str) {
+  return str.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+}
+
 const statusEl = document.getElementById("mapStatus");
 const target = document.getElementById("mmd-target");
-let scale = 1;
-function applyScale() { target.style.transform = `scale(${scale})`; }
+const sidebarList = document.getElementById("mapSidebarList");
+const searchInput = document.getElementById("mapSearch");
 
 mermaid.initialize({ startOnLoad: false, securityLevel: "loose", flowchart: { htmlLabels: true, curve: "basis" }, theme: "base", themeVariables: { background: "transparent", primaryColor: "transparent", primaryBorderColor: pal.line, primaryTextColor: pal.ink, lineColor: pal.muted, clusterBkg: "transparent", clusterBorder: pal.line, fontFamily: "inherit" } });
 
+let panZoomInstance = null;
+
+function buildSidebar() {
+  const frag = document.createDocumentFragment();
+  let lastGroup = null;
+  for (const n of NODE_INDEX) {
+    if (n.group !== lastGroup) {
+      const label = document.createElement("div");
+      label.className = "grp-label";
+      label.textContent = GROUP_LABELS[n.group] || n.group;
+      frag.appendChild(label);
+      lastGroup = n.group;
+    }
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.dataset.id = n.id;
+    btn.dataset.filter = normalizeSearch(n.name + " " + n.sub);
+    btn.textContent = n.sub ? `${n.name} — ${n.sub}` : n.name;
+    btn.addEventListener("click", () => centerOnNode(n.id));
+    frag.appendChild(btn);
+  }
+  sidebarList.appendChild(frag);
+}
+
+function centerOnNode(id) {
+  if (!panZoomInstance) return;
+  const svg = target.querySelector("svg");
+  const marker = `-${id}-`;
+  const nodeEl = [...svg.querySelectorAll(".node")].find((el) => el.id.includes(marker));
+  if (!nodeEl) return;
+  const bbox = nodeEl.getBBox();
+  const cx = bbox.x + bbox.width / 2;
+  const cy = bbox.y + bbox.height / 2;
+  const sizes = panZoomInstance.getSizes();
+  const z = Math.max(sizes.realZoom, 1.4);
+  panZoomInstance.zoom(z);
+  panZoomInstance.pan({ x: sizes.width / 2 - cx * z, y: sizes.height / 2 - cy * z });
+}
+
+searchInput.addEventListener("input", () => {
+  const q = normalizeSearch(searchInput.value.trim());
+  const buttons = sidebarList.querySelectorAll("button");
+  const labels = sidebarList.querySelectorAll(".grp-label");
+  buttons.forEach((b) => { b.hidden = q.length > 0 && !b.dataset.filter.includes(q); });
+  labels.forEach((l) => {
+    let sib = l.nextElementSibling;
+    let anyVisible = false;
+    while (sib && sib.tagName === "BUTTON") { if (!sib.hidden) anyVisible = true; sib = sib.nextElementSibling; }
+    l.hidden = q.length > 0 && !anyVisible;
+  });
+});
+
 mermaid.render("mmdGraph", graphSrc).then(({ svg }) => {
   target.innerHTML = svg;
-  statusEl.textContent = "81 nodes · rendered client-side with Mermaid. Drag to scroll, click a box to open its page.";
+  const svgEl = target.querySelector("svg");
+  svgEl.removeAttribute("width");
+  svgEl.removeAttribute("height");
+  svgEl.style.width = "100%";
+  svgEl.style.height = "100%";
+
+  panZoomInstance = window.svgPanZoom(svgEl, {
+    zoomEnabled: true, panEnabled: true, controlIconsEnabled: false,
+    fit: true, center: true, minZoom: 0.2, maxZoom: 20, zoomScaleSensitivity: 0.35
+  });
+
+  buildSidebar();
+  statusEl.textContent = "81 nodes, 121 edges · scroll/pinch to zoom, drag to pan, or use the index on the left.";
 }).catch((err) => {
   statusEl.textContent = "Diagram failed to render: " + err.message;
   console.error(err);
 });
 
-document.getElementById("zoomIn").addEventListener("click", () => { scale = Math.min(1.6, scale + 0.1); applyScale(); });
-document.getElementById("zoomOut").addEventListener("click", () => { scale = Math.max(0.3, scale - 0.1); applyScale(); });
-document.getElementById("zoomReset").addEventListener("click", () => { scale = 1; applyScale(); });
+document.getElementById("zoomIn").addEventListener("click", () => panZoomInstance && panZoomInstance.zoomIn());
+document.getElementById("zoomOut").addEventListener("click", () => panZoomInstance && panZoomInstance.zoomOut());
+document.getElementById("zoomFit").addEventListener("click", () => { if (panZoomInstance) { panZoomInstance.fit(); panZoomInstance.center(); } });
+document.getElementById("zoomReset").addEventListener("click", () => { if (panZoomInstance) { panZoomInstance.reset(); panZoomInstance.fit(); panZoomInstance.center(); } });
+
+window.addEventListener("resize", () => { if (panZoomInstance) { panZoomInstance.resize(); panZoomInstance.fit(); panZoomInstance.center(); } });
