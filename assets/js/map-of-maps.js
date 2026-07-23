@@ -83,6 +83,9 @@ const NODES = [
   { id: "harvey", name: "David Harvey", sub: "time-space compression", group: "constellations", year: 1989, href: "/constellations-of-history.html#anderson-harvey-eagleton" },
   { id: "zizek", name: "Žižek", sub: "parallax view", group: "grounding", year: 1989, href: "/grounding-the-unconscious.html#zizek" },
   { id: "jameson", name: "Jameson", sub: "postmodernism · cognitive mapping", group: "constellations", year: 1991, href: "/constellations-of-history.html#jameson" },
+  { id: "habermas", name: "Habermas", sub: "communicative action", group: "constellations", year: 1981, href: "/constellations-of-history.html#habermas" },
+  { id: "taylor", name: "Charles Taylor", sub: "moral horizons", group: "constellations", year: 1989, href: "/constellations-of-history.html#rosa" },
+  { id: "honneth", name: "Honneth", sub: "struggle for recognition", group: "constellations", year: 1992, href: "/constellations-of-history.html#honneth" },
   { id: "land", name: "Nick Land", sub: "diagonalization · Meltdown", group: "genealogies", year: 1995, href: "/genealogies-of-desire.html#land" },
   { id: "damasio", name: "Damasio", sub: "core / autobiographical self", group: "grounding", year: 1994, href: "/grounding-the-unconscious.html#damasio" },
   { id: "crews", name: "Crews", sub: "historical fraud", group: "grounding", year: 1995, href: "/grounding-the-unconscious.html#rebuttals" },
@@ -102,8 +105,11 @@ const NODES = [
   { id: "nagel", name: "Nagel", sub: "Mind and Cosmos", group: "grounding", year: 2012, href: "/grounding-the-unconscious.html#dissenters" },
   { id: "berardiDean", name: "Berardi · Dean", sub: "semiocapitalism", group: "genealogies", year: 2012, href: "/genealogies-of-desire.html#berardi-dean" },
   { id: "leftAccel", name: "Left-accelerationism", sub: "Srnicek & Williams", group: "genealogies", year: 2013, href: "/genealogies-of-desire.html#left-accelerationism" },
+  { id: "rosa", name: "Hartmut Rosa", sub: "social acceleration · resonance", group: "constellations", year: 2013, href: "/constellations-of-history.html#rosa" },
+  { id: "cSocAccel", name: "social acceleration / dynamic stabilization", sub: "", group: "concept", year: 2013, href: "/constellations-of-history.html#gloss-social-acceleration" },
   { id: "kastrup", name: "Kastrup", sub: "analytic idealism", group: "grounding", year: 2014, href: "/grounding-the-unconscious.html#dissenters" },
-  { id: "acidXeno", name: "Acid Communism / Xenofeminism", sub: "2015–18", group: "genealogies", year: 2016, href: "/genealogies-of-desire.html#connected-strains" }
+  { id: "acidXeno", name: "Acid Communism / Xenofeminism", sub: "2015–18", group: "genealogies", year: 2016, href: "/genealogies-of-desire.html#connected-strains" },
+  { id: "cResonance", name: "resonance / world-relation", sub: "", group: "concept", year: 2016, href: "/constellations-of-history.html#gloss-resonance" }
 ];
 
 /** kind: build | critique | parallel | callback */
@@ -196,6 +202,18 @@ const EDGES = [
   { from: "anderson", to: "gramsci", kind: "callback" },
   { from: "harvey", to: "jameson", kind: "parallel" },
   { from: "williamsR", to: "eagleton", kind: "build" },
+  { from: "adorno", to: "habermas", kind: "build" },
+  { from: "habermas", to: "honneth", kind: "build" },
+  { from: "hegel", to: "honneth", kind: "build" },
+  { from: "cRecog", to: "honneth", kind: "build" },
+  { from: "honneth", to: "rosa", kind: "build" },
+  { from: "taylor", to: "rosa", kind: "build" },
+  { from: "fromm", to: "rosa", kind: "callback" },
+  { from: "harvey", to: "rosa", kind: "parallel" },
+  { from: "rosa", to: "fisher", kind: "parallel" },
+  { from: "rosa", to: "cSocAccel", kind: "build" },
+  { from: "rosa", to: "cResonance", kind: "build" },
+  { from: "harvey", to: "cSocAccel", kind: "parallel" },
   { from: "spinoza", to: "cUnconscious", kind: "build" },
   { from: "leibniz", to: "cUnconscious", kind: "build" },
   { from: "herbart", to: "cUnconscious", kind: "build" },
