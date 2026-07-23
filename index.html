@@ -62,13 +62,13 @@
   }
   </script>
   <link rel="preconnect" href="https://fonts.bunny.net" crossorigin />
-  <meta name="hub-content-version" content="20260602" />
+  <meta name="hub-content-version" content="20260723" />
   <link rel="preload" href="/assets/css/hub.css?v=3" as="style" />
   <link rel="stylesheet" href="https://fonts.bunny.net/css?family=figtree:400,500,600|fraunces:600,700|jetbrains-mono:400,500,600&display=swap" />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%230e1015%22%2F%3E%3Cpath%20d%3D%22M10%2032%20L13%2018%20L16%2046%20L19%2022%20L22%2042%20L25%2020%20L28%2044%20L31%2026%20L34%2040%20L37%2024%20L43%2038%20L49%2028%20L55%2034%22%20fill%3D%22none%22%20stroke%3D%22%236b9cff%22%20stroke-width%3D%223.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%223%22%20fill%3D%22%23c9a227%22%2F%3E%3C%2Fsvg%3E" />
   <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%230e1015%22%2F%3E%3Cpath%20d%3D%22M10%2032%20L13%2018%20L16%2046%20L19%2022%20L22%2042%20L25%2020%20L28%2044%20L31%2026%20L34%2040%20L37%2024%20L43%2038%20L49%2028%20L55%2034%22%20fill%3D%22none%22%20stroke%3D%22%236b9cff%22%20stroke-width%3D%223.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%223%22%20fill%3D%22%23c9a227%22%2F%3E%3C%2Fsvg%3E" />
 
-  <link rel="stylesheet" href="/assets/css/hub.css?v=20" />
+  <link rel="stylesheet" href="/assets/css/hub.css?v=22" />
   <link rel="stylesheet" href="/assets/css/cinnamon-nav.css?v=15" />
   <link rel="preload" href="/assets/cinnamon-agent.png?v=4" as="image" type="image/png" />
   <link rel="preload" href="/assets/cinnamon-tail.png?v=11" as="image" type="image/png" />
@@ -109,7 +109,12 @@
         </div>
         <div class="hero-aside">
           <p class="lede">Tools, sites and experiments from the workshop. Everything linked here is real - shipping, in progress, or on the bench.</p>
-          <p class="brain-teaser">Prefer something spatial? <a href="/brain/">Open the 3D brain map</a> - gigs, reading, and writing in one explorable space. Or plot the philosophies: <a href="/consciousness-map.html">verdicts on the conscious machine</a>. Or go deeper on one of them: <a href="/grounding-the-unconscious.html">grounding the unconscious</a>, psychoanalysis mapped against actual brain structure - or its political cousin, <a href="/genealogies-of-desire.html">genealogies of desire</a>, from Kant and Hegel to accelerationism - or its cultural-theory sibling, <a href="/constellations-of-history.html">constellations of history</a>, from Lukács and Benjamin to Jameson's postmodernism - or all three at once, on <a href="/map-of-maps.html">one clickable diagram</a>.</p>
+          <p class="brain-teaser">Prefer something spatial?</p>
+          <ul class="brain-teaser-links">
+            <li><a href="/brain/">3D brain map</a> — gigs, reading, and writing in one space</li>
+            <li><a href="/consciousness-map.html">Consciousness map</a> — verdicts on the conscious machine</li>
+            <li><a href="/map-of-maps.html">Map of maps</a> — every thinker from the genealogy essays, one diagram</li>
+          </ul>
         </div>
       </div>
     </div>
@@ -117,6 +122,7 @@
 
   <div class="wrap split-shell">
     <div class="hub-intro-host split-rail-host" id="split-rail-host">
+      <div class="split-rail-sentinel hub-intro-sentinel" id="split-rail-sentinel" aria-hidden="true"></div>
       <div class="hub-intro-grid" id="hub-intro-grid">
       <div class="hub-who-block hub-who-intro-col" id="hub-section-who" data-console-scene="who" aria-label="About">
         <h2 class="section-heading hub-who-heading"><span class="sec-title">Who's Andy?</span></h2>
@@ -125,16 +131,12 @@
           <p class="desc" id="who-am-i-body">Andy Papadopoulos, trained as a software engineer - senior developer, full-stack engineer,
              and infrastructure architect at Mecca Medialight in Melbourne. He designs and ships web apps, mentors where he can, and tinkers on the side.
              Off the clock he plays music, teaches bass, and scratches creative itches here under Anthemic.
-             Cinnamon, the site guide alongside, runs quality assurance and keeps morale high.</p>
+             Cinnamon, the site guide, runs quality assurance and keeps morale high.</p>
           <div class="card-profile-actions">
             <a href="https://www.linkedin.com/in/andy-papadopoulos/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
             <a id="profile-instagram" href="https://www.instagram.com/anthemstothefall/" target="_blank" rel="noopener noreferrer">Instagram</a>
             <a href="https://anthemstothefall.bandcamp.com/" target="_blank" rel="noopener noreferrer">Bandcamp</a>
             <a href="/brain/">Brain map</a>
-            <a href="/consciousness-map.html">Consciousness map</a>
-            <a href="/grounding-the-unconscious.html">Grounding the Unconscious</a>
-            <a href="/genealogies-of-desire.html">Genealogies of Desire</a>
-            <a href="/constellations-of-history.html">Constellations of History</a>
             <a href="/map-of-maps.html">Map of Maps</a>
           </div>
         </article>
@@ -306,7 +308,6 @@
         </div>
       </div>
       </div>
-      <div class="split-rail-sentinel hub-intro-sentinel" id="split-rail-sentinel" aria-hidden="true"></div>
     </div>
 
     <div class="split-scroll">
@@ -327,6 +328,8 @@
             <div class="employer-skills-preview" id="employer-skills-preview" aria-label="Key skills">
               <span class="employer-skill">Full-stack · React &amp; TypeScript</span>
               <span class="employer-skill">Node.js &amp; APIs</span>
+              <span class="employer-skill">PHP / Laravel</span>
+              <span class="employer-skill">Cloud Infrastructure</span>
             </div>
             <div class="employer-links">
               <a class="employer-link" href="https://www.linkedin.com/in/andy-papadopoulos/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
@@ -336,21 +339,21 @@
             </div>
           </div>
           <details class="employer-skills-expand-details" id="employer-skills-details">
-            <summary class="employer-skills-expand-toggle">More <span class="employer-skills-expand-count" id="employer-skills-count">(18)</span></summary>
+            <summary class="employer-skills-expand-toggle">More <span class="employer-skills-expand-count" id="employer-skills-count">(14)</span></summary>
             <div class="employer-skills-expanded" id="employer-skills-root" aria-label="More skills">
             <div class="employer-skills">
               <span class="employer-skill">Full-stack · React &amp; TypeScript</span>
               <span class="employer-skill">Node.js &amp; APIs</span>
-              <span class="employer-skill">AWS cloud architecture</span>
+              <span class="employer-skill">PHP / Laravel</span>
+              <span class="employer-skill">Cloud Infrastructure</span>
               <span class="employer-skill">CI/CD &amp; DevOps</span>
               <span class="employer-skill">SQL &amp; data literacy</span>
-              <span class="employer-skill">Laravel / PHP</span>
               <span class="employer-skill">AI &amp; LLM integration</span>
               <span class="employer-skill">System design</span>
               <span class="employer-skill">Docker &amp; Kubernetes</span>
               <span class="employer-skill">Git &amp; deployment automation</span>
               <span class="employer-skill">Python &amp; data processing</span>
-              <span class="employer-skill">Microsoft Azure</span>
+              <span class="employer-skill">AWS &amp; Azure</span>
               <span class="employer-skill">Automated testing</span>
               <span class="employer-skill">REST &amp; GraphQL</span>
               <span class="employer-skill">Maps &amp; geospatial data</span>
@@ -655,9 +658,9 @@
       <p class="cinnamon-spotlight-bubble" id="cinnamon-spotlight-bubble"></p>
     </div>
   </div>
-  <script src="/assets/js/hub.js?v=3" defer></script>
+  <script src="/assets/js/hub.js?v=4" defer></script>
   <script src="/assets/js/hub-nav.js?v=3" defer></script>
-  <script src="/assets/js/hub-console.js?v=4" defer></script>
+  <script src="/assets/js/hub-console.js?v=5" defer></script>
   <script src="/assets/js/hub-rail.js?v=7" defer></script>
   <script src="/assets/js/cinnamon-nav.js?v=6" defer></script>
 </html>

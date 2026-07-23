@@ -365,7 +365,7 @@
       border-left: 1px solid var(--theme-chip-border);
     }
     header {
-      padding: 8px 0 40px;
+      padding: 8px 0 48px;
       border-bottom: 1px solid var(--border);
     }
     header .inner {
@@ -375,9 +375,9 @@
     }
     @media (min-width: 720px) {
       header .inner {
-        grid-template-columns: minmax(0, 1fr) minmax(0, 38ch);
-        gap: 48px;
-        align-items: end;
+        grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+        gap: 40px 56px;
+        align-items: start;
       }
     }
     header .brand {
@@ -426,19 +426,37 @@
       color: var(--fg-dim);
       font-size: 1.02rem;
       line-height: 1.65;
+      max-width: 46ch;
     }
     .brain-teaser {
-      margin: 16px 0 0;
-      font-size: 0.95rem;
-      line-height: 1.55;
+      margin: 18px 0 0;
+      font-size: 0.92rem;
+      font-weight: 600;
+      line-height: 1.4;
+      color: var(--fg);
+    }
+    .brain-teaser-links {
+      list-style: none;
+      margin: 10px 0 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-width: 46ch;
+    }
+    .brain-teaser-links li {
+      font-size: 0.9rem;
+      line-height: 1.45;
       color: var(--fg-dim);
     }
+    .brain-teaser-links a,
     .brain-teaser a {
       color: var(--accent-live);
       font-weight: 600;
       text-decoration: underline;
       text-underline-offset: 3px;
     }
+    .brain-teaser-links a:hover,
     .brain-teaser a:hover {
       color: var(--fg);
     }
@@ -2116,7 +2134,7 @@
     }
     .split-shell {
       display: block;
-      padding-top: 8px;
+      padding-top: 28px;
       padding-bottom: 48px;
     }
     @media (min-width: 1080px) {
@@ -2567,9 +2585,11 @@
         flex-direction: column;
       }
       .hub-intro-grid .console-body {
-        min-height: 0;
-        height: auto;
-        overflow: visible;
+        height: var(--console-body-height);
+        min-height: var(--console-body-height);
+        max-height: var(--console-body-height);
+        overflow-x: hidden;
+        overflow-y: auto;
       }
       .split-console {
         overflow: visible;
@@ -2593,9 +2613,11 @@
       }
       .split-console .console-body {
         flex: 0 0 auto;
-        min-height: 0;
-        max-height: none;
-        overflow: visible;
+        height: var(--console-body-height);
+        min-height: var(--console-body-height);
+        max-height: var(--console-body-height);
+        overflow-x: hidden;
+        overflow-y: auto;
       }
       .split-console .console-chrome > :not(.console-body) {
         flex-shrink: 0;
@@ -2638,9 +2660,11 @@
       }
       .split-console .console-body {
         flex: 0 0 auto;
-        min-height: 0;
-        max-height: none;
-        overflow: visible;
+        height: var(--console-body-height);
+        min-height: var(--console-body-height);
+        max-height: var(--console-body-height);
+        overflow-x: hidden;
+        overflow-y: auto;
       }
       .split-console .console-chrome > :not(.console-body) {
         flex-shrink: 0;
@@ -2806,14 +2830,19 @@
       color: var(--accent);
     }
     .console-body {
+      --console-body-height: clamp(11.5rem, 28vh, 14.5rem);
       position: relative;
-      min-height: 0;
-      height: auto;
+      height: var(--console-body-height);
+      min-height: var(--console-body-height);
+      max-height: var(--console-body-height);
       padding: 8px 0 14px;
-      overflow: visible;
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-gutter: stable;
     }
     #hub-cli-panel .console-body {
-      min-height: 0;
+      min-height: var(--console-body-height);
     }
     .console-scene {
       margin: 0;

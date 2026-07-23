@@ -12,6 +12,7 @@
   };
   var scenes = document.querySelectorAll(".console-scene");
   var caption = document.getElementById("console-caption");
+  var consoleBody = document.getElementById("console-body");
   var btns = document.querySelectorAll("[data-scene-jump]");
   var targets = document.querySelectorAll("[data-console-scene]");
   var current = "who";
@@ -28,6 +29,11 @@
     var code = el.querySelector("code");
     if (code) el._consoleSource = code.innerHTML.trim();
   });
+
+  function scrollConsoleToBottom() {
+    if (!consoleBody) return;
+    consoleBody.scrollTop = consoleBody.scrollHeight;
+  }
 
   function splitSceneLines(html) {
     return html.split("\n").map(function (line) {
@@ -82,6 +88,7 @@
 
     code.innerHTML = "";
     code.classList.add("is-typing");
+    if (consoleBody) consoleBody.scrollTop = 0;
 
     function finish() {
       if (runId !== typeRunId) return;
@@ -112,17 +119,20 @@
         charAt += 1;
         lineEl.textContent = plain.slice(0, charAt);
         ensureCursor(code);
+        scrollConsoleToBottom();
         if (charAt < plain.length) {
           window.setTimeout(typeChar, CHAR_MS);
         } else {
           lineEl.innerHTML = lineHtml;
           ensureCursor(code);
+          scrollConsoleToBottom();
           window.setTimeout(typeLine, LINE_PAUSE_MS);
         }
       }
 
       if (!plain.length) {
         lineEl.innerHTML = lineHtml;
+        scrollConsoleToBottom();
         window.setTimeout(typeLine, LINE_PAUSE_MS);
       } else {
         typeChar();

@@ -123,7 +123,7 @@
     var previewEl = document.getElementById('employer-skills-preview');
     var skillsRoot = document.getElementById('employer-skills-root');
     var skillsCount = document.getElementById('employer-skills-count');
-    var previewSkills = primary.slice(0, 2);
+    var previewSkills = primary;
     if (previewEl && previewSkills.length) {
       previewEl.innerHTML = previewSkills.map(skillChip).join('');
     }

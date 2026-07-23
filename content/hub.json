@@ -7,18 +7,18 @@
   "employer_skills": [
     "Full-stack · React & TypeScript",
     "Node.js & APIs",
-    "AWS cloud architecture",
-    "CI/CD & DevOps",
-    "SQL & data literacy",
-    "Laravel / PHP",
-    "AI & LLM integration",
-    "System design"
+    "PHP / Laravel",
+    "Cloud Infrastructure"
   ],
   "employer_skills_more": [
+    "CI/CD & DevOps",
+    "SQL & data literacy",
+    "AI & LLM integration",
+    "System design",
     "Docker & Kubernetes",
     "Git & deployment automation",
     "Python & data processing",
-    "Microsoft Azure",
+    "AWS & Azure",
     "Automated testing",
     "REST & GraphQL",
     "Maps & geospatial data",
