@@ -41,7 +41,7 @@ const NODES = [
   { id: "kant", name: "Kant", sub: "synthetic a priori", group: "genealogies", year: 1781, href: "/genealogies-of-desire.html#kant-hegel" },
   { id: "cRecog", name: "desire & recognition", sub: "", group: "concept", year: 1807, href: "/genealogies-of-desire.html#gloss-recognition" },
   { id: "hegel", name: "Hegel", sub: "lordship and bondage", group: "genealogies", year: 1807, href: "/genealogies-of-desire.html#kant-hegel" },
-  { id: "schopen", name: "Schopenhauer", sub: "the Will", group: "grounding", year: 1819, href: "/grounding-the-unconscious.html#prehistory" },
+  { id: "schopen", name: "Schopenhauer", sub: "the Will", group: "grounding", year: 1819, href: "/grounding-the-unconscious.html#prehistory", approx: true },
   { id: "herbart", name: "Herbart", sub: "dynamic psychology", group: "grounding", year: 1824, href: "/grounding-the-unconscious.html#prehistory" },
   { id: "cIdeology", name: "ideology", sub: "", group: "concept", year: 1846, href: "/genealogies-of-desire.html#gloss-ideology" },
   { id: "marx", name: "Marx", sub: "base & superstructure", group: "genealogies", year: 1859, href: "/genealogies-of-desire.html#freud-marx" },
@@ -51,7 +51,7 @@ const NODES = [
   { id: "nietzsche", name: "Nietzsche", sub: "genealogy as method", group: "genealogies", year: 1887, href: "/genealogies-of-desire.html#nietzsche" },
   { id: "charJan", name: "Charcot · Janet", sub: "hysteria, dissociation", group: "grounding", year: 1890, href: "/grounding-the-unconscious.html#prehistory" },
   { id: "cUnconscious", name: "the unconscious / repression", sub: "", group: "concept", year: 1900, href: "/genealogies-of-desire.html#gloss-unconscious" },
-  { id: "freud", name: "Freud", sub: "id · ego · superego", group: "grounding", year: 1900, href: "/grounding-the-unconscious.html#freud" },
+  { id: "freud", name: "Freud", sub: "dreams · repression", group: "grounding", year: 1900, href: "/grounding-the-unconscious.html#freud" },
   { id: "bergson", name: "Bergson", sub: "durée · élan vital", group: "genealogies", year: 1907, href: "/genealogies-of-desire.html#bergson" },
   { id: "structImp", name: "Saussure · Jakobson · Lévi-Strauss · Benveniste", sub: "structuralist imports", group: "grounding", year: 1916, href: "/grounding-the-unconscious.html#lacan", approx: true },
   { id: "cReif", name: "reification / commodity fetishism", sub: "", group: "concept", year: 1923, href: "/constellations-of-history.html#gloss-reification" },
@@ -68,7 +68,7 @@ const NODES = [
   { id: "kojeve", name: "Kojève", sub: "desire for recognition", group: "genealogies", year: 1939, href: "/genealogies-of-desire.html#kojeve" },
   { id: "fromm", name: "Fromm", sub: "escape from freedom", group: "genealogies", year: 1941, href: "/genealogies-of-desire.html#fromm" },
   { id: "scholem", name: "Scholem", sub: "Kabbalah · messianism", group: "constellations", year: 1941, href: "/constellations-of-history.html#weimar-circle" },
-  { id: "sartre", name: "Sartre", sub: "existential Marxism", group: "constellations", year: 1943, href: "/constellations-of-history.html#sartre" },
+  { id: "sartre", name: "Sartre", sub: "Being and Nothingness", group: "constellations", year: 1943, href: "/constellations-of-history.html#sartre" },
   { id: "adorno", name: "Adorno · Horkheimer", sub: "culture industry", group: "genealogies", year: 1947, href: "/genealogies-of-desire.html#adorno" },
   { id: "bataille", name: "Bataille", sub: "expenditure · sovereignty", group: "genealogies", year: 1949, href: "/genealogies-of-desire.html#bataille" },
   { id: "eysenck", name: "Eysenck", sub: "efficacy", group: "grounding", year: 1952, href: "/grounding-the-unconscious.html#rebuttals" },
@@ -88,7 +88,7 @@ const NODES = [
   { id: "baudLyo", name: "Baudrillard · Lyotard", sub: "Mirror of Production · libidinal economy", group: "genealogies", year: 1974, href: "/genealogies-of-desire.html#baudrillard-lyotard" },
   { id: "kristeva", name: "Kristeva", sub: "the semiotic", group: "grounding", year: 1974, href: "/grounding-the-unconscious.html#kristeva" },
   { id: "anderson", name: "Perry Anderson", sub: "periodizes Western Marxism", group: "constellations", year: 1976, href: "/constellations-of-history.html#anderson-harvey-eagleton" },
-  { id: "eagleton", name: "Terry Eagleton", sub: "transmission · Literary Theory", group: "constellations", year: 1976, href: "/constellations-of-history.html#anderson-harvey-eagleton" },
+  { id: "eagleton", name: "Terry Eagleton", sub: "Marxism and Literary Criticism", group: "constellations", year: 1976, href: "/constellations-of-history.html#anderson-harvey-eagleton" },
   { id: "foucault", name: "Foucault", sub: "biopower", group: "genealogies", year: 1976, href: "/genealogies-of-desire.html#foucault" },
   { id: "hobsonMc", name: "Hobson · McCarley", sub: "activation-synthesis", group: "grounding", year: 1977, href: "/grounding-the-unconscious.html#hobson-mccarley" },
   { id: "hofstadter", name: "Hofstadter", sub: "strange loop", group: "grounding", year: 1979, href: "/grounding-the-unconscious.html#cognitive-science" },
@@ -108,7 +108,7 @@ const NODES = [
   { id: "ccruTrio", name: "Eshun · Mackay · Grant", sub: "theory-fiction", group: "genealogies", year: 1995, href: "/genealogies-of-desire.html#warwick-ccru", approx: true },
   { id: "chalmers", name: "Chalmers", sub: "hard problem", group: "grounding", year: 1995, href: "/grounding-the-unconscious.html#chalmers" },
   { id: "cHardProb", name: "the hard problem / subject as gap", sub: "", group: "concept", year: 1995, href: "/grounding-the-unconscious.html#dissenters" },
-  { id: "crews", name: "Crews", sub: "historical fraud", group: "grounding", year: 1995, href: "/grounding-the-unconscious.html#rebuttals" },
+  { id: "crews", name: "Crews", sub: "Memory Wars · historical critique", group: "grounding", year: 1995, href: "/grounding-the-unconscious.html#rebuttals" },
   { id: "land", name: "Nick Land", sub: "diagonalization · Meltdown", group: "genealogies", year: 1995, href: "/genealogies-of-desire.html#land" },
   { id: "ledoux", name: "LeDoux", sub: "fast threat pathway", group: "grounding", year: 1996, href: "/grounding-the-unconscious.html#cognitive-science" },
   { id: "plant", name: "Sadie Plant", sub: "cyberfeminism", group: "genealogies", year: 1997, href: "/genealogies-of-desire.html#plant" },
@@ -312,28 +312,35 @@ const EDGES = [
 ];
 
 const NODE_W = 168;
-const NODE_H = 56;
-const CONCEPT_H = 48;
+const NODE_H = 52;
+const CONCEPT_H = 44;
 const COL_W = 200;
 const LANE_GAP = 18;
-const V_GAP = 18;
-const PAD_L = 118;
+const V_GAP = 12;
+const PAD_L = 180;
 const PAD_T = 56;
 const PAD_R = 40;
 const PAD_B = 56;
 const AXIS_W = 8;
+/** Side-by-side pack density: card width capped so adjacent slots can sit this far apart. */
+const SUBLANE_PITCH = 156;
+const MAX_NODE_W = SUBLANE_PITCH - 8;
 
-/** Essay tracks keep the diagram wide; collisions stack downward inside a track. */
+/** Essay tracks keep the diagram wide; collisions prefer horizontal pack, then downward. */
 const GROUP_TRACK = { grounding: 0, genealogies: 1, constellations: 2, concept: 3 };
 const TRACK_COUNT = 4;
 
-/** Relative base lengths along the time axis (sum = 1). Final spans also grow to fit stacked nodes. */
+/** Relative base lengths along the time axis (sum = 1). Final spans also grow for peak clusters. */
 const YEAR_WEIGHTS = [
-  { y0: -1300, y1: 500, w: 0.22 },
-  { y0: 500, y1: 1600, w: 0.06 },
-  { y0: 1600, y1: 1850, w: 0.14 },
-  { y0: 1850, y1: 1950, w: 0.24 },
-  { y0: 1950, y1: 2025, w: 0.34 }
+  { y0: -1300, y1: -600, w: 0.07 },
+  { y0: -600, y1: -300, w: 0.10 },
+  { y0: -300, y1: 500, w: 0.06 },
+  { y0: 500, y1: 1600, w: 0.04 },
+  { y0: 1600, y1: 1850, w: 0.09 },
+  { y0: 1850, y1: 1900, w: 0.07 },
+  { y0: 1900, y1: 1950, w: 0.15 },
+  { y0: 1950, y1: 1980, w: 0.17 },
+  { y0: 1980, y1: 2025, w: 0.25 }
 ];
 
 const TICKS = [-1200, -800, -500, -400, 0, 500, 1000, 1600, 1700, 1800, 1850, 1900, 1925, 1950, 1975, 2000, 2015];
@@ -341,7 +348,7 @@ const TICKS = [-1200, -800, -500, -400, 0, 500, 1000, 1600, 1700, 1800, 1850, 19
 /** Illustrative era washes — layout anchors, not historiography. */
 const PERIODS = [
   { id: "axial", label: "Axial & earlier", y0: -1300, y1: -300, fillLight: "rgba(140, 100, 50, 0.11)", fillDark: "rgba(180, 130, 70, 0.13)" },
-  { id: "antiquity", label: "Classical antiquity", y0: -300, y1: 500, fillLight: "rgba(180, 120, 60, 0.10)", fillDark: "rgba(210, 150, 80, 0.12)" },
+  { id: "antiquity", label: "Antiquity", y0: -300, y1: 500, fillLight: "rgba(180, 120, 60, 0.10)", fillDark: "rgba(210, 150, 80, 0.12)" },
   { id: "middleAges", label: "Middle Ages", y0: 500, y1: 1400, fillLight: "rgba(90, 110, 140, 0.09)", fillDark: "rgba(120, 140, 170, 0.11)" },
   { id: "renaissance", label: "Renaissance", y0: 1400, y1: 1600, fillLight: "rgba(160, 70, 90, 0.10)", fillDark: "rgba(200, 100, 120, 0.12)" },
   { id: "earlyModern", label: "Early modern", y0: 1600, y1: 1700, fillLight: "rgba(50, 120, 130, 0.10)", fillDark: "rgba(70, 160, 170, 0.12)" },
@@ -352,32 +359,50 @@ const PERIODS = [
   { id: "contemporary", label: "Contemporary", y0: 1980, y1: 2025, fillLight: "rgba(50, 90, 160, 0.09)", fillDark: "rgba(80, 130, 210, 0.12)" }
 ];
 
+function trackOriginX(track) {
+  return PAD_L + AXIS_W + 28 + track * (COL_W + LANE_GAP);
+}
+
 function contentWidth() {
-  return PAD_L + AXIS_W + 28 + TRACK_COUNT * (COL_W + LANE_GAP) + PAD_R;
+  // Extra pack lane so dense cross-track clusters can sit 6-abreast
+  return trackOriginX(TRACK_COUNT - 1) + COL_W + SUBLANE_PITCH + PAD_R;
 }
 
-/** How many nodes in the densest track fall inside [y0, y1]? */
-function densestTrackCount(y0, y1) {
-  const counts = [0, 0, 0, 0];
-  for (const n of NODES) {
-    if (n.year < y0 || n.year > y1) continue;
-    const track = GROUP_TRACK[n.group] ?? 0;
-    counts[track] += 1;
+function packRightLimit() {
+  return trackOriginX(TRACK_COUNT - 1) + COL_W + SUBLANE_PITCH;
+}
+
+function horizontalSlots() {
+  const left = trackOriginX(0);
+  return Math.max(TRACK_COUNT, Math.floor((packRightLimit() - left) / SUBLANE_PITCH));
+}
+
+/** Peak nodes in a collision-sized year window inside [y0, y1]. */
+function peakClusterRows(y0, y1) {
+  const years = NODES.filter((n) => n.year >= y0 && n.year <= y1).map((n) => n.year).sort((a, b) => a - b);
+  if (!years.length) return 0;
+  // Wide enough that cards whose idealYs fall within one row height count as one cluster
+  const windowYears = Math.max(20, Math.ceil((y1 - y0) * 0.12));
+  let peak = 1;
+  for (let i = 0; i < years.length; i++) {
+    let j = i;
+    while (j + 1 < years.length && years[j + 1] - years[i] <= windowYears) j++;
+    peak = Math.max(peak, j - i + 1);
   }
-  return Math.max(0, ...counts);
+  return Math.ceil(peak / horizontalSlots());
 }
 
-/** Time-axis length: base weights, then grow any band that can't fit its densest track stack. */
+/** Time-axis length: base weights, then grow any band that can't fit its densest packed rows. */
 function yearSegmentsForViewport(vpW, vpH) {
   const cW = contentWidth();
   const fillWidthH = (vpH * cW) / Math.max(vpW, 1) - PAD_T - PAD_B;
-  const readableH = 3800;
+  const readableH = 4200;
   const targetH = Math.max(fillWidthH, readableH);
   const rowPitch = NODE_H + V_GAP;
   let t = 0;
   return YEAR_WEIGHTS.map((seg) => {
     const base = targetH * seg.w;
-    const need = densestTrackCount(seg.y0, seg.y1) * rowPitch + V_GAP * 2;
+    const need = peakClusterRows(seg.y0, seg.y1) * rowPitch + V_GAP * 2;
     const span = Math.max(base, need);
     const out = { y0: seg.y0, y1: seg.y1, t0: t, t1: t + span };
     t += span;
@@ -420,48 +445,99 @@ function groupFill(group) {
   return "transparent";
 }
 
+function rectsOverlap(a, b, pad = 4) {
+  return !(a.x + a.w + pad <= b.x || b.x + b.w + pad <= a.x || a.y + a.h + pad <= b.y || b.y + b.h + pad <= a.y);
+}
+
+/** Prefer home track, then other track columns, then a fine horizontal scan. */
+function xCandidatesFor(homeX, nodeW, rightLimit) {
+  const left = trackOriginX(0);
+  const seen = new Set();
+  const xs = [];
+  function add(x) {
+    const xi = Math.round(x);
+    if (xi < left - 1 || xi + nodeW > rightLimit + 1) return;
+    if (seen.has(xi)) return;
+    seen.add(xi);
+    xs.push(xi);
+  }
+  add(homeX);
+  for (let t = 0; t < TRACK_COUNT; t++) add(trackOriginX(t));
+  for (let x = left; x + nodeW <= rightLimit + 1; x += SUBLANE_PITCH) add(x);
+  // Fine fill for leftover gaps between wide/narrow cards
+  for (let x = left; x + nodeW <= rightLimit + 1; x += 24) add(x);
+  xs.sort((a, b) => Math.abs(a - homeX) - Math.abs(b - homeX) || a - b);
+  return xs;
+}
+
 function layoutNodes(nodes) {
-  const byTrack = [[], [], [], []];
-  for (const n of nodes) {
+  const rightLimit = packRightLimit();
+  const prepared = nodes.map((n) => {
     const w = nodeWidth(n);
-    const lines = nameLines(n, n.group === "concept" ? 26 : 24);
+    const lines = nameLines(n, n.group === "concept" ? 24 : 22);
     const lineCount = lines.length + (n.sub ? 1 : 0);
-    const h = Math.min(70, Math.max(n.group === "concept" ? CONCEPT_H : NODE_H, 18 + lineCount * 14));
+    const h = Math.min(64, Math.max(n.group === "concept" ? CONCEPT_H : NODE_H, 16 + lineCount * 13));
     const idealY = Math.max(PAD_T * 0.35, PAD_T + yearToY(n.year) - h / 2);
     const track = GROUP_TRACK[n.group] ?? 0;
-    byTrack[track].push({ ...n, w, h, lines, idealY });
-  }
+    return { ...n, w, h, lines, idealY, track, homeX: trackOriginX(track) };
+  });
+
+  prepared.sort((a, b) => a.year - b.year || a.track - b.track || a.name.localeCompare(b.name));
 
   const placed = [];
   let maxBottom = 0;
-  for (let t = 0; t < TRACK_COUNT; t++) {
-    const list = byTrack[t].slice().sort((a, b) => a.idealY - b.idealY || a.year - b.year || a.name.localeCompare(b.name));
-    let prevBottom = -Infinity;
-    const trackX = PAD_L + AXIS_W + 28 + t * (COL_W + LANE_GAP);
-    for (const n of list) {
-      const y = Math.max(n.idealY, prevBottom + V_GAP);
-      prevBottom = y + n.h;
-      maxBottom = Math.max(maxBottom, prevBottom);
-      placed.push({
-        ...n,
-        x: trackX,
-        y,
-        cx: trackX + n.w / 2,
-        cy: y + n.h / 2,
-        lane: t
-      });
+  let maxRight = contentWidth() - PAD_R;
+
+  for (const n of prepared) {
+    const xs = xCandidatesFor(n.homeX, n.w, rightLimit);
+    let spot = null;
+
+    for (const x of xs) {
+      const cand = { x, y: n.idealY, w: n.w, h: n.h };
+      if (!placed.some((p) => rectsOverlap(cand, p))) {
+        spot = { x, y: n.idealY };
+        break;
+      }
     }
+
+    if (!spot) {
+      let y = n.idealY;
+      search: for (let step = 0; step < 280; step++) {
+        for (const x of xs) {
+          const cand = { x, y, w: n.w, h: n.h };
+          if (!placed.some((p) => rectsOverlap(cand, p))) {
+            spot = { x, y };
+            break search;
+          }
+        }
+        y += 6;
+      }
+    }
+
+    if (!spot) spot = { x: n.homeX, y: n.idealY };
+
+    const node = {
+      ...n,
+      x: spot.x,
+      y: spot.y,
+      cx: spot.x + n.w / 2,
+      cy: spot.y + n.h / 2,
+      lane: n.track
+    };
+    placed.push(node);
+    maxBottom = Math.max(maxBottom, node.y + node.h);
+    maxRight = Math.max(maxRight, node.x + node.w);
   }
 
-  const width = contentWidth();
+  const width = Math.max(contentWidth(), maxRight + PAD_R);
   const height = Math.max(maxBottom + PAD_B, PAD_T + YEAR_SEGMENTS[YEAR_SEGMENTS.length - 1].t1 + PAD_B);
   return { placed, width, height, laneCount: TRACK_COUNT };
 }
 
 function nodeWidth(n) {
   const len = (n.name || "").length + (n.sub ? 4 : 0);
-  if (n.group === "concept") return Math.min(200, Math.max(150, len * 6.2));
-  return Math.min(210, Math.max(148, len * 5.8));
+  if (n.group === "concept") return Math.min(MAX_NODE_W, Math.max(132, len * 5.6));
+  return Math.min(MAX_NODE_W, Math.max(136, len * 5.4));
 }
 
 function nameLines(n, maxChars) {
@@ -518,15 +594,37 @@ function buildSvg() {
   const { placed, width, height } = layoutNodes(NODES);
   const byId = Object.fromEntries(placed.map((n) => [n.id, n]));
 
+  const tickYs = TICKS.map((yr) => PAD_T + yearToY(yr));
+  const LABEL_CLEAR = 13;
+  const usedPeriodLabelYs = [];
+
+  function placePeriodLabelY(y0, y1) {
+    const top = y0 + 11;
+    const bottom = y1 - 5;
+    if (bottom < top) return null;
+    let y = top;
+    for (let attempt = 0; attempt < 20; attempt++) {
+      const hit = usedPeriodLabelYs.find((by) => Math.abs(by - y) < LABEL_CLEAR);
+      if (!hit) {
+        if (y > bottom) return null;
+        usedPeriodLabelYs.push(y);
+        return y;
+      }
+      y = hit + LABEL_CLEAR;
+      if (y > bottom) return null;
+    }
+    return null;
+  }
+
   const periodEls = PERIODS.map((p) => {
     const y0 = PAD_T + yearToY(p.y0);
     const y1 = PAD_T + yearToY(p.y1);
     const h = Math.max(2, y1 - y0);
     const fill = dark ? p.fillDark : p.fillLight;
-    const midY = y0 + h / 2;
-    const showLabel = h >= 22;
-    const label = showLabel
-      ? `<text class="period-label" x="6" y="${midY + 3.5}" fill="${pal.muted}" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9" letter-spacing="0.02em" opacity="0.78">${escapeXml(p.label)}</text>`
+    // Left gutter column (separate from year ticks at PAD_L); top of band, de-collided with peers
+    const labelY = h >= 26 ? placePeriodLabelY(y0, y1) : null;
+    const label = labelY != null
+      ? `<text class="period-label" x="4" y="${labelY}" fill="${pal.muted}" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9" letter-spacing="0.02em" opacity="0.78">${escapeXml(p.label)}</text>`
       : "";
     return `<g class="period" data-period="${escapeXml(p.id)}">
       <rect x="${PAD_L}" y="${y0}" width="${width - PAD_L - PAD_R}" height="${h}" fill="${fill}" pointer-events="none"/>
@@ -534,11 +632,11 @@ function buildSvg() {
     </g>`;
   }).join("");
 
-  const tickMarks = TICKS.map((yr) => {
-    const y = PAD_T + yearToY(yr);
+  const tickMarks = TICKS.map((yr, i) => {
+    const y = tickYs[i];
     return `<g class="tick">
       <line x1="${PAD_L}" y1="${y}" x2="${width - PAD_R}" y2="${y}" stroke="${pal.line}" stroke-width="1" stroke-dasharray="2 6"/>
-      <text x="${PAD_L - 10}" y="${y + 4}" text-anchor="end" fill="${pal.muted}" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11">${escapeXml(formatYear(yr))}</text>
+      <text x="${PAD_L - 8}" y="${y + 4}" text-anchor="end" fill="${pal.muted}" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11">${escapeXml(formatYear(yr))}</text>
     </g>`;
   }).join("");
 
@@ -551,7 +649,7 @@ function buildSvg() {
     { i: 2, label: "Constellations" },
     { i: 3, label: "Concepts" }
   ].map(({ i, label }) => {
-    const x = PAD_L + AXIS_W + 28 + i * (COL_W + LANE_GAP) + COL_W / 2;
+    const x = trackOriginX(i) + COL_W / 2;
     return `<text x="${x}" y="${PAD_T - 20}" text-anchor="middle" fill="${pal.muted}" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="10" letter-spacing="0.04em">${label}</text>`;
   }).join("");
 
@@ -641,6 +739,8 @@ const searchInput = document.getElementById("mapSearch");
 
 let panZoomInstance = null;
 let layoutPlaced = [];
+/** Diagram content size in SVG units — used to clamp pan (svg-pan-zoom viewBox can be unreliable). */
+let mapContentSize = { width: 0, height: 0 };
 
 function centuryBucket(year) {
   if (year < -800) return "Before 800 BCE";
@@ -743,6 +843,20 @@ function fitWidth() {
   });
 }
 
+const PAN_MARGIN = 12;
+
+/** Vertical pan limits so the diagram cannot scroll past its top or bottom. */
+function clampPanY(sizes, y) {
+  const zoom = sizes.realZoom || 1;
+  const vbH = sizes.viewBox && sizes.viewBox.height > 1 ? sizes.viewBox.height : mapContentSize.height;
+  const contentH = vbH * zoom;
+  if (!(contentH > 1) || !(sizes.height > 0)) return y;
+  if (contentH <= sizes.height) return PAN_MARGIN;
+  const maxY = PAN_MARGIN;
+  const minY = sizes.height - contentH - PAN_MARGIN;
+  return Math.max(minY, Math.min(maxY, y));
+}
+
 let wheelScrollHandler = null;
 
 function bindWheelScroll(svgEl) {
@@ -772,6 +886,7 @@ function renderMap() {
 
   const { svg, placed, width, height } = buildSvg();
   layoutPlaced = placed;
+  mapContentSize = { width, height };
   target.innerHTML = svg;
   const svgEl = target.querySelector("svg");
   svgEl.setAttribute("viewBox", `0 0 ${width} ${height}`);
@@ -789,7 +904,15 @@ function renderMap() {
     center: false,
     minZoom: 0.05,
     maxZoom: 20,
-    zoomScaleSensitivity: 0.35
+    zoomScaleSensitivity: 0.35,
+    beforePan(oldPan, newPan) {
+      return { x: newPan.x, y: clampPanY(this.getSizes(), newPan.y) };
+    },
+    onZoom() {
+      const pan = this.getPan();
+      const y = clampPanY(this.getSizes(), pan.y);
+      if (y !== pan.y) this.pan({ x: pan.x, y });
+    }
   });
   bindWheelScroll(svgEl);
   fitWidth();
