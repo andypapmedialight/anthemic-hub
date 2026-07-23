@@ -270,7 +270,7 @@ jobs:
             echo "/map-of-maps.html is serving the hub index — apply script must copy map-of-maps.html to web root"
             exit 1
           fi
-          grep -qF 'The Map of Maps' /tmp/anthemic-smoke-mom.html \
+          grep -qF 'Thinkers Timeline' /tmp/anthemic-smoke-mom.html \
             || { echo "/map-of-maps.html missing expected title marker"; exit 1; }
           code_bnd=$(curl -sS -o /dev/null -w "%{http_code}" --retry 3 --retry-delay 2 "https://anthemic-developments.com/the-boundary-play.html")
           [[ "${code_bnd}" == "200" ]] || { echo "/the-boundary-play.html returned HTTP ${code_bnd}"; exit 1; }

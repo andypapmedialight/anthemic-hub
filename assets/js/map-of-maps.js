@@ -1,4 +1,4 @@
-/* Map of Maps — single chronological timeline with lineage edges.
+/* Thinkers Timeline — single chronological timeline with lineage edges.
    year ≈ floruit / key work (illustrative, not biographical precision). */
 
 const dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -20,96 +20,115 @@ const GROUP_LABELS = {
   concept: "Shared concepts"
 };
 
-/** @type {{id:string,name:string,sub:string,group:string,year:number,href?:string}[]} */
+/** @type {{id:string,name:string,sub:string,group:string,year:number,href?:string,approx?:boolean}[]} */
 const NODES = [
-  { id: "platoAr", name: "Plato · Aristotle", sub: "akrasia", group: "grounding", year: -380, href: "/grounding-the-unconscious.html#prehistory" },
-  { id: "artemid", name: "Artemidorus", sub: "dream interpretation", group: "grounding", year: 150, href: "/grounding-the-unconscious.html#prehistory" },
+  { id: "nearEastDream", name: "Egyptian · Mesopotamian", sub: "dream books · omens", group: "grounding", year: -1200, href: "/grounding-the-unconscious.html#near-east-dreams", approx: true },
+  { id: "zoroaster", name: "Zoroaster", sub: "truth · the lie", group: "grounding", year: -1000, href: "/grounding-the-unconscious.html#zoroaster", approx: true },
+  { id: "upanishads", name: "Upanishads", sub: "avidya · desire", group: "grounding", year: -700, href: "/grounding-the-unconscious.html#upanishads", approx: true },
+  { id: "confucius", name: "Confucius", sub: "self-cultivation", group: "grounding", year: -500, href: "/grounding-the-unconscious.html#confucius", approx: true },
+  { id: "laozi", name: "Laozi", sub: "Dao · wu wei", group: "grounding", year: -500, href: "/grounding-the-unconscious.html#laozi", approx: true },
+  { id: "heraclitus", name: "Heraclitus", sub: "logos · psyche", group: "grounding", year: -500, href: "/grounding-the-unconscious.html#presocratics", approx: true },
+  { id: "buddha", name: "Buddha", sub: "craving · dependent origination", group: "grounding", year: -480, href: "/grounding-the-unconscious.html#buddha", approx: true },
+  { id: "parmenides", name: "Parmenides", sub: "Being · doxa", group: "grounding", year: -475, href: "/grounding-the-unconscious.html#parmenides", approx: true },
+  { id: "empedocles", name: "Empedocles", sub: "Love · Strife", group: "grounding", year: -444, href: "/grounding-the-unconscious.html#presocratics", approx: true },
+  { id: "democritus", name: "Democritus", sub: "atoms · void", group: "grounding", year: -420, href: "/grounding-the-unconscious.html#democritus", approx: true },
+  { id: "socrates", name: "Socrates", sub: "know thyself · daimonion", group: "grounding", year: -399, href: "/grounding-the-unconscious.html#socrates", approx: true },
+  { id: "platoAr", name: "Plato · Aristotle", sub: "akrasia", group: "grounding", year: -375, href: "/grounding-the-unconscious.html#plato-aristotle", approx: true },
+  { id: "artemid", name: "Artemidorus", sub: "dream interpretation", group: "grounding", year: 150, href: "/grounding-the-unconscious.html#prehistory", approx: true },
   { id: "descartes", name: "Descartes", sub: "cogito · dualism", group: "grounding", year: 1641, href: "/grounding-the-unconscious.html#descartes" },
   { id: "spinoza", name: "Spinoza", sub: "desire w/o knowing why", group: "grounding", year: 1677, href: "/grounding-the-unconscious.html#prehistory" },
-  { id: "leibniz", name: "Leibniz", sub: "petites perceptions", group: "grounding", year: 1704, href: "/grounding-the-unconscious.html#prehistory" },
+  { id: "leibniz", name: "Leibniz", sub: "petites perceptions", group: "grounding", year: 1704, href: "/grounding-the-unconscious.html#prehistory", approx: true },
   { id: "kant", name: "Kant", sub: "synthetic a priori", group: "genealogies", year: 1781, href: "/genealogies-of-desire.html#kant-hegel" },
-  { id: "hegel", name: "Hegel", sub: "lordship and bondage", group: "genealogies", year: 1807, href: "/genealogies-of-desire.html#kant-hegel" },
   { id: "cRecog", name: "desire & recognition", sub: "", group: "concept", year: 1807, href: "/genealogies-of-desire.html#gloss-recognition" },
+  { id: "hegel", name: "Hegel", sub: "lordship and bondage", group: "genealogies", year: 1807, href: "/genealogies-of-desire.html#kant-hegel" },
   { id: "schopen", name: "Schopenhauer", sub: "the Will", group: "grounding", year: 1819, href: "/grounding-the-unconscious.html#prehistory" },
   { id: "herbart", name: "Herbart", sub: "dynamic psychology", group: "grounding", year: 1824, href: "/grounding-the-unconscious.html#prehistory" },
   { id: "cIdeology", name: "ideology", sub: "", group: "concept", year: 1846, href: "/genealogies-of-desire.html#gloss-ideology" },
-  { id: "fechner", name: "Fechner", sub: "constancy principle", group: "grounding", year: 1873, href: "/grounding-the-unconscious.html#prehistory" },
   { id: "marx", name: "Marx", sub: "base & superstructure", group: "genealogies", year: 1859, href: "/genealogies-of-desire.html#freud-marx" },
+  { id: "fechner", name: "Fechner", sub: "constancy principle", group: "grounding", year: 1860, href: "/grounding-the-unconscious.html#prehistory" },
   { id: "vonHart", name: "von Hartmann", sub: "Philosophy of the Unconscious", group: "grounding", year: 1869, href: "/grounding-the-unconscious.html#prehistory" },
-  { id: "nietzsche", name: "Nietzsche", sub: "genealogy as method", group: "genealogies", year: 1887, href: "/genealogies-of-desire.html#nietzsche" },
   { id: "cGenMethod", name: "genealogy as method", sub: "", group: "concept", year: 1887, href: "/genealogies-of-desire.html#gloss-genealogy" },
+  { id: "nietzsche", name: "Nietzsche", sub: "genealogy as method", group: "genealogies", year: 1887, href: "/genealogies-of-desire.html#nietzsche" },
   { id: "charJan", name: "Charcot · Janet", sub: "hysteria, dissociation", group: "grounding", year: 1890, href: "/grounding-the-unconscious.html#prehistory" },
-  { id: "freud", name: "Freud", sub: "id · ego · superego", group: "grounding", year: 1900, href: "/grounding-the-unconscious.html#freud" },
   { id: "cUnconscious", name: "the unconscious / repression", sub: "", group: "concept", year: 1900, href: "/genealogies-of-desire.html#gloss-unconscious" },
+  { id: "freud", name: "Freud", sub: "id · ego · superego", group: "grounding", year: 1900, href: "/grounding-the-unconscious.html#freud" },
   { id: "bergson", name: "Bergson", sub: "durée · élan vital", group: "genealogies", year: 1907, href: "/genealogies-of-desire.html#bergson" },
-  { id: "structImp", name: "Saussure · Jakobson · Lévi-Strauss · Benveniste", sub: "structuralist imports", group: "grounding", year: 1916, href: "/grounding-the-unconscious.html#lacan" },
-  { id: "lukacs", name: "Lukács", sub: "reification", group: "constellations", year: 1923, href: "/constellations-of-history.html#lukacs-gramsci" },
+  { id: "structImp", name: "Saussure · Jakobson · Lévi-Strauss · Benveniste", sub: "structuralist imports", group: "grounding", year: 1916, href: "/grounding-the-unconscious.html#lacan", approx: true },
   { id: "cReif", name: "reification / commodity fetishism", sub: "", group: "concept", year: 1923, href: "/constellations-of-history.html#gloss-reification" },
+  { id: "lukacs", name: "Lukács", sub: "reification", group: "constellations", year: 1923, href: "/constellations-of-history.html#lukacs-gramsci" },
+  { id: "heidegger", name: "Heidegger", sub: "Being and Time · Dasein", group: "genealogies", year: 1927, href: "/genealogies-of-desire.html#heidegger" },
   { id: "kracauer", name: "Kracauer", sub: "mass ornament", group: "constellations", year: 1927, href: "/constellations-of-history.html#weimar-circle" },
   { id: "malinowski", name: "Malinowski", sub: "Trobriand fieldwork", group: "grounding", year: 1927, href: "/grounding-the-unconscious.html#rebuttals" },
-  { id: "gramsci", name: "Gramsci", sub: "hegemony", group: "constellations", year: 1930, href: "/constellations-of-history.html#lukacs-gramsci" },
-  { id: "cHegemony", name: "hegemony", sub: "", group: "concept", year: 1930, href: "/constellations-of-history.html#gloss-hegemony" },
   { id: "brecht", name: "Brecht", sub: "epic theater", group: "constellations", year: 1930, href: "/constellations-of-history.html#weimar-circle" },
+  { id: "cHegemony", name: "hegemony", sub: "", group: "concept", year: 1930, href: "/constellations-of-history.html#gloss-hegemony" },
+  { id: "gramsci", name: "Gramsci", sub: "hegemony", group: "constellations", year: 1930, href: "/constellations-of-history.html#lukacs-gramsci" },
   { id: "reich", name: "Reich", sub: "character armor", group: "genealogies", year: 1933, href: "/genealogies-of-desire.html#reich" },
   { id: "bloch", name: "Bloch", sub: "non-synchronism", group: "constellations", year: 1935, href: "/constellations-of-history.html#weimar-circle" },
   { id: "benjamin", name: "Benjamin", sub: "aura · dialectical image", group: "constellations", year: 1936, href: "/constellations-of-history.html#benjamin" },
   { id: "kojeve", name: "Kojève", sub: "desire for recognition", group: "genealogies", year: 1939, href: "/genealogies-of-desire.html#kojeve" },
   { id: "fromm", name: "Fromm", sub: "escape from freedom", group: "genealogies", year: 1941, href: "/genealogies-of-desire.html#fromm" },
   { id: "scholem", name: "Scholem", sub: "Kabbalah · messianism", group: "constellations", year: 1941, href: "/constellations-of-history.html#weimar-circle" },
+  { id: "sartre", name: "Sartre", sub: "existential Marxism", group: "constellations", year: 1943, href: "/constellations-of-history.html#sartre" },
   { id: "adorno", name: "Adorno · Horkheimer", sub: "culture industry", group: "genealogies", year: 1947, href: "/genealogies-of-desire.html#adorno" },
+  { id: "bataille", name: "Bataille", sub: "expenditure · sovereignty", group: "genealogies", year: 1949, href: "/genealogies-of-desire.html#bataille" },
   { id: "eysenck", name: "Eysenck", sub: "efficacy", group: "grounding", year: 1952, href: "/grounding-the-unconscious.html#rebuttals" },
   { id: "lacan", name: "Lacan", sub: "Real · Symbolic · Imaginary", group: "grounding", year: 1953, href: "/grounding-the-unconscious.html#lacan" },
   { id: "marcuse", name: "Marcuse", sub: "surplus-repression", group: "genealogies", year: 1955, href: "/genealogies-of-desire.html#marcuse" },
   { id: "williamsR", name: "Raymond Williams", sub: "structure of feeling", group: "constellations", year: 1958, href: "/constellations-of-history.html#cultural-studies" },
   { id: "popper", name: "Popper", sub: "falsifiability", group: "grounding", year: 1963, href: "/grounding-the-unconscious.html#rebuttals" },
   { id: "mcluhan", name: "Marshall McLuhan", sub: "the medium is the message", group: "constellations", year: 1964, href: "/constellations-of-history.html#mcluhan" },
-  { id: "chomLak", name: "Chomsky · Lakoff", sub: "innate / embodied pushback", group: "grounding", year: 1965, href: "/grounding-the-unconscious.html#lacan" },
+  { id: "chomLak", name: "Chomsky · Lakoff", sub: "innate / embodied pushback", group: "grounding", year: 1965, href: "/grounding-the-unconscious.html#lacan", approx: true },
   { id: "debord", name: "Debord", sub: "society of the spectacle", group: "constellations", year: 1967, href: "/constellations-of-history.html#adorno-debord" },
-  { id: "ellenb", name: "Ellenberger", sub: "synthesis thesis", group: "grounding", year: 1970, href: "/grounding-the-unconscious.html#prehistory" },
+  { id: "derrida", name: "Derrida", sub: "différance · specters", group: "genealogies", year: 1967, href: "/genealogies-of-desire.html#derrida" },
   { id: "althusser", name: "Althusser", sub: "interpellation", group: "genealogies", year: 1970, href: "/genealogies-of-desire.html#althusser" },
+  { id: "ellenb", name: "Ellenberger", sub: "synthesis thesis", group: "grounding", year: 1970, href: "/grounding-the-unconscious.html#prehistory" },
   { id: "dg", name: "Deleuze & Guattari", sub: "desiring-production", group: "genealogies", year: 1972, href: "/genealogies-of-desire.html#dg" },
-  { id: "kristeva", name: "Kristeva", sub: "the semiotic", group: "grounding", year: 1974, href: "/grounding-the-unconscious.html#kristeva" },
+  { id: "mandel", name: "Ernest Mandel", sub: "late capitalism stages", group: "constellations", year: 1972, href: "/constellations-of-history.html#mandel" },
+  { id: "hall", name: "Stuart Hall", sub: "encoding / decoding", group: "constellations", year: 1973, href: "/constellations-of-history.html#cultural-studies" },
   { id: "baudLyo", name: "Baudrillard · Lyotard", sub: "Mirror of Production · libidinal economy", group: "genealogies", year: 1974, href: "/genealogies-of-desire.html#baudrillard-lyotard" },
+  { id: "kristeva", name: "Kristeva", sub: "the semiotic", group: "grounding", year: 1974, href: "/grounding-the-unconscious.html#kristeva" },
   { id: "anderson", name: "Perry Anderson", sub: "periodizes Western Marxism", group: "constellations", year: 1976, href: "/constellations-of-history.html#anderson-harvey-eagleton" },
   { id: "eagleton", name: "Terry Eagleton", sub: "transmission · Literary Theory", group: "constellations", year: 1976, href: "/constellations-of-history.html#anderson-harvey-eagleton" },
   { id: "foucault", name: "Foucault", sub: "biopower", group: "genealogies", year: 1976, href: "/genealogies-of-desire.html#foucault" },
   { id: "hobsonMc", name: "Hobson · McCarley", sub: "activation-synthesis", group: "grounding", year: 1977, href: "/grounding-the-unconscious.html#hobson-mccarley" },
   { id: "hofstadter", name: "Hofstadter", sub: "strange loop", group: "grounding", year: 1979, href: "/grounding-the-unconscious.html#cognitive-science" },
   { id: "searle", name: "Searle", sub: "Chinese Room", group: "grounding", year: 1980, href: "/grounding-the-unconscious.html#cognitive-science" },
-  { id: "hall", name: "Stuart Hall", sub: "encoding / decoding", group: "constellations", year: 1973, href: "/constellations-of-history.html#cultural-studies" },
+  { id: "habermas", name: "Habermas", sub: "communicative action", group: "constellations", year: 1981, href: "/constellations-of-history.html#habermas" },
   { id: "jackson", name: "Jackson", sub: "Mary's Room", group: "grounding", year: 1982, href: "/grounding-the-unconscious.html#dissenters" },
   { id: "grunbaum", name: "Grünbaum", sub: "the tally argument", group: "grounding", year: 1984, href: "/grounding-the-unconscious.html#rebuttals" },
   { id: "churchland", name: "P. & P. Churchland", sub: "eliminative materialism", group: "grounding", year: 1986, href: "/grounding-the-unconscious.html#cognitive-science" },
   { id: "edelman", name: "Edelman", sub: "TNGS · reentry", group: "grounding", year: 1987, href: "/grounding-the-unconscious.html#edelman" },
+  { id: "badiou", name: "Badiou", sub: "event · subject of truth", group: "grounding", year: 1988, href: "/grounding-the-unconscious.html#badiou" },
   { id: "harvey", name: "David Harvey", sub: "time-space compression", group: "constellations", year: 1989, href: "/constellations-of-history.html#anderson-harvey-eagleton" },
+  { id: "taylor", name: "Charles Taylor", sub: "moral horizons", group: "constellations", year: 1989, href: "/constellations-of-history.html#rosa" },
   { id: "zizek", name: "Žižek", sub: "parallax view", group: "grounding", year: 1989, href: "/grounding-the-unconscious.html#zizek" },
   { id: "jameson", name: "Jameson", sub: "postmodernism · cognitive mapping", group: "constellations", year: 1991, href: "/constellations-of-history.html#jameson" },
-  { id: "habermas", name: "Habermas", sub: "communicative action", group: "constellations", year: 1981, href: "/constellations-of-history.html#habermas" },
-  { id: "taylor", name: "Charles Taylor", sub: "moral horizons", group: "constellations", year: 1989, href: "/constellations-of-history.html#rosa" },
   { id: "honneth", name: "Honneth", sub: "struggle for recognition", group: "constellations", year: 1992, href: "/constellations-of-history.html#honneth" },
-  { id: "land", name: "Nick Land", sub: "diagonalization · Meltdown", group: "genealogies", year: 1995, href: "/genealogies-of-desire.html#land" },
   { id: "damasio", name: "Damasio", sub: "core / autobiographical self", group: "grounding", year: 1994, href: "/grounding-the-unconscious.html#damasio" },
-  { id: "crews", name: "Crews", sub: "historical fraud", group: "grounding", year: 1995, href: "/grounding-the-unconscious.html#rebuttals" },
+  { id: "ccruTrio", name: "Eshun · Mackay · Grant", sub: "theory-fiction", group: "genealogies", year: 1995, href: "/genealogies-of-desire.html#warwick-ccru", approx: true },
   { id: "chalmers", name: "Chalmers", sub: "hard problem", group: "grounding", year: 1995, href: "/grounding-the-unconscious.html#chalmers" },
   { id: "cHardProb", name: "the hard problem / subject as gap", sub: "", group: "concept", year: 1995, href: "/grounding-the-unconscious.html#dissenters" },
-  { id: "ccruTrio", name: "Eshun · Mackay · Grant", sub: "theory-fiction", group: "genealogies", year: 1995, href: "/genealogies-of-desire.html#warwick-ccru" },
+  { id: "crews", name: "Crews", sub: "historical fraud", group: "grounding", year: 1995, href: "/grounding-the-unconscious.html#rebuttals" },
+  { id: "land", name: "Nick Land", sub: "diagonalization · Meltdown", group: "genealogies", year: 1995, href: "/genealogies-of-desire.html#land" },
   { id: "ledoux", name: "LeDoux", sub: "fast threat pathway", group: "grounding", year: 1996, href: "/grounding-the-unconscious.html#cognitive-science" },
   { id: "plant", name: "Sadie Plant", sub: "cyberfeminism", group: "genealogies", year: 1997, href: "/genealogies-of-desire.html#plant" },
+  { id: "panksepp", name: "Panksepp", sub: "affective neuroscience · SEEKING", group: "grounding", year: 1998, href: "/grounding-the-unconscious.html#panksepp" },
+  { id: "miller", name: "Miller-school", sub: "anti-neuro Lacan", group: "grounding", year: 2000, href: "/grounding-the-unconscious.html#dissenters", approx: true },
   { id: "solms", name: "Solms", sub: "SEEKING drives dreaming", group: "grounding", year: 2000, href: "/grounding-the-unconscious.html#solms" },
-  { id: "miller", name: "Miller-school", sub: "anti-neuro Lacan", group: "grounding", year: 2000, href: "/grounding-the-unconscious.html#dissenters" },
   { id: "domhoff", name: "Domhoff", sub: "neurocognitive / continuity", group: "grounding", year: 2003, href: "/grounding-the-unconscious.html#domhoff" },
+  { id: "strawGoff", name: "Strawson · Goff", sub: "panpsychism", group: "grounding", year: 2006, href: "/grounding-the-unconscious.html#dissenters", approx: true },
   { id: "malabou", name: "Malabou", sub: "destructive plasticity", group: "grounding", year: 2007, href: "/grounding-the-unconscious.html#malabou" },
-  { id: "strawGoff", name: "Strawson · Goff", sub: "panpsychism", group: "grounding", year: 2006, href: "/grounding-the-unconscious.html#dissenters" },
   { id: "johnston", name: "Johnston", sub: "transcendental materialism", group: "grounding", year: 2008, href: "/grounding-the-unconscious.html#johnston" },
   { id: "fisher", name: "Mark Fisher", sub: "capitalist realism", group: "genealogies", year: 2009, href: "/genealogies-of-desire.html#fisher" },
   { id: "friston", name: "Friston", sub: "predictive processing", group: "grounding", year: 2010, href: "/grounding-the-unconscious.html#cognitive-science" },
+  { id: "berardiDean", name: "Berardi · Dean", sub: "semiocapitalism", group: "genealogies", year: 2012, href: "/genealogies-of-desire.html#berardi-dean", approx: true },
+  { id: "bostrom", name: "Bostrom", sub: "orthogonality thesis", group: "genealogies", year: 2012, href: "/genealogies-of-desire.html#bostrom" },
   { id: "nagel", name: "Nagel", sub: "Mind and Cosmos", group: "grounding", year: 2012, href: "/grounding-the-unconscious.html#dissenters" },
-  { id: "berardiDean", name: "Berardi · Dean", sub: "semiocapitalism", group: "genealogies", year: 2012, href: "/genealogies-of-desire.html#berardi-dean" },
+  { id: "cSocAccel", name: "social acceleration / dynamic stabilization", sub: "", group: "concept", year: 2013, href: "/constellations-of-history.html#gloss-social-acceleration" },
   { id: "leftAccel", name: "Left-accelerationism", sub: "Srnicek & Williams", group: "genealogies", year: 2013, href: "/genealogies-of-desire.html#left-accelerationism" },
   { id: "rosa", name: "Hartmut Rosa", sub: "social acceleration · resonance", group: "constellations", year: 2013, href: "/constellations-of-history.html#rosa" },
-  { id: "cSocAccel", name: "social acceleration / dynamic stabilization", sub: "", group: "concept", year: 2013, href: "/constellations-of-history.html#gloss-social-acceleration" },
   { id: "kastrup", name: "Kastrup", sub: "analytic idealism", group: "grounding", year: 2014, href: "/grounding-the-unconscious.html#dissenters" },
-  { id: "acidXeno", name: "Acid Communism / Xenofeminism", sub: "2015–18", group: "genealogies", year: 2016, href: "/genealogies-of-desire.html#connected-strains" },
+  { id: "acidXeno", name: "Acid Communism / Xenofeminism", sub: "2015–18", group: "genealogies", year: 2016, href: "/genealogies-of-desire.html#connected-strains", approx: true },
   { id: "cResonance", name: "resonance / world-relation", sub: "", group: "concept", year: 2016, href: "/constellations-of-history.html#gloss-resonance" }
 ];
 
@@ -120,6 +139,24 @@ const EDGES = [
   { from: "herbart", to: "freud", kind: "build" },
   { from: "schopen", to: "freud", kind: "build" },
   { from: "vonHart", to: "freud", kind: "build" },
+  { from: "nearEastDream", to: "artemid", kind: "build" },
+  { from: "nearEastDream", to: "freud", kind: "build" },
+  { from: "zoroaster", to: "nietzsche", kind: "parallel" },
+  { from: "zoroaster", to: "freud", kind: "parallel" },
+  { from: "upanishads", to: "schopen", kind: "build" },
+  { from: "upanishads", to: "buddha", kind: "parallel" },
+  { from: "confucius", to: "socrates", kind: "parallel" },
+  { from: "laozi", to: "heraclitus", kind: "parallel" },
+  { from: "buddha", to: "schopen", kind: "build" },
+  { from: "heraclitus", to: "platoAr", kind: "build" },
+  { from: "parmenides", to: "platoAr", kind: "build" },
+  { from: "empedocles", to: "platoAr", kind: "build" },
+  { from: "empedocles", to: "freud", kind: "parallel" },
+  { from: "democritus", to: "platoAr", kind: "critique" },
+  { from: "democritus", to: "churchland", kind: "build" },
+  { from: "democritus", to: "descartes", kind: "critique" },
+  { from: "socrates", to: "platoAr", kind: "build" },
+  { from: "socrates", to: "freud", kind: "build" },
   { from: "platoAr", to: "freud", kind: "build" },
   { from: "artemid", to: "freud", kind: "build" },
   { from: "descartes", to: "spinoza", kind: "critique" },
@@ -127,6 +164,22 @@ const EDGES = [
   { from: "descartes", to: "chalmers", kind: "build" },
   { from: "descartes", to: "cHardProb", kind: "build" },
   { from: "descartes", to: "hofstadter", kind: "critique" },
+  { from: "heidegger", to: "kojeve", kind: "build" },
+  { from: "heidegger", to: "sartre", kind: "build" },
+  { from: "kojeve", to: "bataille", kind: "critique" },
+  { from: "bataille", to: "land", kind: "build" },
+  { from: "bataille", to: "baudLyo", kind: "build" },
+  { from: "sartre", to: "jameson", kind: "build" },
+  { from: "sartre", to: "anderson", kind: "build" },
+  { from: "mandel", to: "jameson", kind: "build" },
+  { from: "derrida", to: "fisher", kind: "build" },
+  { from: "derrida", to: "foucault", kind: "parallel" },
+  { from: "badiou", to: "johnston", kind: "critique" },
+  { from: "badiou", to: "zizek", kind: "parallel" },
+  { from: "panksepp", to: "solms", kind: "build" },
+  { from: "panksepp", to: "freud", kind: "build" },
+  { from: "panksepp", to: "johnston", kind: "build" },
+  { from: "land", to: "bostrom", kind: "critique" },
   { from: "charJan", to: "freud", kind: "build" },
   { from: "fechner", to: "freud", kind: "build" },
   { from: "ellenb", to: "freud", kind: "critique" },
@@ -264,7 +317,7 @@ const CONCEPT_H = 48;
 const COL_W = 200;
 const LANE_GAP = 18;
 const V_GAP = 18;
-const PAD_L = 92;
+const PAD_L = 118;
 const PAD_T = 56;
 const PAD_R = 40;
 const PAD_B = 56;
@@ -274,30 +327,58 @@ const AXIS_W = 8;
 const GROUP_TRACK = { grounding: 0, genealogies: 1, constellations: 2, concept: 3 };
 const TRACK_COUNT = 4;
 
-/** Relative lengths along the time axis (sum = 1). */
+/** Relative base lengths along the time axis (sum = 1). Final spans also grow to fit stacked nodes. */
 const YEAR_WEIGHTS = [
-  { y0: -400, y1: 1600, w: 0.10 },
-  { y0: 1600, y1: 1850, w: 0.12 },
-  { y0: 1850, y1: 1950, w: 0.30 },
-  { y0: 1950, y1: 2025, w: 0.48 }
+  { y0: -1300, y1: 500, w: 0.22 },
+  { y0: 500, y1: 1600, w: 0.06 },
+  { y0: 1600, y1: 1850, w: 0.14 },
+  { y0: 1850, y1: 1950, w: 0.24 },
+  { y0: 1950, y1: 2025, w: 0.34 }
 ];
 
-const TICKS = [-400, 0, 500, 1000, 1600, 1700, 1800, 1850, 1900, 1925, 1950, 1975, 2000, 2015];
+const TICKS = [-1200, -800, -500, -400, 0, 500, 1000, 1600, 1700, 1800, 1850, 1900, 1925, 1950, 1975, 2000, 2015];
+
+/** Illustrative era washes — layout anchors, not historiography. */
+const PERIODS = [
+  { id: "axial", label: "Axial & earlier", y0: -1300, y1: -300, fillLight: "rgba(140, 100, 50, 0.11)", fillDark: "rgba(180, 130, 70, 0.13)" },
+  { id: "antiquity", label: "Classical antiquity", y0: -300, y1: 500, fillLight: "rgba(180, 120, 60, 0.10)", fillDark: "rgba(210, 150, 80, 0.12)" },
+  { id: "middleAges", label: "Middle Ages", y0: 500, y1: 1400, fillLight: "rgba(90, 110, 140, 0.09)", fillDark: "rgba(120, 140, 170, 0.11)" },
+  { id: "renaissance", label: "Renaissance", y0: 1400, y1: 1600, fillLight: "rgba(160, 70, 90, 0.10)", fillDark: "rgba(200, 100, 120, 0.12)" },
+  { id: "earlyModern", label: "Early modern", y0: 1600, y1: 1700, fillLight: "rgba(50, 120, 130, 0.10)", fillDark: "rgba(70, 160, 170, 0.12)" },
+  { id: "enlightenment", label: "Enlightenment", y0: 1700, y1: 1800, fillLight: "rgba(180, 150, 40, 0.11)", fillDark: "rgba(210, 180, 70, 0.13)" },
+  { id: "long19th", label: "Long 19th", y0: 1800, y1: 1900, fillLight: "rgba(100, 80, 150, 0.09)", fillDark: "rgba(140, 120, 200, 0.12)" },
+  { id: "early20th", label: "Early 20th", y0: 1900, y1: 1945, fillLight: "rgba(40, 110, 90, 0.10)", fillDark: "rgba(60, 150, 120, 0.12)" },
+  { id: "postwar", label: "Postwar", y0: 1945, y1: 1980, fillLight: "rgba(150, 80, 50, 0.09)", fillDark: "rgba(190, 110, 70, 0.12)" },
+  { id: "contemporary", label: "Contemporary", y0: 1980, y1: 2025, fillLight: "rgba(50, 90, 160, 0.09)", fillDark: "rgba(80, 130, 210, 0.12)" }
+];
 
 function contentWidth() {
   return PAD_L + AXIS_W + 28 + TRACK_COUNT * (COL_W + LANE_GAP) + PAD_R;
 }
 
-/** Time-axis length: at least tall enough to separate dense years; also aims to fill viewport width. */
+/** How many nodes in the densest track fall inside [y0, y1]? */
+function densestTrackCount(y0, y1) {
+  const counts = [0, 0, 0, 0];
+  for (const n of NODES) {
+    if (n.year < y0 || n.year > y1) continue;
+    const track = GROUP_TRACK[n.group] ?? 0;
+    counts[track] += 1;
+  }
+  return Math.max(0, ...counts);
+}
+
+/** Time-axis length: base weights, then grow any band that can't fit its densest track stack. */
 function yearSegmentsForViewport(vpW, vpH) {
   const cW = contentWidth();
   const fillWidthH = (vpH * cW) / Math.max(vpW, 1) - PAD_T - PAD_B;
-  // ~one node row per ~3 years in the densest modern band, across 4 tracks
-  const readableH = 3200;
+  const readableH = 3800;
   const targetH = Math.max(fillWidthH, readableH);
+  const rowPitch = NODE_H + V_GAP;
   let t = 0;
   return YEAR_WEIGHTS.map((seg) => {
-    const span = targetH * seg.w;
+    const base = targetH * seg.w;
+    const need = densestTrackCount(seg.y0, seg.y1) * rowPitch + V_GAP * 2;
+    const span = Math.max(base, need);
     const out = { y0: seg.y0, y1: seg.y1, t0: t, t1: t + span };
     t += span;
     return out;
@@ -316,9 +397,9 @@ function yearToY(year) {
   return YEAR_SEGMENTS[YEAR_SEGMENTS.length - 1].t1;
 }
 
-function formatYear(y) {
-  if (y < 0) return Math.abs(y) + " BCE";
-  return String(y);
+function formatYear(y, approx) {
+  const core = y < 0 ? Math.abs(y) + " BCE" : String(y);
+  return approx ? "c. " + core : core;
 }
 
 function escapeXml(s) {
@@ -437,6 +518,22 @@ function buildSvg() {
   const { placed, width, height } = layoutNodes(NODES);
   const byId = Object.fromEntries(placed.map((n) => [n.id, n]));
 
+  const periodEls = PERIODS.map((p) => {
+    const y0 = PAD_T + yearToY(p.y0);
+    const y1 = PAD_T + yearToY(p.y1);
+    const h = Math.max(2, y1 - y0);
+    const fill = dark ? p.fillDark : p.fillLight;
+    const midY = y0 + h / 2;
+    const showLabel = h >= 22;
+    const label = showLabel
+      ? `<text class="period-label" x="6" y="${midY + 3.5}" fill="${pal.muted}" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9" letter-spacing="0.02em" opacity="0.78">${escapeXml(p.label)}</text>`
+      : "";
+    return `<g class="period" data-period="${escapeXml(p.id)}">
+      <rect x="${PAD_L}" y="${y0}" width="${width - PAD_L - PAD_R}" height="${h}" fill="${fill}" pointer-events="none"/>
+      ${label}
+    </g>`;
+  }).join("");
+
   const tickMarks = TICKS.map((yr) => {
     const y = PAD_T + yearToY(yr);
     return `<g class="tick">
@@ -484,14 +581,14 @@ function buildSvg() {
     const subTs = hasSub
       ? `<tspan x="${n.cx}" y="${startY + lines.length * lineH}" fill="${pal.muted}" font-size="10">${escapeXml(n.sub)}</tspan>`
       : "";
-    const yearLabel = `<text x="${n.x + 8}" y="${n.y + 12}" fill="${pal.muted}" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9">${escapeXml(formatYear(n.year))}</text>`;
+    const yearLabel = `<text x="${n.x + 8}" y="${n.y + 12}" fill="${pal.muted}" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9">${escapeXml(formatYear(n.year, n.approx))}</text>`;
     const body = `
       <rect class="node-box" x="${n.x}" y="${n.y}" width="${n.w}" height="${n.h}" rx="${isConcept ? 14 : 8}" ry="${isConcept ? 14 : 8}"
         fill="${fill}" stroke="${stroke}" stroke-width="1.6" ${dash}/>
       ${yearLabel}
       <text class="node-label" text-anchor="middle" fill="${pal.ink}"
         font-family="system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="${isConcept ? 11 : 12}" font-weight="${isConcept ? 500 : 600}">${nameTs}${subTs}</text>`;
-    const tip = `${escapeXml(n.name)}${n.sub ? " — " + escapeXml(n.sub) : ""} · ${escapeXml(formatYear(n.year))}`;
+    const tip = `${escapeXml(n.name)}${n.sub ? " — " + escapeXml(n.sub) : ""} · ${escapeXml(formatYear(n.year, n.approx))}${n.approx ? " (approx.)" : ""}`;
     if (href) {
       return `<a class="node" id="node-${n.id}" data-id="${n.id}" href="${escapeXml(href)}" target="_blank" rel="noopener">
         <title>${tip}</title>${body}</a>`;
@@ -520,6 +617,7 @@ function buildSvg() {
     svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" role="img" aria-label="Vertical chronological map of thinkers and concepts">
       ${markers}
       <rect width="${width}" height="${height}" fill="transparent"/>
+      <g class="periods">${periodEls}</g>
       ${tickMarks}
       ${axis}
       ${trackLabels}
@@ -545,6 +643,7 @@ let panZoomInstance = null;
 let layoutPlaced = [];
 
 function centuryBucket(year) {
+  if (year < -800) return "Before 800 BCE";
   if (year < 0) return "Antiquity";
   if (year < 1600) return "To 1600";
   if (year < 1800) return "1600s–1700s";
@@ -570,8 +669,8 @@ function buildSidebar() {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.dataset.id = n.id;
-    btn.dataset.filter = normalizeSearch(n.name + " " + n.sub + " " + formatYear(n.year) + " " + (GROUP_LABELS[n.group] || ""));
-    const yearBit = formatYear(n.year);
+    btn.dataset.filter = normalizeSearch(n.name + " " + n.sub + " " + formatYear(n.year, n.approx) + " " + (GROUP_LABELS[n.group] || ""));
+    const yearBit = formatYear(n.year, n.approx);
     btn.textContent = n.sub ? `${yearBit} · ${n.name} — ${n.sub}` : `${yearBit} · ${n.name}`;
     btn.addEventListener("click", () => centerOnNode(n.id));
     frag.appendChild(btn);
