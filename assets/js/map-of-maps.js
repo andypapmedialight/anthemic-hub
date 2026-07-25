@@ -742,10 +742,16 @@ function normalizeSearch(str) {
   return str.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 }
 
+window.THINKERS_TIMELINE = { NODES, GROUP_LABELS, EDGES, HREF, formatYear };
+
 const statusEl = document.getElementById("mapStatus");
 const target = document.getElementById("mmd-target");
 const sidebarList = document.getElementById("mapSidebarList");
 const searchInput = document.getElementById("mapSearch");
+
+if (!target) {
+  /* Data-only load (e.g. philosophy booklet). */
+} else {
 
 let panZoomInstance = null;
 let layoutPlaced = [];
@@ -945,3 +951,5 @@ window.addEventListener("resize", () => {
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(renderMap, 160);
 });
+
+} /* end mmd-target guard */

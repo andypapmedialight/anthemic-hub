@@ -178,3 +178,153 @@ a:hover { border-bottom-color: currentColor; }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }
+
+@media print {
+  @page {
+    margin: 14mm 12mm;
+  }
+
+  html,
+  :root,
+  :root[data-theme="dark"],
+  :root[data-theme="light"] {
+    background: #fff !important;
+    color-scheme: light;
+    --ground: #fff;
+    --panel: #fff;
+    --panel-2: #f4f4f4;
+    --ink: #111;
+    --muted: #333;
+    --faint: #555;
+    --line: rgba(0, 0, 0, 0.2);
+    --grid: rgba(0, 0, 0, 0.08);
+    --cross: rgba(0, 0, 0, 0.18);
+    --cyan: #0a5f70;
+    --cyan-soft: rgba(10, 95, 112, 0.08);
+    --violet: #4a2f8a;
+    --violet-soft: rgba(74, 47, 138, 0.08);
+    --gold: #7a5614;
+    --shadow: none;
+  }
+
+  body {
+    background: #fff !important;
+    color: #111 !important;
+  }
+
+  .wrap {
+    background: #fff !important;
+    color: #111 !important;
+    padding: 0 !important;
+    max-width: none !important;
+  }
+
+  .site-bar,
+  .essay-toc,
+  .essay-toc-toggle,
+  .essay-toc-backdrop,
+  .essay-toc-close,
+  .back-to-top,
+  .booklet-screen-only,
+  .map-toolbar,
+  .map-sidebar,
+  .map-chrome {
+    display: none !important;
+  }
+
+  .essay-layout {
+    display: block !important;
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
+  a {
+    color: inherit !important;
+    border-bottom: none !important;
+    text-decoration: none !important;
+  }
+
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.75em;
+    color: #555;
+    word-break: break-all;
+  }
+
+  a[href^="/"]::after,
+  a[href^="#"]::after {
+    content: none;
+  }
+
+  section.thinker,
+  section.mapsec,
+  section.glossary,
+  section.synthesis,
+  .booklet-chapter,
+  .booklet-timeline {
+    break-inside: auto;
+  }
+
+  .booklet-chapter,
+  .booklet-timeline,
+  section.mapsec,
+  section.glossary,
+  section.synthesis {
+    break-before: page;
+    page-break-before: always;
+  }
+
+  .booklet-chapter:first-of-type {
+    break-before: auto;
+    page-break-before: auto;
+  }
+
+  section.thinker {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  section.thinker + section.thinker {
+    break-before: auto;
+    page-break-before: auto;
+  }
+
+  header.masthead {
+    break-before: auto;
+    page-break-before: auto;
+  }
+
+  h1, h2, h3 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  .map-scroll,
+  .table-scroll {
+    overflow: visible !important;
+  }
+
+  svg.genealogy,
+  .mapsec svg,
+  table {
+    max-width: 100% !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  table {
+    min-width: 0 !important;
+    font-size: 0.75rem !important;
+  }
+
+  aside.margin {
+    border-left: 2px solid #0a5f70 !important;
+    background: transparent !important;
+  }
+
+  .tier,
+  .frame-note,
+  .table-scroll {
+    box-shadow: none !important;
+  }
+}

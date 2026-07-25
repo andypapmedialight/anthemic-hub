@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Philosophy booklet — essays, maps, and thinkers timeline</title>
+<meta name="description" content="Printable booklet assembling Grounding the Unconscious, Genealogies of Desire, Constellations of History, and the Thinkers Timeline.">
+<meta name="color-scheme" content="light dark">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Philosophy booklet">
+<meta property="og:description" content="Printable assembly of the three genealogy essays, their maps, and the thinkers timeline.">
+<meta property="og:url" content="https://anthemic-developments.com/philosophy-booklet.html">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://anthemic-developments.com/philosophy-booklet.html">
+<link rel="stylesheet" href="assets/css/philosophy-pages.css">
+<style>
+  .wrap.booklet { max-width: 920px; margin: 0 auto; font-size: 17px; line-height: 1.65; }
+
+  .booklet-screen-only {
+    margin-bottom: 2.4rem;
+    padding-bottom: 1.6rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .booklet-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1rem;
+    align-items: center;
+    margin: 1.2rem 0 1rem;
+  }
+  .booklet-actions button {
+    font-family: var(--sans);
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--panel);
+    background: var(--cyan);
+    border: none;
+    border-radius: 8px;
+    padding: 0.65rem 1.15rem;
+    cursor: pointer;
+  }
+  .booklet-actions button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  .booklet-actions button:hover:not(:disabled) {
+    filter: brightness(1.05);
+  }
+  #booklet-status {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin: 0;
+  }
+  #booklet-status.is-error { color: var(--violet); }
+
+  .booklet-screen-toc {
+    margin-top: 1rem;
+  }
+  .booklet-screen-toc h2 {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin: 0 0 0.5rem;
+  }
+  .booklet-screen-toc ol {
+    margin: 0;
+    padding-left: 1.2rem;
+    color: var(--muted);
+  }
+  .booklet-screen-toc a { font-size: 0.95rem; }
+
+  .booklet-cover .booklet-date {
+    margin-top: 1rem;
+    color: var(--faint);
+    font-size: 0.78rem;
+  }
+  .booklet-contents {
+    margin-top: 2rem;
+    padding-top: 1.4rem;
+    border-top: 1px solid var(--line);
+  }
+  .booklet-contents h2 {
+    font-family: var(--serif);
+    font-size: 1.35rem;
+    margin: 0 0 0.8rem;
+  }
+  .booklet-contents ol {
+    margin: 0;
+    padding-left: 1.25rem;
+  }
+  .booklet-contents li { margin: 0.25rem 0; }
+  .booklet-contents .toc-chapter {
+    margin-top: 0.7rem;
+    font-weight: 600;
+  }
+  .booklet-contents .toc-section {
+    font-size: 0.92rem;
+    color: var(--muted);
+  }
+
+  .booklet-chapter {
+    margin-top: 3rem;
+    padding-top: 1rem;
+    border-top: 2px solid var(--line);
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 2400px;
+  }
+  .booklet-chapter:first-of-type { margin-top: 2rem; }
+
+  .booklet-timeline {
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 3200px;
+  }
+
+  .timeline-print-list {
+    list-style: none;
+    margin: 1.5rem 0 0;
+    padding: 0;
+    font-size: 0.9rem;
+  }
+  .timeline-print-list li {
+    display: grid;
+    grid-template-columns: 6.5rem minmax(0, 1fr);
+    gap: 0.15rem 1rem;
+    padding: 0.45rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .timeline-print-list .tl-year {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--cyan);
+  }
+  .timeline-print-list .tl-name { font-weight: 600; }
+  .timeline-print-list .tl-meta {
+    grid-column: 2;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+  .timeline-print-list li[data-group="grounding"] .tl-year { color: var(--cyan); }
+  .timeline-print-list li[data-group="genealogies"] .tl-year { color: var(--violet); }
+  .timeline-print-list li[data-group="constellations"] .tl-year { color: var(--gold); }
+  .timeline-print-list li[data-group="concept"] .tl-year { color: var(--muted); }
+
+  @media print {
+    .booklet-chapter { border-top: none; }
+    .timeline-print-list li {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="wrap essay booklet">
+
+<nav class="site-bar" aria-label="Site">
+  <a href="/">← Anthemic hub</a>
+  <span class="sep" aria-hidden="true">·</span>
+  <a href="/grounding-the-unconscious.html">Grounding the Unconscious</a>
+  <span class="sep" aria-hidden="true">·</span>
+  <a href="/genealogies-of-desire.html">Genealogies of Desire</a>
+  <span class="sep" aria-hidden="true">·</span>
+  <a href="/constellations-of-history.html">Constellations of History</a>
+  <span class="sep" aria-hidden="true">·</span>
+  <a href="/map-of-maps.html">Thinkers Timeline</a>
+</nav>
+
+<div class="booklet-screen-only">
+  <header class="masthead">
+    <div class="eyebrow"><span class="dot">●</span> printable packet</div>
+    <h1>Philosophy booklet</h1>
+    <p class="dek">One print-ready document: the three genealogy essays (with their maps and glossaries), then a chronological thinkers index pulled from the live timeline data.</p>
+  </header>
+  <div class="booklet-actions">
+    <button type="button" id="booklet-print" disabled>Print booklet</button>
+    <p id="booklet-status">Starting…</p>
+  </div>
+  <nav class="booklet-screen-toc" aria-label="Chapters">
+    <h2>Chapters</h2>
+    <div id="booklet-toc"></div>
+  </nav>
+</div>
+
+<div id="booklet-root" aria-live="polite"></div>
+
+</div>
+
+<script src="assets/js/map-of-maps.js"></script>
+<script src="assets/js/philosophy-booklet.js"></script>
+</body>
+</html>
