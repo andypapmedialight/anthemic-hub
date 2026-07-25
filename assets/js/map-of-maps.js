@@ -120,7 +120,7 @@ const NODES = [
   { id: "malabou", name: "Malabou", sub: "destructive plasticity", group: "grounding", year: 2007, href: "/grounding-the-unconscious.html#malabou" },
   { id: "johnston", name: "Johnston", sub: "transcendental materialism", group: "grounding", year: 2008, href: "/grounding-the-unconscious.html#johnston" },
   { id: "fisher", name: "Mark Fisher", sub: "capitalist realism", group: "genealogies", year: 2009, href: "/genealogies-of-desire.html#fisher" },
-  { id: "noys", name: "Benjamin Noys", sub: "names accel · Malign Velocities", group: "genealogies", year: 2010, href: "/genealogies-of-desire.html#noys" },
+  { id: "noys", name: "Benjamin Noys", sub: "names accel · corpse of accel", group: "genealogies", year: 2010, href: "/genealogies-of-desire.html#noys" },
   { id: "friston", name: "Friston", sub: "predictive processing", group: "grounding", year: 2010, href: "/grounding-the-unconscious.html#cognitive-science" },
   { id: "berardiDean", name: "Berardi · Dean", sub: "semiocapitalism", group: "genealogies", year: 2012, href: "/genealogies-of-desire.html#berardi-dean", approx: true },
   { id: "bostrom", name: "Bostrom", sub: "orthogonality thesis", group: "genealogies", year: 2012, href: "/genealogies-of-desire.html#bostrom" },
@@ -130,7 +130,8 @@ const NODES = [
   { id: "rosa", name: "Hartmut Rosa", sub: "social acceleration · resonance", group: "constellations", year: 2013, href: "/constellations-of-history.html#rosa" },
   { id: "kastrup", name: "Kastrup", sub: "analytic idealism", group: "grounding", year: 2014, href: "/grounding-the-unconscious.html#dissenters" },
   { id: "acidXeno", name: "Acid Communism / Xenofeminism", sub: "2015–18", group: "genealogies", year: 2016, href: "/genealogies-of-desire.html#connected-strains", approx: true },
-  { id: "cResonance", name: "resonance / world-relation", sub: "", group: "concept", year: 2016, href: "/constellations-of-history.html#gloss-resonance" }
+  { id: "cResonance", name: "resonance / world-relation", sub: "", group: "concept", year: 2016, href: "/constellations-of-history.html#gloss-resonance" },
+  { id: "eacc", name: "e/acc", sub: "effective accelerationism", group: "genealogies", year: 2023, href: "/genealogies-of-desire.html#corpse-of-accelerationism", approx: true }
 ];
 
 /** kind: build | critique | parallel | callback */
@@ -242,6 +243,9 @@ const EDGES = [
   { from: "noys", to: "leftAccel", kind: "critique" },
   { from: "fisher", to: "noys", kind: "parallel" },
   { from: "land", to: "leftAccel", kind: "critique" },
+  { from: "land", to: "eacc", kind: "build" },
+  { from: "noys", to: "eacc", kind: "critique" },
+  { from: "nietzsche", to: "eacc", kind: "parallel" },
   { from: "ccruTrio", to: "leftAccel", kind: "build" },
   { from: "ccruTrio", to: "berardiDean", kind: "parallel" },
   { from: "fisher", to: "berardiDean", kind: "parallel" },
