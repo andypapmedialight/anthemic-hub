@@ -24,6 +24,12 @@
       prefix: "tat-",
       slug: "techne",
       title: "Technics and Time"
+    },
+    {
+      url: "/fiction-of-the-maps.html",
+      prefix: "fot-",
+      slug: "fiction",
+      title: "Fiction of the Maps"
     }
   ];
 
@@ -104,9 +110,10 @@
     header.innerHTML =
       '<div class="eyebrow"><span class="dot">●</span> index</div>' +
       "<h1>Thinkers Timeline</h1>" +
-      '<p class="dek">Chronological index of every thinker and key concept across the four essays. ' +
+      '<p class="dek">Chronological index of every thinker and key concept across the genealogy essays (including Technics). ' +
       'Years are floruit / key-work markers, not biographical precision. ' +
-      'For the interactive diagram, see <a href="/map-of-maps.html">map-of-maps.html</a>.</p>';
+      'For the interactive diagram, see <a href="/map-of-maps.html">map-of-maps.html</a>. ' +
+      'Fiction writers live in the Fiction of the Maps chapter, not this index.</p>';
     section.appendChild(header);
 
     if (!data || !Array.isArray(data.NODES)) {
@@ -162,9 +169,9 @@
     const date = new Date().toISOString().slice(0, 10);
     cover.innerHTML =
       '<div class="eyebrow"><span class="dot">●</span> Anthemic Developments <span class="dot2">●</span> printable booklet</div>' +
-      "<h1>Genealogies &amp; Constellations</h1>" +
-      '<p class="dek">Four linked essays on the unconscious, desire, historical form, and technics — with genealogy maps and a chronological thinkers index.</p>' +
-      '<div class="frame-note">Assembled from the live site pages. Print from this view (Ctrl/Cmd+P). Interactive maps and the pan/zoom timeline remain on their source pages.</div>' +
+      "<h1>Genealogies, Constellations &amp; Fiction</h1>" +
+      '<p class="dek">Four linked essays on the unconscious, desire, historical form, and technics — plus Fiction of the Maps — with genealogy diagrams and a chronological thinkers index.</p>' +
+      '<div class="frame-note">Assembled from the live site pages (Constellations includes the Critical Theory forks, exhaustion/timenergy band, and related glossary entries; the timeline index pulls live nodes from map-of-maps.js). Print from this view (Ctrl/Cmd+P). Interactive pan/zoom timeline and browse-by-current remain on their source pages.</div>' +
       '<p class="booklet-date mono">Generated ' + date + "</p>";
 
     const toc = document.createElement("nav");
@@ -253,7 +260,7 @@
         tocEl.appendChild(screenOl);
       }
 
-      setStatus("Ready — " + loaded.length + " essays + timeline. Use Print booklet when you want a PDF or paper copy.");
+      setStatus("Ready — " + loaded.length + " chapters + timeline. Use Print booklet when you want a PDF or paper copy.");
       if (printBtn) printBtn.disabled = false;
     } catch (err) {
       console.error(err);

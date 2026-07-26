@@ -73,10 +73,10 @@ const CURRENTS = [
     label: "Recognition debates",
     home: "Constellations / Genealogies",
     homeHref: "/constellations-of-history.html#habermas-honneth-rosa",
-    blurb: "Hegel/Kojève desire-for-recognition through Honneth, Fraser’s redistribution fight, and Butler.",
+    blurb: "Hegel/Kojève desire-for-recognition through Honneth, Fraser’s redistribution fight, Butler, Benhabib’s situated self, Forst’s justification, Jaeggi’s forms of life.",
     nodes: [
       "hegel", "cRecog", "kojeve", "beauvoir", "butler", "honneth", "fraser", "habermas",
-      "taylor", "fanon"
+      "taylor", "fanon", "benhabib", "forst", "jaeggi", "cJustification", "cFormsOfLife", "rosa"
     ]
   },
   {
@@ -106,10 +106,10 @@ const CURRENTS = [
     label: "Late-modern speed",
     home: "Constellations of History",
     homeHref: "/constellations-of-history.html#habermas-honneth-rosa",
-    blurb: "Harvey’s time-space compression, Jameson’s postmodernism, Bauman’s liquid modernity, Rosa’s acceleration vs resonance — peer diagnoses of speed and thinning.",
+    blurb: "Harvey’s time-space compression, Rosa’s acceleration vs resonance, Weeks/Han/Crary on exhaustion and work, McKerracher’s timenergy — peer diagnoses of speed and thinning.",
     nodes: [
       "harvey", "jameson", "mandel", "bauman", "rosa", "cSocAccel", "cResonance", "taylor",
-      "fisher", "debord"
+      "fisher", "debord", "weeks", "han", "crary", "mckerracher", "cTimenergy", "federici", "berardiDean"
     ]
   },
   {

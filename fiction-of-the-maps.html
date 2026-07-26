@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fiction of the Maps — novelists shaped by the thinkers</title>
+<meta name="description" content="Fiction writers directly influenced by thinkers on the Anthemic maps — including Borges (Schopenhauer) and Piglia (Marx/Borges), with book titles and brief explainers of how the influence traveled.">
+<meta name="color-scheme" content="light dark">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Fiction of the Maps">
+<meta property="og:description" content="Novelists and story writers shaped by the same thinkers mapped in the philosophy essays — books and how the influence occurred.">
+<meta property="og:url" content="https://anthemic-developments.com/fiction-of-the-maps.html">
+<meta name="twitter:card" content="summary">
+<link rel="icon" type="image/svg+xml" href="fiction-of-the-maps-favicon.svg">
+<link rel="canonical" href="https://anthemic-developments.com/fiction-of-the-maps.html">
+<link rel="stylesheet" href="assets/css/philosophy-pages.css">
+<link rel="stylesheet" href="assets/css/essay-nav.css">
+<style>
+  .wrap.essay { max-width: 960px; margin: 0 auto; font-size: 17px; line-height: 1.65; }
+
+  header.masthead { margin-bottom: 3.5rem; }
+  .frame-note {
+    margin-top: 1.6rem; padding: 0.9rem 1.1rem;
+    border: 1px solid var(--line); border-left: 3px solid var(--cyan);
+    border-radius: 12px; font-family: var(--mono); font-size: 0.82rem;
+    color: var(--muted); line-height: 1.55; background: var(--panel-2);
+  }
+
+  section.thinker {
+    display: grid; grid-template-columns: minmax(0, 1fr) 260px;
+    gap: 0 2.2rem; padding: 2.6rem 0; border-top: 1px solid var(--line);
+  }
+  .main-col { min-width: 0; }
+  h2 {
+    font-family: var(--serif); font-size: 1.5rem; margin: 0 0 0.15rem;
+    letter-spacing: -0.01em; font-weight: 600;
+  }
+  h2 .years {
+    font-family: var(--mono); font-size: 0.65em; color: var(--muted);
+    font-weight: 400; margin-left: 0.5em;
+  }
+  .tag-row { margin-bottom: 1.1rem; }
+  .tag {
+    display: inline-block; font-family: var(--mono); font-size: 0.68rem;
+    letter-spacing: 0.06em; text-transform: uppercase; padding: 0.18em 0.55em;
+    border-radius: 999px; background: var(--violet-soft); color: var(--violet); margin-right: 0.4em;
+  }
+  .main-col p { margin: 0 0 1rem; max-width: 66ch; }
+  .main-col p:last-child { margin-bottom: 0; }
+  strong.term { font-style: italic; font-weight: 600; }
+  .main-col a { color: var(--cyan); border-bottom: 1px solid color-mix(in srgb, var(--cyan) 35%, transparent); text-decoration: none; }
+  .main-col a:hover { border-bottom-color: var(--cyan); }
+
+  .books {
+    list-style: none; margin: 0 0 1.1rem; padding: 0;
+    font-family: var(--mono); font-size: 0.82rem; line-height: 1.55; color: var(--muted);
+  }
+  .books li { margin: 0 0 0.35rem; padding-left: 0.9rem; position: relative; max-width: 66ch; }
+  .books li::before { content: "·"; position: absolute; left: 0; color: var(--cyan); }
+  .books em { color: var(--ink); font-style: italic; }
+
+  aside.margin {
+    font-family: var(--mono); font-size: 0.76rem; line-height: 1.55;
+    color: var(--muted); border-left: 2px solid var(--cyan); padding-left: 1rem; align-self: start;
+  }
+  aside.margin .label {
+    color: var(--cyan); text-transform: uppercase; letter-spacing: 0.08em;
+    font-size: 0.68rem; display: block; margin-bottom: 0.5rem;
+  }
+  aside.margin p { margin: 0 0 0.8rem; }
+  aside.margin p:last-child { margin-bottom: 0; }
+  aside.margin .who { color: var(--ink); }
+
+  @media (max-width: 760px) {
+    section.thinker { grid-template-columns: 1fr; }
+    aside.margin {
+      border-left: none; border-top: 1px solid var(--line); padding-left: 0;
+      margin-top: 1.2rem; background: var(--cyan-soft);
+      padding: 0.9rem 1rem; border-radius: 12px;
+    }
+  }
+
+  .mapsec { padding-top: 3rem; border-top: 1px solid var(--line); }
+  .mapsec h2 { font-size: 1.6rem; margin-bottom: 0.4rem; }
+  .mapsec > p.lede { max-width: 66ch; margin-bottom: 1.6rem; }
+  .map-scroll {
+    overflow-x: auto; border: 1px solid var(--line); border-radius: 14px;
+    background: var(--panel); box-shadow: var(--shadow); padding: 0.75rem;
+  }
+  svg.genealogy { display: block; min-width: 820px; }
+  .gband-label {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em;
+    fill: var(--muted); text-transform: uppercase;
+  }
+  .gband-rule { stroke: var(--line); stroke-width: 1; }
+  .gnode rect {
+    fill: var(--panel-2); stroke: var(--cyan); stroke-width: 1.5;
+  }
+  .gnode.thinker rect { stroke: var(--violet); fill: color-mix(in srgb, var(--violet) 12%, var(--panel-2)); }
+  .gnode text { fill: var(--ink); font-family: var(--sans); font-size: 13px; }
+  .gnode .gsub { fill: var(--muted); font-size: 10px; font-family: var(--mono); }
+  .glink { fill: none; stroke: var(--muted); stroke-width: 1.4; opacity: 0.75; }
+  .glink.parallel { stroke-dasharray: 2 3; }
+  .glabel { fill: var(--muted); font-family: var(--mono); font-size: 10px; }
+
+  footer.close { padding: 2.4rem 0 3rem; border-top: 1px solid var(--line); }
+  footer.close p { max-width: 66ch; color: var(--muted); margin: 0 0 1rem; }
+</style>
+</head>
+<body>
+
+<div class="wrap essay">
+
+<nav class="site-bar" aria-label="Site">
+  <a href="/">← Anthemic hub</a>
+  <span class="sep" aria-hidden="true">·</span>
+  <a href="/grounding-the-unconscious.html">Grounding the Unconscious</a>
+  <span class="sep" aria-hidden="true">·</span>
+  <a href="/genealogies-of-desire.html">Genealogies of Desire</a>
+  <span class="sep" aria-hidden="true">·</span>
+  <a href="/constellations-of-history.html">Constellations of History</a>
+  <span class="sep" aria-hidden="true">·</span>
+  <a href="/technics-and-time.html">Technics and Time</a>
+  <span class="sep" aria-hidden="true">·</span>
+  <a href="/map-of-maps.html">Thinkers Timeline</a>
+  <span class="sep" aria-hidden="true">·</span>
+  <a href="/map-of-maps-currents.html">Browse by current</a>
+  <span class="sep" aria-hidden="true">·</span>
+  <a href="/fiction-of-the-maps.html" aria-current="page">Fiction of the maps</a>
+  <span class="sep" aria-hidden="true">·</span>
+  <a href="/philosophy-booklet.html">Booklet / Print</a>
+</nav>
+
+<header class="masthead">
+  <div class="eyebrow"><span class="dot">●</span> novels <span class="dot2">●</span> influence trails <span class="dot">●</span> theory → fiction</div>
+  <h1>Fiction of the Maps</h1>
+  <p class="dek">A companion map: fiction writers who were <em>directly</em> shaped by thinkers already on the philosophy pages — not every novel that can be "read with" Lacan or Marx, but cases where the writer read, corresponded with, studied under, or openly remixed the theory. Each entry names books and how the influence traveled. Southern Cone anchors: Borges (Schopenhauer) and Piglia (Marx / Borges politicized). A closing reverse band tracks fiction that theorized back into Lacan, Deleuze, Benjamin, Adorno, Freud, Haraway, and Fisher.</p>
+  <div class="frame-note">
+    NOTE — this is not a fifth genealogy essay. It is an index of literary consequences. Criteria: documented reading, correspondence, seminars, or explicit formal borrowing from a figure on <a href="/grounding-the-unconscious.html">Grounding</a>, <a href="/genealogies-of-desire.html">Genealogies</a>, <a href="/constellations-of-history.html">Constellations</a>, or <a href="/technics-and-time.html">Technics</a>. Academic "X can be read through Y" alone does not qualify. Thinker→writer arrows below are influence claims, not lineage of schools. The closing section flips the arrow (fiction→theory) under the same bar. Bias check: women and non-European writers sit inside the same bands as the European male classics, not in a separate annex.
+  </div>
+</header>
+
+<section class="thinker" id="after-freud">
+  <div class="main-col">
+    <h2>After Freud <span class="years">Schnitzler · Svevo · Mann</span></h2>
+    <div class="tag-row"><span class="tag">dream</span><span class="tag">analysis</span><span class="tag">Nietzsche</span></div>
+    <p id="schnitzler"><strong class="term">Arthur Schnitzler</strong> and <a href="/grounding-the-unconscious.html">Freud</a> were Viennese contemporaries who exchanged letters; Freud recognized in Schnitzler's fiction a diagnostic ear for desire and self-deception close to clinical listening. <em>Traumnovelle</em> (1926; <em>Dream Story</em>) stages erotic jealousy, masked ritual, and dream-logic as waking plot — Kubrick's later <em>Eyes Wide Shut</em> film keeps the structure. The influence is peer recognition plus shared milieu more than discipleship: Schnitzler was already writing the unconscious before Freud's fame locked the vocabulary.</p>
+    <ul class="books">
+      <li><em>Dream Story</em> (1926) — dream and waking desire as interchangeable stages</li>
+      <li><em>Lieutenant Gustl</em> (1900) — interior monologue as social panic</li>
+    </ul>
+    <p id="svevo"><strong class="term">Italo Svevo</strong> (Ettore Schmitz) underwent psychoanalysis in Trieste and turned the couch into comic form. <em>Zeno's Conscience</em> (1923) is narrated as a failed analysis: the patient writes to please the analyst, then undermines every cure narrative — addiction, marriage, business — until the "last cigarette" becomes a philosophy of bad faith. Freud is not a distant source; the novel is an early literary reply to the analytic scene itself.</p>
+    <ul class="books">
+      <li><em>Zeno's Conscience</em> (1923) — analysis as unreliable autobiography</li>
+    </ul>
+    <p id="mann"><strong class="term">Thomas Mann</strong> read <a href="/grounding-the-unconscious.html">Schopenhauer</a>, <a href="/genealogies-of-desire.html">Nietzsche</a>, and Freud as load-bearing furniture. <em>The Magic Mountain</em> (1924) turns a Swiss sanatorium into a debating hall of European ideas; <em>Doctor Faustus</em> (1947) binds German music, syphilis, and damnation to a Nietzschean–Faustian artist myth under fascism's shadow. Mann's essays also engage Freud directly; the novels metabolize the German philosophical line the Grounding and Desire maps already track.</p>
+    <ul class="books">
+      <li><em>The Magic Mountain</em> (1924) — time, illness, and ideology in quarantine</li>
+      <li><em>Doctor Faustus</em> (1947) — artist-damnation after Nietzsche and German catastrophe</li>
+      <li><em>Death in Venice</em> (1912) — Apollonian form cracked by desire</li>
+    </ul>
+  </div>
+  <aside class="margin">
+    <span class="label">thinkers on map</span>
+    <p><span class="who">Freud</span> — <a href="/grounding-the-unconscious.html">Grounding</a></p>
+    <p><span class="who">Nietzsche · Schopenhauer</span> — Grounding / Desire</p>
+    <p><span class="who">Why these three</span> — clearest early fiction that treats analysis and the German philosophical unconscious as craft problems, not only themes. Borges (next) takes Schopenhauer without the Freudian couch.</p>
+  </aside>
+</section>
+
+<section class="thinker" id="southern-cone">
+  <div class="main-col">
+    <h2>Southern Cone <span class="years">Borges · Piglia</span></h2>
+    <div class="tag-row"><span class="tag">Schopenhauer</span><span class="tag">Marx</span><span class="tag">Lacan</span><span class="tag">archive</span></div>
+    <p id="borges"><strong class="term">Jorge Luis Borges</strong> is the clearest Latin American fiction writer on this page to meet the influence bar for a thinker already boxed: he named <a href="/grounding-the-unconscious.html">Schopenhauer</a> (with Berkeley and Hume) as load-bearing furniture, not a late academic overlay. In interviews he refused the label "philosopher" while building stories as compact experiments in idealism, will, infinity, and the unreliability of the self — <em>Ficciones</em> (1944) and the stories gathered in English as <em>Labyrinths</em> turn metaphysics into plot devices (the Aleph, the Zahir, Pierre Menard, the lottery in Babylon). The influence is declared and formal: Schopenhauer's World as Will supplies a pessimist/idealist weather Borges stages as labyrinth and mirror, without Freud's clinic and without magical-realism tourism. He sits here so the maps' German line has a Buenos Aires hinge, not only Vienna and Lübeck.</p>
+    <ul class="books">
+      <li><em>Ficciones</em> (1944) — idealism, infinity, and forged authorship as story engines</li>
+      <li><em>The Aleph</em> (1949) — the point that contains all points; Schopenhauerian overload as wonder and horror</li>
+      <li><em>Labyrinths</em> (1962 Eng. selection) — the Anglophone gate to the same experiments</li>
+    </ul>
+    <p id="piglia"><strong class="term">Ricardo Piglia</strong> rebuilds Argentine fiction under dictatorship as a materialist and detective problem, with Borges as the inescapable precursor to rewrite rather than escape. <em>Artificial Respiration</em> (1980) turns inquiry, missing persons, and literary conversation into a novel about how life determines consciousness — Marx's thesis staged as archive and paranoia — while treating Borges (especially "Pierre Menard") as the national starting point that left criticism must politicize. Later fiction and essays keep the same toolkit: narrative as investigation, money and the state as plot, the writer as Renzi alter ego. Lacan enters more as the critical weather of trauma, master narratives, and the symbolic than as seminar pastiche; Marx and Borges are the clearer documented pressures. Read beside <a href="#puig">Puig</a> and <a href="#sarduy">Sarduy</a>: same Southern Cone / Spanish-American theory-fiction climate, different instruments — Piglia is the Marxist-archival hinge Borges's idealism alone would leave missing.</p>
+    <ul class="books">
+      <li><em>Artificial Respiration</em> (1980) — inquiry under dictatorship; Borges politicized</li>
+      <li><em>The Absent City</em> (1992) — machine, memory, and women's voice as national allegory</li>
+      <li><em>Money to Burn</em> (<em>Plata quemada</em>, 1997) — crime, capital, and the state as noir</li>
+    </ul>
+  </div>
+  <aside class="margin">
+    <span class="label">thinkers on map</span>
+    <p><span class="who">Schopenhauer</span> — <a href="/grounding-the-unconscious.html">Grounding</a> (Borges)</p>
+    <p><span class="who">Marx · Lacan · Borges-as-precursor</span> — Desire / Grounding weather (Piglia)</p>
+    <p><span class="who">Why this band</span> — Latin American depth that still meets "direct influence," not a magical-realism annex. Puig and Sarduy remain in the French-theory band below for Lacan/Freud craft; Piglia bridges Borges to Marx.</p>
+  </aside>
+</section>
+
+<section class="thinker" id="existential-novels">
+  <div class="main-col">
+    <h2>Existential novels <span class="years">Sartre · Beauvoir</span></h2>
+    <div class="tag-row"><span class="tag">nausea</span><span class="tag">situation</span><span class="tag">Hegel</span></div>
+    <p id="sartre-fiction"><strong class="term">Jean-Paul Sartre</strong> appears on the Desire and Constellations maps as philosopher; he also wrote the theory into novels. <em>Nausea</em> (1938) is the contingency of being staged as a diary — the chestnut-root epiphany is Heideggerian thrownness and Husserlian attention turned into fiction. <em>The Roads to Freedom</em> trilogy dramatizes occupied France as situations that force choice. Influence here is self-application: the same writer as thinker and novelist.</p>
+    <ul class="books">
+      <li><em>Nausea</em> (1938) — contingency made visceral</li>
+      <li><em>The Age of Reason</em> (1945) — freedom as sticky practical problem</li>
+    </ul>
+    <p id="beauvoir-fiction"><strong class="term">Simone de Beauvoir</strong>, already on <a href="/genealogies-of-desire.html#beauvoir">Genealogies</a> for <em>The Second Sex</em>, used fiction to test Hegelian and existential scenes of recognition. <em>She Came to Stay</em> (1943) reworks the triangular gaze and the look of the Other; <em>The Mandarins</em> (1954) maps postwar intellectual politics — including the quarrel with communism — as novelistic argument. Theory and fiction are co-authored in one career, not a later academic overlay.</p>
+    <ul class="books">
+      <li><em>She Came to Stay</em> (1943) — the look, the trio, bad faith in love</li>
+      <li><em>The Mandarins</em> (1954) — engaged intellectuals after Liberation</li>
+    </ul>
+  </div>
+  <aside class="margin">
+    <span class="label">thinkers on map</span>
+    <p><span class="who">Sartre · Beauvoir · Hegel · Heidegger</span> — Desire / Constellations</p>
+    <p><span class="who">Dual role</span> — listed because the fiction is how many readers first met the arguments, not because every philosopher who wrote a novel belongs here.</p>
+  </aside>
+</section>
+
+<section class="thinker" id="marx-fanon-fiction">
+  <div class="main-col">
+    <h2>Marx, Fanon, and the novel of structure <span class="years">Wright · Ngũgĩ · Wolf · Miéville</span></h2>
+    <div class="tag-row"><span class="tag">class</span><span class="tag">race</span><span class="tag">decolonial</span><span class="tag">weird Marxism</span></div>
+    <p id="wright"><strong class="term">Richard Wright</strong> read Marx and the Communist milieu as tools for naming how racism and class lock a life. <em>Native Son</em> (1940) is not a pamphlet with characters: Bigger Thomas's violence is framed as the product of a social machine — housing, jobs, fear, the courtroom spectacle — closer to Lukácsian typicality than to liberal psychology alone. Wright later broke with the Party; the early novels remain the clearest U.S. fiction of Marxist structural pressure on the Constellations/Desire root.</p>
+    <ul class="books">
+      <li><em>Native Son</em> (1940) — structural racism as plot engine</li>
+      <li><em>Black Boy</em> (1945) — formation under Jim Crow (memoir with novelistic force)</li>
+    </ul>
+    <p id="ngugi"><strong class="term">Ngũgĩ wa Thiong'o</strong> takes <a href="/constellations-of-history.html#fanon">Fanon</a> and Marx into Kenyan fiction and into the language question itself. <em>Petals of Blood</em> (1977) anatomizes neocolonial betrayal after independence; <em>Devil on the Cross</em> (1980), drafted in detention and first published in Gikuyu, turns oral and satirical forms against comprador capitalism. The influence is political-intellectual: Fanon's diagnostics of colonial elites and culture become narrative architecture, then a program to write in African languages.</p>
+    <ul class="books">
+      <li><em>Petals of Blood</em> (1977) — independence without liberation</li>
+      <li><em>Devil on the Cross</em> (1980) — satire of the postcolony in Gikuyu</li>
+    </ul>
+    <p id="wolf"><strong class="term">Christa Wolf</strong> wrote inside GDR Marxism while pressing feminist and subjective cracks against official realism. <em>Cassandra</em> (1983) retells the Trojan War from a woman prophet who sees the war-machine and is not believed — myth as critique of militarized reason. <em>Patterns of Childhood</em> (1976) works memory under fascism and socialism. She is the woman hinge on this band: Marxist literary culture without treating the Party novel as the only form.</p>
+    <ul class="books">
+      <li><em>Cassandra</em> (1983) — prophecy against the war-state</li>
+      <li><em>Patterns of Childhood</em> (1976) — memory, complicity, formation</li>
+    </ul>
+    <p id="mieville"><strong class="term">China Miéville</strong> is an open Marxist (International Socialist tradition) who rebuilds genre as theory-friendly form. <em>The City &amp; The City</em> (2009) literalizes ideological "unseeing" as policing of borders in one urban space — hegemony you can trip over. <em>Iron Council</em> (2004) is revolutionary time and strike politics in New Crobuzon. Influence is declared politics plus craft: Marx and Western Marxism's culture questions enter as worldbuilding rules, not epigraphs.</p>
+    <ul class="books">
+      <li><em>The City &amp; The City</em> (2009) — ideology as enforced perception</li>
+      <li><em>Iron Council</em> (2004) — revolution and mourning in secondary world</li>
+    </ul>
+  </div>
+  <aside class="margin">
+    <span class="label">thinkers on map</span>
+    <p><span class="who">Marx · Lukács · Fanon</span> — Desire / Constellations</p>
+    <p><span class="who">Census</span> — Wright, Ngũgĩ, Wolf keep this band from being only European Marxist genre fiction.</p>
+  </aside>
+</section>
+
+<section class="thinker" id="benjamin-sebald">
+  <div class="main-col">
+    <h2>Benjamin's prose heirs <span class="years">Sebald</span></h2>
+    <div class="tag-row"><span class="tag">constellation</span><span class="tag">memory</span><span class="tag">ruins</span></div>
+    <p id="sebald"><strong class="term">W.G. Sebald</strong> is the clearest late fiction writer to rebuild <a href="/constellations-of-history.html#benjamin">Walter Benjamin</a>'s method as narrative: digressive walks, documentary photographs that do not illustrate so much as interrupt, and history as wreckage piled at the angel's feet. <em>The Rings of Saturn</em> (1995) and <em>Austerlitz</em> (2001) treat research, exile, and the Holocaust's afterlife as constellations of particulars — closer to Benjamin's Arcades temperament than to standard historical novel. Sebald taught and cited the German critical tradition; the influence is formal and acknowledged, not a vague "melancholy."</p>
+    <ul class="books">
+      <li><em>The Rings of Saturn</em> (1995) — pilgrimage as historical montage</li>
+      <li><em>Austerlitz</em> (2001) — architecture, trauma, recovered past</li>
+    </ul>
+  </div>
+  <aside class="margin">
+    <span class="label">thinkers on map</span>
+    <p><span class="who">Benjamin</span> — <a href="/constellations-of-history.html">Constellations</a></p>
+    <p><span class="who">Why alone in band</span> — many novelists are "Benjaminian" in criticism; few rebuild the method this openly.</p>
+  </aside>
+</section>
+
+<section class="thinker" id="french-theory-fiction">
+  <div class="main-col">
+    <h2>French theory in fiction <span class="years">Puig · Sarduy · Carter · Acker · Delany · Ballard · McCarthy</span></h2>
+    <div class="tag-row"><span class="tag">Lacan</span><span class="tag">Deleuze</span><span class="tag">Foucault</span><span class="tag">Freud</span></div>
+    <p id="puig"><strong class="term">Manuel Puig</strong> brought Hollywood melodrama and Freudian/Lacanian talk into Argentine fiction. <em>Kiss of the Spider Woman</em> (1976) is almost entirely dialogue between a political prisoner and a gay window-dresser — film plots as shared fantasy, sexuality and revolution arguing in one cell. Puig knew the psychoanalytic and mass-culture debates of his moment; the novel performs them rather than footnoting them. For the Marxist-archival Argentine hinge beside him, see <a href="#piglia">Piglia</a> above.</p>
+    <ul class="books">
+      <li><em>Kiss of the Spider Woman</em> (1976) — desire, politics, and movie-talk as form</li>
+    </ul>
+    <p id="sarduy"><strong class="term">Severo Sarduy</strong>, Cuban exile in Paris, read <a href="/grounding-the-unconscious.html">Lacan</a> in the structuralist years and wrote back in fiction. <em>Cobra</em> (1971) stages transformation, drag, and the body as signifiers in excess — Lacanian motifs (simulation, the letter, sexuation's theatre) turned into baroque narrative carnival. Influence is documented Parisian traffic between the École and the novel, not only later academic pairing.</p>
+    <ul class="books">
+      <li><em>Cobra</em> (1971) — body, disguise, and psychoanalytic theatre</li>
+    </ul>
+    <p id="carter"><strong class="term">Angela Carter</strong> remade fairy tale with Freud, Sade, and later French theory in the toolkit. <em>The Bloody Chamber</em> (1979) returns the wolf and the marquess as sexual politics; <em>Nights at the Circus</em> (1984) builds a New Woman aerialist who may or may not have wings — demythologizing as feminist craft. Carter's journalism and essays show the reading; the stories show the rewrite.</p>
+    <ul class="books">
+      <li><em>The Bloody Chamber</em> (1979) — fairy tale after Freud and feminism</li>
+      <li><em>Nights at the Circus</em> (1984) — spectacle, gender, tall tale</li>
+    </ul>
+    <p id="acker"><strong class="term">Kathy Acker</strong> cut-up and plagiarized under the sign of <a href="/genealogies-of-desire.html">Deleuze and Guattari</a>. <em>Empire of the Senseless</em> (1988) names <em>Anti-Oedipus</em> in its machinery — piracy, tattoo, incest taboo, and "body without organs" as narrative tactics against Oedipal plot. Influence is explicit citation plus formal theft as politics.</p>
+    <ul class="books">
+      <li><em>Empire of the Senseless</em> (1988) — Anti-Oedipus as novel engine</li>
+      <li><em>Blood and Guts in High School</em> (1978) — girlhood against the family romance</li>
+    </ul>
+    <p id="delany"><strong class="term">Samuel R. Delany</strong> read <a href="/genealogies-of-desire.html">Foucault</a> (and later Derrida) into science fiction's sexual and linguistic futures. <em>Trouble on Triton</em> (1976) subtitled "an ambiguous heterotopia" answers Le Guin while staging Foucault's spatial thought as world design; the Neveryon books braid slavery, semiotics, and desire. Delany is also theorist; the fiction is where Foucault's histories of sexuality meet sword-and-planet and space opera.</p>
+    <ul class="books">
+      <li><em>Trouble on Triton</em> (1976) — heterotopia as planetary society</li>
+      <li><em>Stars in My Pocket Like Grains of Sand</em> (1984) — desire, information, galaxy</li>
+    </ul>
+    <p id="ballard"><strong class="term">J.G. Ballard</strong> came out of Surrealism and a clinical eye for the twentieth century's media-trauma — Freud's dream-work displaced onto motorways, towers, and celebrity wreckage. <em>The Atrocity Exhibition</em> (1970) and <em>Crash</em> (1973) treat the wound and the car as erotic technologies. Later critics pair him with Lacan/Deleuze; the documented drivers are Freud, Surrealism, and postwar psychiatry. He sits here as Desire-map weather in English fiction.</p>
+    <ul class="books">
+      <li><em>Crash</em> (1973) — technology, sex, and the wound</li>
+      <li><em>The Atrocity Exhibition</em> (1970) — media violence as collage novel</li>
+    </ul>
+    <p id="mccarthy"><strong class="term">Tom McCarthy</strong> builds novels as theory machines. <em>Remainder</em> (2005) restages trauma as endless re-enactment — repetition compulsion as plot; <em>Satin Island</em> (2015) makes the narrator a corporate "anthropologist" drowning in reports, a comic of late theory inside capital. McCarthy's essays and International Necronautical Society persona announce Freud, Lacan, Derrida, and Blanchot as tools; the books are the experiments.</p>
+    <ul class="books">
+      <li><em>Remainder</em> (2005) — repetition compulsion as architecture</li>
+      <li><em>Satin Island</em> (2015) — theory inside the firm</li>
+    </ul>
+  </div>
+  <aside class="margin">
+    <span class="label">thinkers on map</span>
+    <p><span class="who">Freud · Lacan · Deleuze · Foucault</span> — Grounding / Desire</p>
+    <p><span class="who">Census</span> — Carter, Acker, Sarduy, Delany, Puig keep the French-theory novel from being only Paris–London men; Borges and Piglia (Southern Cone band) add the Schopenhauer/Marx Argentine spine.</p>
+  </aside>
+</section>
+
+<section class="thinker" id="east-asia">
+  <div class="main-col">
+    <h2>East Asian relays <span class="years">Abe · Mishima · Ōe</span></h2>
+    <div class="tag-row"><span class="tag">Marx</span><span class="tag">Nietzsche</span><span class="tag">Sartre</span></div>
+    <p id="abe"><strong class="term">Kōbō Abe</strong> fused Marxist politics, Surrealism, and Kafkaesque situation. <em>The Woman in the Dunes</em> (1962) traps a man in a sand pit's endless labor — alienation made landscape. Abe's early Communist Party membership and later absurdist theatre keep Marx and European avant-garde inside Japanese postwar fiction without treating "influence" as Western copy.</p>
+    <ul class="books">
+      <li><em>The Woman in the Dunes</em> (1962) — labor and trap as metaphysics</li>
+      <li><em>The Box Man</em> (1973) — anonymity and the city</li>
+    </ul>
+    <p id="mishima"><strong class="term">Yukio Mishima</strong> read <a href="/genealogies-of-desire.html">Nietzsche</a> into an aesthetics of body, beauty, and death. <em>Confessions of a Mask</em> (1949) and <em>The Temple of the Golden Pavilion</em> (1956) stage desire, resentment, and the urge to destroy beauty — will-to-power problems in novel form. The politics of his later militarism are not endorsed here; the literary Nietzscheanism is why he attaches to the Desire map's German line.</p>
+    <ul class="books">
+      <li><em>Confessions of a Mask</em> (1949) — desire under a false face</li>
+      <li><em>The Temple of the Golden Pavilion</em> (1956) — beauty, envy, arson</li>
+    </ul>
+    <p id="oe"><strong class="term">Kenzaburō Ōe</strong> took <a href="/constellations-of-history.html">Sartre</a>'s engaged literature and existential situation into postwar Japanese fiction. Early work and essays show sustained reading of Sartrean commitment and shame; <em>A Personal Matter</em> (1964) turns a father's flight from a disabled newborn into a crisis of bad faith and responsibility — existential ethics as plot, not import sticker. Ōe keeps this band on-map (Sartre is already a thinker box) where a Jung-only trail would not.</p>
+    <ul class="books">
+      <li><em>A Personal Matter</em> (1964) — flight, shame, and chosen responsibility</li>
+      <li><em>The Silent Cry</em> (1967) — uprising, brotherhood, rural modernity</li>
+    </ul>
+  </div>
+  <aside class="margin">
+    <span class="label">thinkers on map</span>
+    <p><span class="who">Marx · Nietzsche · Sartre</span> — Desire / Constellations</p>
+    <p><span class="who">Why this band</span> — non-European relays that still meet the "direct influence" bar, not a token Asia shelf.</p>
+  </aside>
+</section>
+
+<section class="thinker" id="late-theory-weather">
+  <div class="main-col">
+    <h2>Late theory weather <span class="years">Kunzru · Djebar</span></h2>
+    <div class="tag-row"><span class="tag">Heidegger</span><span class="tag">Fanon</span><span class="tag">accelerationist climate</span></div>
+    <p id="kunzru"><strong class="term">Hari Kunzru</strong>'s <em>Red Pill</em> (2020) sends a liberal writer to a Berlin institute where far-right theory, surveillance paranoia, and a reality-TV hunter collide — the plot metabolizes Heideggerian authenticity talk, online radicalization, and the same post-Warwick theory climate the Desire map tracks through Land and Fisher without endorsing it. Influence is contemporary immersion: the novel is about living inside theory discourse as a social weather system.</p>
+    <ul class="books">
+      <li><em>Red Pill</em> (2020) — theory, paranoia, and the far right as plot</li>
+    </ul>
+    <p id="djebar"><strong class="term">Assia Djebar</strong> wrote Algerian women's history against colonial and patriarchal silence, in explicit conversation with the anticolonial thought <a href="/constellations-of-history.html#fanon">Fanon</a> named. <em>Fantasia: An Algerian Cavalcade</em> (1985) braids French conquest archives with autobiographical and oral women's voices — language itself as occupied territory. She is the North African feminist hinge on this page: decolonial critique as narrative method, not only theme.</p>
+    <ul class="books">
+      <li><em>Fantasia: An Algerian Cavalcade</em> (1985) — conquest, tongue, and women's speech</li>
+      <li><em>Women of Algiers in Their Apartment</em> (1980) — stories after Delacroix's gaze</li>
+    </ul>
+  </div>
+  <aside class="margin">
+    <span class="label">thinkers on map</span>
+    <p><span class="who">Heidegger · Land/Fisher climate · Fanon</span> — Desire / Constellations</p>
+    <p><span class="who">Open edge</span> — more 2010s–20s titles will qualify as documentation firms up; this band stays thin on purpose.</p>
+  </aside>
+</section>
+
+<section class="thinker" id="fiction-theorized-back">
+  <div class="main-col">
+    <h2>Fiction that theorized back <span class="years">thinkers ← novelists</span></h2>
+    <div class="tag-row"><span class="tag">reverse arrows</span><span class="tag">load-bearing debts</span><span class="tag">not every citation</span></div>
+    <p>The bands above run theory → fiction. This section flips the arrow for cases where a thinker already on the philosophy maps treats a fiction writer as <em>formative</em> — seminars, whole books, named debts — not every essay that “mentions Kafka.” Same bar, opposite direction.</p>
+    <p id="joyce-lacan"><strong class="term">James Joyce → Lacan.</strong> Late Lacan rebuilds the symptom as <em>sinthome</em> through Joyce (especially <em>Finnegans Wake</em>): writing as a singular knotting that can hold a subject when the Name-of-the-Father does not. Seminar XXIII is not applied psychoanalysis of an author; Joyce is the occasion that forces the theory to change. Poe’s “Purloined Letter” is the earlier structural hinge in the same career.</p>
+    <ul class="books">
+      <li>Joyce — <em>Ulysses</em>, <em>Finnegans Wake</em> (Lacan’s late literary laboratory)</li>
+      <li>Poe — “The Purloined Letter” (letter as pure signifier in transit)</li>
+    </ul>
+    <p id="kafka-deleuze-benjamin"><strong class="term">Franz Kafka → Deleuze·Guattari, Benjamin, Adorno.</strong> Deleuze and Guattari’s <em>Kafka: Toward a Minor Literature</em> (1975) makes Kafka a machine for political enunciation, not an Oedipal case study. Benjamin’s Kafka essays and Adorno’s Kafka/Beckett readings grow Critical Theory’s sense of administered life and damaged experience <em>through</em> the fiction. Kafka is already ambient on this page via Abe; here he is a source for the maps’ theorists.</p>
+    <ul class="books">
+      <li>Kafka — <em>The Trial</em>, <em>The Castle</em>, stories (minor literature; law as opaque machine)</li>
+    </ul>
+    <p id="proust-baudelaire"><strong class="term">Proust · Baudelaire → Benjamin, Deleuze, Adorno.</strong> Benjamin’s Arcades project and Baudelaire essays treat the poet of the modern crowd as historical sensor; Deleuze’s <em>Proust and Signs</em> rebuilds learning and jealousy as a semiotic apprenticeship; Adorno reads Proust for experience and social criticism. These are not hobbies — they are how constellation, sign, and damaged life get articulated.</p>
+    <ul class="books">
+      <li>Baudelaire — <em>Les Fleurs du mal</em>, Paris prose poems (Benjamin’s modern)</li>
+      <li>Proust — <em>In Search of Lost Time</em> (signs, habit, involuntary memory)</li>
+    </ul>
+    <p id="beckett-adorno"><strong class="term">Samuel Beckett → Adorno</strong> (and ambient Deleuze). <em>Trying to Understand Endgame</em> is Adorno working out aesthetic autonomy and the “new” after catastrophe inside Beckett’s form. Drama more than novel, but narrative experimental writing in the same debt class.</p>
+    <ul class="books">
+      <li>Beckett — <em>Endgame</em>, <em>Molloy</em> / the Trilogy (form after meaning’s collapse)</li>
+    </ul>
+    <p id="dostoevsky-upstream"><strong class="term">Dostoevsky → Nietzsche, Freud</strong> (upstream). Nietzsche praises Dostoevsky as the psychologist who discovered the underground; Freud’s “Dostoevsky and Parricide” binds the novels to the Oedipus complex and epilepsy debate. Direction matters: Dostoevsky shapes the maps’ founders more than he is their student — the reverse of Mann or Svevo.</p>
+    <ul class="books">
+      <li>Dostoevsky — <em>Notes from Underground</em>, <em>The Brothers Karamazov</em> (ressentiment; guilt and law)</li>
+    </ul>
+    <p id="sophocles-freud"><strong class="term">Sophocles → Freud.</strong> <em>Oedipus Rex</em> is not a literary example pasted on afterward; it is the myth Freud claims the clinic rediscovers. Drama, not the novel, but the clearest “narrative that theorized first” pin on Grounding.</p>
+    <ul class="books">
+      <li>Sophocles — <em>Oedipus Rex</em> (name for the complex; destiny as misrecognition)</li>
+    </ul>
+    <p id="sf-haraway-fisher"><strong class="term">SF / weird fiction → Haraway, Fisher.</strong> Haraway’s cyborg manifesto treats science fiction (including writers such as Octavia Butler and <a href="#delany">Delany</a>) as speculative partners for socialist-feminist theory, not raw material to decode. Fisher’s capitalist realism and hauntology grow beside Ballard, weird fiction, and cancelled futures — <a href="#ballard">Ballard</a> already sits above as Freud/Surrealism weather; here the arrow also runs Ballard → Fisher.</p>
+    <ul class="books">
+      <li>Butler, Delany, and kin — SF as theory’s co-author (Haraway)</li>
+      <li>Ballard — crash/atrocity landscapes as Fisher’s late-capitalist sensorium</li>
+    </ul>
+    <p id="lukacs-balzac"><strong class="term">Balzac (and the realist novel) → Lukács.</strong> Lukács’s defense of realism and totality is argued through the nineteenth-century novel’s capacity to typicalize social relations — Balzac as method, not ornament. Jameson later inherits that literary-theoretical habit into postmodernism’s cognitive mapping.</p>
+    <ul class="books">
+      <li>Balzac — <em>La Comédie humaine</em> (typicality; society as knowable whole)</li>
+    </ul>
+  </div>
+  <aside class="margin">
+    <span class="label">how to read this</span>
+    <p><span class="who">Bar</span> — whole book, seminar series, or named formative debt. Skip “Žižek namedrops Hitchcock.”</p>
+    <p><span class="who">Women / non-European</span> — Haraway–Butler/Delany and Djebar’s archive work keep the reverse band from being only the European modernist male canon; the Joyce–Kafka–Proust spine is still that canon — named honestly.</p>
+    <p><span class="who">Not browse-by-current</span> — these fiction names are not Thinkers Timeline nodes; currents stay thinker-only.</p>
+  </aside>
+</section>
+
+<section class="mapsec">
+  <h2>Visual mapping</h2>
+  <p class="lede">Thinkers (violet) sit as sources; writers (cyan) hang from the currents they actually used — except the bottom reverse band, where fiction feeds theory. Dotted lines are parallel attachments, not a claim that the novelists form a school.</p>
+  <div class="map-scroll">
+    <svg class="genealogy" viewBox="-20 -20 1040 1100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Map from thinkers to fiction writers">
+      <line class="gband-rule" x1="20" y1="100" x2="1000" y2="100"/>
+      <line class="gband-rule" x1="20" y1="280" x2="1000" y2="280"/>
+      <line class="gband-rule" x1="20" y1="460" x2="1000" y2="460"/>
+      <line class="gband-rule" x1="20" y1="640" x2="1000" y2="640"/>
+      <text class="gband-label" x="20" y="24">Freud · Nietzsche · Schopenhauer · Marx · Fanon · Sartre</text>
+      <text class="gband-label" x="20" y="124">Writers · incl. Borges</text>
+      <text class="gband-label" x="20" y="304">Benjamin · Lacan · Deleuze · Foucault · Marx*</text>
+      <text class="gband-label" x="20" y="484">East Asian relays</text>
+      <text class="gband-label" x="20" y="664">Late weather</text>
+
+      <path class="glink" d="M65,55 Q65,150 50,200"/>
+      <path class="glink" d="M65,55 Q120,150 130,200"/>
+      <path class="glink" d="M180,55 Q200,140 210,200"/>
+      <path class="glink" d="M315,55 Q315,140 305,200"/>
+      <path class="glink" d="M445,55 Q430,140 400,200"/>
+      <path class="glink" d="M445,55 Q500,140 490,200"/>
+      <path class="glink" d="M445,55 Q560,140 665,200"/>
+      <path class="glink" d="M555,55 Q560,140 580,200"/>
+      <path class="glink" d="M685,55 Q740,140 760,200"/>
+      <path class="glink" d="M685,55 Q850,140 870,200"/>
+
+      <path class="glink" d="M95,340 Q100,400 60,520"/>
+      <path class="glink" d="M225,340 Q200,400 155,520"/>
+      <path class="glink" d="M225,340 Q260,400 245,520"/>
+      <path class="glink" d="M225,340 Q320,400 340,520"/>
+      <path class="glink" d="M360,340 Q400,400 435,520"/>
+      <path class="glink" d="M495,340 Q520,400 525,520"/>
+      <path class="glink" d="M615,340 Q620,400 620,520"/>
+      <path class="glink" d="M745,340 Q740,400 715,520"/>
+      <path class="glink" d="M745,340 Q820,400 820,520"/>
+      <path class="glink parallel" d="M445,55 Q400,300 340,520"/>
+
+      <path class="glink" d="M200,700 Q200,760 160,820"/>
+      <path class="glink" d="M200,700 Q280,760 320,820"/>
+      <path class="glink" d="M480,700 Q480,760 480,820"/>
+      <path class="glink" d="M710,700 Q680,760 630,820"/>
+      <path class="glink" d="M870,700 Q840,760 790,820"/>
+
+      <g class="gnode thinker"><rect x="20" y="35" width="90" height="40" rx="5"/><text x="65" y="60" text-anchor="middle">Freud</text></g>
+      <g class="gnode thinker"><rect x="130" y="35" width="100" height="40" rx="5"/><text x="180" y="60" text-anchor="middle">Nietzsche</text></g>
+      <g class="gnode thinker"><rect x="250" y="35" width="130" height="40" rx="5"/><text x="315" y="60" text-anchor="middle">Schopenhauer</text></g>
+      <g class="gnode thinker"><rect x="400" y="35" width="90" height="40" rx="5"/><text x="445" y="60" text-anchor="middle">Marx</text></g>
+      <g class="gnode thinker"><rect x="510" y="35" width="90" height="40" rx="5"/><text x="555" y="60" text-anchor="middle">Fanon</text></g>
+      <g class="gnode thinker"><rect x="620" y="35" width="130" height="40" rx="5"/><text x="685" y="60" text-anchor="middle">Sartre·Beauvoir</text></g>
+
+      <g class="gnode"><rect x="10" y="185" width="80" height="50" rx="5"/><text x="50" y="208" text-anchor="middle">Schnitzler</text><text class="gsub" x="50" y="224" text-anchor="middle">Dream Story</text></g>
+      <g class="gnode"><rect x="95" y="185" width="70" height="50" rx="5"/><text x="130" y="208" text-anchor="middle">Svevo</text><text class="gsub" x="130" y="224" text-anchor="middle">Zeno</text></g>
+      <g class="gnode"><rect x="175" y="185" width="70" height="50" rx="5"/><text x="210" y="208" text-anchor="middle">Mann</text><text class="gsub" x="210" y="224" text-anchor="middle">Faustus</text></g>
+      <g class="gnode"><rect x="260" y="185" width="90" height="50" rx="5"/><text x="305" y="208" text-anchor="middle">Borges</text><text class="gsub" x="305" y="224" text-anchor="middle">Ficciones</text></g>
+      <g class="gnode"><rect x="365" y="185" width="70" height="50" rx="5"/><text x="400" y="208" text-anchor="middle">Wright</text><text class="gsub" x="400" y="224" text-anchor="middle">Native Son</text></g>
+      <g class="gnode"><rect x="450" y="185" width="80" height="50" rx="5"/><text x="490" y="208" text-anchor="middle">Miéville</text><text class="gsub" x="490" y="224" text-anchor="middle">City &amp; City</text></g>
+      <g class="gnode"><rect x="545" y="185" width="70" height="50" rx="5"/><text x="580" y="208" text-anchor="middle">Ngũgĩ</text><text class="gsub" x="580" y="224" text-anchor="middle">Petals</text></g>
+      <g class="gnode"><rect x="630" y="185" width="70" height="50" rx="5"/><text x="665" y="208" text-anchor="middle">Wolf</text><text class="gsub" x="665" y="224" text-anchor="middle">Cassandra</text></g>
+      <g class="gnode"><rect x="715" y="185" width="90" height="50" rx="5"/><text x="760" y="208" text-anchor="middle">Sartre fic.</text><text class="gsub" x="760" y="224" text-anchor="middle">Nausea</text></g>
+      <g class="gnode"><rect x="820" y="185" width="100" height="50" rx="5"/><text x="870" y="208" text-anchor="middle">Beauvoir fic.</text><text class="gsub" x="870" y="224" text-anchor="middle">Mandarins</text></g>
+
+      <g class="gnode thinker"><rect x="40" y="320" width="110" height="40" rx="5"/><text x="95" y="345" text-anchor="middle">Benjamin</text></g>
+      <g class="gnode thinker"><rect x="180" y="320" width="90" height="40" rx="5"/><text x="225" y="345" text-anchor="middle">Lacan</text></g>
+      <g class="gnode thinker"><rect x="300" y="320" width="120" height="40" rx="5"/><text x="360" y="345" text-anchor="middle">Deleuze·Guattari</text></g>
+      <g class="gnode thinker"><rect x="450" y="320" width="90" height="40" rx="5"/><text x="495" y="345" text-anchor="middle">Foucault</text></g>
+      <g class="gnode thinker"><rect x="570" y="320" width="90" height="40" rx="5"/><text x="615" y="345" text-anchor="middle">Freud*</text></g>
+      <g class="gnode thinker"><rect x="690" y="320" width="110" height="40" rx="5"/><text x="745" y="345" text-anchor="middle">theory craft</text></g>
+
+      <g class="gnode"><rect x="20" y="500" width="80" height="50" rx="5"/><text x="60" y="523" text-anchor="middle">Sebald</text><text class="gsub" x="60" y="539" text-anchor="middle">Austerlitz</text></g>
+      <g class="gnode"><rect x="115" y="500" width="80" height="50" rx="5"/><text x="155" y="523" text-anchor="middle">Sarduy</text><text class="gsub" x="155" y="539" text-anchor="middle">Cobra</text></g>
+      <g class="gnode"><rect x="210" y="500" width="70" height="50" rx="5"/><text x="245" y="523" text-anchor="middle">Puig</text><text class="gsub" x="245" y="539" text-anchor="middle">Spider Woman</text></g>
+      <g class="gnode"><rect x="295" y="500" width="90" height="50" rx="5"/><text x="340" y="523" text-anchor="middle">Piglia</text><text class="gsub" x="340" y="539" text-anchor="middle">Art. Respiration</text></g>
+      <g class="gnode"><rect x="400" y="500" width="70" height="50" rx="5"/><text x="435" y="523" text-anchor="middle">Acker</text><text class="gsub" x="435" y="539" text-anchor="middle">Empire</text></g>
+      <g class="gnode"><rect x="485" y="500" width="80" height="50" rx="5"/><text x="525" y="523" text-anchor="middle">Delany</text><text class="gsub" x="525" y="539" text-anchor="middle">Triton</text></g>
+      <g class="gnode"><rect x="580" y="500" width="80" height="50" rx="5"/><text x="620" y="523" text-anchor="middle">Carter</text><text class="gsub" x="620" y="539" text-anchor="middle">Bloody Chamber</text></g>
+      <g class="gnode"><rect x="675" y="500" width="80" height="50" rx="5"/><text x="715" y="523" text-anchor="middle">Ballard</text><text class="gsub" x="715" y="539" text-anchor="middle">Crash</text></g>
+      <g class="gnode"><rect x="770" y="500" width="100" height="50" rx="5"/><text x="820" y="523" text-anchor="middle">McCarthy</text><text class="gsub" x="820" y="539" text-anchor="middle">Remainder</text></g>
+
+      <g class="gnode thinker"><rect x="140" y="680" width="120" height="40" rx="5"/><text x="200" y="705" text-anchor="middle">Marx·Surreal</text></g>
+      <g class="gnode thinker"><rect x="420" y="680" width="120" height="40" rx="5"/><text x="480" y="705" text-anchor="middle">Nietzsche</text></g>
+      <g class="gnode thinker"><rect x="660" y="680" width="100" height="40" rx="5"/><text x="710" y="705" text-anchor="middle">Sartre</text></g>
+      <g class="gnode thinker"><rect x="820" y="680" width="100" height="40" rx="5"/><text x="870" y="705" text-anchor="middle">Fanon</text></g>
+
+      <g class="gnode"><rect x="110" y="800" width="100" height="50" rx="5"/><text x="160" y="823" text-anchor="middle">Kōbō Abe</text><text class="gsub" x="160" y="839" text-anchor="middle">Dunes</text></g>
+      <g class="gnode"><rect x="270" y="800" width="100" height="50" rx="5"/><text x="320" y="823" text-anchor="middle">Mishima</text><text class="gsub" x="320" y="839" text-anchor="middle">Golden Pavilion</text></g>
+      <g class="gnode"><rect x="430" y="800" width="100" height="50" rx="5"/><text x="480" y="823" text-anchor="middle">Ōe</text><text class="gsub" x="480" y="839" text-anchor="middle">Personal Matter</text></g>
+      <g class="gnode"><rect x="580" y="800" width="100" height="50" rx="5"/><text x="630" y="823" text-anchor="middle">Kunzru</text><text class="gsub" x="630" y="839" text-anchor="middle">Red Pill</text></g>
+      <g class="gnode"><rect x="740" y="800" width="100" height="50" rx="5"/><text x="790" y="823" text-anchor="middle">Djebar</text><text class="gsub" x="790" y="839" text-anchor="middle">Fantasia</text></g>
+
+      <line class="gband-rule" x1="20" y1="880" x2="1000" y2="880"/>
+      <text class="gband-label" x="20" y="904">Reverse · fiction → theory</text>
+      <path class="glink" d="M80,960 Q120,1000 205,1000"/>
+      <path class="glink" d="M190,960 Q250,1000 325,1000"/>
+      <path class="glink" d="M315,960 Q360,1000 450,1000"/>
+      <path class="glink" d="M450,960 Q500,1000 575,1000"/>
+      <path class="glink" d="M580,960 Q620,1000 695,1000"/>
+      <path class="glink" d="M705,960 Q750,1000 830,1000"/>
+      <path class="glink" d="M830,960 Q830,980 830,1000"/>
+
+      <g class="gnode"><rect x="20" y="920" width="100" height="50" rx="5"/><text x="70" y="943" text-anchor="middle">Joyce</text><text class="gsub" x="70" y="959" text-anchor="middle">→ Lacan</text></g>
+      <g class="gnode"><rect x="140" y="920" width="100" height="50" rx="5"/><text x="190" y="943" text-anchor="middle">Kafka</text><text class="gsub" x="190" y="959" text-anchor="middle">→ D&amp;G · Benj.</text></g>
+      <g class="gnode"><rect x="260" y="920" width="110" height="50" rx="5"/><text x="315" y="943" text-anchor="middle">Proust</text><text class="gsub" x="315" y="959" text-anchor="middle">→ Deleuze</text></g>
+      <g class="gnode"><rect x="390" y="920" width="120" height="50" rx="5"/><text x="450" y="943" text-anchor="middle">Baudelaire</text><text class="gsub" x="450" y="959" text-anchor="middle">→ Benjamin</text></g>
+      <g class="gnode"><rect x="530" y="920" width="100" height="50" rx="5"/><text x="580" y="943" text-anchor="middle">Beckett</text><text class="gsub" x="580" y="959" text-anchor="middle">→ Adorno</text></g>
+      <g class="gnode"><rect x="650" y="920" width="110" height="50" rx="5"/><text x="705" y="943" text-anchor="middle">Dostoevsky</text><text class="gsub" x="705" y="959" text-anchor="middle">→ Nietz. · Freud</text></g>
+      <g class="gnode"><rect x="780" y="920" width="100" height="50" rx="5"/><text x="830" y="943" text-anchor="middle">SF / Ballard</text><text class="gsub" x="830" y="959" text-anchor="middle">→ Haraway · Fisher</text></g>
+
+      <g class="gnode thinker"><rect x="160" y="1000" width="90" height="40" rx="5"/><text x="205" y="1025" text-anchor="middle">Lacan</text></g>
+      <g class="gnode thinker"><rect x="280" y="1000" width="90" height="40" rx="5"/><text x="325" y="1025" text-anchor="middle">Deleuze</text></g>
+      <g class="gnode thinker"><rect x="400" y="1000" width="100" height="40" rx="5"/><text x="450" y="1025" text-anchor="middle">Benjamin</text></g>
+      <g class="gnode thinker"><rect x="530" y="1000" width="90" height="40" rx="5"/><text x="575" y="1025" text-anchor="middle">Adorno</text></g>
+      <g class="gnode thinker"><rect x="650" y="1000" width="90" height="40" rx="5"/><text x="695" y="1025" text-anchor="middle">Freud</text></g>
+      <g class="gnode thinker"><rect x="770" y="1000" width="120" height="40" rx="5"/><text x="830" y="1025" text-anchor="middle">Haraway·Fisher</text></g>
+    </svg>
+  </div>
+  <p class="lede" style="margin-top:1.2rem;color:var(--muted);font-family:var(--mono);font-size:0.78rem;">Freud* marks Carter/Ballard/Puig attachments through Freud as well as later French theory. Marx* dotted line: Piglia’s materialist archive novel. Borges hangs from Schopenhauer; Piglia from Lacan weather + Marx. Bottom band: fiction → theory (Joyce, Kafka, Proust, Baudelaire, Beckett, Dostoevsky, SF/Ballard).</p>
+</section>
+
+<footer class="close">
+  <p>The philosophy maps ask what desire, culture, technics, or the unconscious <em>are</em>. This page asks a smaller follow-up: who took those answers seriously enough to rebuild plot, voice, or world around them — and, in the reverse section, which fiction forced the theorists to rebuild their concepts. If a favorite novel is missing, the usual reason is the bar — "richly readable through theory" is not the same as "written under theory's pressure" (or theorized under fiction's pressure).</p>
+  <p>Back to the <a href="/map-of-maps.html">Thinkers Timeline</a> · <a href="/map-of-maps-currents.html">browse by current</a> (thinkers only — fiction stays on this page) · essays linked above.</p>
+</footer>
+
+</div>
+<script defer src="assets/js/essay-nav.js"></script>
+</body>
+</html>

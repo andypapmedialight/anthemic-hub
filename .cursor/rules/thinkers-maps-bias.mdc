@@ -1,0 +1,31 @@
+---
+description: Correct male and eurocentric bias when editing thinkers maps
+globs: "{grounding-the-unconscious,genealogies-of-desire,constellations-of-history,technics-and-time,map-of-maps,map-of-maps-currents,fiction-of-the-maps,philosophy-booklet}*.{html,js,svg},assets/js/map-*.js"
+alwaysApply: false
+---
+
+# Thinkers maps — bias correction
+
+Add/revise thinkers, currents, timeline nodes, SVGs, glossaries → correct **male** + **European** skew. Western male canon not unmarked default.
+
+## Required checks before shipping a change
+
+1. **Census** — after edits, rough count named women vs person/cluster nodes; note non-European / Global South. Change adds men only → add/propose matching women and/or non-European interlocutors on same current.
+2. **Placement** — figures *inside* argument (edges, prose hinges, currents tags), not segregated “diversity” sidebar / afterthought band.
+3. **Entry points** — male/Europe-heavy spine → early non-European or woman hinge (e.g. Fanon beside Sartre; Federici/Firestone inside Freudo-Marxism; Hui/Merchant/Hayles on techne).
+4. **Honesty** — frame notes / currents may state imbalance; no fake parity. No erase European archives — thicken + rebalance.
+5. **Currents** (`map-currents.js`) — new thinkers get right cohort tags; create/widen current, not timeline-only.
+
+## Good vs bad
+
+```text
+❌ BAD — add three more Frankfurt/Warwick men; leave sex ratio and geography unremarked
+✅ GOOD — same addition paired with a woman or decolonial interlocutor on that quarrel, wired in prose + timeline + current
+
+❌ BAD — park all non-European names on a separate “other” page only
+✅ GOOD — colonial / feminist / cosmotechnics pressure sits on the map that asks the question
+```
+
+## Scope
+
+Grounding, Genealogies, Constellations, Technics, Thinkers Timeline, browse-by-current, Fiction of the maps, booklet assembly of those pages.
