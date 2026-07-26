@@ -3,13 +3,14 @@
 
 const dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
 const pal = dark
-  ? { ink: "#D8DFEC", muted: "#8A96AE", cyan: "#3BC1D6", violet: "#A987F5", gold: "#D9B15E", line: "rgba(255,255,255,0.28)", panel: "rgba(20,28,48,0.92)", softG: "#3BC1D629", softV: "#A987F529", softGo: "#D9B15E2E" }
-  : { ink: "#161C28", muted: "#58627A", cyan: "#0E7F94", violet: "#6B46C1", gold: "#9C6F1C", line: "rgba(20,28,48,0.28)", panel: "rgba(255,255,255,0.94)", softG: "#0E7F941F", softV: "#6B46C11F", softGo: "#9C6F1C24" };
+  ? { ink: "#D8DFEC", muted: "#8A96AE", cyan: "#3BC1D6", violet: "#A987F5", gold: "#D9B15E", rose: "#E08A9A", line: "rgba(255,255,255,0.28)", panel: "rgba(20,28,48,0.92)", softG: "#3BC1D629", softV: "#A987F529", softGo: "#D9B15E2E", softR: "#E08A9A29" }
+  : { ink: "#161C28", muted: "#58627A", cyan: "#0E7F94", violet: "#6B46C1", gold: "#9C6F1C", rose: "#A84D5C", line: "rgba(20,28,48,0.28)", panel: "rgba(255,255,255,0.94)", softG: "#0E7F941F", softV: "#6B46C11F", softGo: "#9C6F1C24", softR: "#A84D5C1F" };
 
 const HREF = {
   grounding: "/grounding-the-unconscious.html",
   genealogies: "/genealogies-of-desire.html",
   constellations: "/constellations-of-history.html",
+  techne: "/technics-and-time.html",
   concept: null
 };
 
@@ -17,6 +18,7 @@ const GROUP_LABELS = {
   grounding: "Grounding the Unconscious",
   genealogies: "Genealogies of Desire",
   constellations: "Constellations of History",
+  techne: "Technics and Time",
   concept: "Shared concepts"
 };
 
@@ -60,8 +62,8 @@ const NODES = [
   { id: "kracauer", name: "Kracauer", sub: "mass ornament", group: "constellations", year: 1927, href: "/constellations-of-history.html#weimar-circle" },
   { id: "malinowski", name: "Malinowski", sub: "Trobriand fieldwork", group: "grounding", year: 1927, href: "/grounding-the-unconscious.html#rebuttals" },
   { id: "brecht", name: "Brecht", sub: "epic theater", group: "constellations", year: 1930, href: "/constellations-of-history.html#weimar-circle" },
-  { id: "cHegemony", name: "hegemony", sub: "", group: "concept", year: 1930, href: "/constellations-of-history.html#gloss-hegemony" },
-  { id: "gramsci", name: "Gramsci", sub: "hegemony", group: "constellations", year: 1930, href: "/constellations-of-history.html#lukacs-gramsci" },
+  { id: "cHegemony", name: "hegemony", sub: "", group: "concept", year: 1930, href: "/constellations-of-history.html#gloss-hegemony", approx: true },
+  { id: "gramsci", name: "Gramsci", sub: "hegemony", group: "constellations", year: 1930, href: "/constellations-of-history.html#lukacs-gramsci", approx: true },
   { id: "reich", name: "Reich", sub: "character armor", group: "genealogies", year: 1933, href: "/genealogies-of-desire.html#reich" },
   { id: "bloch", name: "Bloch", sub: "non-synchronism", group: "constellations", year: 1935, href: "/constellations-of-history.html#weimar-circle" },
   { id: "benjamin", name: "Benjamin", sub: "aura · dialectical image", group: "constellations", year: 1936, href: "/constellations-of-history.html#benjamin" },
@@ -75,7 +77,7 @@ const NODES = [
   { id: "lacan", name: "Lacan", sub: "Real · Symbolic · Imaginary", group: "grounding", year: 1953, href: "/grounding-the-unconscious.html#lacan" },
   { id: "marcuse", name: "Marcuse", sub: "surplus-repression", group: "genealogies", year: 1955, href: "/genealogies-of-desire.html#marcuse" },
   { id: "williamsR", name: "Raymond Williams", sub: "structure of feeling", group: "constellations", year: 1958, href: "/constellations-of-history.html#cultural-studies" },
-  { id: "popper", name: "Popper", sub: "falsifiability", group: "grounding", year: 1963, href: "/grounding-the-unconscious.html#rebuttals" },
+  { id: "popper", name: "Popper", sub: "falsifiability", group: "grounding", year: 1963, href: "/grounding-the-unconscious.html#rebuttals", approx: true },
   { id: "mcluhan", name: "Marshall McLuhan", sub: "the medium is the message", group: "constellations", year: 1964, href: "/constellations-of-history.html#mcluhan" },
   { id: "chomLak", name: "Chomsky · Lakoff", sub: "innate / embodied pushback", group: "grounding", year: 1965, href: "/grounding-the-unconscious.html#lacan", approx: true },
   { id: "debord", name: "Debord", sub: "society of the spectacle", group: "constellations", year: 1967, href: "/constellations-of-history.html#adorno-debord" },
@@ -102,12 +104,12 @@ const NODES = [
   { id: "harvey", name: "David Harvey", sub: "time-space compression", group: "constellations", year: 1989, href: "/constellations-of-history.html#anderson-harvey-eagleton" },
   { id: "taylor", name: "Charles Taylor", sub: "moral horizons", group: "constellations", year: 1989, href: "/constellations-of-history.html#rosa" },
   { id: "zizek", name: "Žižek", sub: "parallax view", group: "grounding", year: 1989, href: "/grounding-the-unconscious.html#zizek" },
-  { id: "jameson", name: "Jameson", sub: "postmodernism · cognitive mapping", group: "constellations", year: 1991, href: "/constellations-of-history.html#jameson" },
+  { id: "jameson", name: "Jameson", sub: "postmodernism · cognitive mapping", group: "constellations", year: 1991, href: "/constellations-of-history.html#jameson", approx: true },
   { id: "honneth", name: "Honneth", sub: "struggle for recognition", group: "constellations", year: 1992, href: "/constellations-of-history.html#honneth" },
   { id: "damasio", name: "Damasio", sub: "core / autobiographical self", group: "grounding", year: 1994, href: "/grounding-the-unconscious.html#damasio" },
   { id: "ccruTrio", name: "Eshun · Mackay · Grant", sub: "theory-fiction", group: "genealogies", year: 1995, href: "/genealogies-of-desire.html#warwick-ccru", approx: true },
   { id: "chalmers", name: "Chalmers", sub: "hard problem", group: "grounding", year: 1995, href: "/grounding-the-unconscious.html#chalmers" },
-  { id: "cHardProb", name: "the hard problem / subject as gap", sub: "", group: "concept", year: 1995, href: "/grounding-the-unconscious.html#dissenters" },
+  { id: "cHardProb", name: "the hard problem / subject as gap", sub: "", group: "concept", year: 1995, href: "/grounding-the-unconscious.html#gloss-hard-problem" },
   { id: "crews", name: "Crews", sub: "Memory Wars · historical critique", group: "grounding", year: 1995, href: "/grounding-the-unconscious.html#rebuttals" },
   { id: "land", name: "Nick Land", sub: "diagonalization · Meltdown", group: "genealogies", year: 1995, href: "/genealogies-of-desire.html#land" },
   { id: "ledoux", name: "LeDoux", sub: "fast threat pathway", group: "grounding", year: 1996, href: "/grounding-the-unconscious.html#cognitive-science" },
@@ -125,13 +127,50 @@ const NODES = [
   { id: "berardiDean", name: "Berardi · Dean", sub: "semiocapitalism", group: "genealogies", year: 2012, href: "/genealogies-of-desire.html#berardi-dean", approx: true },
   { id: "bostrom", name: "Bostrom", sub: "orthogonality thesis", group: "genealogies", year: 2012, href: "/genealogies-of-desire.html#bostrom" },
   { id: "nagel", name: "Nagel", sub: "Mind and Cosmos", group: "grounding", year: 2012, href: "/grounding-the-unconscious.html#dissenters" },
-  { id: "cSocAccel", name: "social acceleration / dynamic stabilization", sub: "", group: "concept", year: 2013, href: "/constellations-of-history.html#gloss-social-acceleration" },
+  { id: "cSocAccel", name: "social acceleration / dynamic stabilization", sub: "", group: "concept", year: 2005, href: "/constellations-of-history.html#gloss-social-acceleration", approx: true },
   { id: "leftAccel", name: "Left-accelerationism", sub: "Srnicek & Williams", group: "genealogies", year: 2013, href: "/genealogies-of-desire.html#left-accelerationism" },
-  { id: "rosa", name: "Hartmut Rosa", sub: "social acceleration · resonance", group: "constellations", year: 2013, href: "/constellations-of-history.html#rosa" },
+  { id: "rosa", name: "Hartmut Rosa", sub: "social acceleration · resonance", group: "constellations", year: 2005, href: "/constellations-of-history.html#rosa", approx: true },
   { id: "kastrup", name: "Kastrup", sub: "analytic idealism", group: "grounding", year: 2014, href: "/grounding-the-unconscious.html#dissenters" },
   { id: "acidXeno", name: "Acid Communism / Xenofeminism", sub: "2015–18", group: "genealogies", year: 2016, href: "/genealogies-of-desire.html#connected-strains", approx: true },
   { id: "cResonance", name: "resonance / world-relation", sub: "", group: "concept", year: 2016, href: "/constellations-of-history.html#gloss-resonance" },
-  { id: "eacc", name: "e/acc", sub: "effective accelerationism", group: "genealogies", year: 2023, href: "/genealogies-of-desire.html#corpse-of-accelerationism", approx: true }
+  { id: "eacc", name: "e/acc", sub: "effective accelerationism", group: "genealogies", year: 2023, href: "/genealogies-of-desire.html#corpse-of-accelerationism", approx: true },
+  { id: "aristotleTech", name: "Aristotle · techne", sub: "making vs phronesis", group: "techne", year: -350, href: "/technics-and-time.html#aristotle-techne", approx: true },
+  { id: "cTechneGestell", name: "techne / Gestell", sub: "", group: "concept", year: 1954, href: "/technics-and-time.html#gloss-gestell" },
+  { id: "heideggerGestell", name: "Heidegger · Gestell", sub: "enframing · standing-reserve", group: "techne", year: 1954, href: "/technics-and-time.html#heidegger-gestell", approx: true },
+  { id: "simondon", name: "Simondon", sub: "technical individuation", group: "techne", year: 1958, href: "/technics-and-time.html#simondon" },
+  { id: "stiegler", name: "Stiegler", sub: "tertiary retention · pharmakon", group: "techne", year: 1994, href: "/technics-and-time.html#stiegler" },
+  { id: "cPharmakon", name: "pharmacology / tertiary retention", sub: "", group: "concept", year: 1994, href: "/technics-and-time.html#gloss-tertiary" },
+  { id: "yukHui", name: "Yuk Hui", sub: "cosmotechnics", group: "techne", year: 2016, href: "/technics-and-time.html#yuk-hui" },
+  { id: "cCosmotech", name: "cosmotechnics", sub: "", group: "concept", year: 2016, href: "/technics-and-time.html#gloss-cosmotechnics" },
+  { id: "beauvoir", name: "Beauvoir", sub: "Second Sex · becoming-woman", group: "genealogies", year: 1949, href: "/genealogies-of-desire.html#beauvoir" },
+  { id: "irigaray", name: "Irigaray", sub: "phallocentric Symbolic", group: "genealogies", year: 1974, href: "/genealogies-of-desire.html#irigaray" },
+  { id: "federici", name: "Federici", sub: "social reproduction", group: "genealogies", year: 2004, href: "/genealogies-of-desire.html#federici" },
+  { id: "butler", name: "Butler", sub: "gender performativity", group: "genealogies", year: 1990, href: "/genealogies-of-desire.html#butler" },
+  { id: "haraway", name: "Haraway", sub: "cyborg manifesto", group: "genealogies", year: 1985, href: "/genealogies-of-desire.html#haraway" },
+  { id: "arendt", name: "Arendt", sub: "Origins of Totalitarianism", group: "constellations", year: 1951, href: "/constellations-of-history.html#arendt" },
+  { id: "fanon", name: "Fanon", sub: "Black Skin, White Masks", group: "constellations", year: 1952, href: "/constellations-of-history.html#fanon" },
+  { id: "bourdieu", name: "Bourdieu", sub: "habitus · cultural capital", group: "constellations", year: 1979, href: "/constellations-of-history.html#bourdieu" },
+  { id: "cHabitus", name: "habitus / cultural capital", sub: "", group: "concept", year: 1979, href: "/constellations-of-history.html#gloss-habitus" },
+  { id: "said", name: "Said", sub: "Orientalism", group: "constellations", year: 1978, href: "/constellations-of-history.html#said" },
+  { id: "spivak", name: "Spivak", sub: "Can the Subaltern Speak?", group: "constellations", year: 1988, href: "/constellations-of-history.html#spivak" },
+  { id: "wynter", name: "Wynter", sub: "after Man · coloniality of being", group: "constellations", year: 2003, href: "/constellations-of-history.html#wynter" },
+  { id: "mills", name: "Charles W. Mills", sub: "racial contract", group: "constellations", year: 1997, href: "/constellations-of-history.html#mills" },
+  { id: "cRacialContract", name: "racial contract", sub: "", group: "concept", year: 1997, href: "/constellations-of-history.html#gloss-racial-contract" },
+  { id: "fraser", name: "Nancy Fraser", sub: "redistribution or recognition", group: "constellations", year: 2003, href: "/constellations-of-history.html#fraser" },
+  { id: "bauman", name: "Bauman", sub: "liquid modernity · Holocaust", group: "constellations", year: 2000, href: "/constellations-of-history.html#bauman" },
+  { id: "weil", name: "Simone Weil", sub: "Need for Roots · poem of force", group: "constellations", year: 1949, href: "/constellations-of-history.html#weil" },
+  { id: "firestone", name: "Firestone", sub: "Dialectic of Sex", group: "genealogies", year: 1970, href: "/genealogies-of-desire.html#firestone" },
+  { id: "cixous", name: "Cixous", sub: "écriture féminine", group: "genealogies", year: 1975, href: "/genealogies-of-desire.html#cixous" },
+  { id: "davis", name: "Angela Davis", sub: "Women, Race & Class", group: "constellations", year: 1981, href: "/constellations-of-history.html#davis" },
+  { id: "lordeHooks", name: "Lorde · hooks", sub: "Sister Outsider · margin to center", group: "constellations", year: 1984, href: "/constellations-of-history.html#lorde-hooks", approx: true },
+  { id: "collins", name: "Patricia Hill Collins", sub: "Black feminist thought", group: "constellations", year: 1990, href: "/constellations-of-history.html#collins" },
+  { id: "hayles", name: "N. Katherine Hayles", sub: "How We Became Posthuman", group: "techne", year: 1999, href: "/technics-and-time.html#hayles" },
+  { id: "lugones", name: "María Lugones", sub: "coloniality of gender", group: "constellations", year: 2007, href: "/constellations-of-history.html#lugones" },
+  { id: "luxemburg", name: "Rosa Luxemburg", sub: "Accumulation of Capital", group: "constellations", year: 1913, href: "/constellations-of-history.html#luxemburg" },
+  { id: "mitchell", name: "Juliet Mitchell", sub: "Psychoanalysis and Feminism", group: "genealogies", year: 1974, href: "/genealogies-of-desire.html#mitchell" },
+  { id: "mohanty", name: "Chandra Mohanty", sub: "Under Western Eyes", group: "constellations", year: 1984, href: "/constellations-of-history.html#mohanty" },
+  { id: "merchant", name: "Carolyn Merchant", sub: "Death of Nature", group: "techne", year: 1980, href: "/technics-and-time.html#merchant" },
+  { id: "anzaldua", name: "Gloria Anzaldúa", sub: "Borderlands / mestiza", group: "constellations", year: 1987, href: "/constellations-of-history.html#anzaldua" }
 ];
 
 /** kind: build | critique | parallel | callback */
@@ -318,7 +357,97 @@ const EDGES = [
   { from: "foucault", to: "cGenMethod", kind: "build" },
   { from: "fisher", to: "cGenMethod", kind: "build" },
   { from: "gramsci", to: "cHegemony", kind: "build" },
-  { from: "hall", to: "cHegemony", kind: "build" }
+  { from: "hall", to: "cHegemony", kind: "build" },
+  { from: "aristotleTech", to: "heideggerGestell", kind: "critique" },
+  { from: "heidegger", to: "heideggerGestell", kind: "build" },
+  { from: "heideggerGestell", to: "cTechneGestell", kind: "build" },
+  { from: "aristotleTech", to: "cTechneGestell", kind: "build" },
+  { from: "heideggerGestell", to: "simondon", kind: "critique" },
+  { from: "simondon", to: "stiegler", kind: "build" },
+  { from: "heideggerGestell", to: "stiegler", kind: "build" },
+  { from: "stiegler", to: "cPharmakon", kind: "build" },
+  { from: "stiegler", to: "yukHui", kind: "critique" },
+  { from: "yukHui", to: "cCosmotech", kind: "build" },
+  { from: "heideggerGestell", to: "yukHui", kind: "critique" },
+  { from: "mcluhan", to: "heideggerGestell", kind: "parallel" },
+  { from: "mcluhan", to: "stiegler", kind: "parallel" },
+  { from: "land", to: "stiegler", kind: "parallel" },
+  { from: "haraway", to: "stiegler", kind: "parallel" },
+  { from: "haraway", to: "plant", kind: "build" },
+  { from: "haraway", to: "acidXeno", kind: "build" },
+  { from: "kojeve", to: "beauvoir", kind: "build" },
+  { from: "hegel", to: "beauvoir", kind: "build" },
+  { from: "beauvoir", to: "butler", kind: "build" },
+  { from: "lacan", to: "irigaray", kind: "critique" },
+  { from: "kristeva", to: "irigaray", kind: "parallel" },
+  { from: "foucault", to: "butler", kind: "build" },
+  { from: "marcuse", to: "federici", kind: "critique" },
+  { from: "marx", to: "federici", kind: "build" },
+  { from: "benjamin", to: "arendt", kind: "parallel" },
+  { from: "sartre", to: "fanon", kind: "build" },
+  { from: "fanon", to: "hall", kind: "build" },
+  { from: "cRecog", to: "fanon", kind: "critique" },
+  { from: "hall", to: "bourdieu", kind: "parallel" },
+  { from: "williamsR", to: "bourdieu", kind: "parallel" },
+  { from: "gramsci", to: "bourdieu", kind: "parallel" },
+  { from: "adorno", to: "bourdieu", kind: "parallel" },
+  { from: "bourdieu", to: "cHabitus", kind: "build" },
+  { from: "jameson", to: "said", kind: "critique" },
+  { from: "said", to: "spivak", kind: "build" },
+  { from: "derrida", to: "spivak", kind: "build" },
+  { from: "fanon", to: "wynter", kind: "parallel" },
+  { from: "mills", to: "cRacialContract", kind: "build" },
+  { from: "hall", to: "mills", kind: "parallel" },
+  { from: "honneth", to: "fraser", kind: "critique" },
+  { from: "butler", to: "fraser", kind: "parallel" },
+  { from: "cRecog", to: "fraser", kind: "build" },
+  { from: "bauman", to: "rosa", kind: "parallel" },
+  { from: "bauman", to: "cSocAccel", kind: "parallel" },
+  { from: "harvey", to: "bauman", kind: "parallel" },
+  { from: "adorno", to: "bauman", kind: "parallel" },
+  { from: "fisher", to: "bauman", kind: "parallel" },
+  { from: "benjamin", to: "weil", kind: "parallel" },
+  { from: "arendt", to: "weil", kind: "parallel" },
+  { from: "marx", to: "weil", kind: "build" },
+  { from: "marcuse", to: "firestone", kind: "build" },
+  { from: "reich", to: "firestone", kind: "build" },
+  { from: "firestone", to: "federici", kind: "parallel" },
+  { from: "firestone", to: "haraway", kind: "build" },
+  { from: "irigaray", to: "cixous", kind: "parallel" },
+  { from: "kristeva", to: "cixous", kind: "parallel" },
+  { from: "derrida", to: "cixous", kind: "parallel" },
+  { from: "adorno", to: "davis", kind: "build" },
+  { from: "marcuse", to: "davis", kind: "build" },
+  { from: "fanon", to: "davis", kind: "build" },
+  { from: "hall", to: "lordeHooks", kind: "parallel" },
+  { from: "davis", to: "lordeHooks", kind: "parallel" },
+  { from: "lordeHooks", to: "collins", kind: "build" },
+  { from: "davis", to: "collins", kind: "build" },
+  { from: "collins", to: "mills", kind: "parallel" },
+  { from: "haraway", to: "hayles", kind: "parallel" },
+  { from: "stiegler", to: "hayles", kind: "parallel" },
+  { from: "wynter", to: "lugones", kind: "parallel" },
+  { from: "fanon", to: "lugones", kind: "build" },
+  { from: "spivak", to: "lugones", kind: "parallel" },
+  { from: "marx", to: "luxemburg", kind: "build" },
+  { from: "luxemburg", to: "lukacs", kind: "parallel" },
+  { from: "luxemburg", to: "gramsci", kind: "parallel" },
+  { from: "freud", to: "mitchell", kind: "build" },
+  { from: "marx", to: "mitchell", kind: "build" },
+  { from: "lacan", to: "mitchell", kind: "build" },
+  { from: "mitchell", to: "irigaray", kind: "parallel" },
+  { from: "mitchell", to: "firestone", kind: "parallel" },
+  { from: "said", to: "mohanty", kind: "parallel" },
+  { from: "spivak", to: "mohanty", kind: "parallel" },
+  { from: "mohanty", to: "lordeHooks", kind: "parallel" },
+  { from: "aristotleTech", to: "merchant", kind: "critique" },
+  { from: "heideggerGestell", to: "merchant", kind: "parallel" },
+  { from: "merchant", to: "haraway", kind: "parallel" },
+  { from: "merchant", to: "hayles", kind: "parallel" },
+  { from: "spivak", to: "anzaldua", kind: "parallel" },
+  { from: "fanon", to: "anzaldua", kind: "parallel" },
+  { from: "anzaldua", to: "lugones", kind: "build" },
+  { from: "anzaldua", to: "mohanty", kind: "parallel" }
 ];
 
 const NODE_W = 168;
@@ -337,8 +466,8 @@ const SUBLANE_PITCH = 156;
 const MAX_NODE_W = SUBLANE_PITCH - 8;
 
 /** Essay tracks keep the diagram wide; collisions prefer horizontal pack, then downward. */
-const GROUP_TRACK = { grounding: 0, genealogies: 1, constellations: 2, concept: 3 };
-const TRACK_COUNT = 4;
+const GROUP_TRACK = { grounding: 0, genealogies: 1, constellations: 2, techne: 3, concept: 4 };
+const TRACK_COUNT = 5;
 
 /** Relative base lengths along the time axis (sum = 1). Final spans also grow for peak clusters. */
 const YEAR_WEIGHTS = [
@@ -445,6 +574,7 @@ function groupStroke(group) {
   if (group === "grounding") return pal.cyan;
   if (group === "genealogies") return pal.violet;
   if (group === "constellations") return pal.gold;
+  if (group === "techne") return pal.rose;
   return pal.muted;
 }
 
@@ -452,6 +582,7 @@ function groupFill(group) {
   if (group === "grounding") return pal.softG;
   if (group === "genealogies") return pal.softV;
   if (group === "constellations") return pal.softGo;
+  if (group === "techne") return pal.softR;
   return "transparent";
 }
 
@@ -773,7 +904,8 @@ function centuryBucket(year) {
 function buildSidebar() {
   const frag = document.createDocumentFragment();
   let lastBucket = null;
-  for (const n of NODES) {
+  const ordered = NODES.slice().sort((a, b) => a.year - b.year || a.name.localeCompare(b.name));
+  for (const n of ordered) {
     const bucket = centuryBucket(n.year);
     if (bucket !== lastBucket) {
       const label = document.createElement("div");

@@ -18,6 +18,12 @@
       prefix: "coh-",
       slug: "constellations",
       title: "Constellations of History"
+    },
+    {
+      url: "/technics-and-time.html",
+      prefix: "tat-",
+      slug: "techne",
+      title: "Technics and Time"
     }
   ];
 
@@ -98,7 +104,7 @@
     header.innerHTML =
       '<div class="eyebrow"><span class="dot">●</span> index</div>' +
       "<h1>Thinkers Timeline</h1>" +
-      '<p class="dek">Chronological index of every thinker and key concept across the three essays. ' +
+      '<p class="dek">Chronological index of every thinker and key concept across the four essays. ' +
       'Years are floruit / key-work markers, not biographical precision. ' +
       'For the interactive diagram, see <a href="/map-of-maps.html">map-of-maps.html</a>.</p>';
     section.appendChild(header);
@@ -115,7 +121,9 @@
     const ol = document.createElement("ol");
     ol.className = "timeline-print-list";
 
-    data.NODES.forEach((n) => {
+    data.NODES.slice()
+      .sort((a, b) => a.year - b.year || a.name.localeCompare(b.name))
+      .forEach((n) => {
       const li = document.createElement("li");
       li.dataset.group = n.group;
       const year = document.createElement("span");
@@ -155,7 +163,7 @@
     cover.innerHTML =
       '<div class="eyebrow"><span class="dot">●</span> Anthemic Developments <span class="dot2">●</span> printable booklet</div>' +
       "<h1>Genealogies &amp; Constellations</h1>" +
-      '<p class="dek">Three linked essays on the unconscious, desire, and historical form — with genealogy maps and a chronological thinkers index.</p>' +
+      '<p class="dek">Four linked essays on the unconscious, desire, historical form, and technics — with genealogy maps and a chronological thinkers index.</p>' +
       '<div class="frame-note">Assembled from the live site pages. Print from this view (Ctrl/Cmd+P). Interactive maps and the pan/zoom timeline remain on their source pages.</div>' +
       '<p class="booklet-date mono">Generated ' + date + "</p>";
 

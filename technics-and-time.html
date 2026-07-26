@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Technics and Time — Gestell, Simondon, Stiegler, cosmotechnics</title>
+<meta name="description" content="Aristotle's techne through Heidegger's Gestell, Simondon's technical individuation, Stiegler's pharmacology, and Yuk Hui's cosmotechnics — a genealogy of what technics do to the subject.">
+<meta name="color-scheme" content="light dark">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Technics and Time">
+<meta property="og:description" content="From Aristotle's techne and Heidegger's Gestell through Simondon and Stiegler to Yuk Hui's cosmotechnics — what technics do to time, memory, and the subject.">
+<meta property="og:url" content="https://anthemic-developments.com/technics-and-time.html">
+<meta name="twitter:card" content="summary">
+<link rel="icon" type="image/svg+xml" href="technics-and-time-favicon.svg">
+<link rel="canonical" href="https://anthemic-developments.com/technics-and-time.html">
+<link rel="stylesheet" href="assets/css/philosophy-pages.css">
+<link rel="stylesheet" href="assets/css/essay-nav.css">
+<style>
+  .wrap.essay { max-width: 960px; margin: 0 auto; font-size: 17px; line-height: 1.65; }
+
+  header.masthead { margin-bottom: 3.5rem; }
+  .frame-note {
+    margin-top: 1.6rem; padding: 0.9rem 1.1rem;
+    border: 1px solid var(--line); border-left: 3px solid var(--cyan);
+    border-radius: 12px; font-family: var(--mono); font-size: 0.82rem;
+    color: var(--muted); line-height: 1.55; background: var(--panel-2);
+  }
+
+  section.thinker {
+    display: grid; grid-template-columns: minmax(0, 1fr) 260px;
+    gap: 0 2.2rem; padding: 2.6rem 0; border-top: 1px solid var(--line);
+  }
+  .main-col { min-width: 0; }
+  h2 {
+    font-family: var(--serif); font-size: 1.5rem; margin: 0 0 0.15rem;
+    letter-spacing: -0.01em; font-weight: 600;
+  }
+  h2 .years {
+    font-family: var(--mono); font-size: 0.65em; color: var(--muted);
+    font-weight: 400; margin-left: 0.5em;
+  }
+  h3 {
+    font-family: var(--mono); font-size: 0.92rem; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--cyan); margin: 1.8rem 0 0.8rem; font-weight: 600;
+  }
+  .tag-row { margin-bottom: 1.1rem; }
+  .tag {
+    display: inline-block; font-family: var(--mono); font-size: 0.68rem;
+    letter-spacing: 0.06em; text-transform: uppercase; padding: 0.18em 0.55em;
+    border-radius: 999px; background: var(--violet-soft); color: var(--violet); margin-right: 0.4em;
+  }
+  .main-col p { margin: 0 0 1rem; max-width: 66ch; }
+  .main-col p:last-child { margin-bottom: 0; }
+  strong.term { font-style: italic; font-weight: 600; }
+
+  a.gloss-jump { color: inherit; text-decoration: none; border-bottom: 1px dotted var(--cyan); }
+  a.gloss-jump:hover { border-bottom-style: solid; color: var(--cyan); }
+  a.gloss-where {
+    display: inline-block; margin-top: 0.35rem;
+    font-family: var(--mono); font-size: 0.72rem; color: var(--cyan);
+    text-decoration: none; border-bottom: 1px dotted var(--cyan);
+  }
+  a.gloss-where:hover { border-bottom-style: solid; }
+
+  .main-col a { color: var(--cyan); border-bottom-color: color-mix(in srgb, var(--cyan) 35%, transparent); }
+  .main-col a:hover { border-bottom-color: var(--cyan); }
+
+  aside.margin {
+    font-family: var(--mono); font-size: 0.76rem; line-height: 1.55;
+    color: var(--muted); border-left: 2px solid var(--cyan); padding-left: 1rem; align-self: start;
+  }
+  aside.margin .label {
+    color: var(--cyan); text-transform: uppercase; letter-spacing: 0.08em;
+    font-size: 0.68rem; display: block; margin-bottom: 0.5rem;
+  }
+  aside.margin p { margin: 0 0 0.8rem; }
+  aside.margin p:last-child { margin-bottom: 0; }
+  aside.margin .who { color: var(--ink); }
+
+  @media (max-width: 760px) {
+    section.thinker { grid-template-columns: 1fr; }
+    aside.margin {
+      border-left: none; border-top: 1px solid var(--line); padding-left: 0;
+      margin-top: 1.2rem; background: var(--cyan-soft);
+      padding: 0.9rem 1rem; border-radius: 12px;
+    }
+  }
+
+  .mapsec { padding-top: 3rem; border-top: 1px solid var(--line); }
+  .mapsec h2 { font-size: 1.6rem; margin-bottom: 0.4rem; }
+  .mapsec > p.lede { max-width: 66ch; margin-bottom: 1.6rem; }
+  .map-scroll {
+    overflow-x: auto; border: 1px solid var(--line); border-radius: 14px;
+    background: var(--panel); box-shadow: var(--shadow);
+    padding: 0.75rem;
+  }
+  svg.genealogy { display: block; min-width: 760px; }
+  .gband-label {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em;
+    fill: var(--muted); text-transform: uppercase;
+  }
+  .gband-label tspan.lc { text-transform: none; }
+  .gband-rule { stroke: var(--line); stroke-width: 1; }
+  .gnode rect { fill: var(--ground); stroke: var(--line); stroke-width: 1.2; }
+  .gnode text { font-family: var(--serif); fill: var(--ink); font-size: 13px; }
+  .gnode .gsub { font-family: var(--mono); fill: var(--muted); font-size: 9.5px; }
+  .glink { fill: none; }
+  .glink.lineage { stroke: var(--muted); stroke-width: 1.4; }
+  .glink.critique { stroke: var(--violet); stroke-width: 1.3; stroke-dasharray: 5, 4; }
+  .glink.parallel { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 1, 3; opacity: 0.7; }
+  .glink.callback { stroke: var(--cyan); stroke-width: 2; }
+  .glabel { font-family: var(--mono); font-size: 9.5px; fill: var(--muted); }
+  .legend-note {
+    margin-top: 1rem; font-family: var(--mono); font-size: 0.72rem;
+    color: var(--muted); line-height: 1.8;
+  }
+  .legend-note .sw {
+    display: inline-block; width: 1.6em; height: 0; border-top: 2px solid;
+    margin-right: 0.4em; vertical-align: middle;
+  }
+  .legend-note .sw.lineage { border-color: var(--muted); }
+  .legend-note .sw.critique { border-color: var(--violet); border-top-style: dashed; }
+  .legend-note .sw.parallel { border-color: var(--muted); border-top-style: dotted; }
+  .legend-note .sw.callback { border-color: var(--cyan); border-top-width: 3px; }
+
+  footer.close {
+    margin-top: 3rem; padding-top: 1.8rem; border-top: 1px solid var(--line);
+    color: var(--muted); font-size: 0.92rem; max-width: 68ch;
+  }
+  footer.close p { margin: 0 0 0.9rem; }
+  footer.close a { color: var(--cyan); }
+
+  .glossary { padding-top: 3rem; border-top: 1px solid var(--line); }
+  .glossary h2 { font-size: 1.6rem; margin-bottom: 0.4rem; }
+  .glossary > p.lede { max-width: 66ch; margin-bottom: 2rem; }
+  .gloss-group { margin-bottom: 2.2rem; }
+  .gloss-group:last-child { margin-bottom: 0; }
+  .gloss-group h3 { margin-top: 0; }
+  .gloss-list { display: grid; grid-template-columns: 1fr; gap: 1.1rem 2rem; }
+  @media (min-width: 760px) { .gloss-list { grid-template-columns: 1fr 1fr; } }
+  .gloss-item dt { font-style: italic; font-weight: 600; color: var(--ink); margin: 0 0 0.2rem; }
+  .gloss-item dd { margin: 0; color: var(--muted); font-size: 0.92rem; line-height: 1.5; max-width: 44ch; }
+</style>
+</head>
+<body>
+
+<div class="wrap essay">
+
+<nav class="site-bar" aria-label="Site">
+  <a href="/">← Anthemic hub</a>
+  <span class="sep" aria-hidden="true">·</span>
+  <a href="/grounding-the-unconscious.html">Grounding the Unconscious</a>
+  <span class="sep" aria-hidden="true">·</span>
+  <a href="/genealogies-of-desire.html">Genealogies of Desire</a>
+  <span class="sep" aria-hidden="true">·</span>
+  <a href="/constellations-of-history.html">Constellations of History</a>
+  <span class="sep" aria-hidden="true">·</span>
+  <a href="/consciousness-map.html">Consciousness map</a>
+  <span class="sep" aria-hidden="true">·</span>
+  <a href="/the-boundary-play.html">The Line Between (play)</a>
+  <span class="sep" aria-hidden="true">·</span>
+  <a href="/map-of-maps.html">Thinkers Timeline</a>
+  <span class="sep" aria-hidden="true">·</span>
+  <a href="/map-of-maps-currents.html">Browse by current</a>
+  <span class="sep" aria-hidden="true">·</span>
+  <a href="/philosophy-booklet.html">Booklet / Print</a>
+</nav>
+
+<header class="masthead">
+  <div class="eyebrow"><span class="dot">●</span> techne <span class="dot2">●</span> Gestell <span class="dot">●</span> organology <span class="dot2">●</span> cosmotechnics</div>
+  <h1>Technics and Time</h1>
+  <p class="dek">What does a tool, a machine, or a digital memory prosthesis do to the subject who uses it — and who is using whom? This fourth branch leaves Freudo-Marxism and Western Marxism's culture maps where they are, and follows a different quarrel: Aristotle's <em>techne</em>, Heidegger's <em>Gestell</em>, Simondon's technical individuation, Stiegler's pharmacology, and Yuk Hui's cosmotechnics.</p>
+  <div class="frame-note">
+    NOTE — <a href="/genealogies-of-desire.html#heidegger">Genealogies of Desire</a> keeps Heidegger at <em>Being and Time</em> (1927), folded into Kojève's recognition seminar, and deliberately does not follow the later work or the political catastrophe of his Nazism. This page is that deferred genealogy: the question of technology, not Dasein as care. Same caveats as the siblings — intellectual history, not engineering; "how influential" and "what it was reacting against," not "how well-evidenced." McLuhan, Land, Plant, and Haraway appear only as cross-strains: parallel tech diagnoses, not this lineage's trunk.
+  </div>
+</header>
+
+<section class="thinker" id="aristotle-techne">
+  <div class="main-col">
+    <h2>Aristotle's techne <span class="years">c. 350 BCE, making vs knowing how to live</span></h2>
+    <div class="tag-row"><span class="tag">techne</span><span class="tag">phronesis</span><span class="tag">poiesis</span></div>
+    <p>The vocabulary this whole page keeps returning to starts in ordinary Greek philosophy of craft. <strong class="term">Aristotle</strong>, in the <em>Nicomachean Ethics</em> and related texts, distinguishes <a class="gloss-jump" href="#gloss-techne"><strong class="term">techne</strong></a> — skilled making, the know-how that produces an artifact according to a rule — from <a class="gloss-jump" href="#gloss-phronesis"><strong class="term">phronesis</strong></a>, practical wisdom about how to live well among people, and from theoretical knowledge of what is necessarily so. A shoemaker has techne; a statesman needs phronesis. <a class="gloss-jump" href="#gloss-poiesis"><strong class="term">Poiesis</strong></a> is the bringing-into-being that techne serves: the house is for dwelling, the shoe for walking, and the maker's excellence is judged by the work, not by the maker's character as a citizen.</p>
+    <p>That split matters here because almost every later figure on this page is arguing, under different names, about whether modern technology still fits Aristotle's picture — a subordinate craft serving human ends — or whether the relation has inverted, so that ends themselves are reorganized by technical systems. The <a href="/grounding-the-unconscious.html#plato-aristotle">Grounding</a> timeline already pins Plato·Aristotle for akrasia and the divided psyche; this page only needs the craft vocabulary. Heidegger will claim modern Technik is not techne at all in Aristotle's sense. Stiegler will claim human memory was always already technical. Hui will ask whether Aristotle's Greek cut between techne and cosmology is itself a provincial starting point.</p>
+  </div>
+  <aside class="margin">
+    <span class="label">how this landed</span>
+    <p><span class="who">Techne</span> — ordinary Greek for craft and art; later English "technique" and "technology" inherit the word while losing Aristotle's subordination of making to living well.</p>
+    <p><span class="who">Not a full Ethics</span> — this pin is lexical and contrastive, not a reading of Aristotle's politics or metaphysics.</p>
+  </aside>
+</section>
+
+<section class="thinker" id="heidegger-gestell">
+  <div class="main-col">
+    <h2>Heidegger's Gestell <span class="years">1953–54, the question concerning technology</span></h2>
+    <div class="tag-row"><span class="tag">Gestell</span><span class="tag">standing-reserve</span><span class="tag">enframing</span><span class="tag">revealing</span></div>
+    <p id="heidegger-tech">The Heidegger who matters on this page is not the 1927 author of <em>Being and Time</em> that <a href="/genealogies-of-desire.html#heidegger">Genealogies</a> folds into Kojève, but the postwar lecturer of "<a href="https://www.marxists.org/reference/subject/philosophy/works/ge/heidegg2.htm" target="_blank" rel="noopener noreferrer">The Question Concerning Technology</a>" (delivered 1953; published 1954). There <strong class="term">Martin Heidegger</strong> argues that the essence of modern technology is not any particular machine, and not even instrumental means-ends thinking as usually understood. It is <a class="gloss-jump" href="#gloss-gestell"><strong class="term">Gestell</strong></a> — usually translated <strong class="term">enframing</strong> — a mode of revealing that challenges nature forth as <a class="gloss-jump" href="#gloss-standing-reserve"><strong class="term">standing-reserve</strong></a> (<em>Bestand</em>): everything appears as stock on call for ordering, optimizing, and further ordering. A river becomes hydroelectric potential; a forest becomes lumber inventory; a human being becomes human resource. Against the comforting story that technology is a neutral tool we can simply use well or badly, Heidegger claims Gestell already decides in advance what counts as real.</p>
+    <p>He still hears an older echo in the word: Greek <strong class="term">techne</strong> was a way of bringing-forth (<em>poiesis</em>), closer to art than to industrial challenging-forth. Modern Technik, on his reading, is a extreme of that revealing that has forgotten its own character as revealing. The political catastrophe of his Nazism — party membership, the rectorate, the postwar silences — is not a side note and not this essay's subject: it is why many readers refuse to treat his technology diagnosis as detachable wisdom. This page follows the technology argument because Stiegler, Simondon's readers, and Hui all take Gestell as a load-bearing foil or ancestor, not because the biography is settled or forgiven.</p>
+    <p>What this piece does <em>not</em> follow: fundamental ontology after the "turn," the full Hölderlin and poetry lectures, or a rehabilitation brief. The sibling desire genealogy already said those are their own maps. The bridge from 1927 Dasein to 1954 Gestell is real — care and worldhood make the later claim about revealing intelligible — but the quarrel changes: from how a finite existence is thrown into a world of tools, to how a planetary technical revealing reorganizes worldhood itself.</p>
+  </div>
+  <aside class="margin">
+    <span class="label">how this landed</span>
+    <p><span class="who">Gestell</span> — still the default continental reference for "technology as world-disclosure, not just tools"; contested for vagueness and for underplaying political economy.</p>
+    <p><span class="who">Nazism</span> — documented and non-negotiable; readers who use the technology essay anyway usually do so under protest or with heavy caveat, as here.</p>
+    <p><span class="who">Being and Time</span> — stays on the <a href="/genealogies-of-desire.html#heidegger">desire genealogy</a>; do not collapse the two Heideggers into one box.</p>
+  </aside>
+</section>
+
+<section class="thinker" id="simondon">
+  <div class="main-col">
+    <h2>Simondon <span class="years">1958, technical objects and individuation</span></h2>
+    <div class="tag-row"><span class="tag">individuation</span><span class="tag">technical object</span><span class="tag">concretization</span><span class="tag">associated milieu</span></div>
+    <p><strong class="term">Gilbert Simondon</strong>'s doctoral work — <em>On the Mode of Existence of Technical Objects</em> (1958) and the larger individuation thesis — is the main philosophical precursor Stiegler will credit. Against both the hylomorphic picture (form stamped on passive matter) and a romantic humanism that treats machines as alienated spirit, Simondon asks how <strong class="term">technical objects</strong> themselves individuate: how a crude abstract machine becomes a more <strong class="term">concrete</strong> one as its elements take on multifunctional roles and couple to an <strong class="term">associated milieu</strong>. A technical being is not a dead tool waiting for a human essence to animate it; it has a genesis, a metastability, and a relation to the world that philosophy of technology had mostly ignored.</p>
+    <p>That move matters because it refuses Heidegger's tendency to treat Technik as a monolithic revealing with no internal history of machines. Simondon still diagnoses alienation — culture's contempt for technics, the split between specialist and user — but the therapy is different: culture must learn to think with technical individuation rather than only fear Gestell. Deleuze later picks up Simondon's individuation vocabulary; Stiegler will rebuild it into an account of human memory as always already technical.</p>
+  </div>
+  <aside class="margin">
+    <span class="label">how this landed</span>
+    <p><span class="who">Simondon</span> — long marginal in Anglophone theory; stature rose sharply via Deleuze studies and then Stiegler; still denser and less "quotable" than Heidegger's technology essay.</p>
+    <p><span class="who">Not cybernetics lite</span> — individuation is a general ontology of becoming, of which technical objects are one privileged case, not a gadget theory.</p>
+  </aside>
+</section>
+
+<section class="thinker" id="stiegler">
+  <div class="main-col">
+    <h2>Stiegler <span class="years">1994–2018, Technics and Time</span></h2>
+    <div class="tag-row"><span class="tag">tertiary retention</span><span class="tag">pharmacology</span><span class="tag">organology</span><span class="tag">epiphilogenesis</span></div>
+    <p><strong class="term">Bernard Stiegler</strong>'s <em>Technics and Time</em> trilogy (1994–2001) is this page's spine and namesake. His wager: the human is not a biological given that later invents tools; technical exteriorization is constitutive of who "we" are. Against a clean inside/outside of mind and machine, he reads paleoanthropology (especially Leroi-Gourhan) as showing that tools and exteriorized memory — flint, writing, archives, hard drives — are how a mortal, incomplete being inherits a past it did not live. He calls that exteriorized memory <a class="gloss-jump" href="#gloss-tertiary"><strong class="term">tertiary retention</strong></a>, extending Husserl's primary retention (the just-past in a melody) and secondary retention (reactivated memory): the third is the technical trace that outlives any living consciousness.</p>
+    <p>From there, technics is always a <a class="gloss-jump" href="#gloss-pharmakon"><strong class="term">pharmakon</strong></a> in the double sense Derrida recovered from Plato's pharmacy: remedy and poison at once. Writing supports memory and threatens living recollection; industrial temporal objects (film, television, later platforms) can open attention or capture and proletarianize it. Stiegler's <a class="gloss-jump" href="#gloss-organology"><strong class="term">organology</strong></a> treats psychic, social, and technical organs as co-evolving systems — an account that can absorb Heidegger's warning about Gestell without accepting technology as a single destiny, and that can absorb Simondon's genesis of technical objects without leaving politics and desire outside. Late work turns harder toward disruption, attention economy, and the need for a new critique of political economy of the digital; this piece does not follow every pamphlet, but the pharmacological and organological frame is the lasting export.</p>
+  </div>
+  <aside class="margin">
+    <span class="label">how this landed</span>
+    <p><span class="who">Technics and Time</span> — still the entry point; dense, and often taught selectively (tertiary retention + pharmakon) rather than cover to cover.</p>
+    <p><span class="who">Pharmakon</span> — via Derrida's Plato reading; Stiegler politicizes it for industrial and digital technics.</p>
+    <p><span class="who">Biography</span> — Stiegler's early imprisonment and self-education are part of his public mythos; useful context, not a substitute for the arguments.</p>
+  </aside>
+</section>
+
+<section class="thinker" id="yuk-hui">
+  <div class="main-col">
+    <h2>Yuk Hui <span class="years">2016–, cosmotechnics</span></h2>
+    <div class="tag-row"><span class="tag">cosmotechnics</span><span class="tag">plural technics</span><span class="tag">after Gestell</span></div>
+    <p><strong class="term">Yuk Hui</strong>'s <em>The Question Concerning Technology in China</em> (2016) takes Heidegger's title and refuses his European frame as universal. If Gestell names a particular modern Western revealing, then treating it as <em>the</em> essence of technology repeats the provincialism it diagnoses. Hui's counter-concept is <a class="gloss-jump" href="#gloss-cosmotechnics"><strong class="term">cosmotechnics</strong></a>: the unification, in a given culture, of cosmic and moral order with technical activity — not one Technik, but historically plural ways technical practice was bound to cosmology. Chinese thought, on his reading, offers resources for thinking technics otherwise than as standing-reserve, without nostalgia for a pre-technical Eden and without simply importing Heidegger as Asia's destiny.</p>
+    <p>Later essays and <em>Recursivity and Contingency</em> push the same pluralizing pressure against a homogenized digital globalism. For this map, Hui is the explicit non-European hinge the techne line needed: not an Axial cameo in a prehistory section, but a contemporary argument that the Gestell story is one history among others. Stiegler remains a major interlocutor; the disagreement is whether organology still needs a stronger dose of cultural and cosmological difference than European philosophy of technology usually allows.</p>
+  </div>
+  <aside class="margin">
+    <span class="label">how this landed</span>
+    <p><span class="who">Cosmotechnics</span> — widely cited in media theory, art, and STS-adjacent philosophy; still contested by sinologists over how cleanly "Chinese technics" can be periodized against Heidegger.</p>
+    <p><span class="who">Not anti-tech</span> — Hui's project is reinvention and pluralism, not Luddism or civilizational essentialism.</p>
+  </aside>
+</section>
+
+<section class="thinker" id="cross-strains">
+  <div class="main-col">
+    <h2>Cross-strains <span class="years">parallels, not this trunk</span></h2>
+    <div class="tag-row"><span class="tag">McLuhan</span><span class="tag">accelerationism</span><span class="tag">cyberfeminism</span></div>
+    <p><strong class="term">Marshall McLuhan</strong>, covered in <a href="/constellations-of-history.html#mcluhan">Constellations of History</a>, diagnoses media as environments that remake the sensorium — "the medium is the message" — without Heidegger's Gestell vocabulary or Stiegler's tertiary retention. Useful rhyme: both treat technical form as world-shaping. Different quarrel: McLuhan wants the environment made visible; Cultural Studies then rejects his determinism. This page does not restage that fight.</p>
+    <p><a href="/genealogies-of-desire.html#land">Nick Land</a> and Warwick accelerationism treat capital/technics as an autonomous optimizing process to be pushed further; <a href="/genealogies-of-desire.html#noys">Noys</a> names and refuses that program. Stiegler's pharmacology can sound adjacent — technics as fate-shaped — but his politics run toward care, education, and reinvention of the pharmakon, not Meltdown. Keep them parallel.</p>
+    <p id="hayles"><strong class="term">N. Katherine Hayles</strong>'s <em>How We Became Posthuman</em> (1999) is the feminist STS hinge on this map: against cybernetics' dream of information without bodies, she insists on embodiment and materiality — a parallel to Haraway's cyborg and a useful foil to any Gestell story that forgets gender and labor. She is not Stiegler's school; she is why the techne line cannot stay only Heidegger–Simondon–Stiegler–Hui.</p>
+    <p id="merchant"><strong class="term">Carolyn Merchant</strong>'s <em>The Death of Nature</em> (1980) is the ecofeminist precursor: the scientific revolution, she argues, remade nature as dead, controllable matter — a gendered domination story that rhymes with Gestell without sharing Heidegger's vocabulary. Merchant sits beside, not inside, the Simondon–Stiegler trunk: another feminist pressure that techne is never neutral craft.</p>
+    <p><a href="/genealogies-of-desire.html#haraway">Donna Haraway</a>'s cyborg and <a href="/genealogies-of-desire.html#plant">Sadie Plant</a>'s cyberfeminism (and Xenofeminism downstream) are feminist technics that refuse both pure nature and pure Gestell-despair. They belong on the desire genealogy's map; they appear here only so the timeline can show the kinship without pretending Stiegler and Haraway share a school.</p>
+  </div>
+  <aside class="margin">
+    <span class="label">how this landed</span>
+    <p><span class="who">Why list them</span> — reviewers of these maps keep asking where techne meets acceleration and media theory; the answer is "beside, not inside," and this section is that answer in prose.</p>
+    <p><span class="who">Hayles</span> — still a default posthumanities reference; the Wellek Prize book is the pin, not her whole later corpus.</p>
+    <p><span class="who">Merchant</span> — foundational for ecofeminist history of science; contested by some historians of early modern science over how cleanly Baconian "rape of nature" metaphors drive the whole story.</p>
+  </aside>
+</section>
+
+<section class="mapsec">
+  <h2>Visual mapping</h2>
+  <p class="lede">Aristotle names techne as skilled making under living ends; Heidegger claims modern Technik is Gestell — a revealing that turns world into standing-reserve; Simondon gives technical objects their own individuation against that monolith; Stiegler rebuilds the human as always already technical (tertiary retention, pharmacology, organology); Hui pluralizes the whole story as cosmotechnics. Dashed lines mark critique or break; dotted lines are parallel tech diagnoses living on sibling pages.</p>
+
+  <div class="map-scroll">
+    <svg class="genealogy" viewBox="-40 -40 1080 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Genealogy diagram from Aristotle's techne through Heidegger's Gestell, Simondon, Stiegler, and Yuk Hui, with parallel links to McLuhan, Land, and Haraway.">
+      <defs>
+        <marker id="arrowT" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="context-stroke"/>
+        </marker>
+      </defs>
+
+      <line class="gband-rule" x1="20" y1="140" x2="980" y2="140"/>
+      <line class="gband-rule" x1="20" y1="300" x2="980" y2="300"/>
+      <line class="gband-rule" x1="20" y1="460" x2="980" y2="460"/>
+      <text class="gband-label" x="20" y="16">Aristotle · techne · c. 350 BCE</text>
+      <text class="gband-label" x="20" y="164">Heidegger · Gestell · 1953–54</text>
+      <text class="gband-label" x="20" y="324">Simondon · Stiegler · 1958–2001</text>
+      <text class="gband-label" x="20" y="484">Hui · cross-strains · 2016–</text>
+
+      <path class="glink critique" d="M480,90 Q480,140 480,190" marker-end="url(#arrowT)"/>
+      <text class="glabel" x="500" y="130">not Aristotle's subordinate craft</text>
+
+      <path class="glink critique" d="M400,240 Q280,280 200,350" marker-end="url(#arrowT)"/>
+      <text class="glabel" x="40" y="300">objects individuate; not one Gestell</text>
+
+      <path class="glink lineage" d="M200,400 Q350,420 480,420" marker-end="url(#arrowT)"/>
+      <text class="glabel" x="280" y="405">technical genesis → organology</text>
+
+      <path class="glink lineage" d="M560,240 Q560,320 560,350" marker-end="url(#arrowT)"/>
+      <text class="glabel" x="575" y="300">Gestell as foil</text>
+
+      <path class="glink critique" d="M560,450 Q560,500 560,540" marker-end="url(#arrowT)"/>
+      <text class="glabel" x="575" y="500">pluralize; refuse universal Gestell</text>
+
+      <path class="glink parallel" d="M700,240 Q820,350 820,540"/>
+      <text class="glabel" x="830" y="400">media environments</text>
+
+      <path class="glink parallel" d="M700,400 Q780,480 700,540"/>
+      <text class="glabel" x="720" y="470">accel / cyborg parallels</text>
+
+      <g class="gnode"><rect x="380" y="50" width="200" height="50" rx="6"/><text x="480" y="80" text-anchor="middle">Aristotle · techne</text></g>
+
+      <g class="gnode"><rect x="360" y="190" width="240" height="60" rx="6"/><text x="480" y="216" text-anchor="middle">Heidegger</text><text class="gsub" x="480" y="234" text-anchor="middle">Gestell · standing-reserve</text></g>
+
+      <g class="gnode"><rect x="80" y="350" width="200" height="50" rx="6"/><text x="180" y="380" text-anchor="middle">Simondon</text></g>
+      <g class="gnode"><rect x="420" y="350" width="280" height="60" rx="6"/><text x="560" y="376" text-anchor="middle">Stiegler</text><text class="gsub" x="560" y="394" text-anchor="middle">tertiary retention · pharmakon</text></g>
+
+      <g class="gnode"><rect x="420" y="530" width="280" height="60" rx="6"/><text x="560" y="556" text-anchor="middle">Yuk Hui</text><text class="gsub" x="560" y="574" text-anchor="middle">cosmotechnics</text></g>
+      <g class="gnode"><rect x="40" y="530" width="200" height="60" rx="6"/><text x="140" y="552" text-anchor="middle">Merchant · Hayles</text><text class="gsub" x="140" y="570" text-anchor="middle">Death of Nature · posthuman</text></g>
+      <g class="gnode"><rect x="740" y="530" width="200" height="60" rx="6"/><text x="840" y="552" text-anchor="middle">McLuhan · Land ·</text><text x="840" y="570" text-anchor="middle">Haraway / Plant</text></g>
+    </svg>
+  </div>
+
+  <p class="legend-note">
+    <span class="sw lineage"></span>builds on / develops directly<br>
+    <span class="sw critique"></span>explicitly critiques, rejects, or breaks from<br>
+    <span class="sw parallel"></span>parallel dialogue, not a lineage claim<br>
+    <span class="sw callback"></span>long-range callback
+  </p>
+
+  <footer class="close">
+    <p>The desire genealogy asked whose interests the unconscious serves. The history constellation asked what a cultural form does politically by existing. This branch asks a third question: what technics do to time, memory, and the possibility of a subject who could still care. Gestell says the revealing has already decided. Simondon and Stiegler say technical genesis and pharmacology leave the decision open — poisonous and curative at once. Hui says even that European frame is one cosmotechnics among others.</p>
+    <p>None of those answers settles Freudo-Marxism or Western Marxism. A hard drive can be tertiary retention and, completely independently, a node in communicative capitalism or standing-reserve logistics. The maps are meant to sit beside each other, not collapse into one master diagram.</p>
+  </footer>
+</section>
+
+<section class="glossary">
+  <h2>Glossary</h2>
+  <p class="lede">Terms in the essay that have a glossary entry are dotted-underlined; click to jump here. Each entry links back to where it is introduced.</p>
+
+  <div class="gloss-group">
+    <h3>Aristotle</h3>
+    <dl class="gloss-list">
+      <div class="gloss-item" id="gloss-techne"><dt>Techne</dt><dd>Aristotle's skilled making: know-how that produces an artifact according to a rule, judged by the work, distinct from phronesis (practical wisdom about living well). <a class="gloss-where" href="#aristotle-techne">Where this is used ↑</a></dd></div>
+      <div class="gloss-item" id="gloss-phronesis"><dt>Phronesis</dt><dd>Practical wisdom concerning action and the good life among people — not reducible to craft skill. <a class="gloss-where" href="#aristotle-techne">Where this is used ↑</a></dd></div>
+      <div class="gloss-item" id="gloss-poiesis"><dt>Poiesis</dt><dd>Bringing-into-being; the productive activity techne serves. <a class="gloss-where" href="#aristotle-techne">Where this is used ↑</a></dd></div>
+    </dl>
+  </div>
+
+  <div class="gloss-group">
+    <h3>Heidegger</h3>
+    <dl class="gloss-list">
+      <div class="gloss-item" id="gloss-gestell"><dt>Gestell (enframing)</dt><dd>Heidegger's name for the essence of modern technology as a mode of revealing that challenges world forth as orderable stock, not a particular machine or a neutral tool. <a class="gloss-where" href="#heidegger-gestell">Where this is used ↑</a></dd></div>
+      <div class="gloss-item" id="gloss-standing-reserve"><dt>Standing-reserve (Bestand)</dt><dd>Whatever appears only as inventory on call for further ordering — river as power, forest as lumber, person as resource. <a class="gloss-where" href="#heidegger-gestell">Where this is used ↑</a></dd></div>
+    </dl>
+  </div>
+
+  <div class="gloss-group">
+    <h3>Simondon</h3>
+    <dl class="gloss-list">
+      <div class="gloss-item" id="gloss-technical-object"><dt>Technical object</dt><dd>A being with its own mode of existence and genesis, not merely a passive instrument of human will.</dd></div>
+      <div class="gloss-item" id="gloss-concretization"><dt>Concretization</dt><dd>Simondon's term for a technical object's becoming more integrated as elements take on multifunctional roles and couple to an associated milieu.</dd></div>
+      <div class="gloss-item" id="gloss-individuation"><dt>Individuation</dt><dd>The process by which a metastable system resolves into a more stable individual — psychic, collective, or technical.</dd></div>
+    </dl>
+  </div>
+
+  <div class="gloss-group">
+    <h3>Stiegler</h3>
+    <dl class="gloss-list">
+      <div class="gloss-item" id="gloss-tertiary"><dt>Tertiary retention</dt><dd>Exteriorized technical memory (writing, recordings, digital traces) that outlives any living consciousness — Stiegler's third term beside Husserl's primary and secondary retention. <a class="gloss-where" href="#stiegler">Where this is used ↑</a></dd></div>
+      <div class="gloss-item" id="gloss-pharmakon"><dt>Pharmakon / pharmacology</dt><dd>Technics as remedy and poison at once; Stiegler's program is to think and invent the curative side rather than deny the poisonous. <a class="gloss-where" href="#stiegler">Where this is used ↑</a></dd></div>
+      <div class="gloss-item" id="gloss-organology"><dt>Organology</dt><dd>Study of the co-evolution of psychic, social, and technical organs as one system. <a class="gloss-where" href="#stiegler">Where this is used ↑</a></dd></div>
+    </dl>
+  </div>
+
+  <div class="gloss-group">
+    <h3>Hui</h3>
+    <dl class="gloss-list">
+      <div class="gloss-item" id="gloss-cosmotechnics"><dt>Cosmotechnics</dt><dd>Hui's term for the unification, in a given culture, of cosmic/moral order with technical activity — implying plural histories of technics rather than one universal Gestell. <a class="gloss-where" href="#yuk-hui">Where this is used ↑</a></dd></div>
+      <div class="gloss-item" id="gloss-posthuman"><dt>Posthuman (Hayles)</dt><dd>Hayles's embodied sense: not the end of humanity, but the end of a liberal-humanist conception of the autonomous, disembodied subject — insisted against cybernetics' dream of information without bodies.</dd></div>
+      <div class="gloss-item" id="gloss-death-of-nature"><dt>Death of nature (Merchant)</dt><dd>Merchant's ecofeminist thesis that early modern science and capitalism remade nature as passive, controllable matter — a domination story gendered as well as ecological.</dd></div>
+    </dl>
+  </div>
+</section>
+
+</div>
+<script defer src="assets/js/essay-nav.js"></script>
+</body>
+</html>
