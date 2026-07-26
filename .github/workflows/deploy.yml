@@ -355,10 +355,18 @@ jobs:
             echo "bass/papaweb.config.js must not expose Slack webhook URLs"
             exit 1
           fi
-          ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            "curl -fsS --max-time 10 -X POST http://127.0.0.1:8072/contact \
-              -H 'Content-Type: application/json' \
-              -H 'Origin: https://anthemic-developments.com' \
-              -d '{\"name\":\"smoke\",\"email\":\"smoke@example.com\",\"message\":\"deploy smoke (ignore)\"}' \
-            | grep -q '\"success\":true'" \
+          contact_smoke_ok=0
+          for attempt in 1 2 3 4 5 6 7 8; do
+            if ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+              "curl -fsS --max-time 10 -X POST http://127.0.0.1:8072/contact \
+                -H 'Content-Type: application/json' \
+                -H 'Origin: https://anthemic-developments.com' \
+                -d '{\"name\":\"smoke\",\"email\":\"smoke@example.com\",\"message\":\"deploy smoke (ignore)\"}' \
+              | grep -q '\"success\":true'"; then
+              contact_smoke_ok=1
+              break
+            fi
+            sleep 2
+          done
+          [[ "${contact_smoke_ok}" == 1 ]] \
             || { echo "papaweb-contact.service loopback POST /contact failed (install node, check journalctl -u papaweb-contact)"; exit 1; }

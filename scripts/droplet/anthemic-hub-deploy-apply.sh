@@ -307,19 +307,20 @@ if [[ -f "${INCOMING}/contact/server.mjs" ]]; then
     systemctl daemon-reload
     systemctl enable papaweb-contact.service
     systemctl restart papaweb-contact.service
-    sleep 1
-    if ! systemctl is-active --quiet papaweb-contact.service; then
-      echo "anthemic-hub-deploy-apply: papaweb-contact.service is not active" >&2
+    contact_ok=0
+    for attempt in 1 2 3 4 5 6 7 8; do
+      if systemctl is-active --quiet papaweb-contact.service \
+        && curl -fsS --max-time 5 http://127.0.0.1:8072/health >/dev/null 2>&1; then
+        contact_ok=1
+        break
+      fi
+      sleep 2
+    done
+    if [[ "${contact_ok}" -ne 1 ]]; then
+      echo "anthemic-hub-deploy-apply: papaweb-contact /health check failed" >&2
       systemctl status papaweb-contact.service --no-pager >&2 || true
       journalctl -u papaweb-contact.service -n 40 --no-pager >&2 || true
       exit 1
-    fi
-    if command -v curl >/dev/null 2>&1; then
-      if ! curl -fsS --max-time 10 http://127.0.0.1:8072/health >/dev/null; then
-        echo "anthemic-hub-deploy-apply: papaweb-contact /health check failed" >&2
-        journalctl -u papaweb-contact.service -n 40 --no-pager >&2 || true
-        exit 1
-      fi
     fi
   fi
 fi
