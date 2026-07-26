@@ -33,9 +33,36 @@
   closeBtn.innerHTML = "&times;";
   toc.appendChild(closeBtn);
 
+  const path = (location.pathname || "").replace(/\/+$/, "") || "/";
+  const pathBase = path.split("/").pop() || "";
+  const moreLinks = SIBLINGS.filter((item) => {
+    const targetBase = item.href.replace(/\/+$/, "").split("/").pop() || "";
+    return targetBase && targetBase !== pathBase;
+  });
+
+  if (moreLinks.length) {
+    const more = document.createElement("div");
+    more.className = "essay-toc-more";
+    const moreLabel = document.createElement("p");
+    moreLabel.className = "essay-toc-label";
+    moreLabel.textContent = "Maps & essays";
+    more.appendChild(moreLabel);
+    const moreList = document.createElement("ul");
+    moreLinks.forEach((item) => {
+      const li = document.createElement("li");
+      const a = document.createElement("a");
+      a.href = item.href;
+      a.textContent = item.label;
+      li.appendChild(a);
+      moreList.appendChild(li);
+    });
+    more.appendChild(moreList);
+    toc.appendChild(more);
+  }
+
   const label = document.createElement("p");
   label.className = "essay-toc-label";
-  label.textContent = "Contents";
+  label.textContent = moreLinks.length ? "On this page" : "Contents";
   toc.appendChild(label);
 
   const list = document.createElement("ol");
@@ -58,31 +85,6 @@
   });
 
   toc.appendChild(list);
-
-  const path = (location.pathname || "").replace(/\/+$/, "") || "/";
-  const moreLinks = SIBLINGS.filter((item) => {
-    const target = item.href.replace(/\/+$/, "");
-    return path !== target && !path.endsWith(target);
-  });
-  if (moreLinks.length) {
-    const more = document.createElement("div");
-    more.className = "essay-toc-more";
-    const moreLabel = document.createElement("p");
-    moreLabel.className = "essay-toc-label";
-    moreLabel.textContent = "Maps & essays";
-    more.appendChild(moreLabel);
-    const moreList = document.createElement("ul");
-    moreLinks.forEach((item) => {
-      const li = document.createElement("li");
-      const a = document.createElement("a");
-      a.href = item.href;
-      a.textContent = item.label;
-      li.appendChild(a);
-      moreList.appendChild(li);
-    });
-    more.appendChild(moreList);
-    toc.appendChild(more);
-  }
 
   layout.insertBefore(toc, wrap);
 
