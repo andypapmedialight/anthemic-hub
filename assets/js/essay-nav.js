@@ -6,6 +6,17 @@
   const wrap = document.querySelector(".wrap.essay");
   if (!wrap) return;
 
+  const SIBLINGS = [
+    { href: "/grounding-the-unconscious.html", label: "Grounding the Unconscious" },
+    { href: "/genealogies-of-desire.html", label: "Genealogies of Desire" },
+    { href: "/constellations-of-history.html", label: "Constellations of History" },
+    { href: "/technics-and-time.html", label: "Technics and Time" },
+    { href: "/fiction-of-the-maps.html", label: "Fiction of the Maps" },
+    { href: "/map-of-maps.html", label: "Thinkers Timeline" },
+    { href: "/map-of-maps-currents.html", label: "Browse by current" },
+    { href: "/philosophy-booklet.html", label: "Booklet / Print" },
+  ];
+
   const layout = document.createElement("div");
   layout.className = "essay-layout";
   wrap.parentNode.insertBefore(layout, wrap);
@@ -47,6 +58,32 @@
   });
 
   toc.appendChild(list);
+
+  const path = (location.pathname || "").replace(/\/+$/, "") || "/";
+  const moreLinks = SIBLINGS.filter((item) => {
+    const target = item.href.replace(/\/+$/, "");
+    return path !== target && !path.endsWith(target);
+  });
+  if (moreLinks.length) {
+    const more = document.createElement("div");
+    more.className = "essay-toc-more";
+    const moreLabel = document.createElement("p");
+    moreLabel.className = "essay-toc-label";
+    moreLabel.textContent = "Maps & essays";
+    more.appendChild(moreLabel);
+    const moreList = document.createElement("ul");
+    moreLinks.forEach((item) => {
+      const li = document.createElement("li");
+      const a = document.createElement("a");
+      a.href = item.href;
+      a.textContent = item.label;
+      li.appendChild(a);
+      moreList.appendChild(li);
+    });
+    more.appendChild(moreList);
+    toc.appendChild(more);
+  }
+
   layout.insertBefore(toc, wrap);
 
   const toggle = document.createElement("button");
