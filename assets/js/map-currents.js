@@ -11,9 +11,10 @@ const CURRENTS = [
     nodes: [
       "freud", "cUnconscious", "lacan", "structImp", "kristeva", "zizek", "johnston", "malabou",
       "panksepp", "solms", "hobsonMc", "domhoff", "damasio", "edelman", "friston", "churchland",
-      "chalmers", "cHardProb", "jackson", "nagel", "strawGoff", "kastrup", "miller", "badiou",
-      "popper", "grunbaum", "crews", "eysenck", "schopen", "leibniz", "herbart", "vonHart",
-      "descartes", "spinoza", "platoAr", "socrates"
+      "chalmers", "cHardProb", "jackson", "nagel", "strawGoff", "kastrup", "bohm", "faggin", "mcgilchrist",
+      "miller", "badiou", "popper", "grunbaum", "crews", "eysenck", "schopen", "leibniz", "herbart",
+      "vonHart", "descartes", "spinoza", "platoAr", "socrates",
+      "turing", "ryle", "searle", "hofstadter", "dennett", "crick", "gwt", "penrose", "block", "iit"
     ]
   },
   {

@@ -4,17 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Verdicts on the Conscious Machine — a map of consciousness theories</title>
-<meta name="description" content="A quadrant map of seventeen theories of consciousness — from Descartes and Turing to Penrose, Chalmers, Faggin, Bohm, panpsychism and eliminativism — plotted by whether the mind is computable and whether the hard problem remains.">
+<meta name="description" content="A quadrant map of eighteen theories of consciousness — from Descartes and Turing to Penrose, Chalmers, Faggin, Bohm, McGilchrist, panpsychism and eliminativism — plotted by whether the mind is computable and whether the hard problem remains.">
 <meta name="color-scheme" content="light dark">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Verdicts on the Conscious Machine">
-<meta property="og:description" content="A map of seventeen theories of consciousness, plotted by computability and the hard problem.">
+<meta property="og:description" content="A map of eighteen theories of consciousness, plotted by computability and the hard problem.">
 <!-- Update these absolute URLs to match where you host the files -->
 <meta property="og:url" content="https://anthemic-developments.com/consciousness-map.html">
 <meta property="og:image" content="https://anthemic-developments.com/consciousness-map-preview.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="A quadrant map of seventeen theories of consciousness, plotted by computability and the hard problem.">
+<meta property="og:image:alt" content="A quadrant map of eighteen theories of consciousness, plotted by computability and the hard problem.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://anthemic-developments.com/consciousness-map-preview.png">
 <link rel="icon" type="image/svg+xml" href="consciousness-map-favicon.svg">
@@ -32,7 +32,7 @@
       "url": "https://anthemic-developments.com/consciousness-map.html",
       "name": "Verdicts on the Conscious Machine",
       "headline": "Verdicts on the Conscious Machine",
-      "description": "A quadrant map of seventeen theories of consciousness — from Descartes and Turing to Penrose, Chalmers, Faggin, Bohm, panpsychism and eliminativism — plotted by whether the mind is computable and whether the hard problem remains.",
+      "description": "A quadrant map of eighteen theories of consciousness — from Descartes and Turing to Penrose, Chalmers, Faggin, Bohm, McGilchrist, panpsychism and eliminativism — plotted by whether the mind is computable and whether the hard problem remains.",
       "inLanguage": "en-AU",
       "isPartOf": {
         "@id": "https://anthemic-developments.com/#website"
@@ -213,7 +213,7 @@
   <hr class="rule" />
 
   <div class="mapwrap">
-  <svg class="map" viewBox="0 0 1000 792" role="img" aria-label="A quadrant map of consciousness theories. Horizontal axis: non-computable and substrate-bound on the left, computable and substrate-independent on the right. Vertical axis: mechanism suffices at the bottom, hard problem remains at the top. Along the top sit the hard-problem theorists: Descartes, Faggin, Bohm and Panpsychism upper-left, Nagel top-centre, Chalmers top-right. Lower-left, the simulation-sceptics Penrose, Searle, Block and IIT. Across the bottom-right, the computationalists Turing, Crick, Global Workspace, Hofstadter, Dennett, Ryle and the Churchlands. A gold arc marks the Gödel inversion between Penrose and Hofstadter; a dotted line marks the binding problem between Crick and Penrose.">
+  <svg class="map" viewBox="0 0 1000 792" role="img" aria-label="A quadrant map of consciousness theories. Horizontal axis: non-computable and substrate-bound on the left, computable and substrate-independent on the right. Vertical axis: mechanism suffices at the bottom, hard problem remains at the top. Along the top sit the hard-problem theorists: Descartes, Faggin, Bohm, McGilchrist and Panpsychism upper-left, Nagel top-centre, Chalmers top-right. Lower-left, the simulation-sceptics Penrose, Searle, Block and IIT. Across the bottom-right, the computationalists Turing, Crick, Global Workspace, Hofstadter, Dennett, Ryle and the Churchlands. A gold arc marks the Gödel inversion between Penrose and Hofstadter; a dotted line marks the binding problem between Crick and Penrose.">
     <defs>
       <linearGradient id="poleWash" x1="0" y1="0" x2="1" y2="1">
         <stop offset="0" stop-color="var(--violet)" stop-opacity="0.11" />
@@ -322,6 +322,11 @@
       <circle cx="168" cy="248" r="9" />
       <text x="184" y="252">Bohm</text>
     </g>
+    <g class="node violet" data-key="mcgilchrist">
+      <circle class="halo" cx="248" cy="286" r="17" />
+      <circle cx="248" cy="286" r="9" />
+      <text x="264" y="290">McGilchrist</text>
+    </g>
     <g class="node violet" data-key="goff">
       <circle class="halo" cx="300" cy="190" r="17" />
       <circle cx="300" cy="190" r="9" />
@@ -371,7 +376,7 @@
   <p class="note" style="margin:-4px 0 20px;max-width:74ch">Each card distills the thinker's position <b style="color:var(--ink);font-weight:600">in our own words</b> — editorial characterizations, not verbatim quotations (aside from a few well-known published lines).</p>
   <div class="dossier">
 
-    <div class="card violet" data-key="penrose">
+    <div class="card violet" id="penrose" data-key="penrose">
       <div class="who"><h3>Penrose &amp; Hameroff</h3><span class="work">Orch OR · 1994</span></div>
       <p class="thesis"><span class="q">“</span>Mathematical understanding is non-algorithmic — Gödel shows the mind outruns any formal system. Consciousness is orchestrated, gravitationally-induced quantum collapse in neuronal microtubules: new physics, not computation.<span class="q">”</span></p>
       <div class="chips">
@@ -380,7 +385,7 @@
       </div>
     </div>
 
-    <div class="card cyan" data-key="crick">
+    <div class="card cyan" id="crick" data-key="crick">
       <div class="who"><h3>Francis Crick</h3><span class="work">The Astonishing Hypothesis · 1994</span></div>
       <p class="thesis"><span class="q">“</span>‘You’ are no more than a vast assembly of nerve cells and their molecules. Map the neural correlates — gamma synchrony, the claustrum as conductor — and the soul dissolves into mechanism.<span class="q">”</span></p>
       <div class="chips">
@@ -389,7 +394,7 @@
       </div>
     </div>
 
-    <div class="card cyan" data-key="hofstadter">
+    <div class="card cyan" id="hofstadter" data-key="hofstadter">
       <div class="who"><h3>Douglas Hofstadter</h3><span class="work">GEB 1979 · Strange Loop 2007</span></div>
       <p class="thesis"><span class="q">“</span>The self is a substrate-neutral <em>strange loop</em> — a symbol system that models itself. Gödelian self-reference doesn't defeat the machine; it's exactly what turns one into an ‘I’.<span class="q">”</span></p>
       <div class="chips">
@@ -398,7 +403,7 @@
       </div>
     </div>
 
-    <div class="card cyan" data-key="chalmers">
+    <div class="card cyan" id="chalmers" data-key="chalmers">
       <div class="who"><h3>David Chalmers</h3><span class="work">The Conscious Mind · 1996</span></div>
       <p class="thesis"><span class="q">“</span>Swap neurons for functional silicon and experience can't quietly fade or invert — organizational invariance. The copy <em>is</em> conscious. Yet no mechanism explains <em>why</em> there is experience at all: the hard problem.<span class="q">”</span></p>
       <div class="chips">
@@ -407,7 +412,7 @@
       </div>
     </div>
 
-    <div class="card cyan" data-key="dennett">
+    <div class="card cyan" id="dennett" data-key="dennett">
       <div class="who"><h3>Daniel Dennett</h3><span class="work">Consciousness Explained · 1991</span></div>
       <p class="thesis"><span class="q">“</span>The felt ‘extra’ is a user illusion. Account for every function — discrimination, report, control — and there is simply nothing left over to explain.<span class="q">”</span></p>
       <div class="chips">
@@ -416,7 +421,7 @@
       </div>
     </div>
 
-    <div class="card violet" data-key="iit">
+    <div class="card violet" id="iit" data-key="iit">
       <div class="who"><h3>Integrated Information</h3><span class="work">Tononi &amp; Koch · IIT</span></div>
       <p class="thesis"><span class="q">“</span>Consciousness is integrated information — Φ, a system's intrinsic cause-effect power. A feed-forward digital copy can match the behaviour with near-zero Φ, so it would <em>not</em> be conscious.<span class="q">”</span></p>
       <div class="chips">
@@ -425,7 +430,7 @@
       </div>
     </div>
 
-    <div class="card violet" data-key="searle">
+    <div class="card violet" id="searle" data-key="searle">
       <div class="who"><h3>John Searle</h3><span class="work">Chinese Room · 1980</span></div>
       <p class="thesis"><span class="q">“</span>A program shuffling symbols by rule has syntax but no semantics — the person in the Chinese Room follows every rule yet understands no Chinese. Software isn't understanding; consciousness is a real biological power of brains.<span class="q">”</span></p>
       <div class="chips">
@@ -434,7 +439,7 @@
       </div>
     </div>
 
-    <div class="card violet" data-key="nagel">
+    <div class="card violet" id="nagel" data-key="nagel">
       <div class="who"><h3>Thomas Nagel</h3><span class="work">Like to Be a Bat? · 1974</span></div>
       <p class="thesis"><span class="q">“</span>There is something it is like to be a bat — a subjective point of view that no third-person, objective description reaches. Physical science leaves out the very feature that makes a state conscious.<span class="q">”</span></p>
       <div class="chips">
@@ -443,7 +448,7 @@
       </div>
     </div>
 
-    <div class="card cyan" data-key="gwt">
+    <div class="card cyan" id="gwt" data-key="gwt">
       <div class="who"><h3>Global Workspace</h3><span class="work">Baars &amp; Dehaene</span></div>
       <p class="thesis"><span class="q">“</span>Content becomes conscious when a global workspace broadcasts it to the whole system — perception, memory, report. Consciousness is a specific, findable information-processing architecture.<span class="q">”</span></p>
       <div class="chips">
@@ -452,7 +457,7 @@
       </div>
     </div>
 
-    <div class="card cyan" data-key="ryle">
+    <div class="card cyan" id="ryle" data-key="ryle">
       <div class="who"><h3>Gilbert Ryle</h3><span class="work">The Concept of Mind · 1949</span></div>
       <p class="thesis"><span class="q">“</span>The ‘ghost in the machine’ is a category mistake. Mind isn't an inner theatre behind behaviour — mental talk names dispositions to act. Hunt for an extra inner thing and you've misread the grammar.<span class="q">”</span></p>
       <div class="chips">
@@ -461,7 +466,7 @@
       </div>
     </div>
 
-    <div class="card cyan" data-key="turing">
+    <div class="card cyan" id="turing" data-key="turing">
       <div class="who"><h3>Alan Turing</h3><span class="work">Computing Machinery &amp; Intelligence · 1950</span></div>
       <p class="thesis"><span class="q">“</span>Don't ask whether a machine can think — ask whether it can play the imitation game so well you can't tell. If its behaviour is indistinguishable from a mind's, the only workable convention is to grant it one.<span class="q">”</span></p>
       <div class="chips">
@@ -470,7 +475,7 @@
       </div>
     </div>
 
-    <div class="card violet" data-key="descartes">
+    <div class="card violet" id="descartes" data-key="descartes">
       <div class="who"><h3>René Descartes</h3><span class="work"><a href="/grounding-the-unconscious.html#descartes">Meditations · 1641</a></span></div>
       <p class="thesis"><span class="q">“</span>Mind and body are distinct substances — a thinking thing that is not extended matter. The ‘I’ that doubts cannot itself be doubted, and no mere mechanism could ever be it.<span class="q">”</span></p>
       <div class="chips">
@@ -479,7 +484,7 @@
       </div>
     </div>
 
-    <div class="card violet" data-key="faggin">
+    <div class="card violet" id="faggin" data-key="faggin">
       <div class="who"><h3>Federico Faggin</h3><span class="work">QIP · Irreducible · 2021–24</span></div>
       <p class="thesis"><span class="q">“</span>Consciousness is irreducible and primary — the inner experience of a quantum system in a pure state. Matter and classical computation are outer expressions; a digital machine can shuffle symbols forever and never feel. Quantum information is private (no-cloning), so qualia can't be copied onto silicon.<span class="q">”</span></p>
       <div class="chips">
@@ -488,7 +493,7 @@
       </div>
     </div>
 
-    <div class="card violet" data-key="bohm">
+    <div class="card violet" id="bohm" data-key="bohm">
       <div class="who"><h3>David Bohm</h3><span class="work">Wholeness &amp; the Implicate Order · 1980</span></div>
       <p class="thesis"><span class="q">“</span>Mind and matter both unfold from one undivided holomovement — an implicate order enfolded beneath the explicate world of separate things. At the quantum level, <em>active information</em> is already mind-like; a fragmented classical machine never reaches that ground.<span class="q">”</span></p>
       <div class="chips">
@@ -497,7 +502,16 @@
       </div>
     </div>
 
-    <div class="card violet" data-key="goff">
+    <div class="card violet" id="mcgilchrist" data-key="mcgilchrist">
+      <div class="who"><h3>Iain McGilchrist</h3><span class="work">Master &amp; Emissary · 2009 · Matter With Things · 2021</span></div>
+      <p class="thesis"><span class="q">“</span>Two modes of attention, not a pop-psych split: the left takes the world apart into useful bits; the right holds the living whole. Culture has let the map rule the territory. Consciousness is an ontological primitive; matter is one way it shows up. AI can do the left's work and never make the right's leap.<span class="q">”</span></p>
+      <div class="chips">
+        <div class="chip"><span class="lbl">Simulate it?</span><span class="val no">No — insight isn't a procedure</span></div>
+        <div class="chip"><span class="lbl">Hard problem?</span><span class="val no">Kept — experience never emerged from dead stuff</span></div>
+      </div>
+    </div>
+
+    <div class="card violet" id="goff" data-key="goff">
       <div class="who"><h3>Panpsychism</h3><span class="work">Goff · Strawson</span></div>
       <p class="thesis"><span class="q">“</span>Rather than conjure experience from dead matter, take it as fundamental — a basic feature of the physical, present in some form all the way down. The gap closes because there was never a leap.<span class="q">”</span></p>
       <div class="chips">
@@ -506,7 +520,7 @@
       </div>
     </div>
 
-    <div class="card violet" data-key="block">
+    <div class="card violet" id="block" data-key="block">
       <div class="who"><h3>Ned Block</h3><span class="work">Access vs. Phenomenal · 1995</span></div>
       <p class="thesis"><span class="q">“</span>Pull apart two things ‘conscious’ blurs: access-consciousness — information poised for use and report — and phenomenal-consciousness, what it is like. A system can have the first with none of the second.<span class="q">”</span></p>
       <div class="chips">
@@ -515,7 +529,7 @@
       </div>
     </div>
 
-    <div class="card cyan" data-key="churchland">
+    <div class="card cyan" id="churchland" data-key="churchland">
       <div class="who"><h3>The Churchlands</h3><span class="work">Eliminative materialism</span></div>
       <p class="thesis"><span class="q">“</span>The felt inner life is a theory — folk psychology — and a false one. There are no qualia to explain; as neuroscience matures, talk of them will follow phlogiston and caloric into disuse.<span class="q">”</span></p>
       <div class="chips">
@@ -532,7 +546,7 @@
   <div class="synth">
     <div class="col">
       <h4>Binding unites</h4>
-      <p>The empirical programs meet on one puzzle: how scattered activity becomes a single field of experience. <b>Crick's gamma synchrony and claustrum</b> and <b>Orch OR's quantum entanglement</b> are rival mechanisms for the same unity — reductionist and quantum camps aiming at one target. <b>Faggin</b> takes entanglement further still: not a brain mechanism for binding, but the reason micro-experiences can compose at all. <b>Bohm</b> names the same unity as undivided wholeness — the binding problem is what you get when you start from fragments.</p>
+      <p>The empirical programs meet on one puzzle: how scattered activity becomes a single field of experience. <b>Crick's gamma synchrony and claustrum</b> and <b>Orch OR's quantum entanglement</b> are rival mechanisms for the same unity — reductionist and quantum camps aiming at one target. <b>Faggin</b> takes entanglement further still: not a brain mechanism for binding, but the reason micro-experiences can compose at all. <b>Bohm</b> names the same unity as undivided wholeness — the binding problem is what you get when you start from fragments. <b>McGilchrist</b> puts the same fracture in attention: left-hemisphere bits versus right-hemisphere gestalt, with modern culture stuck in the map.</p>
     </div>
     <div class="col">
       <h4>Gödel splits</h4>
@@ -546,7 +560,7 @@
 
   <div class="foot">
     <p>The one thing the extremes agree on: a program that <em>works</em> is not the same as an account of <em>why it's conscious</em> — Penrose because he thinks the working program is impossible, Chalmers because he thinks it would be insufficient. Everyone between them is a bet that mechanism, once found, is the whole story.</p>
-    <p class="src">Sources — Descartes, <em>Meditations</em> (1641) · Turing, ‘Computing Machinery &amp; Intelligence’ (1950) · Nagel, ‘What Is It Like to Be a Bat?’ (1974) · Searle, Chinese Room (1980) · Ryle, <em>The Concept of Mind</em> (1949) · Penrose &amp; Hameroff, Orch OR · Crick, <em>The Astonishing Hypothesis</em> (1994) &amp; Crick–Koch NCC / claustrum · Hofstadter, <em>GEB</em> (1979), <em>I Am a Strange Loop</em> (2007) · Chalmers, <em>Facing Up to the Problem of Consciousness</em> (1995) · Block, access/phenomenal (1995) · Tononi &amp; Koch, IIT · Baars &amp; Dehaene, Global Workspace · Goff &amp; Strawson, panpsychism · Faggin &amp; D’Ariano, Quantum-Information Panpsychism / <em>Irreducible</em> (2021–24) · Bohm, <em>Wholeness and the Implicate Order</em> (1980) · P. &amp; P. Churchland, eliminative materialism · Dennett, <em>Consciousness Explained</em> (1991).</p>
+    <p class="src">Sources — Descartes, <em>Meditations</em> (1641) · Turing, ‘Computing Machinery &amp; Intelligence’ (1950) · Nagel, ‘What Is It Like to Be a Bat?’ (1974) · Searle, Chinese Room (1980) · Ryle, <em>The Concept of Mind</em> (1949) · Penrose &amp; Hameroff, Orch OR · Crick, <em>The Astonishing Hypothesis</em> (1994) &amp; Crick–Koch NCC / claustrum · Hofstadter, <em>GEB</em> (1979), <em>I Am a Strange Loop</em> (2007) · Chalmers, <em>Facing Up to the Problem of Consciousness</em> (1995) · Block, access/phenomenal (1995) · Tononi &amp; Koch, IIT · Baars &amp; Dehaene, Global Workspace · Goff &amp; Strawson, panpsychism · Faggin &amp; D’Ariano, Quantum-Information Panpsychism / <em>Irreducible</em> (2021–24) · Bohm, <em>Wholeness and the Implicate Order</em> (1980) · McGilchrist, <em>The Master and His Emissary</em> (2009) / <em>The Matter With Things</em> (2021) · P. &amp; P. Churchland, eliminative materialism · Dennett, <em>Consciousness Explained</em> (1991).</p>
     <p class="src" style="margin-top:12px">Published by <b style="color:var(--muted);font-weight:600">Anthemic Developments</b> · <a href="/">anthemic-developments.com</a> · also on the <a href="/brain/">brain map</a></p>
   </div>
 

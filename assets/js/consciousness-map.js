@@ -43,4 +43,16 @@
       el.addEventListener('blur', function () { set(key, false); });
     }
   });
+
+  function focusHash() {
+    var id = (location.hash || '').replace(/^#/, '');
+    if (!id) return;
+    var card = document.getElementById(id) || cardFor(id);
+    if (!card) return;
+    set(id, true);
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (typeof card.focus === 'function') card.focus({ preventScroll: true });
+  }
+  window.addEventListener('hashchange', focusHash);
+  focusHash();
 })();
