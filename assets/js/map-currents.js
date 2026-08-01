@@ -7,13 +7,13 @@ const CURRENTS = [
     label: "Neuro · unconscious",
     home: "Grounding the Unconscious",
     homeHref: "/grounding-the-unconscious.html",
-    blurb: "Freud’s models through Lacan, dream science, and neural substrates — plus the hard-problem dissent.",
+    blurb: "Freud’s models, Jung’s break, Lacan, dream science, and neural substrates — plus the hard-problem dissent.",
     nodes: [
-      "freud", "cUnconscious", "lacan", "structImp", "kristeva", "zizek", "johnston", "malabou",
+      "freud", "jung", "spielrein", "cCollective", "cUnconscious", "lacan", "structImp", "kristeva", "zizek", "johnston", "malabou",
       "panksepp", "solms", "hobsonMc", "domhoff", "damasio", "edelman", "friston", "churchland",
       "chalmers", "cHardProb", "jackson", "nagel", "strawGoff", "kastrup", "bohm", "faggin", "mcgilchrist",
       "miller", "badiou", "popper", "grunbaum", "crews", "eysenck", "schopen", "leibniz", "herbart",
-      "vonHart", "descartes", "spinoza", "platoAr", "socrates",
+      "vonHart", "descartes", "spinoza", "platoAr", "socrates", "nietzsche",
       "turing", "ryle", "searle", "hofstadter", "dennett", "crick", "gwt", "penrose", "block", "iit"
     ]
   },
