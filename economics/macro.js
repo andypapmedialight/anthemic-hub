@@ -2618,7 +2618,16 @@ function parseYahooChart(d) {
   if (!d?.chart?.result?.[0]) throw new Error('no data');
   const r = d.chart.result[0];
   const meta = r.meta;
-  const closes = (r.indicators?.quote?.[0]?.close || []).filter(v => v != null && !Number.isNaN(v));
+  const closesRaw = r.indicators?.quote?.[0]?.close || [];
+  const timestamps = r.timestamp || [];
+  const closes = [];
+  let lastBarUtc = null;
+  for (let i = 0; i < closesRaw.length; i++) {
+    const v = closesRaw[i];
+    if (v == null || Number.isNaN(v)) continue;
+    closes.push(v);
+    if (timestamps[i] != null) lastBarUtc = timestamps[i] * 1000;
+  }
   const metaPrice = meta.regularMarketPrice;
   // Prefer last daily close so card, change %, and chart history use the same scale
   let price = closes.length ? closes[closes.length - 1] : metaPrice;
@@ -2632,10 +2641,13 @@ function parseYahooChart(d) {
   }
   const change = pointsChange(price, prevClose);
   const pct = pctChange(price, prevClose);
-  const asOfUtc = meta.regularMarketTime ? meta.regularMarketTime * 1000 : Date.now();
+  // Yahoo sometimes freezes regularMarketTime (e.g. TIO=F stuck in 2021) while
+  // daily bars keep updating — take the newer of meta time and last valid bar.
+  const metaUtc = meta.regularMarketTime ? meta.regularMarketTime * 1000 : 0;
+  const asOfUtc = Math.max(metaUtc, lastBarUtc || 0) || Date.now();
   const exchangeLabel = formatYahooExchange(meta);
   return attachFreshness({ price, change, pct, asOfUtc, exchangeLabel }, 'live', {
-    note: meta.regularMarketTime ? null : 'quote time unavailable',
+    note: metaUtc || lastBarUtc ? null : 'quote time unavailable',
   });
 }
 
