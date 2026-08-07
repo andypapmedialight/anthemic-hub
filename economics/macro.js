@@ -954,7 +954,10 @@ const COMMODITIES = [
   { id: 'spot-copper',  sym: 'HG=F', priceMul: LBS_PER_METRIC_TON, label: 'Copper Spot',    ticker: 'CU',    unit: 'USD/mt', def: true,  dp: 2 },
   { id: 'spot-wti',     sym: 'CL=F',               label: 'WTI Spot',       ticker: 'WTI',   unit: 'USD/bbl', def: true, dp: 2 },
   { id: 'spot-brent',   sym: 'BZ=F',               label: 'Brent Spot',     ticker: 'BRENT', unit: 'USD/bbl', def: true, dp: 2 },
-  { id: 'spot-ironore', sym: 'TIO=F',              label: 'Iron Ore Spot',  ticker: 'IRON',  unit: 'USD/dmtu', def: false, dp: 2 },
+  // Yahoo chart API still serves TIO=F, but finance.yahoo.com/quote/TIO=F → lookup
+  { id: 'spot-ironore', sym: 'TIO=F', label: 'Iron Ore Spot', ticker: 'IRON', unit: 'USD/dmtu', def: false, dp: 2,
+    sourceUrl: 'https://www.tradingview.com/symbols/COMEX-TIO1!/',
+    sourceLabel: 'TradingView · COMEX iron ore (TIO)' },
   { id: 'spot-gas',     sym: 'NG=F',               label: 'Natural Gas Spot', ticker: 'NG',  unit: 'USD/mmbtu', def: false, dp: 3 },
   { id: 'spot-wheat',   fredId: FRED_WHEAT_SPOT_ID, label: 'Wheat Spot',     ticker: 'WHEAT', unit: 'USD/mt', def: false, dp: 2 },
   { id: 'spot-corn',    sym: 'ZC=F', priceMul: CORN_CENTS_BUSHEL_TO_USD_MT, label: 'Corn Spot', ticker: 'CORN', unit: 'USD/mt', def: false, dp: 2 },
@@ -966,7 +969,9 @@ const COMMODITY_CATALOG = [
   { id: 'spot-copper', sym: 'HG=F', priceMul: LBS_PER_METRIC_TON, label: 'Copper Spot', ticker: 'CU', unit: 'USD/mt' },
   { id: 'spot-wti', sym: 'CL=F', label: 'WTI Spot', ticker: 'WTI', unit: 'USD/bbl' },
   { id: 'spot-brent', sym: 'BZ=F', label: 'Brent Spot', ticker: 'BRENT', unit: 'USD/bbl' },
-  { id: 'spot-ironore', sym: 'TIO=F', label: 'Iron Ore Spot', ticker: 'IRON', unit: 'USD/dmtu' },
+  { id: 'spot-ironore', sym: 'TIO=F', label: 'Iron Ore Spot', ticker: 'IRON', unit: 'USD/dmtu',
+    sourceUrl: 'https://www.tradingview.com/symbols/COMEX-TIO1!/',
+    sourceLabel: 'TradingView · COMEX iron ore (TIO)' },
   { id: 'spot-gas', sym: 'NG=F', label: 'Natural Gas Spot', ticker: 'NG', unit: 'USD/mmbtu' },
   { id: 'spot-wheat', fredId: FRED_WHEAT_SPOT_ID, label: 'Wheat Spot', ticker: 'WHEAT', unit: 'USD/mt' },
   { id: 'spot-corn', sym: 'ZC=F', priceMul: CORN_CENTS_BUSHEL_TO_USD_MT, label: 'Corn Spot', ticker: 'CORN', unit: 'USD/mt' },
@@ -1500,11 +1505,32 @@ function equityCardInfo(item) {
   };
 }
 
+function commodityQuoteSource(item) {
+  if (item.fredId) {
+    return {
+      label: 'FRED commodity series',
+      href: `https://fred.stlouisfed.org/series/${item.fredId}`,
+      data: `FRED ${item.fredId}`,
+    };
+  }
+  if (item.sourceUrl) {
+    const yahooNote = item.sym ? `Yahoo chart ${item.sym}` : null;
+    return {
+      label: item.sourceLabel || 'Market data',
+      href: item.sourceUrl,
+      data: yahooNote ? `${yahooNote} · ${item.sourceLabel || 'market page'}` : (item.sourceLabel || 'Market data'),
+    };
+  }
+  return {
+    label: 'Yahoo Finance',
+    href: `https://finance.yahoo.com/quote/${encodeURIComponent(item.sym || '')}`,
+    data: `Yahoo ${item.sym || item.ticker}`,
+  };
+}
+
 function commodityCardInfo(item) {
   const unit = item.unit ? ` Unit: ${item.unit}.` : '';
-  const source = item.fredId
-    ? { label: 'FRED commodity series', href: `https://fred.stlouisfed.org/series/${item.fredId}`, data: `FRED ${item.fredId}` }
-    : { label: 'Yahoo Finance', href: `https://finance.yahoo.com/quote/${encodeURIComponent(item.sym || '')}`, data: `Yahoo ${item.sym || item.ticker}` };
+  const source = commodityQuoteSource(item);
   return {
     title: item.label,
     summary: `${item.label} is a spot/reference commodity benchmark level.${item.sym ? ' Live quote via Yahoo.' : ''}`,
