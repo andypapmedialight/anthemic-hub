@@ -55,9 +55,9 @@ const CURRENTS = [
     label: "Colonial · decolonial critique",
     home: "Constellations of History",
     homeHref: "/constellations-of-history.html#colonial-critique",
-    blurb: "Fanon through Said, Spivak, Mills, Wynter, Mohanty, Anzaldúa, Lugones — pressure on the Western culture map from inside it.",
+    blurb: "Hobbes and Locke as social-contract hinges; Fanon through Said, Spivak, Mills, Wynter, Mohanty, Anzaldúa, Lugones — pressure on the Western culture map from inside it.",
     nodes: [
-      "fanon", "said", "spivak", "mills", "cRacialContract", "wynter", "mohanty", "anzaldua",
+      "hobbes", "locke", "rousseau", "cSocialContract", "fanon", "said", "spivak", "mills", "cRacialContract", "wynter", "mohanty", "anzaldua",
       "lugones", "sartre", "hall", "davis"
     ]
   },
