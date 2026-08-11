@@ -171,7 +171,7 @@
       '<div class="eyebrow"><span class="dot">●</span> Anthemic Developments <span class="dot2">●</span> printable booklet</div>' +
       "<h1>Genealogies, Constellations &amp; Fiction</h1>" +
       '<p class="dek">Four linked essays on the unconscious, desire, historical form, and technics — plus Fiction of the Maps — with genealogy diagrams and a chronological thinkers index.</p>' +
-      '<div class="frame-note">Assembled from the live site pages (Constellations includes the Critical Theory forks, exhaustion/timenergy band, and related glossary entries; the timeline index pulls live nodes from map-of-maps.js). Print from this view (Ctrl/Cmd+P). Interactive pan/zoom timeline and browse-by-current remain on their source pages.</div>' +
+      '<div class="frame-note">Assembled from the live site pages (Constellations opens with Lukács, Gramsci, and Luxemburg — including linked primary texts and glossary entries for non-capitalist hinterlands and the mass strike — then Critical Theory forks, the exhaustion/timenergy band, and related glossary entries; the timeline index pulls live nodes from map-of-maps.js). Print from this view (Ctrl/Cmd+P). Interactive pan/zoom timeline and browse-by-current remain on their source pages.</div>' +
       '<p class="booklet-date mono">Generated ' + date + "</p>";
 
     const toc = document.createElement("nav");
