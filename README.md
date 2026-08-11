@@ -45,11 +45,42 @@ Open **http://127.0.0.1:8000/**. The admin panel requires the PHP Docker contain
 
 ## Deploy
 
-Push to `main` → GitHub Actions rsyncs all dirs to the Droplet → apply script promotes to web root.
+Push to `main` → GitHub Actions rsyncs into `/home/deploy/incoming-hub/` → the **trusted** apply script on the droplet promotes into `/var/www/anthemic-hub` and reloads related services.
 
 ```bash
 git push origin main
 ```
+
+### What CI does automatically
+
+1. Stage static trees, contact backend, mmd Python, and private secrets under a local `incoming-hub/` bundle.
+2. Rsync to `/home/deploy/incoming-hub/` on the droplet (including a copy of `anthemic-hub-deploy-apply.sh` for review only).
+3. Run:
+   ```bash
+   sudo /usr/local/bin/anthemic-hub-deploy-apply.sh /home/deploy/incoming-hub
+   ```
+4. Smoke-test public URLs and loopback services.
+
+Site HTML/JS/assets, contact `server.mjs`, mmd code, FRED/ABS/contact env files, and systemd unit refreshes all go through this path. Nginx routing lives in **anthemic-ops** (separate deploy).
+
+### Apply script updates (manual)
+
+`/usr/local/bin/anthemic-hub-deploy-apply.sh` does **not** self-update from `incoming-hub/`. That avoids a compromised `deploy` key turning into root via a malicious apply script.
+
+| Change type | Deploy behaviour |
+|-------------|------------------|
+| Site content, contact backend, mmd, CI secrets | Automatic on push to `main` |
+| `scripts/droplet/anthemic-hub-deploy-apply.sh` | Rsynced to `incoming-hub/` only; live `/usr/local/bin` copy is unchanged until you install it as root |
+
+After reviewing the staged script on the droplet:
+
+```bash
+sudo install -o root -g root -m 755 \
+  /home/deploy/incoming-hub/anthemic-hub-deploy-apply.sh \
+  /usr/local/bin/anthemic-hub-deploy-apply.sh
+```
+
+If the staged script differs from `/usr/local/bin`, apply logs a warning and continues with the installed version. Same rule for nginx apply in **anthemic-ops**.
 
 ### What the deploy preserves (never overwritten by CI)
 
@@ -152,9 +183,10 @@ EOF
 sudo chmod 440 /etc/sudoers.d/deploy-anthemic-hub
 
 # Apply script does NOT self-update from incoming-hub (avoids deploy→root RCE).
-# After reviewing a new apply script, install it manually as root:
+# After reviewing a new apply script on the droplet, install it manually as root:
 #   sudo install -o root -g root -m 755 /home/deploy/incoming-hub/anthemic-hub-deploy-apply.sh /usr/local/bin/anthemic-hub-deploy-apply.sh
-# CI invokes: sudo /usr/local/bin/anthemic-hub-deploy-apply.sh /home/deploy/incoming-hub
+# Everyday CI invokes (path must be /home/<user>/incoming-hub):
+#   sudo /usr/local/bin/anthemic-hub-deploy-apply.sh /home/deploy/incoming-hub
 # (Use your real staging path if DEPLOY_USER is not `deploy`.)
 
 # Incoming dir

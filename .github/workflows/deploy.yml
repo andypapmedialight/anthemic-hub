@@ -178,7 +178,8 @@ jobs:
           if [[ -d assets ]]; then
             rsync -avz -e "${RSYNC_SSH}" ./assets/ "${DEST}assets/"
           fi
-          # Always ship the latest apply script so the droplet cannot drift.
+          # Stage latest apply script for review only — /usr/local/bin is NOT auto-updated
+          # (deploy-writable self-update was removed to prevent deploy→root RCE).
           rsync -avz -e "${RSYNC_SSH}" ./scripts/droplet/anthemic-hub-deploy-apply.sh \
             "${DEPLOY_USER}@${DEPLOY_HOST}:/home/${DEPLOY_USER}/incoming-hub/anthemic-hub-deploy-apply.sh"
 
