@@ -35,34 +35,34 @@
 
   const path = (location.pathname || "").replace(/\/+$/, "") || "/";
   const pathBase = path.split("/").pop() || "";
-  const moreLinks = SIBLINGS.filter((item) => {
-    const targetBase = item.href.replace(/\/+$/, "").split("/").pop() || "";
-    return targetBase && targetBase !== pathBase;
-  });
 
-  if (moreLinks.length) {
-    const more = document.createElement("div");
-    more.className = "essay-toc-more";
-    const moreLabel = document.createElement("p");
-    moreLabel.className = "essay-toc-label";
-    moreLabel.textContent = "Maps & essays";
-    more.appendChild(moreLabel);
-    const moreList = document.createElement("ul");
-    moreLinks.forEach((item) => {
-      const li = document.createElement("li");
-      const a = document.createElement("a");
-      a.href = item.href;
-      a.textContent = item.label;
-      li.appendChild(a);
-      moreList.appendChild(li);
-    });
-    more.appendChild(moreList);
-    toc.appendChild(more);
-  }
+  const more = document.createElement("div");
+  more.className = "essay-toc-more";
+  const moreLabel = document.createElement("p");
+  moreLabel.className = "essay-toc-label";
+  moreLabel.textContent = "Maps & essays";
+  more.appendChild(moreLabel);
+  const moreList = document.createElement("ul");
+  SIBLINGS.forEach((item) => {
+    const targetBase = item.href.replace(/\/+$/, "").split("/").pop() || "";
+    const isCurrent = targetBase && targetBase === pathBase;
+    const li = document.createElement("li");
+    const a = document.createElement("a");
+    a.href = item.href;
+    a.textContent = item.label;
+    if (isCurrent) {
+      a.className = "is-current";
+      a.setAttribute("aria-current", "page");
+    }
+    li.appendChild(a);
+    moreList.appendChild(li);
+  });
+  more.appendChild(moreList);
+  toc.appendChild(more);
 
   const label = document.createElement("p");
   label.className = "essay-toc-label";
-  label.textContent = moreLinks.length ? "On this page" : "Contents";
+  label.textContent = "On this page";
   toc.appendChild(label);
 
   const list = document.createElement("ol");
