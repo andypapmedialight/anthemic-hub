@@ -112,7 +112,6 @@ class ValuationHandler(BaseHTTPRequestHandler):
         )
         self.send_response(status)
         self.send_header("Content-Type", ct)
-        self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         try:
@@ -124,7 +123,6 @@ class ValuationHandler(BaseHTTPRequestHandler):
         body = json.dumps(payload).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
-        self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         try:

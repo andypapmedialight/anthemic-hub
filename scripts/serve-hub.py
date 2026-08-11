@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static hub server with CORS proxy for /economics/ (Morning Macro).
+"""Static hub server with same-origin proxy for /economics/ (Morning Macro).
 
 Usage: python3 scripts/serve-hub.py
        PORT=8000 python3 scripts/serve-hub.py
@@ -12,6 +12,8 @@ Proxy: GET /economics/proxy/yahoo?sym=^GSPC&range=5d
        GET /economics/proxy/multilateral?metric=oecd-cli-au
        GET /economics/proxy/multilateral/history?metric=imf-gdp-au&days=1825
        GET /economics/proxy/fred/health
+
+Dotfiles (e.g. /.env, /.git) are not served.
 """
 from __future__ import annotations
 
@@ -191,6 +193,12 @@ _FRED_ID_RE = re.compile(r"^[A-Z0-9]+$")
 _GF_PATH_RE = re.compile(r"^[A-Za-z0-9.^=:\-]+$")
 
 
+def _is_blocked_static_path(path: str) -> bool:
+    """Refuse /.env, /.git, and any path segment starting with '.' (except handled routes)."""
+    parts = [p for p in path.split("/") if p]
+    return any(p.startswith(".") for p in parts)
+
+
 class HubHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=ROOT, **kwargs)
@@ -236,7 +244,7 @@ class HubHandler(SimpleHTTPRequestHandler):
         if path == "/economics/api/freshness":
             self._freshness_api()
             return
-        if path.startswith("/.well-known/"):
+        if path.startswith("/.well-known/") or _is_blocked_static_path(path):
             self.send_error(404)
             return
         super().do_GET()
@@ -264,21 +272,18 @@ class HubHandler(SimpleHTTPRequestHandler):
                 ct = resp.headers.get("Content-Type", "application/octet-stream")
             self.send_response(200)
             self.send_header("Content-Type", ct)
-            self.send_header("Access-Control-Allow-Origin", "*")
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self._safe_write(body)
         except urllib.error.HTTPError as e:
             body = e.read()
             self.send_response(e.code)
-            self.send_header("Access-Control-Allow-Origin", "*")
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self._safe_write(body)
         except Exception as e:
             msg = str(e).encode()
             self.send_response(502)
-            self.send_header("Access-Control-Allow-Origin", "*")
             self.send_header("Content-Length", str(len(msg)))
             self.end_headers()
             self._safe_write(msg)
@@ -329,7 +334,6 @@ class HubHandler(SimpleHTTPRequestHandler):
         body = json.dumps(payload).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
-        self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self._safe_write(body)
@@ -427,7 +431,6 @@ class HubHandler(SimpleHTTPRequestHandler):
     def _send_cached_body(self, body: bytes, content_type: str) -> None:
         self.send_response(200)
         self.send_header("Content-Type", content_type)
-        self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self._safe_write(body)
@@ -453,7 +456,6 @@ class HubHandler(SimpleHTTPRequestHandler):
             sort_order=order,
         )
         self.send_response(status)
-        self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Content-Type", ct)
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
@@ -472,7 +474,7 @@ def main():
     httpd = HTTPServer((BIND, PORT), HubHandler)
     print(f"Anthemic hub: http://{BIND}:{PORT}/")
     print(f"Morning Macro: http://{BIND}:{PORT}/economics/")
-    print(f"CORS proxy:    http://{BIND}:{PORT}/economics/proxy/yahoo?sym=…")
+    print(f"Same-origin proxy: http://{BIND}:{PORT}/economics/proxy/yahoo?sym=…")
     print(f"Google proxy:  http://{BIND}:{PORT}/economics/proxy/google?path=AAPL:NASDAQ")
     print(f"Valuation API: http://{BIND}:{PORT}/economics/proxy/valuation?metric=margin-debt")
     print(f"Valuation ping: http://{BIND}:{PORT}/economics/proxy/valuation/health")

@@ -2,9 +2,9 @@
 # Installed on the Droplet as /usr/local/bin/anthemic-hub-deploy-apply.sh (root, 755).
 # Invoked by the deploy user via:
 #   sudo /usr/local/bin/anthemic-hub-deploy-apply.sh
-# Optional first argument sets INCOMING (manual override).
-# If no argument: read one line from /tmp/anthemic-hub-incoming.path if it exists (CI writes this before sudo — works when SUDO_USER is unset).
-# Else read /home/${SUDO_USER}/.incoming-hub-path when present (manual).
+# Optional first argument sets INCOMING (preferred; CI should pass it).
+# Else read one line from /home/${SUDO_USER}/.incoming-hub-path (chmod 600).
+# Else legacy /tmp/anthemic-hub-incoming.path (validated under /home/<user>/incoming-hub).
 # Else default /home/deploy/incoming-hub.
 #   index.html        - the hub landing page
 #   consciousness-map.html (+ favicon/preview) - philosophy of mind map
@@ -27,33 +27,60 @@
 #
 set -euo pipefail
 
+# Resolve + validate INCOMING: must be a real directory /home/<user>/incoming-hub.
+# Never trust path files under /tmp without this check (TOCTOU / path swap → root RCE).
+_normalize_incoming_raw() {
+  local raw="$1"
+  raw="${raw//$'\r'/}"
+  raw="${raw//$'\n'/}"
+  raw="$(printf '%s' "$raw" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+  printf '%s' "$raw"
+}
+
+_validate_incoming() {
+  local raw="$1"
+  if [[ -z "${raw}" || "${raw}" == *..* || "${raw}" != /* ]]; then
+    echo "anthemic-hub-deploy-apply: refused INCOMING path '${raw}'" >&2
+    exit 1
+  fi
+  if [[ ! -d "${raw}" ]]; then
+    echo "anthemic-hub-deploy-apply: INCOMING is not a directory: ${raw}" >&2
+    exit 1
+  fi
+  local resolved
+  resolved="$(cd "${raw}" && pwd -P)"
+  if [[ ! "${resolved}" =~ ^/home/[a-zA-Z0-9._-]+/incoming-hub$ ]]; then
+    echo "anthemic-hub-deploy-apply: INCOMING must resolve to /home/<user>/incoming-hub (got ${resolved})" >&2
+    exit 1
+  fi
+  INCOMING="${resolved}"
+}
+
 if [[ -n "${1:-}" ]]; then
-  INCOMING="$1"
-elif [[ -f /tmp/anthemic-hub-incoming.path ]]; then
-  IFS= read -r INCOMING < /tmp/anthemic-hub-incoming.path || true
-  INCOMING="${INCOMING//$'\r'/}"
-  INCOMING="${INCOMING//$'\n'/}"
-  INCOMING=$(printf '%s' "$INCOMING" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-  rm -f /tmp/anthemic-hub-incoming.path
+  _validate_incoming "$(_normalize_incoming_raw "$1")"
 elif [[ -n "${SUDO_USER:-}" && -f "/home/${SUDO_USER}/.incoming-hub-path" ]]; then
-  IFS= read -r INCOMING < "/home/${SUDO_USER}/.incoming-hub-path" || true
-  INCOMING="${INCOMING//$'\r'/}"
-  INCOMING="${INCOMING//$'\n'/}"
-  INCOMING=$(printf '%s' "$INCOMING" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-fi
-if [[ -z "${INCOMING:-}" ]]; then
-  INCOMING="/home/deploy/incoming-hub"
+  _line=""
+  IFS= read -r _line < "/home/${SUDO_USER}/.incoming-hub-path" || true
+  rm -f "/home/${SUDO_USER}/.incoming-hub-path"
+  _validate_incoming "$(_normalize_incoming_raw "${_line}")"
+elif [[ -f /tmp/anthemic-hub-incoming.path ]]; then
+  # Legacy CI path; prefer argv or ~/.incoming-hub-path going forward.
+  _line=""
+  IFS= read -r _line < /tmp/anthemic-hub-incoming.path || true
+  rm -f /tmp/anthemic-hub-incoming.path
+  _validate_incoming "$(_normalize_incoming_raw "${_line}")"
+else
+  _validate_incoming "/home/deploy/incoming-hub"
 fi
 DEST=/var/www/anthemic-hub
-# If /usr/local/bin still predates this block, bootstrap once as root:
-#   install -m 755 /home/deploy/incoming-hub/anthemic-hub-deploy-apply.sh /usr/local/bin/anthemic-hub-deploy-apply.sh
+# Never install/exec APPLY_BIN from deploy-writable INCOMING (privilege escalation).
+# Bootstrap / update manually as root when the apply script itself changes:
+#   install -m 755 -o root -g root /home/deploy/incoming-hub/anthemic-hub-deploy-apply.sh /usr/local/bin/anthemic-hub-deploy-apply.sh
 SELF_INCOMING="${INCOMING}/anthemic-hub-deploy-apply.sh"
 APPLY_BIN="/usr/local/bin/anthemic-hub-deploy-apply.sh"
-if [[ "${EUID:-$(id -u)}" -eq 0 ]] && [[ -f "${SELF_INCOMING}" ]]; then
+if [[ "${EUID:-$(id -u)}" -eq 0 ]] && [[ -f "${SELF_INCOMING}" ]] && [[ -f "${APPLY_BIN}" ]]; then
   if ! cmp -s "${SELF_INCOMING}" "${APPLY_BIN}" 2>/dev/null; then
-    install -m 755 -o root -g root "${SELF_INCOMING}" "${APPLY_BIN}"
-    echo "anthemic-hub-deploy-apply: updated ${APPLY_BIN}; re-running with new script" >&2
-    exec "${APPLY_BIN}" "${INCOMING}"
+    echo "anthemic-hub-deploy-apply: WARNING: ${SELF_INCOMING} differs from ${APPLY_BIN}; not auto-updating (install manually as root)" >&2
   fi
 fi
 
@@ -266,11 +293,24 @@ fi
 mkdir -p /etc/nginx/snippets
 if [[ -f "${FRED_KEY_FILE}" ]]; then
   KEY="$(tr -d '\r\n' < "${FRED_KEY_FILE}")"
+  # Reject charset that could break out of nginx double-quoted set.
+  if [[ -n "${KEY}" && ! "${KEY}" =~ ^[A-Za-z0-9_-]+$ ]]; then
+    echo "anthemic-hub-deploy-apply: FRED API key has invalid characters" >&2
+    exit 1
+  fi
   printf 'set $mmd_fred_api_key "%s";\n' "${KEY}" > "${SNIP}"
 else
   printf 'set $mmd_fred_api_key "";\n' > "${SNIP}"
 fi
-chmod 644 "${SNIP}"
+# Readable by nginx worker only (not world). Prefer www-data, else nginx.
+if getent group www-data >/dev/null 2>&1; then
+  chown root:www-data "${SNIP}"
+elif getent group nginx >/dev/null 2>&1; then
+  chown root:nginx "${SNIP}"
+else
+  chown root:root "${SNIP}"
+fi
+chmod 640 "${SNIP}"
 
 # PapaWeb contact API (Slack + JSON store on loopback; nginx proxies /bass/api/*).
 CONTACT_OPT=/opt/anthemic-contact

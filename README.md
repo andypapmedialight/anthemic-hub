@@ -151,8 +151,10 @@ deploy ALL=(root) NOPASSWD: /usr/local/bin/anthemic-hub-deploy-apply.sh
 EOF
 sudo chmod 440 /etc/sudoers.d/deploy-anthemic-hub
 
-# After pulling a new apply script from the repo, refresh /usr/local/bin (CI relies on /tmp/anthemic-hub-incoming.path + this script):
+# Apply script does NOT self-update from incoming-hub (avoids deploy→root RCE).
+# After reviewing a new apply script, install it manually as root:
 #   sudo install -o root -g root -m 755 /home/deploy/incoming-hub/anthemic-hub-deploy-apply.sh /usr/local/bin/anthemic-hub-deploy-apply.sh
+# CI invokes: sudo /usr/local/bin/anthemic-hub-deploy-apply.sh /home/deploy/incoming-hub
 # (Use your real staging path if DEPLOY_USER is not `deploy`.)
 
 # Incoming dir

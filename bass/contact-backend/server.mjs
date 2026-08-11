@@ -67,12 +67,25 @@ function timingSafeEqualStr(a, b) {
   return crypto.timingSafeEqual(ba, bb);
 }
 
+function isLoopbackRemote(addr) {
+  return addr === '127.0.0.1' || addr === '::1' || addr === '::ffff:127.0.0.1';
+}
+
+/** Client IP for rate limits. Trust X-Real-IP / XFF only from the loopback nginx proxy. */
 function clientIp(req) {
-  const fwd = req.headers['x-forwarded-for'];
-  if (typeof fwd === 'string' && fwd.trim()) {
-    return fwd.split(',')[0].trim().slice(0, 64);
+  const remote = req.socket.remoteAddress || '';
+  if (isLoopbackRemote(remote)) {
+    const real = req.headers['x-real-ip'];
+    if (typeof real === 'string' && real.trim()) {
+      return real.trim().slice(0, 64);
+    }
+    const fwd = req.headers['x-forwarded-for'];
+    if (typeof fwd === 'string' && fwd.trim()) {
+      // Nginx overwrites XFF with $remote_addr (single hop).
+      return fwd.split(',')[0].trim().slice(0, 64);
+    }
   }
-  return req.socket.remoteAddress || 'unknown';
+  return remote || 'unknown';
 }
 
 function rateAllow(ip) {
