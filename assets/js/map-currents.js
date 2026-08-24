@@ -11,10 +11,11 @@ const CURRENTS = [
     nodes: [
       "freud", "jung", "spielrein", "cCollective", "cUnconscious", "lacan", "structImp", "kristeva", "zizek", "johnston", "malabou",
       "panksepp", "solms", "hobsonMc", "domhoff", "damasio", "edelman", "friston", "churchland",
-      "chalmers", "cHardProb", "jackson", "nagel", "strawGoff", "kastrup", "bohm", "faggin", "mcgilchrist",
+      "chalmers", "cHardProb", "jackson", "nagel", "strawGoff", "kastrup", "albahari", "bohm", "faggin", "mcgilchrist",
       "miller", "badiou", "popper", "grunbaum", "crews", "eysenck", "schopen", "leibniz", "herbart",
-      "vonHart", "descartes", "spinoza", "platoAr", "socrates", "nietzsche",
-      "turing", "ryle", "searle", "hofstadter", "dennett", "crick", "gwt", "penrose", "block", "iit"
+      "vonHart", "descartes", "spinoza", "platoAr", "socrates", "nietzsche", "james",
+      "turing", "ryle", "searle", "hofstadter", "dennett", "crick", "gwt", "penrose", "block", "iit",
+      "varela", "seth", "barrett"
     ]
   },
   {
@@ -96,10 +97,10 @@ const CURRENTS = [
     label: "Techne · Gestell · organology",
     home: "Technics and Time",
     homeHref: "/technics-and-time.html",
-    blurb: "Aristotle’s techne through Heidegger’s Gestell, Simondon, Stiegler’s pharmacology, Hui’s cosmotechnics — with Merchant and Hayles as feminist foils.",
+    blurb: "Aristotle’s techne through Heidegger’s Gestell, Simondon, Stiegler’s pharmacology, Hui’s cosmotechnics — with Merchant and Hayles as feminist foils, Clark’s extended mind as the Anglophone rhyme.",
     nodes: [
       "aristotleTech", "heideggerGestell", "cTechneGestell", "simondon", "stiegler", "cPharmakon",
-      "yukHui", "cCosmotech", "merchant", "hayles", "haraway", "plant", "mcluhan", "heidegger"
+      "clark", "yukHui", "cCosmotech", "merchant", "hayles", "haraway", "plant", "mcluhan", "heidegger"
     ]
   },
   {
