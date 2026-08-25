@@ -11,6 +11,7 @@
     { href: "/genealogies-of-desire.html", label: "Genealogies of Desire" },
     { href: "/constellations-of-history.html", label: "Constellations of History" },
     { href: "/technics-and-time.html", label: "Technics and Time" },
+    { href: "/consciousness-map.html", label: "Consciousness map" },
     { href: "/fiction-of-the-maps.html", label: "Fiction of the Maps" },
     { href: "/map-of-maps.html", label: "Thinkers Timeline" },
     { href: "/map-of-maps-currents.html", label: "Browse by current" },

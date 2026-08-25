@@ -23,10 +23,10 @@ const CURRENTS = [
     label: "Freudo-Marxism",
     home: "Genealogies of Desire",
     homeHref: "/genealogies-of-desire.html#freudo-marxism",
-    blurb: "Reich through the Frankfurt School: repression, surplus-repression, culture industry — pressed later by Firestone, Federici, Mitchell.",
+    blurb: "Reich through the Frankfurt School: repression, surplus-repression, culture industry — pressed later by Firestone, Federici, Mitchell, Spillers; Lasch’s culture of narcissism as the American social-character sequel.",
     nodes: [
       "freud", "marx", "reich", "adorno", "marcuse", "fromm", "benjamin", "firestone", "federici",
-      "mitchell", "fisher", "acidXeno", "cIdeology", "cUnconscious"
+      "mitchell", "spillers", "fisher", "acidXeno", "cIdeology", "cUnconscious", "lasch", "cNarcissism"
     ]
   },
   {
@@ -34,10 +34,10 @@ const CURRENTS = [
     label: "French feminism · sexual difference",
     home: "Genealogies / Grounding",
     homeHref: "/genealogies-of-desire.html#french-turn",
-    blurb: "Irigaray, Cixous, Kristeva, Mitchell — and Beauvoir / Butler as hinges into performativity and recognition.",
+    blurb: "Irigaray, Cixous, Kristeva, Mitchell — Beauvoir / Butler as hinges into performativity; Spillers’s ungendering and Mahmood’s pious agency as later cuts.",
     nodes: [
       "beauvoir", "irigaray", "cixous", "kristeva", "mitchell", "butler", "lacan", "derrida",
-      "kojeve", "cRecog", "foucault"
+      "kojeve", "cRecog", "foucault", "spillers", "mahmood"
     ]
   },
   {
@@ -45,10 +45,10 @@ const CURRENTS = [
     label: "Cultural Studies · habitus",
     home: "Constellations of History",
     homeHref: "/constellations-of-history.html#cultural-studies",
-    blurb: "Williams and Hall’s culture-as-material-practice, beside Bourdieu’s habitus / field / cultural capital.",
+    blurb: "Williams and Hall’s culture-as-material-practice, beside Bourdieu’s habitus / field / cultural capital — and Liu’s later polemic that distinction became virtue-hoarding.",
     nodes: [
       "williamsR", "hall", "bourdieu", "cHabitus", "gramsci", "cHegemony", "althusser", "mcluhan",
-      "eagleton"
+      "eagleton", "liu", "cPMC", "lasch", "clrJames"
     ]
   },
   {
@@ -56,10 +56,10 @@ const CURRENTS = [
     label: "Colonial · decolonial critique",
     home: "Constellations of History",
     homeHref: "/constellations-of-history.html#colonial-critique",
-    blurb: "Hobbes and Locke as social-contract hinges; Fanon through Said, Spivak, Mills, Wynter, Mohanty, Anzaldúa, Lugones — pressure on the Western culture map from inside it.",
+    blurb: "Hobbes and Locke as social-contract hinges; Du Bois and Césaire before Fanon; then Said, Spivak, Mills, Wynter, Quijano, Lugones — pressure on the Western culture map from inside it.",
     nodes: [
-      "hobbes", "locke", "rousseau", "cSocialContract", "fanon", "said", "spivak", "mills", "cRacialContract", "wynter", "mohanty", "anzaldua",
-      "lugones", "sartre", "hall", "davis"
+      "hobbes", "locke", "rousseau", "cSocialContract", "dubois", "cDoubleConsciousness", "cesaire", "fanon", "said", "spivak", "mills", "cRacialContract", "wynter", "mohanty", "anzaldua",
+      "quijano", "cColonialityOfPower", "lugones", "sartre", "hall", "davis"
     ]
   },
   {
@@ -67,18 +67,19 @@ const CURRENTS = [
     label: "Black feminist thought",
     home: "Constellations of History",
     homeHref: "/constellations-of-history.html#davis",
-    blurb: "Davis, Lorde · hooks, Collins — abolition, margin-as-theory, outsider-within epistemology.",
-    nodes: ["davis", "lordeHooks", "collins", "marcuse", "fanon", "hall", "fraser"]
+    blurb: "Davis, Lorde · hooks, Collins — abolition, margin-as-theory, outsider-within epistemology; Spillers’s flesh/ungendering as the psychoanalytic cut.",
+    nodes: ["davis", "lordeHooks", "collins", "marcuse", "fanon", "hall", "fraser", "spillers", "dubois"]
   },
   {
     id: "recognition",
     label: "Recognition debates",
     home: "Constellations / Genealogies",
     homeHref: "/constellations-of-history.html#habermas-honneth-rosa",
-    blurb: "Hegel/Kojève desire-for-recognition through Honneth, Fraser’s redistribution fight, Butler, Benhabib’s situated self, Forst’s justification, Jaeggi’s forms of life.",
+    blurb: "Hegel/Kojève desire-for-recognition through Du Bois’s double consciousness, Honneth, Fraser’s redistribution fight, Lasch’s therapeutic culture, Liu’s PMC polemic, Butler, Mahmood’s pious agency, Benhabib’s situated self, Forst’s justification, Jaeggi’s forms of life.",
     nodes: [
       "hegel", "cRecog", "kojeve", "beauvoir", "butler", "honneth", "fraser", "habermas",
-      "taylor", "fanon", "benhabib", "forst", "jaeggi", "cJustification", "cFormsOfLife", "rosa"
+      "taylor", "dubois", "cDoubleConsciousness", "fanon", "benhabib", "forst", "jaeggi", "cJustification", "cFormsOfLife", "rosa",
+      "liu", "cPMC", "lasch", "cNarcissism", "mahmood"
     ]
   },
   {
@@ -119,11 +120,22 @@ const CURRENTS = [
     label: "Western Marxism spine",
     home: "Constellations of History",
     homeHref: "/constellations-of-history.html#lukacs-gramsci",
-    blurb: "Lukács, Gramsci, Luxemburg, Weimar circle, Anderson’s naming — the culture-and-consciousness break from orthodox Marxism.",
+    blurb: "Lukács, Gramsci, Luxemburg, Weimar circle, Anderson’s naming — pressed by C.L.R. James’s Black Jacobins and Robinson’s racial capitalism.",
     nodes: [
       "luxemburg", "lukacs", "gramsci", "cReif", "cHegemony", "benjamin", "bloch", "brecht",
       "kracauer", "scholem", "arendt", "weil", "adorno", "debord", "anderson", "jameson",
-      "marx"
+      "marx", "clrJames", "robinson", "cRacialCapitalism"
+    ]
+  },
+  {
+    id: "pmc-virtue",
+    label: "PMC · virtue hoarding",
+    home: "Constellations of History",
+    homeHref: "/constellations-of-history.html#liu",
+    blurb: "Ehrenreichs’ 1977 PMC via Kracauer; Lasch’s narcissism and revolt of the elites; Bourdieu’s distinction; Fraser’s redistribution insistence — Liu’s polemic that the credentialed left hoards virtue while blocking class politics.",
+    nodes: [
+      "kracauer", "cPMC", "anderson", "hall", "bourdieu", "cHabitus", "fraser", "lasch",
+      "cNarcissism", "liu", "adorno", "weeks", "fromm", "taylor"
     ]
   }
 ];
