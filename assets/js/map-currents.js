@@ -37,7 +37,7 @@ const CURRENTS = [
     blurb: "Irigaray, Cixous, Kristeva, Mitchell — Beauvoir / Butler as hinges into performativity; Spillers’s ungendering and Mahmood’s pious agency as later cuts.",
     nodes: [
       "beauvoir", "irigaray", "cixous", "kristeva", "mitchell", "butler", "lacan", "derrida",
-      "kojeve", "cRecog", "foucault", "spillers", "mahmood"
+      "kojeve", "cRecog", "foucault", "spillers", "mahmood", "mead"
     ]
   },
   {
@@ -59,7 +59,7 @@ const CURRENTS = [
     blurb: "Hobbes and Locke as social-contract hinges; Du Bois and Césaire before Fanon; then Said, Spivak, Mills, Wynter, Quijano, Lugones — pressure on the Western culture map from inside it.",
     nodes: [
       "hobbes", "locke", "rousseau", "cSocialContract", "dubois", "cDoubleConsciousness", "cesaire", "fanon", "said", "spivak", "mills", "cRacialContract", "wynter", "mohanty", "anzaldua",
-      "quijano", "cColonialityOfPower", "lugones", "sartre", "hall", "davis"
+      "quijano", "cColonialityOfPower", "lugones", "sartre", "hall", "davis", "taussig"
     ]
   },
   {
@@ -79,7 +79,7 @@ const CURRENTS = [
     nodes: [
       "hegel", "cRecog", "kojeve", "beauvoir", "butler", "honneth", "fraser", "habermas",
       "taylor", "dubois", "cDoubleConsciousness", "fanon", "benhabib", "forst", "jaeggi", "cJustification", "cFormsOfLife", "rosa",
-      "liu", "cPMC", "lasch", "cNarcissism", "mahmood"
+      "liu", "cPMC", "lasch", "cNarcissism", "mahmood", "girard", "cMimesis", "mead", "taussig"
     ]
   },
   {
@@ -90,7 +90,7 @@ const CURRENTS = [
     blurb: "Land, CCRU, Fisher, Noys’s naming/refusal, left-accelerationism, e/acc — not Rosa’s social acceleration.",
     nodes: [
       "dg", "land", "ccruTrio", "plant", "fisher", "noys", "leftAccel", "eacc", "acidXeno",
-      "bostrom", "berardiDean", "derrida"
+      "bostrom", "berardiDean", "derrida", "bateson"
     ]
   },
   {
@@ -125,6 +125,18 @@ const CURRENTS = [
       "luxemburg", "lukacs", "gramsci", "cReif", "cHegemony", "benjamin", "bloch", "brecht",
       "kracauer", "scholem", "arendt", "weil", "adorno", "debord", "anderson", "jameson",
       "marx", "clrJames", "robinson", "cRacialCapitalism"
+    ]
+  },
+  {
+    id: "mimesis-cybernetics",
+    label: "Mimesis · culture · schismogenesis",
+    home: "Genealogies of Desire",
+    homeHref: "/genealogies-of-desire.html#mead-bateson-girard",
+    blurb: "Mead and Benedict’s culture-and-personality, Bateson’s schismogenesis / plateau, Girard’s mimetic desire and scapegoat, and Taussig’s Benjaminian mimesis-and-alterity as the late ethnographic brake on Girard’s universal — beside Kojève, against Freud’s Oedipus, rival to Anti-Oedipus in 1972.",
+    nodes: [
+      "mead", "benedict", "bateson", "girard", "taussig", "cMimesis", "cMimeticFaculty", "malinowski",
+      "kojeve", "cRecog", "lacan", "dg", "freud", "structImp", "bataille", "nietzsche",
+      "federici", "spillers", "beauvoir", "benjamin", "marx", "said"
     ]
   },
   {
