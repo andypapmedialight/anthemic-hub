@@ -228,7 +228,16 @@ const NODES = [
   { id: "quijano", name: "Aníbal Quijano", sub: "coloniality of power", group: "constellations", year: 2000, href: "/constellations-of-history.html#quijano" },
   { id: "cColonialityOfPower", name: "coloniality of power", sub: "", group: "concept", year: 2000, href: "/constellations-of-history.html#gloss-coloniality-of-power" },
   { id: "spillers", name: "Hortense Spillers", sub: "flesh · ungendering", group: "genealogies", year: 1987, href: "/genealogies-of-desire.html#spillers" },
-  { id: "mahmood", name: "Saba Mahmood", sub: "pious agency · Politics of Piety", group: "genealogies", year: 2005, href: "/genealogies-of-desire.html#mahmood" }
+  { id: "mahmood", name: "Saba Mahmood", sub: "pious agency · Politics of Piety", group: "genealogies", year: 2005, href: "/genealogies-of-desire.html#mahmood" },
+  { id: "klein", name: "Melanie Klein", sub: "object relations · positions", group: "grounding", year: 1946, href: "/grounding-the-unconscious.html#klein" },
+  { id: "cProjectiveId", name: "projective identification", sub: "", group: "concept", year: 1946, href: "/grounding-the-unconscious.html#gloss-projective-identification" },
+  { id: "moretonRobinson", name: "Aileen Moreton-Robinson", sub: "white possessive · Indigenous sovereignty", group: "constellations", year: 2015, href: "/constellations-of-history.html#moreton-robinson" },
+  { id: "cWhitePossessive", name: "white possessive / patriarchal white sovereignty", sub: "", group: "concept", year: 2015, href: "/constellations-of-history.html#gloss-white-possessive" },
+  { id: "chakrabarty", name: "Dipesh Chakrabarty", sub: "provincializing Europe", group: "constellations", year: 2000, href: "/constellations-of-history.html#chakrabarty" },
+  { id: "cProvincializing", name: "provincializing Europe", sub: "", group: "concept", year: 2000, href: "/constellations-of-history.html#gloss-provincializing-europe" },
+  { id: "mbembe", name: "Achille Mbembe", sub: "necropolitics", group: "genealogies", year: 2003, href: "/genealogies-of-desire.html#mbembe" },
+  { id: "cNecropolitics", name: "necropolitics", sub: "", group: "concept", year: 2003, href: "/genealogies-of-desire.html#gloss-necropolitics" },
+  { id: "chun", name: "Wendy Hui Kyong Chun", sub: "software as memory · discriminating data", group: "techne", year: 2011, href: "/technics-and-time.html#chun" }
 ];
 
 /** kind: build | critique | parallel | callback */
@@ -675,7 +684,28 @@ const EDGES = [
   { from: "davis", to: "spillers", kind: "parallel" },
   { from: "foucault", to: "mahmood", kind: "build" },
   { from: "butler", to: "mahmood", kind: "critique" },
-  { from: "beauvoir", to: "mahmood", kind: "critique" }
+  { from: "beauvoir", to: "mahmood", kind: "critique" },
+  { from: "freud", to: "klein", kind: "build" },
+  { from: "spielrein", to: "klein", kind: "parallel" },
+  { from: "klein", to: "lacan", kind: "critique" },
+  { from: "klein", to: "cProjectiveId", kind: "build" },
+  { from: "mitchell", to: "klein", kind: "parallel" },
+  { from: "mills", to: "moretonRobinson", kind: "build" },
+  { from: "locke", to: "moretonRobinson", kind: "critique" },
+  { from: "wynter", to: "moretonRobinson", kind: "parallel" },
+  { from: "moretonRobinson", to: "cWhitePossessive", kind: "build" },
+  { from: "spivak", to: "chakrabarty", kind: "build" },
+  { from: "said", to: "chakrabarty", kind: "parallel" },
+  { from: "quijano", to: "chakrabarty", kind: "parallel" },
+  { from: "chakrabarty", to: "cProvincializing", kind: "build" },
+  { from: "foucault", to: "mbembe", kind: "critique" },
+  { from: "fanon", to: "mbembe", kind: "build" },
+  { from: "wynter", to: "mbembe", kind: "parallel" },
+  { from: "mbembe", to: "cNecropolitics", kind: "build" },
+  { from: "stiegler", to: "chun", kind: "parallel" },
+  { from: "hayles", to: "chun", kind: "build" },
+  { from: "clark", to: "chun", kind: "parallel" },
+  { from: "merchant", to: "chun", kind: "parallel" }
 ];
 
 const NODE_W = 168;

@@ -9,7 +9,7 @@ const CURRENTS = [
     homeHref: "/grounding-the-unconscious.html",
     blurb: "Freud’s models, Jung’s break, Lacan, dream science, and neural substrates — plus the hard-problem dissent.",
     nodes: [
-      "freud", "jung", "spielrein", "cCollective", "cUnconscious", "lacan", "structImp", "kristeva", "zizek", "johnston", "malabou",
+      "freud", "jung", "spielrein", "klein", "cProjectiveId", "cCollective", "cUnconscious", "lacan", "structImp", "kristeva", "zizek", "johnston", "malabou",
       "panksepp", "solms", "hobsonMc", "domhoff", "damasio", "edelman", "friston", "churchland",
       "chalmers", "cHardProb", "jackson", "nagel", "strawGoff", "kastrup", "albahari", "bohm", "faggin", "mcgilchrist",
       "miller", "badiou", "popper", "grunbaum", "crews", "eysenck", "schopen", "leibniz", "herbart",
@@ -56,10 +56,10 @@ const CURRENTS = [
     label: "Colonial · decolonial critique",
     home: "Constellations of History",
     homeHref: "/constellations-of-history.html#colonial-critique",
-    blurb: "Hobbes and Locke as social-contract hinges; Du Bois and Césaire before Fanon; then Said, Spivak, Mills, Wynter, Quijano, Lugones — pressure on the Western culture map from inside it.",
+    blurb: "Hobbes and Locke as social-contract hinges; Du Bois and Césaire before Fanon; then Said, Spivak, Chakrabarty, Mills, Wynter, Quijano, Lugones, Moreton-Robinson — pressure on the Western culture map from inside it, including the settler colony this site is written from.",
     nodes: [
-      "hobbes", "locke", "rousseau", "cSocialContract", "dubois", "cDoubleConsciousness", "cesaire", "fanon", "said", "spivak", "mills", "cRacialContract", "wynter", "mohanty", "anzaldua",
-      "quijano", "cColonialityOfPower", "lugones", "sartre", "hall", "davis", "taussig"
+      "hobbes", "locke", "rousseau", "cSocialContract", "dubois", "cDoubleConsciousness", "cesaire", "fanon", "said", "spivak", "chakrabarty", "cProvincializing", "mills", "cRacialContract", "wynter", "mohanty", "anzaldua",
+      "quijano", "cColonialityOfPower", "lugones", "moretonRobinson", "cWhitePossessive", "sartre", "hall", "davis", "taussig", "mbembe", "cNecropolitics"
     ]
   },
   {
@@ -98,10 +98,10 @@ const CURRENTS = [
     label: "Techne · Gestell · organology",
     home: "Technics and Time",
     homeHref: "/technics-and-time.html",
-    blurb: "Aristotle’s techne through Heidegger’s Gestell, Simondon, Stiegler’s pharmacology, Hui’s cosmotechnics — with Merchant and Hayles as feminist foils, Clark’s extended mind as the Anglophone rhyme.",
+    blurb: "Aristotle’s techne through Heidegger’s Gestell, Simondon, Stiegler’s pharmacology, Hui’s cosmotechnics — with Merchant, Hayles, and Chun as feminist/STS foils, Clark’s extended mind as the Anglophone rhyme.",
     nodes: [
       "aristotleTech", "heideggerGestell", "cTechneGestell", "simondon", "stiegler", "cPharmakon",
-      "clark", "yukHui", "cCosmotech", "merchant", "hayles", "haraway", "plant", "mcluhan", "heidegger"
+      "clark", "yukHui", "cCosmotech", "merchant", "hayles", "chun", "haraway", "plant", "mcluhan", "heidegger"
     ]
   },
   {
