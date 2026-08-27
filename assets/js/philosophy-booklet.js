@@ -111,7 +111,7 @@
       '<div class="eyebrow"><span class="dot">●</span> index</div>' +
       "<h1>Thinkers Timeline</h1>" +
       '<p class="dek">Chronological index of every thinker and key concept across the genealogy essays (including Technics). ' +
-      'Years are floruit / key-work markers, not biographical precision. ' +
+      'Years mark when someone was active, or the date of a key work — not a birth-to-death biography, and not a claim of precision. ' +
       'For the interactive diagram, see <a href="/map-of-maps.html">map-of-maps.html</a>. ' +
       'Fiction writers live in the Fiction of the Maps chapter, not this index.</p>';
     section.appendChild(header);
@@ -262,6 +262,7 @@
 
       setStatus("Ready — " + loaded.length + " chapters + timeline. Use Print booklet when you want a PDF or paper copy.");
       if (printBtn) printBtn.disabled = false;
+      if (typeof window.initFrameNotes === "function") window.initFrameNotes(root);
     } catch (err) {
       console.error(err);
       setStatus(err.message || "Could not assemble booklet.", true);

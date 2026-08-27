@@ -1,5 +1,5 @@
 /* Thinkers Timeline — single chronological timeline with lineage edges.
-   year ≈ floruit / key work (illustrative, not biographical precision). */
+   year ≈ when active, or a key work (illustrative, not biographical precision). */
 
 const dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
 const pal = dark
@@ -1057,7 +1057,7 @@ function buildSvg() {
     const b = byId[e.to];
     if (!a || !b) return "";
     const st = edgeStyle(e.kind);
-    return `<path class="edge edge-${e.kind}" d="${edgePath(a, b)}" fill="none" stroke="${st.color}" stroke-width="${st.width}" ${st.dash ? `stroke-dasharray="${st.dash}"` : ""} marker-end="${st.marker}" opacity="0.75"/>`;
+    return `<path class="edge edge-${e.kind}" data-from="${escapeXml(e.from)}" data-to="${escapeXml(e.to)}" d="${edgePath(a, b)}" fill="none" stroke="${st.color}" stroke-width="${st.width}" ${st.dash ? `stroke-dasharray="${st.dash}"` : ""} marker-end="${st.marker}" opacity="0.75"/>`;
   }).join("");
 
   const nodeEls = placed.map((n) => {
@@ -1146,6 +1146,13 @@ let panZoomInstance = null;
 let layoutPlaced = [];
 /** Diagram content size in SVG units — used to clamp pan (svg-pan-zoom viewBox can be unreliable). */
 let mapContentSize = { width: 0, height: 0 };
+/** all = every lineage; off = hide edges; selected = only the focused thinker's edges. */
+let edgeMode = "all";
+let selectedId = null;
+let ptrDown = null;
+const mapShell = document.querySelector(".map-shell");
+const hintEl = document.querySelector(".map-toolbar .hint");
+const edgeSwitch = document.querySelector(".map-edge-switch");
 
 function centuryBucket(year) {
   if (year < -800) return "Before 800 BCE";
@@ -1178,7 +1185,11 @@ function buildSidebar() {
     btn.dataset.filter = normalizeSearch(n.name + " " + n.sub + " " + formatYear(n.year, n.approx) + " " + (GROUP_LABELS[n.group] || ""));
     const yearBit = formatYear(n.year, n.approx);
     btn.textContent = n.sub ? `${yearBit} · ${n.name} — ${n.sub}` : `${yearBit} · ${n.name}`;
-    btn.addEventListener("click", () => centerOnNode(n.id));
+    btn.addEventListener("click", () => {
+      selectedId = n.id;
+      applyEdgeFilter();
+      centerOnNode(n.id);
+    });
     frag.appendChild(btn);
   }
   sidebarList.appendChild(frag);
@@ -1213,6 +1224,69 @@ function centerOnNode(id) {
 
   nodeEl.classList.add("is-focus");
   setTimeout(() => nodeEl.classList.remove("is-focus"), 1200);
+}
+
+function updateStatus() {
+  const base = `${NODES.length} nodes, ${EDGES.length} edges · chronological top→bottom · scroll or drag to move · buttons zoom.`;
+  if (edgeMode === "off") {
+    statusEl.textContent = base + " Connections hidden.";
+    if (hintEl) hintEl.textContent = "scroll/pinch to zoom · drag to pan · click a box to open its page";
+    return;
+  }
+  if (edgeMode === "selected") {
+    const n = selectedId && NODES.find((x) => x.id === selectedId);
+    if (!n) {
+      statusEl.textContent = base + " Click a thinker to show only their connections.";
+      if (hintEl) hintEl.textContent = "click a box to see only that thinker’s connections";
+      return;
+    }
+    const count = EDGES.filter((e) => e.from === selectedId || e.to === selectedId).length;
+    statusEl.textContent = base + ` Showing ${count} connection${count === 1 ? "" : "s"} for ${n.name}. Click the same box again to open its page.`;
+    if (hintEl) hintEl.textContent = "click another thinker to switch · click the same box again to open its page";
+    return;
+  }
+  statusEl.textContent = base;
+  if (hintEl) hintEl.textContent = "scroll/pinch to zoom · drag to pan · click a box to open its page";
+}
+
+function applyEdgeFilter() {
+  if (!mapShell || !target) return;
+  mapShell.classList.toggle("edges-off", edgeMode === "off");
+  mapShell.classList.toggle("edges-selected", edgeMode === "selected");
+  mapShell.classList.toggle("is-picked", edgeMode === "selected" && Boolean(selectedId));
+
+  const edges = target.querySelectorAll(".edge");
+  const nodes = target.querySelectorAll(".node");
+  nodes.forEach((el) => {
+    el.classList.toggle("is-selected", el.dataset.id === selectedId);
+    el.classList.remove("is-neighbor");
+  });
+  if (sidebarList) {
+    sidebarList.querySelectorAll("button[data-id]").forEach((btn) => {
+      if (btn.dataset.id === selectedId) btn.setAttribute("aria-current", "true");
+      else btn.removeAttribute("aria-current");
+    });
+  }
+  edges.forEach((el) => {
+    const lit = edgeMode === "selected" && selectedId && (el.dataset.from === selectedId || el.dataset.to === selectedId);
+    el.classList.toggle("is-lit", Boolean(lit));
+    if (lit) {
+      const other = el.dataset.from === selectedId ? el.dataset.to : el.dataset.from;
+      const otherEl = document.getElementById("node-" + other);
+      if (otherEl) otherEl.classList.add("is-neighbor");
+    }
+  });
+  updateStatus();
+}
+
+function setEdgeMode(mode) {
+  edgeMode = mode;
+  if (edgeSwitch) {
+    edgeSwitch.querySelectorAll("[data-edges]").forEach((btn) => {
+      btn.setAttribute("aria-checked", btn.dataset.edges === mode ? "true" : "false");
+    });
+  }
+  applyEdgeFilter();
 }
 
 searchInput.addEventListener("input", () => {
@@ -1322,7 +1396,7 @@ function renderMap() {
   });
   bindWheelScroll(svgEl);
   fitWidth();
-  statusEl.textContent = `${NODES.length} nodes, ${EDGES.length} edges · chronological top→bottom · scroll or drag to move · buttons zoom.`;
+  applyEdgeFilter();
 }
 
 function init() {
@@ -1336,6 +1410,56 @@ document.getElementById("zoomIn").addEventListener("click", () => panZoomInstanc
 document.getElementById("zoomOut").addEventListener("click", () => panZoomInstance && panZoomInstance.zoomOut());
 document.getElementById("zoomFit").addEventListener("click", () => fitWidth());
 document.getElementById("zoomReset").addEventListener("click", () => renderMap());
+
+if (edgeSwitch) {
+  edgeSwitch.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-edges]");
+    if (!btn) return;
+    setEdgeMode(btn.dataset.edges);
+  });
+  edgeSwitch.addEventListener("keydown", (e) => {
+    const modes = ["all", "off", "selected"];
+    const i = modes.indexOf(edgeMode);
+    if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+      e.preventDefault();
+      setEdgeMode(modes[(i + 1) % modes.length]);
+      edgeSwitch.querySelector(`[data-edges="${edgeMode}"]`)?.focus();
+    } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+      e.preventDefault();
+      setEdgeMode(modes[(i - 1 + modes.length) % modes.length]);
+      edgeSwitch.querySelector(`[data-edges="${edgeMode}"]`)?.focus();
+    }
+  });
+}
+
+target.addEventListener("pointerdown", (e) => {
+  ptrDown = { x: e.clientX, y: e.clientY };
+});
+
+target.addEventListener("click", (e) => {
+  const dragged = ptrDown && Math.hypot(e.clientX - ptrDown.x, e.clientY - ptrDown.y) > 8;
+  const nodeEl = e.target.closest(".node");
+  if (!nodeEl) {
+    if (e.target.closest(".edge")) return;
+    if (edgeMode === "selected" && selectedId && !dragged) {
+      selectedId = null;
+      applyEdgeFilter();
+    }
+    return;
+  }
+  if (dragged) return;
+  const id = nodeEl.dataset.id;
+  if (edgeMode === "selected") {
+    if (selectedId !== id) {
+      e.preventDefault();
+      selectedId = id;
+      applyEdgeFilter();
+    }
+    return;
+  }
+  selectedId = id;
+  applyEdgeFilter();
+}, true);
 let resizeTimer = 0;
 window.addEventListener("resize", () => {
   clearTimeout(resizeTimer);
