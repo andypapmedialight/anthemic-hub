@@ -7,9 +7,9 @@ const CURRENTS = [
     label: "Neuro · unconscious",
     home: "Grounding the Unconscious",
     homeHref: "/grounding-the-unconscious.html",
-    blurb: "Freud’s models, Jung’s break, Lacan in three dated periods, dream science, and neural substrates — plus the hard-problem dissent.",
+    blurb: "Freud’s models, Jung’s break, Klein’s object relations (play, positions, envy), Segal’s symbol formation, Lacan in three dated periods, dream science, and neural substrates — plus the hard-problem dissent.",
     nodes: [
-      "freud", "jung", "spielrein", "klein", "cProjectiveId", "cCollective", "cUnconscious", "lacan", "structImp", "cObjetA", "kristeva", "zizek", "copjec", "zupancic", "johnston", "malabou",
+      "freud", "jung", "spielrein", "klein", "cProjectiveId", "segal", "cEnvy", "cCollective", "cUnconscious", "lacan", "structImp", "cObjetA", "kristeva", "zizek", "copjec", "zupancic", "johnston", "malabou",
       "panksepp", "solms", "hobsonMc", "domhoff", "damasio", "edelman", "friston", "churchland",
       "chalmers", "cHardProb", "jackson", "nagel", "strawGoff", "kastrup", "albahari", "bohm", "faggin", "mcgilchrist",
       "miller", "badiou", "popper", "grunbaum", "crews", "eysenck", "schopen", "leibniz", "herbart",
@@ -23,10 +23,11 @@ const CURRENTS = [
     label: "Freudo-Marxism",
     home: "Genealogies of Desire",
     homeHref: "/genealogies-of-desire.html#freudo-marxism",
-    blurb: "Reich through the Frankfurt School: repression, surplus-repression, culture industry — pressed later by Firestone, Federici, Mitchell, Spillers; Lasch’s culture of narcissism as the American social-character sequel.",
+    blurb: "Reich through the Frankfurt School: repression, surplus-repression, culture industry — pressed later by Firestone, Federici, Mitchell, Spillers; Lasch’s culture of narcissism as the American social-character sequel, via Klein’s positions in The Minimal Self.",
     nodes: [
       "freud", "marx", "reich", "adorno", "marcuse", "fromm", "benjamin", "firestone", "federici",
-      "mitchell", "spillers", "fisher", "acidXeno", "cIdeology", "cUnconscious", "lasch", "cNarcissism"
+      "mitchell", "spillers", "fisher", "acidXeno", "cIdeology", "cUnconscious", "lasch", "cNarcissism",
+      "klein", "cEnvy"
     ]
   },
   {
@@ -34,10 +35,10 @@ const CURRENTS = [
     label: "French feminism · sexual difference",
     home: "Genealogies / Grounding",
     homeHref: "/genealogies-of-desire.html#french-turn",
-    blurb: "Irigaray, Cixous, Kristeva, Mitchell — Beauvoir / Butler as hinges into performativity; Copjec and Zupančič as the 1989/Ljubljana reading of sexuation; Spillers’s ungendering and Mahmood’s pious agency as later cuts.",
+    blurb: "Irigaray, Cixous, Kristeva, Mitchell — Beauvoir / Butler as hinges into performativity; Copjec and Zupančič as the 1989/Ljubljana reading of sexuation; Klein and Segal as the British clinic Kristeva and Mitchell keep using; Spillers’s ungendering and Mahmood’s pious agency as later cuts.",
     nodes: [
       "beauvoir", "irigaray", "cixous", "kristeva", "mitchell", "butler", "lacan", "copjec", "zupancic", "derrida",
-      "kojeve", "cRecog", "foucault", "spillers", "mahmood", "mead"
+      "kojeve", "cRecog", "foucault", "spillers", "mahmood", "mead", "klein", "segal", "cEnvy"
     ]
   },
   {
@@ -75,11 +76,12 @@ const CURRENTS = [
     label: "Recognition debates",
     home: "Constellations / Genealogies",
     homeHref: "/constellations-of-history.html#habermas-honneth-rosa",
-    blurb: "Hegel/Kojève desire-for-recognition through Du Bois’s double consciousness, Honneth, Fraser’s redistribution fight, Lasch’s therapeutic culture, Liu’s PMC polemic, Butler, Copjec’s anti-historicist sex, Mahmood’s pious agency, Benhabib’s situated self, Forst’s justification, Jaeggi’s forms of life.",
+    blurb: "Hegel/Kojève desire-for-recognition through Du Bois’s double consciousness, Honneth, Fraser’s redistribution fight, Lasch’s therapeutic culture, Liu’s PMC polemic, Butler, Copjec’s anti-historicist sex, Mahmood’s pious agency, Benhabib’s situated self, Forst’s justification, Jaeggi’s forms of life — with Klein’s envy as the desire-machine that is not recognition.",
     nodes: [
       "hegel", "cRecog", "kojeve", "cObjetA", "beauvoir", "butler", "copjec", "honneth", "fraser", "habermas",
       "taylor", "dubois", "cDoubleConsciousness", "fanon", "benhabib", "forst", "jaeggi", "cJustification", "cFormsOfLife", "rosa",
-      "liu", "cPMC", "lasch", "cNarcissism", "mahmood", "girard", "cMimesis", "mead", "taussig"
+      "liu", "cPMC", "lasch", "cNarcissism", "mahmood", "girard", "cMimesis", "mead", "taussig",
+      "klein", "cEnvy"
     ]
   },
   {
