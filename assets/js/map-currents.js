@@ -7,9 +7,9 @@ const CURRENTS = [
     label: "Neuro · unconscious",
     home: "Grounding the Unconscious",
     homeHref: "/grounding-the-unconscious.html",
-    blurb: "Freud’s models, Jung’s break, Lacan, dream science, and neural substrates — plus the hard-problem dissent.",
+    blurb: "Freud’s models, Jung’s break, Lacan in three dated periods, dream science, and neural substrates — plus the hard-problem dissent.",
     nodes: [
-      "freud", "jung", "spielrein", "klein", "cProjectiveId", "cCollective", "cUnconscious", "lacan", "structImp", "kristeva", "zizek", "johnston", "malabou",
+      "freud", "jung", "spielrein", "klein", "cProjectiveId", "cCollective", "cUnconscious", "lacan", "structImp", "cObjetA", "kristeva", "zizek", "copjec", "zupancic", "johnston", "malabou",
       "panksepp", "solms", "hobsonMc", "domhoff", "damasio", "edelman", "friston", "churchland",
       "chalmers", "cHardProb", "jackson", "nagel", "strawGoff", "kastrup", "albahari", "bohm", "faggin", "mcgilchrist",
       "miller", "badiou", "popper", "grunbaum", "crews", "eysenck", "schopen", "leibniz", "herbart",
@@ -34,9 +34,9 @@ const CURRENTS = [
     label: "French feminism · sexual difference",
     home: "Genealogies / Grounding",
     homeHref: "/genealogies-of-desire.html#french-turn",
-    blurb: "Irigaray, Cixous, Kristeva, Mitchell — Beauvoir / Butler as hinges into performativity; Spillers’s ungendering and Mahmood’s pious agency as later cuts.",
+    blurb: "Irigaray, Cixous, Kristeva, Mitchell — Beauvoir / Butler as hinges into performativity; Copjec and Zupančič as the 1989/Ljubljana reading of sexuation; Spillers’s ungendering and Mahmood’s pious agency as later cuts.",
     nodes: [
-      "beauvoir", "irigaray", "cixous", "kristeva", "mitchell", "butler", "lacan", "derrida",
+      "beauvoir", "irigaray", "cixous", "kristeva", "mitchell", "butler", "lacan", "copjec", "zupancic", "derrida",
       "kojeve", "cRecog", "foucault", "spillers", "mahmood", "mead"
     ]
   },
@@ -75,9 +75,9 @@ const CURRENTS = [
     label: "Recognition debates",
     home: "Constellations / Genealogies",
     homeHref: "/constellations-of-history.html#habermas-honneth-rosa",
-    blurb: "Hegel/Kojève desire-for-recognition through Du Bois’s double consciousness, Honneth, Fraser’s redistribution fight, Lasch’s therapeutic culture, Liu’s PMC polemic, Butler, Mahmood’s pious agency, Benhabib’s situated self, Forst’s justification, Jaeggi’s forms of life.",
+    blurb: "Hegel/Kojève desire-for-recognition through Du Bois’s double consciousness, Honneth, Fraser’s redistribution fight, Lasch’s therapeutic culture, Liu’s PMC polemic, Butler, Copjec’s anti-historicist sex, Mahmood’s pious agency, Benhabib’s situated self, Forst’s justification, Jaeggi’s forms of life.",
     nodes: [
-      "hegel", "cRecog", "kojeve", "beauvoir", "butler", "honneth", "fraser", "habermas",
+      "hegel", "cRecog", "kojeve", "cObjetA", "beauvoir", "butler", "copjec", "honneth", "fraser", "habermas",
       "taylor", "dubois", "cDoubleConsciousness", "fanon", "benhabib", "forst", "jaeggi", "cJustification", "cFormsOfLife", "rosa",
       "liu", "cPMC", "lasch", "cNarcissism", "mahmood", "girard", "cMimesis", "mead", "taussig"
     ]
