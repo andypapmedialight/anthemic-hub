@@ -150,6 +150,7 @@ jobs:
             ./fiction-of-the-maps.html \
             ./fiction-of-the-maps-favicon.svg \
             ./philosophy-booklet.html \
+            ./philosophy-overview.html \
             ./the-boundary-play.html \
             ./sitemap.xml \
             ./robots.txt \
@@ -191,8 +192,8 @@ jobs:
         run: |
           HUB_IN="/home/${DEPLOY_USER}/incoming-hub"
           ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            "test -f ${HUB_IN}/index.html && test -f ${HUB_IN}/consciousness-map.html && test -f ${HUB_IN}/consciousness-map-favicon.svg && test -f ${HUB_IN}/consciousness-map-preview.png && test -f ${HUB_IN}/grounding-the-unconscious.html && test -f ${HUB_IN}/grounding-the-unconscious-favicon.svg && test -f ${HUB_IN}/genealogies-of-desire.html && test -f ${HUB_IN}/genealogies-of-desire-favicon.svg && test -f ${HUB_IN}/constellations-of-history.html && test -f ${HUB_IN}/constellations-of-history-favicon.svg && test -f ${HUB_IN}/technics-and-time.html && test -f ${HUB_IN}/technics-and-time-favicon.svg && test -f ${HUB_IN}/map-of-maps.html && test -f ${HUB_IN}/map-of-maps-favicon.svg && test -f ${HUB_IN}/map-of-maps-currents.html && test -f ${HUB_IN}/fiction-of-the-maps.html && test -f ${HUB_IN}/fiction-of-the-maps-favicon.svg && test -f ${HUB_IN}/philosophy-booklet.html && test -f ${HUB_IN}/the-boundary-play.html && test -f ${HUB_IN}/bass/index.html && test -f ${HUB_IN}/brain/index.html && test -f ${HUB_IN}/hire/index.html && test -f ${HUB_IN}/hire/pitch.js && test -f ${HUB_IN}/content/pitch.json && test -f ${HUB_IN}/gigs/index.html && test -f ${HUB_IN}/gigs/gigs.json && test -f ${HUB_IN}/content/hub.json && test -f ${HUB_IN}/content/reading-list.seed.json && test -f ${HUB_IN}/personal/index.html && test -f ${HUB_IN}/personal/writing/index.html && test -f ${HUB_IN}/personal/writing/writing-desk.png && test -f ${HUB_IN}/economics/index.html && test -f ${HUB_IN}/mmd/valuation_server.py && test -f ${HUB_IN}/mmd/valuation_fetch.py && test -f ${HUB_IN}/mmd/treasury_fetch.py && test -f ${HUB_IN}/mmd/aus_fetch.py" \
-            || { echo "incoming-hub missing hub, consciousness-map, grounding-the-unconscious, genealogies-of-desire, technics-and-time, map-of-maps(+currents), fiction-of-the-maps, philosophy-booklet, the-boundary-play, bass, brain, gigs, content, reading-list.seed, or personal/ files after upload (expected under ${HUB_IN})"; exit 1; }
+            "test -f ${HUB_IN}/index.html && test -f ${HUB_IN}/consciousness-map.html && test -f ${HUB_IN}/consciousness-map-favicon.svg && test -f ${HUB_IN}/consciousness-map-preview.png && test -f ${HUB_IN}/grounding-the-unconscious.html && test -f ${HUB_IN}/grounding-the-unconscious-favicon.svg && test -f ${HUB_IN}/genealogies-of-desire.html && test -f ${HUB_IN}/genealogies-of-desire-favicon.svg && test -f ${HUB_IN}/constellations-of-history.html && test -f ${HUB_IN}/constellations-of-history-favicon.svg && test -f ${HUB_IN}/technics-and-time.html && test -f ${HUB_IN}/technics-and-time-favicon.svg && test -f ${HUB_IN}/map-of-maps.html && test -f ${HUB_IN}/map-of-maps-favicon.svg && test -f ${HUB_IN}/map-of-maps-currents.html && test -f ${HUB_IN}/fiction-of-the-maps.html && test -f ${HUB_IN}/fiction-of-the-maps-favicon.svg && test -f ${HUB_IN}/philosophy-booklet.html && test -f ${HUB_IN}/philosophy-overview.html && test -f ${HUB_IN}/the-boundary-play.html && test -f ${HUB_IN}/bass/index.html && test -f ${HUB_IN}/brain/index.html && test -f ${HUB_IN}/hire/index.html && test -f ${HUB_IN}/hire/pitch.js && test -f ${HUB_IN}/content/pitch.json && test -f ${HUB_IN}/gigs/index.html && test -f ${HUB_IN}/gigs/gigs.json && test -f ${HUB_IN}/content/hub.json && test -f ${HUB_IN}/content/reading-list.seed.json && test -f ${HUB_IN}/personal/index.html && test -f ${HUB_IN}/personal/writing/index.html && test -f ${HUB_IN}/personal/writing/writing-desk.png && test -f ${HUB_IN}/economics/index.html && test -f ${HUB_IN}/mmd/valuation_server.py && test -f ${HUB_IN}/mmd/valuation_fetch.py && test -f ${HUB_IN}/mmd/treasury_fetch.py && test -f ${HUB_IN}/mmd/aus_fetch.py" \
+            || { echo "incoming-hub missing hub, consciousness-map, grounding-the-unconscious, genealogies-of-desire, technics-and-time, map-of-maps(+currents), fiction-of-the-maps, philosophy-booklet, philosophy-overview, the-boundary-play, bass, brain, gigs, content, reading-list.seed, or personal/ files after upload (expected under ${HUB_IN})"; exit 1; }
 
       - name: Apply on Droplet
         env:
@@ -315,6 +316,15 @@ jobs:
           fi
           grep -qF 'Philosophy booklet' /tmp/anthemic-smoke-bklt.html \
             || { echo "/philosophy-booklet.html missing expected title marker"; exit 1; }
+          code_ov=$(curl -sS -o /dev/null -w "%{http_code}" --retry 3 --retry-delay 2 "https://anthemic-developments.com/philosophy-overview.html")
+          [[ "${code_ov}" == "200" ]] || { echo "/philosophy-overview.html returned HTTP ${code_ov}"; exit 1; }
+          curl -sS --retry 3 --retry-delay 2 "https://anthemic-developments.com/philosophy-overview.html" -o /tmp/anthemic-smoke-ov.html
+          if grep -qF 'id="hero-name"' /tmp/anthemic-smoke-ov.html; then
+            echo "/philosophy-overview.html is serving the hub index — apply script must copy philosophy-overview.html to web root"
+            exit 1
+          fi
+          grep -qF 'What the essays are arguing' /tmp/anthemic-smoke-ov.html \
+            || { echo "/philosophy-overview.html missing expected title marker"; exit 1; }
           code_bnd=$(curl -sS -o /dev/null -w "%{http_code}" --retry 3 --retry-delay 2 "https://anthemic-developments.com/the-boundary-play.html")
           [[ "${code_bnd}" == "200" ]] || { echo "/the-boundary-play.html returned HTTP ${code_bnd}"; exit 1; }
           curl -sS --retry 3 --retry-delay 2 "https://anthemic-developments.com/the-boundary-play.html" -o /tmp/anthemic-smoke-bnd.html

@@ -16,6 +16,7 @@
 #   map-of-maps-currents.html - optional browse-by-current cohort view
 #   fiction-of-the-maps.html (+ favicon) - novelists shaped by the mapped thinkers
 #   philosophy-booklet.html - printable assembly of the essays + fiction + timeline
+#   philosophy-overview.html - keyed slideshow of load-bearing essay concepts
 #   the-boundary-play.html - Kant–Hegel one-act + genealogy rewrites
 #   sitemap.xml / robots.txt - SEO files at site root
 #   assets/           - optional folder of static assets
@@ -132,6 +133,10 @@ if [[ ! -f "${INCOMING}/philosophy-booklet.html" ]]; then
   echo "anthemic-hub-deploy-apply: missing philosophy-booklet.html in ${INCOMING}" >&2
   exit 1
 fi
+if [[ ! -f "${INCOMING}/philosophy-overview.html" ]]; then
+  echo "anthemic-hub-deploy-apply: missing philosophy-overview.html in ${INCOMING}" >&2
+  exit 1
+fi
 if [[ ! -f "${INCOMING}/the-boundary-play.html" ]]; then
   echo "anthemic-hub-deploy-apply: missing the-boundary-play.html in ${INCOMING}" >&2
   exit 1
@@ -197,6 +202,7 @@ rsync -a \
   "${INCOMING}/fiction-of-the-maps.html" \
   "${INCOMING}/fiction-of-the-maps-favicon.svg" \
   "${INCOMING}/philosophy-booklet.html" \
+  "${INCOMING}/philosophy-overview.html" \
   "${INCOMING}/the-boundary-play.html" \
   "${DEST}/"
 if [[ -f "${INCOMING}/sitemap.xml" ]]; then

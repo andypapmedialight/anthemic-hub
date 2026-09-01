@@ -71,6 +71,11 @@
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>https://anthemic-developments.com/philosophy-overview.html</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>https://anthemic-developments.com/philosophy-booklet.html</loc>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>

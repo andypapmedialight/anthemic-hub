@@ -70,7 +70,7 @@ Cards: `data-interests="music gigs teaching creative work community personal"`. 
 
 ## Thinkers maps (philosophy essays)
 
-Essays + timeline + currents + fiction: `grounding-the-unconscious.html`, `genealogies-of-desire.html`, `constellations-of-history.html`, `technics-and-time.html`, `map-of-maps.html`, `map-of-maps-currents.html`, `fiction-of-the-maps.html`.
+Essays + timeline + currents + fiction: `grounding-the-unconscious.html`, `genealogies-of-desire.html`, `constellations-of-history.html`, `technics-and-time.html`, `map-of-maps.html`, `map-of-maps-currents.html`, `fiction-of-the-maps.html`, `philosophy-overview.html`.
 
 **Intros (always):** introduce the argument, not the identity slot and not a page-purpose slot. Gender/race/nation only when they are the thesis — never “woman hinge”, diversity annex, named-women census, or “non-European entry point.” Do not introduce someone as filling “this page’s through-line” or what “this map needs”; lead with the quarrel among writers. Who belongs is who changes the quarrel of that current; place them on the map that asks it, not a segregated add-on. Same for `fiction-of-the-maps.html` writer picks. See `.cursor/rules/thinkers-maps-bias.mdc`.
 
