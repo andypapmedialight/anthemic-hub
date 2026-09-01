@@ -7,10 +7,10 @@ const CURRENTS = [
     label: "Neuro · unconscious",
     home: "Grounding the Unconscious",
     homeHref: "/grounding-the-unconscious.html",
-    blurb: "Freud’s models, Jung’s break, Klein’s object relations (play, positions, envy), Segal’s symbol formation, Lacan in three dated periods, dream science, and neural substrates — plus the hard-problem dissent.",
+    blurb: "Freud’s models, Jung’s break, Klein’s object relations (play, positions, envy), Segal’s symbol formation, Lacan in three dated periods, dream science (Hobson, Solms, Revonsuo, Domhoff), and neural substrates — plus the hard-problem dissent.",
     nodes: [
       "freud", "jung", "spielrein", "klein", "cProjectiveId", "segal", "cEnvy", "cCollective", "cUnconscious", "lacan", "structImp", "cObjetA", "kristeva", "zizek", "copjec", "zupancic", "johnston", "malabou",
-      "panksepp", "solms", "hobsonMc", "domhoff", "damasio", "edelman", "friston", "churchland",
+      "panksepp", "solms", "hobsonMc", "revonsuo", "domhoff", "damasio", "edelman", "friston", "churchland",
       "chalmers", "cHardProb", "jackson", "nagel", "strawGoff", "kastrup", "albahari", "bohm", "faggin", "mcgilchrist",
       "miller", "badiou", "popper", "grunbaum", "crews", "eysenck", "sokal", "chomLak", "schopen", "leibniz", "herbart",
       "vonHart", "descartes", "spinoza", "platoAr", "socrates", "nietzsche", "james",
