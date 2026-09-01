@@ -12,7 +12,7 @@ const CURRENTS = [
       "freud", "jung", "spielrein", "klein", "cProjectiveId", "segal", "cEnvy", "cCollective", "cUnconscious", "lacan", "structImp", "cObjetA", "kristeva", "zizek", "copjec", "zupancic", "johnston", "malabou",
       "panksepp", "solms", "hobsonMc", "domhoff", "damasio", "edelman", "friston", "churchland",
       "chalmers", "cHardProb", "jackson", "nagel", "strawGoff", "kastrup", "albahari", "bohm", "faggin", "mcgilchrist",
-      "miller", "badiou", "popper", "grunbaum", "crews", "eysenck", "schopen", "leibniz", "herbart",
+      "miller", "badiou", "popper", "grunbaum", "crews", "eysenck", "sokal", "chomLak", "schopen", "leibniz", "herbart",
       "vonHart", "descartes", "spinoza", "platoAr", "socrates", "nietzsche", "james",
       "turing", "ryle", "searle", "hofstadter", "dennett", "crick", "gwt", "penrose", "block", "iit",
       "varela", "seth", "barrett"
