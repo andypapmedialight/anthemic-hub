@@ -72,7 +72,7 @@ Cards: `data-interests="music gigs teaching creative work community personal"`. 
 
 Essays + timeline + currents + fiction: `grounding-the-unconscious.html`, `genealogies-of-desire.html`, `constellations-of-history.html`, `technics-and-time.html`, `map-of-maps.html`, `map-of-maps-currents.html`, `fiction-of-the-maps.html`.
 
-**Bias correction (always):** expand/revise → correct male + European skew. Thicken women + non-European / Global South interlocutors *inside* current (prose, edges, timeline, currents tags) — not segregated add-on. Honest ratio notes; no fake parity; no erase European archive. Same rule for `fiction-of-the-maps.html` writer picks. See `.cursor/rules/thinkers-maps-bias.mdc`.
+**Intros (always):** introduce the argument, not the identity slot. Gender/race/nation only when they are the thesis — never “woman hinge”, diversity annex, named-women census, or “non-European entry point.” Who belongs is who changes the quarrel of that current; place them on the map that asks it, not a segregated add-on. Same for `fiction-of-the-maps.html` writer picks. See `.cursor/rules/thinkers-maps-bias.mdc`.
 
 ## What NOT to do
 
