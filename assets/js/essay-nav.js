@@ -7,6 +7,7 @@
   if (!wrap) return;
 
   const SIBLINGS = [
+    { href: "/philosophy-overview.html", label: "Overview slides" },
     { href: "/grounding-the-unconscious.html", label: "Grounding the Unconscious" },
     { href: "/genealogies-of-desire.html", label: "Genealogies of Desire" },
     { href: "/constellations-of-history.html", label: "Constellations of History" },
