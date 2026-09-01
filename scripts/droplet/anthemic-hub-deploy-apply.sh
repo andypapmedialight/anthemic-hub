@@ -89,6 +89,10 @@ if [[ ! -f "${INCOMING}/index.html" ]]; then
   echo "anthemic-hub-deploy-apply: missing ${INCOMING}/index.html" >&2
   exit 1
 fi
+if [[ ! -f "${INCOMING}/favicon.svg" ]]; then
+  echo "anthemic-hub-deploy-apply: missing ${INCOMING}/favicon.svg" >&2
+  exit 1
+fi
 if [[ ! -f "${INCOMING}/consciousness-map.html" ]] \
   || [[ ! -f "${INCOMING}/consciousness-map-favicon.svg" ]] \
   || [[ ! -f "${INCOMING}/consciousness-map-preview.png" ]]; then
@@ -184,6 +188,7 @@ CONTENT_BACKUP="$(preserve_backup "${CONTENT_LIVE}")"
 
 # Two-step rsync: multi-source rsync --delete has been observed to skip or clobber bass/ on the droplet.
 rsync -a "${INCOMING}/index.html" "${DEST}/"
+rsync -a "${INCOMING}/favicon.svg" "${DEST}/"
 rsync -a \
   "${INCOMING}/consciousness-map.html" \
   "${INCOMING}/consciousness-map-favicon.svg" \
