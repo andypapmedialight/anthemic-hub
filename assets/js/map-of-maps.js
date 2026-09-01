@@ -900,13 +900,10 @@ function xCandidatesFor(homeX, nodeW, rightLimit) {
 function layoutNodes(nodes) {
   const rightLimit = packRightLimit();
   const prepared = nodes.map((n) => {
-    const w = nodeWidth(n);
-    const lines = nameLines(n, n.group === "concept" ? 24 : 22);
-    const lineCount = lines.length + (n.sub ? 1 : 0);
-    const h = Math.min(64, Math.max(n.group === "concept" ? CONCEPT_H : NODE_H, 16 + lineCount * 13));
-    const idealY = Math.max(PAD_T * 0.35, PAD_T + yearToY(n.year) - h / 2);
+    const fitted = fitNodeText(n);
+    const idealY = Math.max(PAD_T * 0.35, PAD_T + yearToY(n.year) - fitted.h / 2);
     const track = GROUP_TRACK[n.group] ?? 0;
-    return { ...n, w, h, lines, idealY, track, homeX: trackOriginX(track) };
+    return { ...n, ...fitted, idealY, track, homeX: trackOriginX(track) };
   });
 
   prepared.sort((a, b) => a.year - b.year || a.track - b.track || a.name.localeCompare(b.name));
@@ -961,36 +958,84 @@ function layoutNodes(nodes) {
   return { placed, width, height, laneCount: TRACK_COUNT };
 }
 
-function nodeWidth(n) {
-  const len = (n.name || "").length + (n.sub ? 4 : 0);
-  if (n.group === "concept") return Math.min(MAX_NODE_W, Math.max(132, len * 5.6));
-  return Math.min(MAX_NODE_W, Math.max(136, len * 5.4));
+const NODE_FONT = "system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif";
+const NODE_PAD_X = 16;
+const YEAR_BAND = 22;
+const LINE_H = 17;
+let _measureCtx = null;
+
+function measureText(text, sizePx, weight) {
+  if (!_measureCtx) {
+    const c = document.createElement("canvas");
+    _measureCtx = c.getContext("2d");
+  }
+  _measureCtx.font = `${weight} ${sizePx}px ${NODE_FONT}`;
+  return _measureCtx.measureText(text).width;
 }
 
-function nameLines(n, maxChars) {
-  const name = n.name;
-  if (name.length <= maxChars) return [name];
-  if (name.includes(" · ")) {
-    const parts = name.split(" · ");
-    const lines = [];
-    let cur = "";
-    for (const p of parts) {
-      const next = cur ? cur + " · " + p : p;
-      if (next.length > maxChars && cur) {
-        lines.push(cur);
-        cur = p;
-      } else cur = next;
-    }
-    if (cur) lines.push(cur);
-    if (lines.length <= 3) return lines;
+function hardSplitToWidth(text, maxW, sizePx, weight) {
+  if (measureText(text, sizePx, weight) <= maxW) return [text];
+  const lines = [];
+  let cur = "";
+  for (const ch of text) {
+    const next = cur + ch;
+    if (cur && measureText(next, sizePx, weight) > maxW) {
+      lines.push(cur);
+      cur = ch;
+    } else cur = next;
   }
-  if (name.includes(" / ")) {
-    return name.split(" / ").slice(0, 2);
+  if (cur) lines.push(cur);
+  return lines;
+}
+
+function spaceWrap(text, maxW, sizePx, weight) {
+  if (measureText(text, sizePx, weight) <= maxW) return [text];
+  const words = text.split(/\s+/).filter(Boolean);
+  const lines = [];
+  let cur = "";
+  for (const w of words) {
+    const next = cur ? cur + " " + w : w;
+    if (cur && measureText(next, sizePx, weight) > maxW) {
+      lines.push(cur);
+      cur = w;
+    } else cur = next;
   }
-  const mid = Math.ceil(name.length / 2);
-  const sp = name.lastIndexOf(" ", mid);
-  const cut = sp > 8 ? sp : mid;
-  return [name.slice(0, cut).trim(), name.slice(cut).trim()];
+  if (cur) lines.push(cur);
+  return lines.flatMap((ln) => hardSplitToWidth(ln, maxW, sizePx, weight));
+}
+
+function wrapToWidth(text, maxW, sizePx, weight) {
+  if (!text) return [];
+  if (measureText(text, sizePx, weight) <= maxW) return [text];
+  const chunks = text.split(/\s*·\s*/).map((s) => s.trim()).filter(Boolean);
+  const lines = [];
+  let cur = "";
+  for (const chunk of chunks) {
+    const next = cur ? cur + " · " + chunk : chunk;
+    if (cur && measureText(next, sizePx, weight) > maxW) {
+      lines.push(...spaceWrap(cur, maxW, sizePx, weight));
+      cur = chunk;
+    } else cur = next;
+  }
+  if (cur) lines.push(...spaceWrap(cur, maxW, sizePx, weight));
+  return lines;
+}
+
+function fitNodeText(n) {
+  const isConcept = n.group === "concept";
+  const nameSize = isConcept ? 11 : 12;
+  const nameWeight = isConcept ? "500" : "600";
+  const innerW = MAX_NODE_W - NODE_PAD_X;
+  const lines = wrapToWidth(n.name, innerW, nameSize, nameWeight);
+  const subLines = n.sub ? wrapToWidth(n.sub, innerW, 10, "400") : [];
+  const longest = Math.max(
+    ...lines.map((l) => measureText(l, nameSize, nameWeight)),
+    ...subLines.map((l) => measureText(l, 10, "400")),
+    isConcept ? 116 : 120
+  );
+  const w = Math.min(MAX_NODE_W, Math.ceil(longest) + NODE_PAD_X);
+  const h = YEAR_BAND + 6 + (lines.length + subLines.length) * LINE_H + 6;
+  return { w, h, lines, subLines };
 }
 
 function edgePath(a, b) {
@@ -1074,7 +1119,8 @@ function buildSvg() {
     { i: 0, label: "Grounding" },
     { i: 1, label: "Genealogies" },
     { i: 2, label: "Constellations" },
-    { i: 3, label: "Concepts" }
+    { i: 3, label: "Technics" },
+    { i: 4, label: "Concepts" }
   ].map(({ i, label }) => {
     const x = trackOriginX(i) + COL_W / 2;
     return `<text x="${x}" y="${PAD_T - 20}" text-anchor="middle" fill="${pal.muted}" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="10" letter-spacing="0.04em">${label}</text>`;
@@ -1094,22 +1140,25 @@ function buildSvg() {
     const stroke = groupStroke(n.group);
     const fill = groupFill(n.group);
     const dash = isConcept ? `stroke-dasharray="4 3"` : "";
-    const lines = n.lines || nameLines(n, isConcept ? 26 : 24);
-    const hasSub = Boolean(n.sub);
-    const lineH = 13;
-    const blockH = lines.length * lineH + (hasSub ? lineH : 0);
-    const startY = n.cy - blockH / 2 + 10;
+    const lines = n.lines || [n.name];
+    const subLines = n.subLines || (n.sub ? [n.sub] : []);
+    const startY = n.y + YEAR_BAND + 10;
     const nameTs = lines.map((ln, i) => {
-      const y = startY + i * lineH;
+      const y = startY + i * LINE_H;
       return `<tspan x="${n.cx}" y="${y}">${escapeXml(ln)}</tspan>`;
     }).join("");
-    const subTs = hasSub
-      ? `<tspan x="${n.cx}" y="${startY + lines.length * lineH}" fill="${pal.muted}" font-size="10">${escapeXml(n.sub)}</tspan>`
-      : "";
+    const subTs = subLines.map((ln, i) => {
+      const y = startY + (lines.length + i) * LINE_H;
+      return `<tspan x="${n.cx}" y="${y}" fill="${pal.muted}" font-size="10">${escapeXml(ln)}</tspan>`;
+    }).join("");
     const yearLabel = `<text x="${n.x + 8}" y="${n.y + 12}" fill="${pal.muted}" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="9">${escapeXml(formatYear(n.year, n.approx))}</text>`;
     const body = `
+      <rect x="${n.x}" y="${n.y}" width="${n.w}" height="${n.h}" rx="${isConcept ? 14 : 8}" ry="${isConcept ? 14 : 8}"
+        fill="${pal.panel}" stroke="none"/>
+      <rect x="${n.x}" y="${n.y}" width="${n.w}" height="${n.h}" rx="${isConcept ? 14 : 8}" ry="${isConcept ? 14 : 8}"
+        fill="${fill}" stroke="none" pointer-events="none"/>
       <rect class="node-box" x="${n.x}" y="${n.y}" width="${n.w}" height="${n.h}" rx="${isConcept ? 14 : 8}" ry="${isConcept ? 14 : 8}"
-        fill="${fill}" stroke="${stroke}" stroke-width="1.6" ${dash}/>
+        fill="none" stroke="${stroke}" stroke-width="1.6" ${dash}/>
       ${yearLabel}
       <text class="node-label" text-anchor="middle" fill="${pal.ink}"
         font-family="system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="${isConcept ? 11 : 12}" font-weight="${isConcept ? 500 : 600}">${nameTs}${subTs}</text>`;
