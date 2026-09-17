@@ -62,7 +62,7 @@
   }
   </script>
   <link rel="preconnect" href="https://fonts.bunny.net" crossorigin />
-  <meta name="hub-content-version" content="20260723" />
+  <meta name="hub-content-version" content="20260917" />
   <link rel="preload" href="/assets/css/hub.css?v=3" as="style" />
   <link rel="stylesheet" href="https://fonts.bunny.net/css?family=figtree:400,500,600|fraunces:600,700|jetbrains-mono:400,500,600&display=swap" />
   <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
@@ -231,6 +231,7 @@
             <pre class="console-scene is-active" data-scene="intro"><code><span class="c-dim"># skills</span>
 <span class="c-prompt">$</span> <span class="c-cmd">anthemic hub --status</span>
 <span class="c-out">  setlist      </span><span class="c-ok">live</span>   <span class="c-dim">/setlist/ (login)</span>
+<span class="c-out">  tracker      </span><span class="c-ok">live</span>   <span class="c-dim">tracker.anthemic (demo)</span>
 <span class="c-out">  brain-map    </span><span class="c-ok">live</span>   <span class="c-dim">/brain/</span>
 <span class="c-out">  mind-map     </span><span class="c-ok">live</span>   <span class="c-dim">/consciousness-map.html</span>
 <span class="c-out">  unconscious  </span><span class="c-ok">live</span>   <span class="c-dim">/grounding-the-unconscious.html</span>
@@ -258,6 +259,8 @@
             <pre class="console-scene" data-scene="projects" hidden><code><span class="c-dim"># 01 anthemic projects</span>
 <span class="c-prompt">$</span> <span class="c-cmd">setlist new "Friday at Bar Open"</span>
 <span class="c-ok">→ saved</span>  <span class="c-dim">React · Vite · Spring Boot</span>
+<span class="c-prompt">$</span> <span class="c-cmd">open tracker --demo</span>
+<span class="c-ok">→ try it</span>  <span class="c-dim">look-only sample school</span>
 <span class="c-prompt">$</span> <span class="c-cmd">deploy swarm-reporter</span>
 <span class="c-out">  heatmap live · community reports</span></code></pre>
             <pre class="console-scene" data-scene="music" hidden><code><span class="c-dim"># 02 music</span>
@@ -409,6 +412,17 @@
           <p class="card-outcome">Sign in to build, organise and share set lists from rehearsal to stage.</p>
           <p class="card-stack">React · Vite · Spring Boot API</p>
           <p class="card-login-note">Opens the app sign-in screen — account needed to save lists.</p>
+        </a>
+
+        <a class="card card--live card--live-wave" href="https://tracker.anthemic-developments.com/" target="_blank" rel="noopener noreferrer" data-interests="music teaching work" aria-label="Music Session Tracker — live, try the demo">
+          <div class="card-badges">
+            <span class="badge live">Live</span>
+            <span class="badge login">Demo you can try</span>
+          </div>
+          <div class="title">Music Session Tracker</div>
+          <p class="card-outcome">Lessons, students, and payments for music schools. A look-only demo is on the login screen — try it without an account.</p>
+          <p class="card-stack">Rust · Actix-web · SQLite</p>
+          <p class="card-login-note">tracker.anthemic-developments.com — tap Try a demo.</p>
         </a>
 
         <article class="case-study-card" id="swarm-case-study-root" data-interests="community work" aria-labelledby="swarm-case-study-title">
@@ -688,5 +702,5 @@
   <script src="/assets/js/hub-nav.js?v=3" defer></script>
   <script src="/assets/js/hub-console.js?v=5" defer></script>
   <script src="/assets/js/hub-rail.js?v=7" defer></script>
-  <script src="/assets/js/cinnamon-nav.js?v=6" defer></script>
+  <script src="/assets/js/cinnamon-nav.js?v=7" defer></script>
 </html>

@@ -47,7 +47,7 @@
   var DEFAULT_KEYWORD_INTERESTS = [
     { keywords: ["swarm", "civic", "community", "murray", "reporter"], interest: "community" },
     { keywords: ["gig", "gigs", "bass", "band", "bandcamp", "music", "live", "setlist"], interest: "music" },
-    { keywords: ["lesson", "lessons", "teaching", "coach", "coaching"], interest: "teaching" },
+    { keywords: ["lesson", "lessons", "teaching", "coach", "coaching", "tracker", "session tracker"], interest: "teaching" },
     { keywords: ["brain", "map", "3d", "atlas", "creative", "macro"], interest: "creative" },
     { keywords: ["writing", "essay", "personal", "quill"], interest: "personal" },
     { keywords: ["hire", "mecca", "work", "job", "deck", "pitch"], interest: "work" },
@@ -64,7 +64,7 @@
       { id: "about", label: "About Andy", scene: "who", keywords: ["about", "andy", "who"], reply: "About Andy. I'll show you." },
       { id: "skills", label: "Skills", scene: "intro", interest: "work", keywords: ["skills", "stack", "tech"], reply: "Skills and links. On it." },
       { id: "filter", label: "Filter hub", scene: "lens", keywords: ["filter", "interest"], reply: "Hub filter — pick what matters." },
-      { id: "projects", label: "Projects", scene: "projects", keywords: ["project", "setlist", "brain", "swarm"], reply: "Anthemic projects. This way." },
+      { id: "projects", label: "Projects", scene: "projects", keywords: ["project", "setlist", "brain", "swarm", "tracker"], reply: "Anthemic projects. This way." },
       { id: "music", label: "Gigs & bass", scene: "music", interest: "music", keywords: ["gig", "bass", "music", "band"], reply: "Music section. Good sticks." },
       { id: "bio", label: "Music bio", scene: "bio", interest: "music", keywords: ["music bio", "bands"], reply: "Music bio — long story, good ears." },
       { id: "reading", label: "Reading", scene: "reading", interest: "personal", keywords: ["read", "books", "reading list"], reply: "Reading list. Smells like ideas." },
