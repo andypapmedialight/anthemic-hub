@@ -62,9 +62,9 @@
       { "keywords": ["swarm", "civic", "community", "murray", "reporter", "safer"], "interest": "community" },
       { "keywords": ["gig", "gigs", "bass", "band", "bandcamp", "music", "live", "setlist", "anthems"], "interest": "music" },
       { "keywords": ["lesson", "lessons", "teaching", "coach", "coaching", "student", "tracker", "session tracker"], "interest": "teaching" },
-      { "keywords": ["brain", "map", "3d", "atlas", "creative", "macro", "economics"], "interest": "creative" },
+      { "keywords": ["brain", "map", "3d", "atlas", "creative", "macro", "economics", "atol", "genome"], "interest": "creative" },
       { "keywords": ["writing", "essay", "personal", "quill"], "interest": "personal" },
-      { "keywords": ["hire", "mecca", "work", "job", "deck", "pitch", "professional"], "interest": "work" },
+      { "keywords": ["hire", "mecca", "work", "job", "deck", "pitch", "professional", "atol", "genome", "pipeline"], "interest": "work" },
       { "keywords": ["read", "reading", "books", "shelf", "library", "shelfie"], "interest": "personal" }
     ],
     "intents": [
@@ -94,7 +94,7 @@
         "id": "projects",
         "label": "Projects",
         "scene": "projects",
-        "keywords": ["project", "projects", "setlist", "brain", "swarm", "app", "build", "macro", "morning", "tracker", "session tracker"],
+        "keywords": ["project", "projects", "setlist", "brain", "swarm", "app", "build", "macro", "morning", "tracker", "session tracker", "atol", "genome"],
         "reply": "Anthemic projects. This way."
       },
       {
