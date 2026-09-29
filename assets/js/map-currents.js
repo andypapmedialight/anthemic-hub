@@ -15,7 +15,7 @@ const CURRENTS = [
       "miller", "badiou", "popper", "grunbaum", "crews", "eysenck", "sokal", "chomLak", "schopen", "leibniz", "herbart",
       "vonHart", "descartes", "spinoza", "platoAr", "socrates", "nietzsche", "james",
       "turing", "ryle", "searle", "hofstadter", "dennett", "crick", "gwt", "penrose", "block", "iit",
-      "varela", "seth", "barrett"
+      "varela", "seth", "barrett", "nishida", "balog", "schneider"
     ]
   },
   {
