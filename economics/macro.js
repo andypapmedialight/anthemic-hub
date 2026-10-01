@@ -1467,7 +1467,7 @@ function infoPara(text) {
 
 function quoteProviderBlurb() {
   if (activeProvider === 'yahoo') {
-    return 'Live quotes via Yahoo Finance (hub proxy). Prior close from chart metadata or last daily close.';
+    return 'Live quotes via Yahoo Finance (hub proxy). Prior close is the previous session in the daily bars.';
   }
   if (activeProvider === 'google') {
     return 'Live quotes via Google Finance page scrape (hub proxy).';
@@ -2640,40 +2640,61 @@ async function fetchRemote(canonicalUrl, { asJson = true } = {}) {
   return null;
 }
 
+function yahooFilledCloses(closesRaw, timestamps) {
+  const filled = [];
+  for (let i = 0; i < closesRaw.length; i++) {
+    const v = closesRaw[i];
+    if (v == null || Number.isNaN(v)) continue;
+    filled.push({ v, t: timestamps[i] != null ? timestamps[i] * 1000 : 0 });
+  }
+  return filled;
+}
+
+/**
+ * Card price and prior close from a Yahoo chart payload.
+ * chartPreviousClose is the close before the requested window, not the prior session.
+ * fulldayChange is the session move, including futures whose daily bars are not settlements.
+ * A null latest daily bar still has the print in regularMarketPrice — but only trust
+ * that when its timestamp is newer than the last filled bar (TIO=F / 2YY=F go stale).
+ */
+function yahooPrintPrice(meta, closesRaw, timestamps) {
+  const filled = yahooFilledCloses(closesRaw, timestamps);
+  const last = filled.length ? filled[filled.length - 1] : null;
+  const prior = filled.length > 1 ? filled[filled.length - 2] : null;
+  const metaPrice = meta?.regularMarketPrice;
+  const metaUtc = meta?.regularMarketTime ? meta.regularMarketTime * 1000 : 0;
+  const lastMissing = closesRaw.length > 0
+    && (closesRaw[closesRaw.length - 1] == null || Number.isNaN(closesRaw[closesRaw.length - 1]));
+  const onScale = Boolean(last && metaPrice != null && !Number.isNaN(metaPrice) && last.v !== 0
+    && Math.abs(metaPrice - last.v) / Math.abs(last.v) <= 0.15);
+  const useMeta = Boolean(lastMissing && onScale && metaUtc > (last?.t || 0));
+  const price = useMeta ? metaPrice : (last ? last.v : metaPrice);
+  const fullPrice = meta?.fulldayPrice;
+  const fullChange = meta?.fulldayChange;
+  const fullMatches = price != null && fullPrice != null && !Number.isNaN(fullPrice)
+    && fullChange != null && !Number.isNaN(fullChange)
+    && (price === 0 ? fullPrice === 0 : Math.abs(price - fullPrice) / Math.abs(price) <= 0.001);
+  let prevClose = null;
+  if (fullMatches) prevClose = price - fullChange;
+  else if (useMeta && last) prevClose = last.v;
+  else if (prior) prevClose = prior.v;
+  else prevClose = meta?.previousClose ?? meta?.chartPreviousClose ?? null;
+  const asOfUtc = Math.max(metaUtc, last?.t || 0) || Date.now();
+  return { price, prevClose, asOfUtc, useMeta, metaPrice, metaUtc, hasStamp: Boolean(metaUtc || last?.t) };
+}
+
 function parseYahooChart(d) {
   if (!d?.chart?.result?.[0]) throw new Error('no data');
   const r = d.chart.result[0];
   const meta = r.meta;
   const closesRaw = r.indicators?.quote?.[0]?.close || [];
   const timestamps = r.timestamp || [];
-  const closes = [];
-  let lastBarUtc = null;
-  for (let i = 0; i < closesRaw.length; i++) {
-    const v = closesRaw[i];
-    if (v == null || Number.isNaN(v)) continue;
-    closes.push(v);
-    if (timestamps[i] != null) lastBarUtc = timestamps[i] * 1000;
-  }
-  const metaPrice = meta.regularMarketPrice;
-  // Prefer last daily close so card, change %, and chart history use the same scale
-  let price = closes.length ? closes[closes.length - 1] : metaPrice;
-  if (price == null || Number.isNaN(price)) price = metaPrice;
-  if (closes.length && metaPrice != null && Math.abs(metaPrice - price) / price > 0.15) {
-    price = closes[closes.length - 1];
-  }
-  let prevClose = meta.chartPreviousClose ?? meta.previousClose;
-  if ((prevClose == null || Number.isNaN(prevClose)) && closes.length > 1) {
-    prevClose = closes[closes.length - 2];
-  }
+  const { price, prevClose, asOfUtc, hasStamp } = yahooPrintPrice(meta, closesRaw, timestamps);
   const change = pointsChange(price, prevClose);
   const pct = pctChange(price, prevClose);
-  // Yahoo sometimes freezes regularMarketTime (e.g. TIO=F stuck in 2021) while
-  // daily bars keep updating — take the newer of meta time and last valid bar.
-  const metaUtc = meta.regularMarketTime ? meta.regularMarketTime * 1000 : 0;
-  const asOfUtc = Math.max(metaUtc, lastBarUtc || 0) || Date.now();
   const exchangeLabel = formatYahooExchange(meta);
   return attachFreshness({ price, change, pct, asOfUtc, exchangeLabel }, 'live', {
-    note: metaUtc || lastBarUtc ? null : 'quote time unavailable',
+    note: hasStamp ? null : 'quote time unavailable',
   });
 }
 
@@ -6267,6 +6288,7 @@ function startMarketHoursClock() {
   marketHoursTick = 0;
   tradingClockTimer = setInterval(() => {
     updateTradingClocks();
+    updateDateLine();
     marketHoursTick += 1;
     if (marketHoursTick % 60 === 0) updateMarketStatus();
   }, 1000);
@@ -6275,14 +6297,17 @@ function startMarketHoursClock() {
 
 // ── Date line ─────────────────────────────────────
 function updateDateLine() {
+  const el = document.getElementById('date-line');
+  if (!el) return;
   const now = new Date();
-  document.getElementById('date-line').textContent =
+  const text =
     now.toLocaleDateString('en-AU', {
       weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
     }).toUpperCase() + '  ·  ' +
     now.toLocaleTimeString('en-AU', {
-      hour: '2-digit', minute: '2-digit', timeZoneName: 'short'
+      hour: '2-digit', minute: '2-digit', second: '2-digit', timeZoneName: 'short'
     });
+  if (el.textContent !== text) el.textContent = text;
 }
 
 // ── Main Load ─────────────────────────────────────
@@ -6667,6 +6692,11 @@ function parseYahooSeries(data) {
     const v = closes[i];
     if (v == null || Number.isNaN(v)) continue;
     series.push({ t: timestamps[i] * 1000, v });
+  }
+  const print = yahooPrintPrice(r.meta, closes, timestamps);
+  if (print.useMeta && print.metaUtc && print.metaPrice != null) {
+    const lastT = series.length ? series[series.length - 1].t : 0;
+    if (print.metaUtc > lastT) series.push({ t: print.metaUtc, v: print.metaPrice });
   }
   return series.length ? series : null;
 }
