@@ -395,6 +395,34 @@ function formatCardAsOf(meta) {
   return parts.join(' · ');
 }
 
+/** Equities, exchange futures, yield tickers, and crypto — the auto-refresh set. */
+function cardTracksReadTime(item, sectionKey) {
+  if (activeProvider === 'alphavantage') return false;
+  if (sectionKey === 'crypto') return true;
+  if (sectionKey === 'eq') return Boolean(item?.sym);
+  if (sectionKey === 'comm') return Boolean(item?.sym) && !item.fredId;
+  if (sectionKey === 'bond') return Boolean(item?.yTicker);
+  return false;
+}
+
+function noteQuoteRead(item, sectionKey, data) {
+  if (!data || !cardTracksReadTime(item, sectionKey)) return null;
+  if (!data.readAt) data.readAt = Date.now();
+  return data.readAt;
+}
+
+function formatQuoteReadAt(ms) {
+  if (ms == null) return null;
+  const d = new Date(ms);
+  if (Number.isNaN(d.getTime())) return null;
+  const time = d.toLocaleTimeString('en-AU', {
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+  });
+  if (d.toDateString() === new Date().toDateString()) return `Read ${time}`;
+  const day = d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+  return `Read ${day} ${time}`;
+}
+
 // ── Provider ──────────────────────────────────────
 const PROVIDERS = ['yahoo', 'google', 'alphavantage'];
 let activeProvider = localStorage.getItem('mmd:provider') || 'yahoo';
@@ -2297,6 +2325,7 @@ function renderCard(meta, delay = 0) {
         ? formatPointsChange(meta.change)
         : formatQuoteAbsChange(meta.change, meta.quoteDp);
   const asOfStr = formatCardAsOf(meta);
+  const readStr = formatQuoteReadAt(meta.readAt);
   const freshnessPill = resolveFreshnessPill(meta);
   const failed = cardIsFailed(meta);
   const loading = CARD_LOADING.has(meta.itemKey);
@@ -2341,8 +2370,8 @@ function renderCard(meta, delay = 0) {
     : `<span class="pill ${pillClass(meta.pct, meta.change)}">${pillText(meta.pct)}</span>`}
         ${absStr ? `<span class="card-abs ${absChangeClass(meta.pct, meta.change)}">${absStr}</span>` : ''}
       </div>
-      ${asOfStr && meta.showCardAsOf !== false
-    ? `<div class="card-asof${isMetaStale(meta) || meta.sessionOpen === false ? ' card-asof--stale' : ''}">${escapeHtml(asOfStr)}</div>`
+      ${(asOfStr && meta.showCardAsOf !== false) || readStr
+    ? `<div class="card-asof${isMetaStale(meta) || meta.sessionOpen === false ? ' card-asof--stale' : ''}">${asOfStr && meta.showCardAsOf !== false ? escapeHtml(asOfStr) : ''}${readStr ? `<div class="card-read">${escapeHtml(readStr)}</div>` : ''}</div>`
     : ''}
       ${meta.extra || ''}`;
 
@@ -4619,6 +4648,7 @@ function collectCardMetas(section, items) {
         price: formatYieldPrice(d),
         change: d ? d.change : null, pct: d ? d.pct : null, extra,
         isYield: true,
+        readAt: noteQuoteRead(item, section.key, d),
         asOfUtc: d?.asOfUtc ?? null,
         freshnessKind: d?.freshnessKind,
         freshnessNote: d?.freshnessNote,
@@ -4645,6 +4675,7 @@ function collectCardMetas(section, items) {
       ...sessionAware,
       itemKey: k,
       sectionKey: section.key,
+      readAt: noteQuoteRead(item, section.key, d),
       failed: !d,
       asOfUtc: d?.asOfUtc ?? card.asOfUtc,
       freshnessKind: sessionAware.freshnessKind ?? d?.freshnessKind ?? card.freshnessKind

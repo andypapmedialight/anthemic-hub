@@ -613,6 +613,7 @@
     word-break: break-word;
   }
   .card-asof--stale { color: var(--muted); }
+  .card-read { color: var(--muted); }
 
   .card-loading {
     position: absolute;
