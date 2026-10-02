@@ -2910,7 +2910,7 @@ let _cgPromise = null;
 async function loadCoinGecko(force = false) {
   const key = 'cg:batch';
   if (!force) { const c = cacheGet(key); if (c) return c; }
-  if (!force && _cgPromise) return _cgPromise;
+  if (_cgPromise) return _cgPromise;
   const ids = Object.values(CG_IDS).join(',');
   _cgPromise = fetch(
     `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`
@@ -6196,15 +6196,18 @@ const SESSION_TRACKED_VENUES = ['us_equity', 'asx', 'cme'];
 let lastSessionOpenByVenue = {};
 
 function sessionStateChanged(now = new Date()) {
+  const closed = [];
   let changed = false;
   for (const id of SESSION_TRACKED_VENUES) {
     const open = evaluateVenue(id, now).open;
-    if (lastSessionOpenByVenue[id] !== undefined && lastSessionOpenByVenue[id] !== open) {
+    const prev = lastSessionOpenByVenue[id];
+    if (prev !== undefined && prev !== open) {
       changed = true;
+      if (!open) closed.push(id);
     }
     lastSessionOpenByVenue[id] = open;
   }
-  return changed;
+  return { changed, closed };
 }
 
 function marketChipHtml(venueId, state) {
@@ -6263,17 +6266,18 @@ function updateSectionMarkets() {
 
 function updateMarketStatus() {
   const now = new Date();
-  const sessionChanged = sessionStateChanged(now);
+  const { changed, closed } = sessionStateChanged(now);
   const footer = document.getElementById('market-hours');
   const venueIds = activeMarketVenueIds();
   if (footer) renderMarketHoursBar(footer, venueIds.length ? venueIds : ['us_equity', 'fx', 'crypto']);
   updateSectionMarkets();
-  if (sessionChanged) {
+  if (changed) {
     for (const section of SECTIONS) {
       if (section.key === 'eq') renderSectionGrid(section);
     }
     renderGlanceGrid();
   }
+  schedulePostCloseRefresh(closed);
 }
 
 let marketHoursTimer = null;
@@ -6293,6 +6297,123 @@ function startMarketHoursClock() {
     if (marketHoursTick % 60 === 0) updateMarketStatus();
   }, 1000);
   marketHoursTimer = tradingClockTimer;
+}
+
+// ── Live quote refresh ────────────────────────────
+// Equities and yields while that cash session is open; futures while Globex
+// is open; crypto whenever the tab is visible. One more pass 10 min after
+// the ASX or NY cash close, so the official print replaces the last trade.
+const LIVE_REFRESH_MS = 2 * 60 * 1000;
+const POST_CLOSE_DELAY_MS = 10 * 60 * 1000;
+const POST_CLOSE_VENUES = new Set(['us_equity', 'asx']);
+let liveRefreshTimer = null;
+let liveRefreshVisibilityBound = false;
+let liveRefreshInFlight = false;
+let lastLiveRefreshAt = 0;
+const postCloseTimers = new Map();
+
+function quoteAutoRefreshOpen(item, sectionKey, now = new Date()) {
+  if (sectionKey === 'crypto') return true;
+  if (sectionKey === 'eq') return isSessionOpenForItem(item, sectionKey, now) === true;
+  if (sectionKey === 'comm') return Boolean(item.sym) && !item.fredId && evaluateVenue('cme', now).open;
+  if (sectionKey === 'bond') return Boolean(item.yTicker) && evaluateVenue('us_equity', now).open;
+  return false;
+}
+
+function liveRefreshTargets(now = new Date(), venueIds = null) {
+  const targets = [];
+  for (const section of SECTIONS) {
+    if (section.key !== 'eq' && section.key !== 'comm' && section.key !== 'bond' && section.key !== 'crypto') continue;
+    for (const item of visOf(section.items)) {
+      if (venueIds) {
+        const venue = sessionVenueForItem(item, section.key);
+        const cashHit = section.key === 'eq' && venueIds.includes(venue);
+        const bondHit = section.key === 'bond' && item.yTicker && venueIds.includes('us_equity');
+        if (cashHit || bondHit) targets.push({ section, item });
+      } else if (quoteAutoRefreshOpen(item, section.key, now)) {
+        targets.push({ section, item });
+      }
+    }
+  }
+  return targets;
+}
+
+function paintLiveRefresh(touched) {
+  if (!touched.size) return;
+  for (const section of SECTIONS) {
+    if (touched.has(section.key)) renderSectionGrid(section);
+  }
+  renderGlanceGrid();
+}
+
+async function refreshLiveQuotes(venueIds = null) {
+  if (activeProvider === 'alphavantage') return;
+  if (document.hidden || liveRefreshInFlight || isPageLoading()) return;
+  const targets = liveRefreshTargets(new Date(), venueIds);
+  if (!targets.length) return;
+  liveRefreshInFlight = true;
+  const touched = new Set();
+  try {
+    const crypto = targets.filter(t => t.section.key === 'crypto');
+    const rest = targets.filter(t => t.section.key !== 'crypto');
+    if (crypto.length) {
+      try {
+        await loadCoinGecko(true);
+        for (const { section, item } of crypto) {
+          const data = await fetchCrypto(item.sym, false);
+          if (data) DATA[getItemKey(item)] = data;
+          touched.add(section.key);
+        }
+      } catch (err) {
+        console.warn('live crypto refresh failed', err);
+      }
+    }
+    await Promise.all(rest.map(async ({ section, item }) => {
+      try {
+        const data = await section.fetch(item, true);
+        if (data) DATA[getItemKey(item)] = data;
+        touched.add(section.key);
+      } catch (err) {
+        console.warn('live refresh failed', section.key, getItemKey(item), err);
+      }
+    }));
+    paintLiveRefresh(touched);
+    if (!venueIds) lastLiveRefreshAt = Date.now();
+  } finally {
+    liveRefreshInFlight = false;
+  }
+}
+
+function runPostCloseRefresh(venueId) {
+  if (document.hidden || liveRefreshInFlight || isPageLoading()) {
+    postCloseTimers.set(venueId, setTimeout(() => runPostCloseRefresh(venueId), 15 * 1000));
+    return;
+  }
+  postCloseTimers.delete(venueId);
+  void refreshLiveQuotes([venueId]);
+}
+
+function schedulePostCloseRefresh(venueIds) {
+  for (const id of venueIds) {
+    if (!POST_CLOSE_VENUES.has(id)) continue;
+    clearTimeout(postCloseTimers.get(id));
+    postCloseTimers.set(id, setTimeout(() => runPostCloseRefresh(id), POST_CLOSE_DELAY_MS));
+  }
+}
+
+function onLiveRefreshVisibility() {
+  if (document.hidden) return;
+  if (Date.now() - lastLiveRefreshAt >= LIVE_REFRESH_MS) void refreshLiveQuotes();
+}
+
+function startLiveQuoteRefresh() {
+  if (liveRefreshTimer) clearInterval(liveRefreshTimer);
+  lastLiveRefreshAt = Date.now();
+  liveRefreshTimer = setInterval(() => { void refreshLiveQuotes(); }, LIVE_REFRESH_MS);
+  if (!liveRefreshVisibilityBound) {
+    document.addEventListener('visibilitychange', onLiveRefreshVisibility);
+    liveRefreshVisibilityBound = true;
+  }
 }
 
 // ── Date line ─────────────────────────────────────
@@ -7604,6 +7725,7 @@ async function init() {
   }
   startValuationPrefetch(false);
   await loadAll(false);
+  startLiveQuoteRefresh();
 }
 
 init();
