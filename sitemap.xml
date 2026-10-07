@@ -26,6 +26,31 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://anthemic-developments.com/biology/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://anthemic-developments.com/biology/cell-division/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://anthemic-developments.com/biology/cell-division-2d/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://anthemic-developments.com/biology/dna-replication/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://anthemic-developments.com/biology/dna-replication-2d/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>https://anthemic-developments.com/consciousness-map.html</loc>
     <changefreq>yearly</changefreq>
     <priority>0.6</priority>

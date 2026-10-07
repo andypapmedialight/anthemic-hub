@@ -8,6 +8,7 @@ Static site for **anthemic-developments.com** - hub landing page, gig calendar, 
 index.html                          Hub landing page
 bass/                               Bass coaching static site (/bass/)
 brain/                              3D brain map (/brain/)
+biology/                            Cell division and DNA replication WebGPU pages (/biology/)
 personal/
   index.html                      Short index at /personal/ (links to writing)
   writing/
@@ -62,6 +63,16 @@ git push origin main
 4. Smoke-test public URLs and loopback services.
 
 Site HTML/JS/assets, contact `server.mjs`, mmd code, FRED/ABS/contact env files, and systemd unit refreshes all go through this path. Nginx routing lives in **anthemic-ops** (separate deploy).
+
+### Biology sims (`/biology/`)
+
+Cell division and DNA replication (2D and 3D) are the wgpu apps in `/home/andypap/Documents/Code/Vulkan`. The droplet has no display, so the hub serves a WebGPU build, not the native binaries. `scripts/build-biology-wasm.sh` compiles those crates and writes `biology/*/`. Commit that output; CI only rsyncs it.
+
+`/biology/` needs `location ^~ /biology/` in **anthemic-ops** so a missing path does not fall through to the hub index, and so `.wasm` is `application/wasm` (from nginx `mime.types`). Rebuild the pages with:
+
+```bash
+./scripts/build-biology-wasm.sh
+```
 
 ### Apply script updates (manual)
 

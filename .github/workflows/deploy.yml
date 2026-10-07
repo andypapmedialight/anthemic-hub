@@ -158,6 +158,7 @@ jobs:
             "${DEST}"
           rsync -avz -e "${RSYNC_SSH}" ./bass/ "${DEST}bass/"
           rsync -avz -e "${RSYNC_SSH}" ./brain/ "${DEST}brain/"
+          rsync -avz -e "${RSYNC_SSH}" ./biology/ "${DEST}biology/"
           rsync -avz -e "${RSYNC_SSH}" ./hire/ "${DEST}hire/"
           rsync -avz -e "${RSYNC_SSH}" ./gigs/ "${DEST}gigs/"
           rsync -avz -e "${RSYNC_SSH}" ./anth-dev-ad/ "${DEST}anth-dev-ad/"
@@ -193,8 +194,8 @@ jobs:
         run: |
           HUB_IN="/home/${DEPLOY_USER}/incoming-hub"
           ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            "test -f ${HUB_IN}/index.html && test -f ${HUB_IN}/favicon.svg && test -f ${HUB_IN}/consciousness-map.html && test -f ${HUB_IN}/consciousness-map-favicon.svg && test -f ${HUB_IN}/consciousness-map-preview.png && test -f ${HUB_IN}/grounding-the-unconscious.html && test -f ${HUB_IN}/grounding-the-unconscious-favicon.svg && test -f ${HUB_IN}/genealogies-of-desire.html && test -f ${HUB_IN}/genealogies-of-desire-favicon.svg && test -f ${HUB_IN}/constellations-of-history.html && test -f ${HUB_IN}/constellations-of-history-favicon.svg && test -f ${HUB_IN}/technics-and-time.html && test -f ${HUB_IN}/technics-and-time-favicon.svg && test -f ${HUB_IN}/map-of-maps.html && test -f ${HUB_IN}/map-of-maps-favicon.svg && test -f ${HUB_IN}/map-of-maps-currents.html && test -f ${HUB_IN}/fiction-of-the-maps.html && test -f ${HUB_IN}/fiction-of-the-maps-favicon.svg && test -f ${HUB_IN}/philosophy-booklet.html && test -f ${HUB_IN}/philosophy-overview.html && test -f ${HUB_IN}/the-boundary-play.html && test -f ${HUB_IN}/bass/index.html && test -f ${HUB_IN}/brain/index.html && test -f ${HUB_IN}/hire/index.html && test -f ${HUB_IN}/hire/pitch.js && test -f ${HUB_IN}/content/pitch.json && test -f ${HUB_IN}/gigs/index.html && test -f ${HUB_IN}/gigs/gigs.json && test -f ${HUB_IN}/content/hub.json && test -f ${HUB_IN}/content/reading-list.seed.json && test -f ${HUB_IN}/personal/index.html && test -f ${HUB_IN}/personal/writing/index.html && test -f ${HUB_IN}/personal/writing/writing-desk.png && test -f ${HUB_IN}/economics/index.html && test -f ${HUB_IN}/mmd/valuation_server.py && test -f ${HUB_IN}/mmd/valuation_fetch.py && test -f ${HUB_IN}/mmd/treasury_fetch.py && test -f ${HUB_IN}/mmd/aus_fetch.py" \
-            || { echo "incoming-hub missing hub, consciousness-map, grounding-the-unconscious, genealogies-of-desire, technics-and-time, map-of-maps(+currents), fiction-of-the-maps, philosophy-booklet, philosophy-overview, the-boundary-play, bass, brain, gigs, content, reading-list.seed, or personal/ files after upload (expected under ${HUB_IN})"; exit 1; }
+            "test -f ${HUB_IN}/index.html && test -f ${HUB_IN}/favicon.svg && test -f ${HUB_IN}/consciousness-map.html && test -f ${HUB_IN}/consciousness-map-favicon.svg && test -f ${HUB_IN}/consciousness-map-preview.png && test -f ${HUB_IN}/grounding-the-unconscious.html && test -f ${HUB_IN}/grounding-the-unconscious-favicon.svg && test -f ${HUB_IN}/genealogies-of-desire.html && test -f ${HUB_IN}/genealogies-of-desire-favicon.svg && test -f ${HUB_IN}/constellations-of-history.html && test -f ${HUB_IN}/constellations-of-history-favicon.svg && test -f ${HUB_IN}/technics-and-time.html && test -f ${HUB_IN}/technics-and-time-favicon.svg && test -f ${HUB_IN}/map-of-maps.html && test -f ${HUB_IN}/map-of-maps-favicon.svg && test -f ${HUB_IN}/map-of-maps-currents.html && test -f ${HUB_IN}/fiction-of-the-maps.html && test -f ${HUB_IN}/fiction-of-the-maps-favicon.svg && test -f ${HUB_IN}/philosophy-booklet.html && test -f ${HUB_IN}/philosophy-overview.html && test -f ${HUB_IN}/the-boundary-play.html && test -f ${HUB_IN}/bass/index.html && test -f ${HUB_IN}/brain/index.html && test -f ${HUB_IN}/hire/index.html && test -f ${HUB_IN}/hire/pitch.js && test -f ${HUB_IN}/content/pitch.json && test -f ${HUB_IN}/gigs/index.html && test -f ${HUB_IN}/gigs/gigs.json && test -f ${HUB_IN}/content/hub.json && test -f ${HUB_IN}/content/reading-list.seed.json && test -f ${HUB_IN}/personal/index.html && test -f ${HUB_IN}/personal/writing/index.html && test -f ${HUB_IN}/personal/writing/writing-desk.png && test -f ${HUB_IN}/economics/index.html && test -f ${HUB_IN}/mmd/valuation_server.py && test -f ${HUB_IN}/mmd/valuation_fetch.py && test -f ${HUB_IN}/mmd/treasury_fetch.py && test -f ${HUB_IN}/mmd/aus_fetch.py && test -f ${HUB_IN}/biology/index.html && test -f ${HUB_IN}/biology/cell-division/index.html && test -f ${HUB_IN}/biology/cell-division/cell_division_rs_bg.wasm && test -f ${HUB_IN}/biology/cell-division-2d/cell_division_2d_bg.wasm && test -f ${HUB_IN}/biology/dna-replication/dna_replication_rs_bg.wasm && test -f ${HUB_IN}/biology/dna-replication-2d/dna_replication_2d_bg.wasm" \
+            || { echo "incoming-hub missing hub, consciousness-map, grounding-the-unconscious, genealogies-of-desire, technics-and-time, map-of-maps(+currents), fiction-of-the-maps, philosophy-booklet, philosophy-overview, the-boundary-play, bass, brain, biology, gigs, content, reading-list.seed, or personal/ files after upload (expected under ${HUB_IN})"; exit 1; }
 
       - name: Apply on Droplet
         env:
@@ -346,6 +347,22 @@ jobs:
           fi
           grep -qF '<title>Why hire Andy Papadopoulos</title>' /tmp/anthemic-smoke-hire.html \
             || { echo "/hire/ page missing expected title marker"; exit 1; }
+          ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            'test -f /var/www/anthemic-hub/biology/index.html && test -f /var/www/anthemic-hub/biology/cell-division/cell_division_rs_bg.wasm' \
+            || { echo "After apply, biology pages missing. Install latest scripts/droplet/anthemic-hub-deploy-apply.sh to /usr/local/bin/ manually as root (no auto-self-update)."; exit 1; }
+          code_bio=$(curl -sS -o /dev/null -w "%{http_code}" --retry 3 --retry-delay 2 "https://anthemic-developments.com/biology/")
+          [[ "${code_bio}" == "200" ]] || { echo "/biology/ returned HTTP ${code_bio}"; exit 1; }
+          curl -sS --retry 3 --retry-delay 2 "https://anthemic-developments.com/biology/" -o /tmp/anthemic-smoke-bio.html
+          if grep -qF 'id="hero-name"' /tmp/anthemic-smoke-bio.html; then
+            echo "/biology/ is serving the hub index — deploy anthemic-ops nginx (location ^~ /biology/)"
+            exit 1
+          fi
+          grep -qF 'Cell and DNA' /tmp/anthemic-smoke-bio.html \
+            || { echo "/biology/ missing expected title marker"; exit 1; }
+          code_bio_wasm=$(curl -sS -o /dev/null -w "%{http_code}" --retry 2 "https://anthemic-developments.com/biology/cell-division-2d/cell_division_2d_bg.wasm")
+          [[ "${code_bio_wasm}" == "200" ]] || { echo "cell division 2D wasm returned HTTP ${code_bio_wasm}"; exit 1; }
+          bio_wasm_type=$(curl -sS -D - -o /dev/null --retry 2 "https://anthemic-developments.com/biology/cell-division-2d/cell_division_2d_bg.wasm" | tr -d '\r' | awk 'tolower($1)=="content-type:" { print tolower($2); exit }')
+          [[ "${bio_wasm_type}" == application/wasm* ]] || { echo "biology wasm Content-Type is '${bio_wasm_type}' (need application/wasm)"; exit 1; }
           mmd_health_ok=0
           for attempt in 1 2 3 4 5 6 7 8; do
             if ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \

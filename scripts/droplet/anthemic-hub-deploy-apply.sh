@@ -22,6 +22,7 @@
 #   assets/           - optional folder of static assets
 #   bass/             - bass coaching static site (e.g. bass/index.html)
 #   brain/            - 3D brain hub page (e.g. brain/index.html)
+#   biology/          - cell division and DNA replication WebGPU pages
 #   hire/             - employer pitch deck (hire/index.html + pitch.js)
 #   gigs/             - gig calendar (gigs/index.html + gigs.json)
 #   content/          - admin-editable site content (content/hub.json)
@@ -173,8 +174,20 @@ if [[ ! -f "${INCOMING}/economics/index.html" ]]; then
   echo "anthemic-hub-deploy-apply: missing ${INCOMING}/economics/index.html (rsync must ship economics/ from repo)" >&2
   exit 1
 fi
+if [[ ! -f "${INCOMING}/biology/index.html" ]] \
+  || [[ ! -f "${INCOMING}/biology/cell-division/index.html" ]] \
+  || [[ ! -f "${INCOMING}/biology/cell-division/cell_division_rs_bg.wasm" ]] \
+  || [[ ! -f "${INCOMING}/biology/cell-division-2d/index.html" ]] \
+  || [[ ! -f "${INCOMING}/biology/cell-division-2d/cell_division_2d_bg.wasm" ]] \
+  || [[ ! -f "${INCOMING}/biology/dna-replication/index.html" ]] \
+  || [[ ! -f "${INCOMING}/biology/dna-replication/dna_replication_rs_bg.wasm" ]] \
+  || [[ ! -f "${INCOMING}/biology/dna-replication-2d/index.html" ]] \
+  || [[ ! -f "${INCOMING}/biology/dna-replication-2d/dna_replication_2d_bg.wasm" ]]; then
+  echo "anthemic-hub-deploy-apply: missing biology/ WebGPU pages (rsync must ship biology/ from repo)" >&2
+  exit 1
+fi
 
-mkdir -p "${DEST}/bass" "${DEST}/brain" "${DEST}/hire" "${DEST}/gigs" "${DEST}/content" "${DEST}/anth-dev-ad" "${DEST}/personal/writing" "${DEST}/economics"
+mkdir -p "${DEST}/bass" "${DEST}/brain" "${DEST}/biology" "${DEST}/hire" "${DEST}/gigs" "${DEST}/content" "${DEST}/anth-dev-ad" "${DEST}/personal/writing" "${DEST}/economics"
 
 # Preserve admin-managed files: back up before rsync, restore after.
 # Git copies act as seeds on first deploy only.
@@ -218,6 +231,7 @@ if [[ -f "${INCOMING}/robots.txt" ]]; then
 fi
 rsync -a --delete "${INCOMING}/bass/" "${DEST}/bass/"
 rsync -a --delete "${INCOMING}/brain/" "${DEST}/brain/"
+rsync -a --delete "${INCOMING}/biology/" "${DEST}/biology/"
 rsync -a --delete "${INCOMING}/hire/" "${DEST}/hire/"
 rsync -a --delete "${INCOMING}/gigs/" "${DEST}/gigs/"
 rsync -a --delete "${INCOMING}/anth-dev-ad/" "${DEST}/anth-dev-ad/"

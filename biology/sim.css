@@ -1,0 +1,121 @@
+:root {
+  color-scheme: dark;
+  --bg: #0e1015;
+  --fg: #eceef4;
+  --dim: #949db0;
+  --line: #2a3140;
+  --card: #161b24;
+  --blue: #6b9cff;
+  --gold: #c9a227;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+a { color: var(--blue); }
+
+body.index {
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: 2.5rem 1.25rem 4rem;
+}
+
+.crumb {
+  color: var(--dim);
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+}
+
+h1 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 600;
+  font-size: 2.2rem;
+  margin: 0.6rem 0 0.4rem;
+}
+
+.lede {
+  color: var(--dim);
+  line-height: 1.5;
+  margin: 0 0 1.75rem;
+}
+
+.sims {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.sims a {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.9rem 1rem 1rem;
+}
+
+.sims a:hover { border-color: var(--blue); }
+
+.sims strong { display: block; font-size: 1.05rem; }
+
+.sims span {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--dim);
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+
+body.sim { overflow: hidden; height: 100%; }
+
+body.sim canvas {
+  position: fixed;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 0;
+  display: block;
+}
+
+.sim-chrome {
+  position: fixed;
+  z-index: 2;
+  top: 0.6rem;
+  left: 0.7rem;
+  right: 0.7rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.45rem;
+  pointer-events: none;
+}
+
+.sim-chrome a,
+#gpu-status {
+  pointer-events: auto;
+  background: rgba(14, 16, 21, 0.82);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.82rem;
+  text-decoration: none;
+}
+
+#gpu-status:empty { display: none; }
+
+#gpu-status {
+  color: var(--gold);
+  border-radius: 12px;
+  max-width: 36rem;
+}
