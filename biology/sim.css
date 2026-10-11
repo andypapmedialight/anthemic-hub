@@ -119,3 +119,53 @@ body.sim canvas {
   border-radius: 12px;
   max-width: 36rem;
 }
+
+.sim-controls {
+  display: none;
+}
+
+@media (max-width: 820px) {
+  body.sim canvas {
+    /* A canvas is a replaced element, so width/height auto stays at its bitmap size (1px until wgpu resizes it) instead of stretching between the insets. */
+    top: env(safe-area-inset-top, 0px);
+    left: env(safe-area-inset-left, 0px);
+    right: auto;
+    bottom: auto;
+    width: calc(100vw - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)) !important;
+    height: calc(100dvh - env(safe-area-inset-top, 0px) - 3.4rem - env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .sim-chrome {
+    top: max(0.4rem, env(safe-area-inset-top));
+    right: max(0.5rem, env(safe-area-inset-right));
+    left: auto;
+    align-items: flex-end;
+  }
+
+  .sim-controls {
+    display: flex;
+    position: fixed;
+    z-index: 3;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    gap: 0.3rem;
+    margin: 0;
+    padding: 0.4rem 0.4rem calc(0.4rem + env(safe-area-inset-bottom, 0px));
+    background: rgba(14, 16, 21, 0.94);
+    border-top: 1px solid var(--line);
+    overflow-x: auto;
+  }
+
+  .sim-controls button {
+    flex: 1 1 0;
+    min-height: 2.35rem;
+    padding: 0 0.35rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--card);
+    color: var(--fg);
+    font: inherit;
+    font-size: 0.75rem;
+  }
+}
