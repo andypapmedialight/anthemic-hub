@@ -5307,14 +5307,14 @@ function renderCust(section) {
   const el = document.getElementById(section.custId);
   if (!el) return;
   el.innerHTML = section.items.map((item, idx) => {
-    const k = getItemKey(item);
+    const k = escapeHtml(getItemKey(item));
     const on = isOn(item);
-    const lbl = item.ticker || `${item.from}/${item.to}`;
+    const lbl = escapeHtml(item.ticker || `${item.from}/${item.to}`);
     return `<div class="sym-pill-row">
       <button type="button" class="sym-pill ${on ? 'on' : 'off'}" data-sym-key="${k}" data-section-key="${section.key}">${lbl}</button>
-      <button type="button" class="sym-move-btn" title="Move left" aria-label="Move ${escapeHtml(lbl)} left"
+      <button type="button" class="sym-move-btn" title="Move left" aria-label="Move ${lbl} left"
         data-move-key="${k}" data-section-key="${section.key}" data-move-dir="-1"${idx === 0 ? ' disabled' : ''}>←</button>
-      <button type="button" class="sym-move-btn" title="Move right" aria-label="Move ${escapeHtml(lbl)} right"
+      <button type="button" class="sym-move-btn" title="Move right" aria-label="Move ${lbl} right"
         data-move-key="${k}" data-section-key="${section.key}" data-move-dir="1"${idx === section.items.length - 1 ? ' disabled' : ''}>→</button>
     </div>`;
   }).join('');

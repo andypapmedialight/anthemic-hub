@@ -8,7 +8,7 @@ Static site for `anthemic-developments.com`. No build step, no framework — pla
 
 - **No build step.** Hand-written HTML/CSS/JS. Never add bundler or framework.
 - **Two repos:** `anthemic-hub` = site content; `anthemic-ops` (sibling) = nginx. Nginx changes → anthemic-ops.
-- **Deploy:** push `main` → GitHub Actions → rsync `/home/deploy/incoming-hub/` → `sudo /usr/local/bin/anthemic-hub-deploy-apply.sh <incoming>`. Site/contact/mmd updates are automatic. The apply script itself does **not** self-update from `incoming-hub/` (manual root `install` after review). See README **Deploy** + `.github/workflows/deploy.yml`.
+- **Deploy:** push `main` → GitHub Actions → rsync `/home/deploy/incoming-hub/` → `sudo /usr/local/bin/anthemic-hub-deploy-apply.sh <incoming>`. Site/contact/mmd code updates are automatic. The apply script and the `papaweb-contact` / `mmd-valuation` systemd units do **not** install from `incoming-hub/` (manual root `install` after review). See README **Deploy** + `.github/workflows/deploy.yml`.
 - **Preserved across deploys** (git = seed only): `gigs/gigs.json`, `content/hub.json`, `assets/gallery/manifest.json`.
 
 ## Admin panel

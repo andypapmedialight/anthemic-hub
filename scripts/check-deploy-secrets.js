@@ -42,6 +42,12 @@ if (!apply.includes('--exclude \'.fred-api-key\'') && !apply.includes('--exclude
 if (!apply.includes('economics/.fred-api-key')) {
   errors.push('anthemic-hub-deploy-apply.sh should remove economics/.fred-api-key from the web root');
 }
+if (/^\s*install\b.*(?:papaweb-contact|mmd-valuation)\.service/m.test(apply)) {
+  errors.push('anthemic-hub-deploy-apply.sh must not install systemd units from incoming-hub');
+}
+if (!apply.includes('_refuse_unit_autoupdate')) {
+  errors.push('anthemic-hub-deploy-apply.sh must refuse systemd unit updates from incoming-hub');
+}
 
 if (errors.length) {
   console.error('check-deploy-secrets: FAILED\n');

@@ -76,22 +76,30 @@ Cell division and DNA replication (2D and 3D) are the wgpu apps in `/home/andypa
 
 ### Apply script updates (manual)
 
-`/usr/local/bin/anthemic-hub-deploy-apply.sh` does **not** self-update from `incoming-hub/`. That avoids a compromised `deploy` key turning into root via a malicious apply script.
+`/usr/local/bin/anthemic-hub-deploy-apply.sh` does **not** self-update from `incoming-hub/`. The same rule applies to `papaweb-contact.service` and `mmd-valuation.service`: apply will restart those units, and it will not copy them out of `incoming-hub/`. A unit's `User=` and `ExecStart=` run via root `systemctl`, so installing one from the deploy user's staging directory would be root.
 
 | Change type | Deploy behaviour |
 |-------------|------------------|
-| Site content, contact backend, mmd, CI secrets | Automatic on push to `main` |
+| Site content, contact backend code, mmd code, CI secrets | Automatic on push to `main` |
 | `scripts/droplet/anthemic-hub-deploy-apply.sh` | Rsynced to `incoming-hub/` only; live `/usr/local/bin` copy is unchanged until you install it as root |
+| `papaweb-contact.service`, `mmd-valuation.service` | Rsynced to `incoming-hub/` only; live unit under `/etc/systemd/system/` is unchanged until you install it as root |
 
-After reviewing the staged script on the droplet:
+After reviewing the staged files on the droplet:
 
 ```bash
 sudo install -o root -g root -m 755 \
   /home/deploy/incoming-hub/anthemic-hub-deploy-apply.sh \
   /usr/local/bin/anthemic-hub-deploy-apply.sh
+sudo install -o root -g root -m 644 \
+  /home/deploy/incoming-hub/contact/papaweb-contact.service \
+  /etc/systemd/system/papaweb-contact.service
+sudo install -o root -g root -m 644 \
+  /home/deploy/incoming-hub/mmd/mmd-valuation.service \
+  /etc/systemd/system/mmd-valuation.service
+sudo systemctl daemon-reload
 ```
 
-If the staged script differs from `/usr/local/bin`, apply logs a warning and continues with the installed version. Same rule for nginx apply in **anthemic-ops**.
+If a staged script or unit differs from the live file, apply logs a warning and continues with the installed version. Same rule for nginx apply in **anthemic-ops**.
 
 ### What the deploy preserves (never overwritten by CI)
 
@@ -193,9 +201,9 @@ deploy ALL=(root) NOPASSWD: /usr/local/bin/anthemic-hub-deploy-apply.sh
 EOF
 sudo chmod 440 /etc/sudoers.d/deploy-anthemic-hub
 
-# Apply script does NOT self-update from incoming-hub (avoids deploy→root RCE).
-# After reviewing a new apply script on the droplet, install it manually as root:
-#   sudo install -o root -g root -m 755 /home/deploy/incoming-hub/anthemic-hub-deploy-apply.sh /usr/local/bin/anthemic-hub-deploy-apply.sh
+# Apply script and systemd units do NOT install from incoming-hub (avoids deploy→root).
+# After reviewing a new apply script or unit on the droplet, install it manually as root.
+# See "Apply script updates (manual)" above.
 # Everyday CI invokes (path must be /home/<user>/incoming-hub):
 #   sudo /usr/local/bin/anthemic-hub-deploy-apply.sh /home/deploy/incoming-hub
 # (Use your real staging path if DEPLOY_USER is not `deploy`.)

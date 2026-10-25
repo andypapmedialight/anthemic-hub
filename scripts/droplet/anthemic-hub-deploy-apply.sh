@@ -86,6 +86,21 @@ if [[ "${EUID:-$(id -u)}" -eq 0 ]] && [[ -f "${SELF_INCOMING}" ]] && [[ -f "${AP
   fi
 fi
 
+# Never install systemd units from INCOMING. systemctl runs as root, and the
+# unit's User=/ExecStart= would run with it. Same manual install as APPLY_BIN:
+#   install -m 644 -o root -g root "$src" "$dest" && systemctl daemon-reload
+_refuse_unit_autoupdate() {
+  local src="$1"
+  local dest="$2"
+  if [[ ! -f "${dest}" ]]; then
+    echo "anthemic-hub-deploy-apply: ${dest} is not installed; refusing to install ${src} (install manually as root)" >&2
+    exit 1
+  fi
+  if [[ -f "${src}" ]] && ! cmp -s "${src}" "${dest}" 2>/dev/null; then
+    echo "anthemic-hub-deploy-apply: WARNING: ${src} differs from ${dest}; not auto-updating (install manually as root)" >&2
+  fi
+}
+
 if [[ ! -f "${INCOMING}/index.html" ]]; then
   echo "anthemic-hub-deploy-apply: missing ${INCOMING}/index.html" >&2
   exit 1
@@ -355,10 +370,9 @@ if [[ -f "${INCOMING}/contact/server.mjs" ]]; then
   fi
   mkdir -p "${CONTACT_OPT}/data"
   install -o root -g root -m 644 "${INCOMING}/contact/server.mjs" "${CONTACT_OPT}/server.mjs"
-  if [[ -f "${INCOMING}/contact/papaweb-contact.service" ]]; then
-    install -o root -g root -m 644 "${INCOMING}/contact/papaweb-contact.service" \
-      /etc/systemd/system/papaweb-contact.service
-  fi
+  _refuse_unit_autoupdate \
+    "${INCOMING}/contact/papaweb-contact.service" \
+    /etc/systemd/system/papaweb-contact.service
   mkdir -p /etc/anthemic-contact
   if [[ -f "${CONTACT_INCOMING_ENV}" ]]; then
     install -o root -g www-data -m 640 "${CONTACT_INCOMING_ENV}" "${CONTACT_ENV}"
@@ -408,10 +422,9 @@ if [[ -f "${INCOMING}/mmd/valuation_server.py" && -f "${INCOMING}/mmd/valuation_
   if [[ -f "${INCOMING}/mmd/multilateral_fetch.py" ]]; then
     install -o root -g root -m 644 "${INCOMING}/mmd/multilateral_fetch.py" "${MMD_OPT}/multilateral_fetch.py"
   fi
-  if [[ -f "${INCOMING}/mmd/mmd-valuation.service" ]]; then
-    install -o root -g root -m 644 "${INCOMING}/mmd/mmd-valuation.service" \
-      /etc/systemd/system/mmd-valuation.service
-  fi
+  _refuse_unit_autoupdate \
+    "${INCOMING}/mmd/mmd-valuation.service" \
+    /etc/systemd/system/mmd-valuation.service
   mkdir -p /etc/anthemic-mmd
   ABS_KEY_FILE="${INCOMING}/private/abs-indicator-api-key"
   {
