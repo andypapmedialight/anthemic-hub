@@ -68,7 +68,7 @@
       { id: "music", label: "Gigs & bass", scene: "music", interest: "music", keywords: ["gig", "bass", "music", "band"], reply: "Music section. Good sticks." },
       { id: "bio", label: "Music bio", scene: "bio", interest: "music", keywords: ["music bio", "bands"], reply: "Music bio — long story, good ears." },
       { id: "reading", label: "Reading", scene: "reading", interest: "personal", keywords: ["read", "books", "reading list"], reply: "Reading list. Smells like ideas." },
-      { id: "work", label: "Work & hire", scene: "work", interest: "work", keywords: ["work", "hire", "job", "mecca"], reply: "Work and hire deck. Lead on." }
+      { id: "work", label: "Work & hire", scene: "work", interest: "work", keywords: ["work", "hire", "job", "mecca", "university", "tree of life"], reply: "Work and hire deck. Lead on." }
     ]
   };
 

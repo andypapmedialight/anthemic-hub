@@ -52,7 +52,7 @@
     "PJ Harvey",
     "Massive Attack"
   ],
-  "who_am_i": "Andy Papadopoulos, trained as a software engineer - senior developer, full-stack engineer, and infrastructure architect at Mecca Medialight in Melbourne. He designs and ships web apps, mentors where he can, and tinkers on the side. Off the clock he plays music, teaches bass, and scratches creative itches here under Anthemic. Cinnamon, the site guide above, runs quality assurance on morale.",
+  "who_am_i": "Andy Papadopoulos, trained as a software engineer - Main Developer at the Australian Tree of Life at Melbourne University. He designs and ships web apps, mentors where he can, and tinkers on the side. Off the clock he plays music, teaches bass, and scratches creative itches here under Anthemic. Cinnamon, the site guide above, runs quality assurance on morale.",
   "cinnamon_nav": {
     "greeting": "I'm Cinnamon - i find stuff. What are you sniffing for?",
     "find_label": "Find it",
@@ -126,7 +126,7 @@
         "label": "Work & hire",
         "scene": "work",
         "interest": "work",
-        "keywords": ["work", "hire", "job", "mecca", "professional", "deck", "pitch", "linkedin"],
+        "keywords": ["work", "hire", "job", "mecca", "professional", "deck", "pitch", "linkedin", "university", "tree of life", "atol"],
         "reply": "Work and hire deck. Lead on."
       }
     ]

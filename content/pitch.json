@@ -15,7 +15,7 @@
       "id": "pitch",
       "kicker": "The short version",
       "headline": "You get someone who ships, owns the stack, and leaves code maintainable.",
-      "body": "Senior developer at Mecca Medialight by day; civic tools and creative experiments under Anthemic by night. The through-line is the same: clear systems, honest delivery, and work you can hand to the next engineer."
+      "body": "Main Developer at the Australian Tree of Life at Melbourne University by day; civic tools and creative experiments under Anthemic by night. The through-line is the same: clear systems, honest delivery, and work you can hand to the next engineer."
     },
     {
       "id": "pillars",
@@ -30,10 +30,10 @@
     {
       "id": "track",
       "kicker": "Day job",
-      "headline": "Mecca Medialight",
-      "role": "Senior developer · full-stack engineer · infrastructure architect",
-      "body": "Melbourne studio building custom websites and web applications for organisations and businesses. Lean delivery, Laravel backends, modern front ends, and engineering discipline that survives handover.",
-      "stack": "Laravel · modern front ends · CI/CD · AWS & Azure"
+      "headline": "Australian Tree of Life",
+      "role": "Main Developer · Melbourne University",
+      "body": "Bioinformatics infrastructure at Melbourne University that turns raw genomic data into assembled and annotated genomes for Australian species. The work is pipelines, data integrity, and software the research community can actually run.",
+      "stack": "Genome pipelines · APIs · research data infrastructure"
     },
     {
       "id": "skills",
@@ -102,7 +102,7 @@
       "headline": "Strong match when you need…",
       "bullets": [
         "A senior full-stack engineer who can also reason about infrastructure and release pipelines.",
-        "Someone comfortable across agency pace — multiple clients, clear handover, no heroics required.",
+        "Someone who can own a platform end to end — data integrity, release discipline, and a handover the next engineer can run.",
         "A builder for civic, mapping, or data-heavy products who has done it in production, not slides.",
         "A calm collaborator — direct communication, honest status, dog-approved morale (Cinnamon, QA)."
       ]
